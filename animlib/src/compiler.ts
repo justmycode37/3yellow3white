@@ -7,7 +7,7 @@ export class SceneCompileError extends Error {
   constructor(public diagnostic: Diagnostic) { super(diagnostic.message); this.name = "SceneCompileError"; }
 }
 
-const kinds = new Set(["circle", "rectangle", "path", "line", "arrow", "text", "latex", "mesh", "group"]);
+const kinds = new Set(["circle", "sphere", "rectangle", "path", "line", "arrow", "text", "latex", "mesh", "group"]);
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -23,6 +23,17 @@ function geometry(g: Geometry) {
   for (const key of ["text", "tex"] as const) if (g[key] !== undefined) check(typeof g[key] === "string" && g[key]!.length <= 20000, `Invalid or oversized ${key}`);
   if (g.kind === "text") check(typeof g.text === "string", "Text requires a string");
   if (g.kind === "latex") check(typeof g.tex === "string", "LaTeX requires a tex string");
+  if (g.anchor !== undefined) check(g.kind === "latex" && typeof g.anchor === "string" && /^[A-Za-z][A-Za-z0-9_-]*$/.test(g.anchor), "Invalid LaTeX anchor");
+  if (g.numberFormat !== undefined) check(g.kind === "latex" && g.numberFormat && typeof g.numberFormat === "object" && !Array.isArray(g.numberFormat), "Invalid numeric format");
+  const decimals = g.numberFormat?.decimals === undefined ? 2 : g.numberFormat.decimals, digits = g.numberFormat?.digits === undefined ? 1 : g.numberFormat.digits;
+  check(Number.isInteger(decimals) && decimals >= 0 && decimals <= 4 && Number.isInteger(digits) && digits >= 1 && digits <= 6, "Numeric format requires decimals 0–4 and digits 1–6");
+  if (g.numbers !== undefined) {
+    check(g.kind === "latex" && g.numbers && typeof g.numbers === "object" && !Array.isArray(g.numbers) && Object.keys(g.numbers).length <= 100, "Invalid numeric slots");
+    for (const [id,value] of Object.entries(g.numbers)) {
+      check(/^[A-Za-z][A-Za-z0-9_-]{0,31}$/.test(id), "Invalid numeric slot ID"); number(value,"numeric slot value");
+      check(Math.abs(Number(value.toFixed(decimals))) < 10 ** digits, `Numeric slot ${id} exceeds its reserved digit width`);
+    }
+  }
   if (g.kind === "path") check((g.points?.length ?? 0) >= 2, "Path requires at least two points");
   if (g.kind === "line" || g.kind === "arrow") check((g.points?.length ?? 0) >= 2, "Line/arrow requires at least two points");
   if (g.kind === "group") check(Array.isArray(g.children) && g.children.length <= 2000 && g.children.every(id => typeof id === "string"), "Invalid group children");
@@ -38,6 +49,9 @@ function element(e: ElementState) {
   check(e.scale >= 0 && e.opacity >= 0 && e.opacity <= 1 && e.strokeWidth >= 0, "Invalid element style range");
   for (const key of ["fill", "stroke"] as const) check(typeof e[key] === "string" && e[key].length <= 128, `Invalid ${key}`);
   check(e.space === "world" || e.space === "screen", "Invalid element space");
+  if (e.billboard !== undefined) check(typeof e.billboard === "boolean", "Invalid billboard flag");
+  if (e.billboardOffset !== undefined) vec(e.billboardOffset,"billboard offset");
+  if (e.viewportOffset !== undefined) vec(e.viewportOffset,"viewport offset",2);
   check(typeof e.persistent === "boolean", "Invalid persistence flag");
   check(e.morph === undefined, "Active morphs are not valid in compiled starting states");
 }
@@ -96,13 +110,13 @@ export function validateCompiledScene(scene: CompiledScene): void {
     checkGroups();
   }
   check(Array.isArray(scene.tracks) && scene.tracks.length <= 10000, "Invalid animation tracks");
-  const animatedKeys = new Set(["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth"]);
+  const animatedKeys = new Set(["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth", "viewportOffset"]);
   for (const track of scene.tracks) {
     number(track.start, "track start"); number(track.duration, "track duration");
     check(track.start >= 0 && track.duration >= 0 && track.start + track.duration <= scene.duration + 1e-6, "Track outside scene duration");
     check(["linear", "smooth", "in", "out"].includes(track.ease), "Invalid easing");
     const a = track.action;
-    check(a && ["camera", "animate", "morph"].includes(a.type) && Array.isArray(a.ids) && a.ids.length <= 2000, "Invalid animation action");
+    check(a && ["camera", "animate", "morph", "numbers"].includes(a.type) && Array.isArray(a.ids) && a.ids.length <= 2000, "Invalid animation action");
     if (a.type === "camera") {
       camera(track.cameraFrom!);
       check(Object.keys(a.properties ?? {}).every(key => ["yaw", "pitch", "height", "distance", "perspective", "target"].includes(key)), "Unknown camera property");
@@ -116,6 +130,10 @@ export function validateCompiledScene(scene: CompiledScene): void {
         if (a.type === "morph") {
           geometry(a.geometry!);
           if (a.map) check(typeof a.map === "object" && Object.entries(a.map).every(([x, y]) => typeof x === "string" && typeof y === "string"), "Invalid morph map");
+        } else if (a.type === "numbers") {
+          check(from.geometry.kind === "latex" && from.geometry.numbers && a.values && typeof a.values === "object" && !Array.isArray(a.values), "countTo requires LaTeX numeric slots and values");
+          check(Object.keys(a.values).every(key => Object.hasOwn(from.geometry.numbers!,key)), "Unknown numeric slot in countTo");
+          geometry({ ...from.geometry, numbers: { ...from.geometry.numbers, ...a.values } });
         } else {
           check(Object.keys(a.properties ?? {}).every(key => animatedKeys.has(key)), "Unknown animatable property");
           element({ ...from, ...a.properties } as ElementState);

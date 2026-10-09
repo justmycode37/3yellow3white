@@ -87,3 +87,17 @@ it('locks orbit input during camera tracks while retaining viewer orientation co
     expect(renderer.orbit).toEqual({yaw:0.5,pitch:0.2});
   } finally {renderer.dispose();vi.unstubAllGlobals();}
 });
+
+import {strokeTriangles,sphereTriangles} from '../src/geometry.js';
+it('builds watertight shared stroke joins without overlapping corner quads',()=> {
+  const triangles=strokeTriangles([[-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0]],0.2,true);
+  let area=0;for(let i=0;i<triangles.length;i+=3){const [a,b,c]=triangles.slice(i,i+3);area+=Math.abs((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))/2;}
+  expect(area).toBeCloseTo(1.6);expect(triangles).toHaveLength(24);
+});
+it('generates a closed sphere surface with unit normals and no degenerate pole faces',()=> {
+  const sphere=sphereTriangles(0.42);
+  expect(sphere.points.length).toBeGreaterThan(1000);
+  expect(sphere.normals.every(n=>Math.abs(Math.hypot(...n)-1)<1e-8)).toBe(true);
+  expect(sphere.points.every(p=>Math.abs(Math.hypot(...p)-0.42)<1e-8)).toBe(true);
+  for(let i=0;i<sphere.points.length;i+=3){const [a,b,c]=sphere.points.slice(i,i+3),u=b.map((v,j)=>v-a[j]),v=c.map((v,j)=>v-a[j]);expect(Math.hypot(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])).toBeGreaterThan(1e-8);}
+});

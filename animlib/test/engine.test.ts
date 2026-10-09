@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { compileSource } from "../src/compiler.js";
 import { evaluateScene } from "../src/timeline.js";
 import { SceneSequence } from "../src/sequence.js";
+import colorString from "color-string";
 
 const first = `export default scene({end:'hold'}, s => {
   const a = s.slider('a', {default:1,min:0,max:4});
@@ -65,6 +66,53 @@ describe("isolated scene compilation", () => {
     expect(await compileSource(source,{seed:4})).toEqual(await compileSource(source,{seed:4}));
     expect(await compileSource(source,{seed:4})).not.toEqual(await compileSource(source,{seed:5}));
     await expect(compileSource(`export default scene({},s=>{const a=s.latex('a',{tex:'x'});s.play(a.morphTo({kind:'latex',tex:'y'}),{duration:1});});`)).rejects.toThrow('explicit map');
+  });
+  it("creates real sphere geometry and validates radius and stationary billboards", async()=>{
+    const compiled=await compileSource(`export default scene({mode:'3d'},s=>{
+      s.sphere('atom',{radius:0.4,position:[0,0,1]});s.text('label',{text:'C',billboard:true,billboardOffset:[0,0.43,0.3]});s.wait(1);
+    });`);
+    const frame=evaluateScene(compiled,0);
+    expect(frame.elements[0].geometry).toMatchObject({kind:'sphere',radius:0.4});
+    expect(frame.elements[1].billboard).toBe(true);
+    expect(frame.elements[1].billboardOffset).toEqual([0,0.43,0.3]);
+    await expect(compileSource(`export default scene({},s=>s.sphere('atom',{radius:-1}));`)).rejects.toThrow('nonnegative');
+    await expect(compileSource(`export default scene({},s=>s.text('label',{text:'C',billboard:'yes'}));`)).rejects.toThrow('billboard');
+  });
+  it("animates normalized viewport offsets deterministically from an implicit zero",async()=>{
+    const compiled=await compileSource(`export default scene({},s=>{
+      const dot=s.circle('dot');s.play(dot.animate({viewportOffset:[-1.5,0.2]}),{duration:2,ease:'linear'});
+    });`);
+    expect(evaluateScene(compiled,1).elements[0].viewportOffset).toEqual([-0.75,0.1]);
+    expect(evaluateScene(compiled,2).elements[0].viewportOffset).toEqual([-1.5,0.2]);
+    expect(evaluateScene(compiled,0).elements[0].viewportOffset).toEqual([0,0]);
+    await expect(compileSource(`export default scene({},s=>s.circle('dot',{viewportOffset:[1,2,3]}));`)).rejects.toThrow('two coordinates');
+    await expect(compileSource(`export default scene({},s=>s.circle('dot',{viewportOffset:[1,NaN]}));`)).rejects.toThrow('viewport offset');
+  });
+  it("fades none fills and strokes through transparent color without a final-frame pop or black tint",async()=>{
+    const compiled=await compileSource(`export default scene({},s=>{
+      const entering=s.circle('entering',{fill:'none',stroke:'none'});
+      const exiting=s.circle('exiting',{fill:'#58c4dd',stroke:'rgba(88,196,221,0.4)'});
+      const invisible=s.circle('invisible',{fill:'none',stroke:'none'});
+      s.play([
+        entering.animate({fill:'#58c4dd',stroke:'rgba(88,196,221,0.4)'}),
+        exiting.animate({fill:'none',stroke:'none'}),invisible.animate({fill:'none',stroke:'none'})
+      ],{duration:2,ease:'linear'});
+    });`);
+    const first=evaluateScene(compiled,0),half=evaluateScene(compiled,1),end=evaluateScene(compiled,2);
+    expect(first.elements[0].fill).toBe('none');
+    expect(first.elements[1].fill).toBe('#58c4dd');
+    for(const id of ['entering','exiting']) {
+      const element=half.elements.find(e=>e.id===id)!;
+      expect(colorString.get.rgb(element.fill)).toEqual([88,196,221,0.5]);
+      expect(colorString.get.rgb(element.stroke)).toEqual([88,196,221,0.2]);
+      expect(element.opacity).toBe(1);
+    }
+    expect(half.elements.find(e=>e.id==='invisible')!.fill).toBe('none');
+    expect(half.elements.find(e=>e.id==='invisible')!.stroke).toBe('none');
+    expect(end.elements[0].fill).toBe('#58c4dd');
+    expect(end.elements[0].stroke).toBe('rgba(88,196,221,0.4)');
+    expect(end.elements[1].fill).toBe('none');expect(end.elements[1].stroke).toBe('none');
+    expect(evaluateScene(compiled,1)).toEqual(half);
   });
 });
 

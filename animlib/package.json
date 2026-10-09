@@ -28,7 +28,7 @@
     "earcut": "^3.2.4",
     "mathjax-full": "3.2.2",
     "quickjs-emscripten": "0.32.0",
-    "svg-path-properties": "2.1.0"
+    "svg-pathdata": "^8.0.0"
   },
   "devDependencies": {
     "@types/color-string": "^1.5.5",

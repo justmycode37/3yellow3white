@@ -6,11 +6,44 @@ import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html.js';
 import 'mathjax-full/js/input/tex/ams/AmsConfiguration.js';
 import 'mathjax-full/js/input/tex/newcommand/NewcommandConfiguration.js';
 import 'mathjax-full/js/input/tex/html/HtmlConfiguration.js';
-import { svgPathProperties } from 'svg-path-properties';
-import type { Vec3 } from './types.js';
+import { SVGPathData } from 'svg-pathdata';
+import type { Geometry, Vec3 } from './types.js';
 
 export interface LatexPath { contours: Vec3[][]; part?: string }
-export interface LatexLayout { paths: LatexPath[]; parts: Set<string>; width: number; height: number }
+export interface LatexNumericSlot { id:string; contours:Vec3[][]; baseline:number; scale:number; part?:string }
+export interface LatexLayout { paths: LatexPath[]; parts: Set<string>; width: number; height: number; baseline:number; numericSlots:LatexNumericSlot[] }
+
+/** Preserve SVG command corners; subdivide curves by geometric error, not arclength. */
+export function flattenSvgPath(source:string,tolerance=1.2):Vec3[][] {
+  const commands=new SVGPathData(source).toAbs().normalizeST().qtToC().aToC().normalizeHVZ(false,true,true).commands;
+  const contours:Vec3[][]=[];let contour:Vec3[]=[];let current:Vec3=[0,0,0];
+  const midpoint=(a:Vec3,b:Vec3):Vec3=>[(a[0]+b[0])/2,(a[1]+b[1])/2,0];
+  const distance=(p:Vec3,a:Vec3,b:Vec3):number=>{
+    const dx=b[0]-a[0],dy=b[1]-a[1],length=dx*dx+dy*dy;
+    const t=length?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/length)):0;
+    return (p[0]-a[0]-t*dx)**2+(p[1]-a[1]-t*dy)**2;
+  };
+  const curve=(a:Vec3,b:Vec3,c:Vec3,d:Vec3,depth=0):void=>{
+    if(depth>=12||Math.max(distance(b,a,d),distance(c,a,d))<=tolerance*tolerance){contour.push(d);return;}
+    const ab=midpoint(a,b),bc=midpoint(b,c),cd=midpoint(c,d),abc=midpoint(ab,bc),bcd=midpoint(bc,cd),center=midpoint(abc,bcd);
+    curve(a,ab,abc,center,depth+1);curve(center,bcd,cd,d,depth+1);
+  };
+  for(const command of commands) {
+    if(command.type===SVGPathData.MOVE_TO) {
+      if(contour.length)contours.push(contour);
+      current=[command.x,command.y,0];contour=[current];
+    } else if(command.type===SVGPathData.LINE_TO) {
+      current=[command.x,command.y,0];contour.push(current);
+    } else if(command.type===SVGPathData.CURVE_TO) {
+      const end:Vec3=[command.x,command.y,0];curve(current,[command.x1,command.y1,0],[command.x2,command.y2,0],end);current=end;
+    } else if(command.type===SVGPathData.CLOSE_PATH) {
+      if(contour.length&&Math.hypot(current[0]-contour[0][0],current[1]-contour[0][1])>1e-9)contour.push([...contour[0]]);
+      current=contour[0]??current;
+    }
+  }
+  if(contour.length)contours.push(contour);
+  return contours;
+}
 type Matrix = [number,number,number,number,number,number];
 const identity: Matrix = [1,0,0,1,0,0];
 function multiply(a:Matrix,b:Matrix): Matrix {
@@ -73,34 +106,69 @@ export function layoutLatex(source:string): LatexLayout {
   if(!svg)throw new Error('MathJax did not produce SVG.');
   const box=(adaptor.getAttribute(svg,'viewBox')??'0 0 1000 1000').split(/\s+/).map(Number);
   const paths:LatexPath[]=[];
+  const numericSlots:LatexNumericSlot[]=[];
   type Node=typeof svg;
-  function visit(node:Node,parent:Matrix,part?:string):void {
+  function visit(node:Node,parent:Matrix,part?:string,slot?:LatexNumericSlot,hidden=false):void {
     const matrix=multiply(parent,transform(adaptor.getAttribute(node,'transform')??''));
     const names=(adaptor.getAttribute(node,'class')??'').split(/\s+/);
     const named=names.find((name:string)=>name.startsWith('animpart-'));
     if(named)part=named.slice(9);
+    hidden ||= adaptor.getAttribute(node,'visibility')==='hidden'||adaptor.getAttribute(node,'display')==='none';
     const kind=adaptor.kind(node);
     if(kind==='text')throw new Error('This character has no bundled MathJax vector glyph. Use supported mathematical/Latin characters.');
     let contours:Vec3[][]=[];
     const point=(x:number,y:number):Vec3=>[(matrix[0]*x+matrix[2]*y+matrix[4]-(box[0]+box[2]/2))/1000,-(matrix[1]*x+matrix[3]*y+matrix[5]-(box[1]+box[3]/2))/1000,0];
+    const slotName=names.find((name:string)=>name.startsWith('animslot-'));
+    if(slotName) {slot={id:slotName.slice(9),contours:[],baseline:point(0,0)[1],scale:Math.hypot(matrix[0],matrix[1]),part};numericSlots.push(slot);}
     if(kind==='path') {
       const d=adaptor.getAttribute(node,'d')??'';
-      for(const segment of d.split(/(?=[Mm])/).filter(Boolean)) {
-        const properties=new svgPathProperties(segment),length=properties.getTotalLength();
-        const count=Math.max(12,Math.min(160,Math.ceil(length/20)));
-        contours.push(Array.from({length:count+1},(_,i)=>{const p=properties.getPointAtLength(length*i/count);return point(p.x,p.y);}));
-      }
+      contours=flattenSvgPath(d).map(contour=>contour.map(p=>point(p[0],p[1])));
     } else if(kind==='rect') {
       const x=Number(adaptor.getAttribute(node,'x')??0),y=Number(adaptor.getAttribute(node,'y')??0),w=Number(adaptor.getAttribute(node,'width')??0),h=Number(adaptor.getAttribute(node,'height')??0);
       contours=[[point(x,y),point(x+w,y),point(x+w,y+h),point(x,y+h)]];
     }
-    if(contours.length)paths.push({contours,part});
-    for(const child of adaptor.childNodes(node))if(adaptor.kind(child)!=='#text' && adaptor.kind(child)!=='#comment')visit(child as Node,matrix,part);
+    if(contours.length&&!hidden) {if(slot)slot.contours.push(...contours);else paths.push({contours,part});}
+    for(const child of adaptor.childNodes(node))if(adaptor.kind(child)!=='#text' && adaptor.kind(child)!=='#comment')visit(child as Node,matrix,part,slot,hidden);
   }
   visit(svg,identity);
-  const layout={paths,parts,width:box[2]/1000,height:box[3]/1000};
+  const layout={paths,parts,width:box[2]/1000,height:box[3]/1000,baseline:(box[1]+box[3]/2)/1000,numericSlots};
   if(cache.size>256)cache.delete(cache.keys().next().value!);
   cache.set(source,layout);return layout;
+}
+
+/** Anchors a formula to an authored named part and fills stable-width numeric slots. */
+export function layoutLatexGeometry(geometry:Geometry):LatexLayout {
+  const source=geometry.tex??'',numbers=geometry.numbers??{};
+  const format=geometry.numberFormat;
+  if(format!==undefined&&(!format||typeof format!=='object'||Array.isArray(format)))throw new Error('Invalid numeric format');
+  const decimals=format?.decimals===undefined?2:format.decimals,digits=format?.digits===undefined?1:format.digits;
+  if(!Number.isInteger(decimals)||decimals<0||decimals>4||!Number.isInteger(digits)||digits<1||digits>6)throw new Error('Invalid numeric format');
+  const reserved=`-${'0'.repeat(digits)}${decimals?'.'+'0'.repeat(decimals):''}`;
+  const used=new Set<string>();
+  const template=source.replace(/\\animnum\s*\{([A-Za-z][A-Za-z0-9_-]{0,31})\}/g,(_match,id:string)=>{
+    if(!Object.hasOwn(numbers,id))throw new Error(`Missing numeric slot value: ${id}`);
+    used.add(id);return `\\class{animslot-${id}}{${reserved}}`;
+  });
+  if(Object.keys(numbers).some(id=>!used.has(id)))throw new Error('Numeric values must correspond to \\animnum{name} slots');
+  const base=layoutLatex(template);
+  let anchor:Vec3=[0,0,0];
+  if(geometry.anchor) {
+    if(!base.parts.has(geometry.anchor))throw new Error(`Unknown LaTeX anchor: ${geometry.anchor}`);
+    const points=[...base.paths.filter(p=>p.part===geometry.anchor).flatMap(p=>p.contours.flat()),...base.numericSlots.filter(s=>s.part===geometry.anchor).flatMap(s=>s.contours.flat())];
+    if(!points.length)throw new Error(`LaTeX anchor ${geometry.anchor} has no visible geometry`);
+    anchor=[(Math.min(...points.map(p=>p[0]))+Math.max(...points.map(p=>p[0])))/2,(Math.min(...points.map(p=>p[1]))+Math.max(...points.map(p=>p[1])))/2,0];
+  }
+  const translate=(contours:Vec3[][],offset:Vec3):Vec3[][]=>contours.map(c=>c.map(p=>p.map((v,i)=>v+offset[i]-anchor[i]) as Vec3));
+  const paths=base.paths.map(path=>({...path,contours:translate(path.contours,[0,0,0])}));
+  for(const slot of base.numericSlots) {
+    const value=numbers[slot.id];
+    if(!Number.isFinite(value)||Math.abs(Number(value.toFixed(decimals)))>=10**digits)throw new Error(`Numeric slot ${slot.id} exceeds its reserved digit width`);
+    const formatted=Number(value.toFixed(decimals)).toFixed(decimals),glyphs=layoutLatex(formatted),slotPoints=slot.contours.flat(),glyphPoints=glyphs.paths.flatMap(p=>p.contours.flat());
+    const right=Math.max(...slotPoints.map(p=>p[0])),glyphRight=Math.max(...glyphPoints.map(p=>p[0]))*slot.scale;
+    const offset:Vec3=[right-glyphRight,slot.baseline-glyphs.baseline*slot.scale,0];
+    for(const path of glyphs.paths)paths.push({part:slot.part,contours:translate(path.contours.map(contour=>contour.map(p=>p.map(v=>v*slot.scale) as Vec3)),offset)});
+  }
+  return {...base,paths,baseline:base.baseline-anchor[1],numericSlots:base.numericSlots.map(slot=>({...slot,contours:translate(slot.contours,[0,0,0]),baseline:slot.baseline-anchor[1]}))};
 }
 export function validateLatexMap(from:LatexLayout,to:LatexLayout,map:Record<string,string>={}):void {
   const targets=new Set<string>();

@@ -17,7 +17,10 @@ function interpolate(from: unknown, to: unknown, t: number): unknown {
   if (Array.isArray(from) && Array.isArray(to)) return from.map((x, i) => interpolate(x, to[i], t));
   if (typeof from === "string" && typeof to === "string") {
     const a = color(from), b = color(to);
-    if (a && b) return `rgba(${a.slice(0, 3).map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")},${a[3] + (b[3] - a[3]) * t})`;
+    if ((a || from === "none") && (b || to === "none") && (a || b)) {
+      const start=a??[b![0],b![1],b![2],0],end=b??[a![0],a![1],a![2],0];
+      return `rgba(${start.slice(0, 3).map((v, i) => Math.round(v + (end[i] - v) * t)).join(",")},${start[3] + (end[3] - start[3]) * t})`;
+    }
   }
   return t < 1 ? from : to;
 }
@@ -63,8 +66,14 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number): Fram
         e.geometry = structuredClone(t === 1 ? to : from.geometry);
         if (t < 1) e.morph = { from: structuredClone(from.geometry), to: structuredClone(to), progress: t, map: track.action.map };
         else delete e.morph;
+      } else if (track.action.type === "numbers") {
+        e.geometry.numbers = { ...e.geometry.numbers };
+        for (const [key,target] of Object.entries(track.action.values ?? {})) {
+          e.geometry.numbers[key] = interpolate(from.geometry.numbers?.[key],target,t) as number;
+        }
       } else for (const [key, target] of Object.entries(track.action.properties ?? {})) {
-        (e as unknown as Record<string, unknown>)[key] = interpolate(from[key as keyof ElementState], target, t);
+        const start=key==='viewportOffset'?from.viewportOffset??[0,0]:from[key as keyof ElementState];
+        (e as unknown as Record<string, unknown>)[key] = interpolate(start, target, t);
       }
     }
   }

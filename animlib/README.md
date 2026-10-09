@@ -16,7 +16,7 @@ Rendering is **WebGPU only**, including 2D scenes. There is no WebGL or Canvas 2
 fallback. A missing adapter/device produces a diagnostic. WebGPU requires a secure
 context, normally HTTPS or localhost. See the [WebGPU specification](https://gpuweb.github.io/gpuweb/).
 
-From the repository root:
+Use Node.js 22.16 or newer for development. From the repository root:
 
 ```sh
 npm install
@@ -73,7 +73,7 @@ animation description as normal playback.
 There is one authoring style: sequential `play(...)` and `wait(...)`. Multiple
 animations in a single `play` run together. Explicit timestamps stay internal.
 
-The first application demos will cover linear algebra, organic chemistry, and
+The application demos cover linear algebra, organic chemistry, and
 computer algorithms. Matrices, molecules, arrays, and graphs belong to application
 helpers built from animlib's shapes, text, paths, meshes, and groups.
 
@@ -293,7 +293,7 @@ start of the interval. Scene-builder calls never draw intermediate frames.
 
 ### Elements and coordinates
 
-Basic creation methods are `circle`, `rectangle`, `line`, `arrow`,
+Basic creation methods are `circle`, `sphere`, `rectangle`, `line`, `arrow`,
 `path`, `text`, `latex`, `mesh`, and `group`. All take stable IDs and plain
 data. Groups supply parent transforms and operate on their children together.
 
@@ -316,6 +316,10 @@ Coordinate conventions:
   16 pixels; default screen LaTeX is 24 pixels.
 - View framing is controlled by the camera, so resizing the canvas does not change
   the mathematical coordinates. Pixel density is handled by the renderer.
+- `viewportOffset: [x, y]` adds a camera-independent displacement in fractions
+  of the viewport's width and height. It can be animated on an element or group,
+  so `[-1.5, 0]` slides content left even after viewer rotation or on an ultrawide
+  canvas. It does not change the underlying world coordinates.
 
 Ordinary IDs are unique within a scene. Persistent IDs must also be unambiguous
 among currently carried objects. Duplicate IDs or missing inherited IDs are
@@ -344,7 +348,7 @@ export default scene({ mode: "2d", end: "hold" }, s => {
   const leftovers = s.previous.exiting();
   const mainShape = s.previous.get("main-shape");
 
-  s.play(leftovers.fadeOut(), { duration: 0.3 });
+  s.play(leftovers.animate({ viewportOffset: [-1.5, 0] }), { duration: 0.5, ease: "smooth" });
   s.remove(leftovers);
 
   s.play(mainShape.moveTo([0, 0]), { duration: 0.8 });
@@ -360,6 +364,10 @@ export default scene({ mode: "2d", end: "hold" }, s => {
 
 There is no separate transition object or clock. These exit and entrance
 animations are ordinary instructions at the start of the incoming scene.
+The player never crossfades entire scenes. For unrelated subjects, clear or move
+the previous content offscreen before introducing the next subject. Keep an
+element only when its identity has a meaningful relationship to the next scene;
+the demo creates new atoms and bars rather than reusing an unrelated vector.
 
 Lifetime details:
 
@@ -469,6 +477,37 @@ glyphs; unsupported characters reject rather than silently disappear. Font
 selection, emoji, multiline text layout, and broad international text coverage
 need a separate text implementation.
 
+### Anchors and counting numbers
+
+Set `anchor` to a named LaTeX part to place that part's center at the element's
+origin. Use the same anchor in the morph target to keep that symbol stationary
+when the rest of the formula changes, such as adding an `A` before `v`.
+Without an anchor, formulas are centered as a whole.
+
+Use `\animnum{name}` for a changing number. Its value comes from `numbers`,
+and `numberFormat` reserves a fixed-width slot so changing digit widths do not
+move the surrounding brackets or symbols. `countTo` interpolates the value using
+the same timeline and easing as other animations; seeking displays the number
+for that exact time without fading between old and new glyphs.
+
+```js
+const equation = s.latex("equation", {
+  tex: String.raw`\animpart{v}{v} = \begin{bmatrix}\animnum{x}\\1\end{bmatrix}`,
+  anchor: "v",
+  numbers: { x: 1.5 },
+  numberFormat: { decimals: 2, digits: 1 },
+  position: [-2.3, 2],
+  fontSize: 0.36,
+});
+s.play(equation.countTo({ x: 2.25 }), { duration: 2, ease: "smooth" });
+```
+
+`digits` reserves the number of integer digits; an extra sign column and the
+specified decimal places are also reserved. Values must fit the selected format.
+Supported formats use 1–6 integer digits and 0–4 decimal places.
+Number updates and geometry morphs both write an element's geometry and cannot
+run on that same element in one `play`; use separate instructions for those changes.
+
 ## 6. Interaction and 2D/3D scenes
 
 ### Controls are input values
@@ -528,7 +567,7 @@ camera preset. Later scenes inherit the previous authored camera state; declarin
 export default scene({ mode: "3d", orbit: true }, s => {
   const point = s.previous.get("main-shape");
   const old = s.previous.exiting();
-  s.play(old.fadeOut(), { duration: 0.3 });
+  s.play(old.animate({ viewportOffset: [-1.5, 0] }), { duration: 0.5, ease: "smooth" });
   s.remove(old);
 
   s.play([
@@ -553,11 +592,15 @@ authored path; its contribution fades with perspective when returning to 2D.
 Editing code preserves these view settings. Viewer rotation is not baked into
 the outgoing object state used for reconstruction.
 
-The renderer handles 3D vertex positions, meshes, camera projection, and opaque
-depth testing on the GPU. Circles/text are planar geometry, not automatically
-billboards or shaded spheres. The molecule demo supplies its own spatial layout
-using primitives. Lighting, physically based materials, model loading, picking,
-and object dragging are not yet implemented.
+The renderer handles 3D vertex positions, meshes, camera projection, depth testing,
+and four-sample antialiasing on the GPU. `sphere` creates an actual tessellated
+sphere with simple directional shading. Circles and text remain planar unless
+`billboard: true` makes their plane face the current camera, including viewer
+rotation. `billboardOffset: [x, y, z]` displaces a billboard along camera right,
+up, and toward the viewer in scene units; this keeps an atom label beside or in
+front of its sphere while orbiting. The molecule demo supplies tetrahedral spatial
+layout and surface-to-surface bond meshes. Physically based materials, model
+loading, picking, and object dragging are not yet implemented.
 
 ## 7. Live source submissions
 

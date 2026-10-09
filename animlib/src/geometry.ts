@@ -64,3 +64,40 @@ export function morphOutline(from: Geometry,to: Geometry,progress:number): { poi
   const [start,end]=matchPoints(a.points,b.points,a.closed);
   return {points:start.map((p,i)=>p.map((v,j)=>lerp(v,end[i][j],progress)) as Vec3),closed:a.closed};
 }
+
+/** Shared miter vertices keep neighboring stroke segments watertight without alpha overlap. */
+export function strokeTriangles(points:Vec3[],width:number,closed:boolean):Vec3[] {
+  points=points.filter((p,i)=>!i||Math.hypot(...p.map((v,j)=>v-points[i-1][j]))>1e-10);
+  if(closed&&points.length>1&&Math.hypot(...points[0].map((v,i)=>v-points.at(-1)![i]))<1e-10)points=points.slice(0,-1);
+  if(points.length<2||width<=0)return [];
+  const half=width/2;
+  const side=(a:Vec3,b:Vec3):Vec3=>{const x=b[0]-a[0],y=b[1]-a[1],length=Math.hypot(x,y);return length>1e-10?[-y/length,x/length,0]:[1,0,0];};
+  const edges=points.map((point,i)=> {
+    const before=side(points[(i+points.length-1)%points.length],point),after=side(point,points[(i+1)%points.length]);
+    let normal=after,magnitude=half;
+    if(!closed&&i===0)normal=after;
+    else if(!closed&&i===points.length-1)normal=before;
+    else {
+      const sum:Vec3=[before[0]+after[0],before[1]+after[1],0],length=Math.hypot(sum[0],sum[1]);
+      if(length>1e-8){normal=[sum[0]/length,sum[1]/length,0];magnitude=Math.min(half*4,half/Math.max(1e-6,normal[0]*after[0]+normal[1]*after[1]));}
+    }
+    return [-1,1].map(sign=>point.map((v,j)=>v+normal[j]*magnitude*sign) as Vec3);
+  });
+  const triangles:Vec3[]=[];
+  for(let i=0;i<(closed?points.length:points.length-1);i++){const a=edges[i],b=edges[(i+1)%points.length];triangles.push(a[0],a[1],b[0],b[0],a[1],b[1]);}
+  return triangles;
+}
+
+const sphereCache=new Map<string,{points:Vec3[];normals:Vec3[]}>();
+/** Latitude/longitude surface mesh with continuous normals for GPU-lit spheres. */
+export function sphereTriangles(radius:number,segments=32,rings=20):{points:Vec3[];normals:Vec3[]} {
+  const key=radius+':'+segments+':'+rings,cached=sphereCache.get(key);if(cached)return cached;
+  const point=(ring:number,segment:number):Vec3=>{const latitude=Math.PI*ring/rings,longitude=Math.PI*2*segment/segments;return [Math.sin(latitude)*Math.cos(longitude),Math.cos(latitude),Math.sin(latitude)*Math.sin(longitude)];};
+  const normals:Vec3[]=[];
+  for(let r=0;r<rings;r++)for(let s=0;s<segments;s++) {
+    const a=point(r,s),b=point(r+1,s),c=point(r+1,s+1),d=point(r,s+1);
+    if(r>0)normals.push(a,b,d);if(r<rings-1)normals.push(d,b,c);
+  }
+  const result={normals,points:normals.map(p=>p.map(v=>v*radius) as Vec3)};
+  if(sphereCache.size>=16)sphereCache.delete(sphereCache.keys().next().value!);sphereCache.set(key,result);return result;
+}

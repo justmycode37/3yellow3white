@@ -6,7 +6,7 @@ export type Ease = "linear" | "smooth" | "in" | "out";
 export type ControlValue = number | boolean | string;
 
 export interface Geometry {
-  kind: "circle" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
+  kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
   radius?: number;
   width?: number;
   height?: number;
@@ -18,6 +18,11 @@ export interface Geometry {
   vertices?: Position[];
   triangles?: [number, number, number][];
   children?: string[];
+  /** Named LaTeX part whose center is the element's origin. */
+  anchor?: string;
+  /** Values rendered in fixed-width \\animnum{name} LaTeX slots. */
+  numbers?: Record<string, number>;
+  numberFormat?: { decimals?: number; digits?: number };
 }
 
 export interface ElementStyle {
@@ -29,6 +34,10 @@ export interface ElementStyle {
   stroke?: string;
   strokeWidth?: number;
   space?: "world" | "screen";
+  billboard?: boolean;
+  billboardOffset?: Position;
+  /** Camera-independent translation in fractions of the viewport width/height. */
+  viewportOffset?: Vec2;
 }
 
 export type ElementProps = Omit<Geometry, "kind"> & ElementStyle;
@@ -43,6 +52,9 @@ export interface ElementState {
   stroke: string;
   strokeWidth: number;
   space: "world" | "screen";
+  billboard?: boolean;
+  billboardOffset?: Vec3;
+  viewportOffset?: Vec2;
   persistent: boolean;
   transient?: boolean;
   morph?: { from: Geometry; to: Geometry; progress: number; map?: Record<string, string> };
@@ -67,11 +79,12 @@ export interface SceneOptions {
 
 export interface AnimationAction {
   ids: string[];
-  type: "animate" | "morph" | "camera";
+  type: "animate" | "morph" | "camera" | "numbers";
   properties?: Partial<ElementState> | Partial<CameraState>;
   geometry?: Geometry;
   map?: Record<string, string>;
   fromOpacity?: number;
+  values?: Record<string, number>;
 }
 
 export interface Track {
@@ -120,17 +133,19 @@ export interface Frame {
 
 export interface ElementHandle {
   readonly id: string;
-  animate(properties: Omit<ElementStyle, "space">): AnimationAction;
+  animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset">): AnimationAction;
   moveTo(position: Position): AnimationAction;
   rotateTo(rotation: Position | number): AnimationAction;
   scaleTo(scale: number): AnimationAction;
   fadeIn(): AnimationAction;
   fadeOut(): AnimationAction;
   morphTo(geometry: Geometry, options?: { map?: Record<string, string> }): AnimationAction;
+  countTo(values: Record<string, number>): AnimationAction;
 }
 
 export interface SceneContext {
   circle(id: string, props?: ElementProps): ElementHandle;
+  sphere(id: string, props?: ElementProps): ElementHandle;
   rectangle(id: string, props?: ElementProps): ElementHandle;
   path(id: string, props: ElementProps): ElementHandle;
   line(id: string, props: ElementProps): ElementHandle;

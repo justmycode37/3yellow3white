@@ -1,13 +1,20 @@
-import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, Geometry, SceneContext, SceneOptions, Vec3 } from "./types.js";
+import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, Geometry, SceneContext, SceneOptions, Vec2, Vec3 } from "./types.js";
 
 /** Self-contained on purpose: the function is installed inside QuickJS, never eval'd by the host. */
 export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}): CompiledScene {
   const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
   const vector = (value: number[] = [0, 0, 0]): Vec3 => [value[0] ?? 0, value[1] ?? 0, value[2] ?? 0];
   const rotation = (value: number | number[] = 0): Vec3 => typeof value === "number" ? [0, 0, value] : vector(value);
+  const viewport = (value: Vec2): Vec2 => { if(!Array.isArray(value)||value.length!==2)throw new Error("Viewport offset requires two coordinates");return [value[0],value[1]]; };
   const finite = (value: number, label: string) => {
     if (!Number.isFinite(value) || Math.abs(value) > 1e6) throw new Error(`${label} must be a finite number with magnitude <= 1,000,000`);
     return value;
+  };
+  const numericFormat = (format: Geometry["numberFormat"]): void => {
+    if(format===undefined)return;
+    if(!format||typeof format!=="object"||Array.isArray(format))throw new Error("Invalid numeric format");
+    const decimals=format.decimals===undefined?2:format.decimals,digits=format.digits===undefined?1:format.digits;
+    if(!Number.isInteger(decimals)||decimals<0||decimals>4||!Number.isInteger(digits)||digits<1||digits>6)throw new Error("Numeric format requires decimals 0–4 and digits 1–6");
   };
   const idCheck = (id: string) => { if (typeof id !== "string" || !id || id.length > 256 || id.startsWith("@")) throw new Error("IDs must be nonempty strings <=256 characters, without an @ prefix"); };
   const mode = options.mode ?? "2d";
@@ -34,6 +41,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     return [Math.atan2(2*(w*x+y*z),1-2*(x*x+y*y)),Math.asin(Math.max(-1,Math.min(1,2*(w*y-z*x)))),Math.atan2(2*(w*z+x*y),1-2*(y*y+z*z))];
   };
   const initial = clone(previousElements.filter(e => e.persistent)).map(e => {
+    e.viewportOffset ??= [0,0];
     // Keeping one child does not implicitly keep its siblings. Bake departing
     // ancestors until the next durable ancestor, preserving the child's visual pose.
     let parent = originalParents.get(e.id);
@@ -44,6 +52,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       e.position = rotateVector(e.position.map(v => v*parent!.scale) as Vec3,parent.rotation).map((v,i)=>v+parent!.position[i]) as Vec3;
       e.rotation = combineRotation(parent.rotation,e.rotation);
       e.scale *= parent.scale; e.opacity *= parent.opacity;
+      if(parent.viewportOffset)e.viewportOffset=[(e.viewportOffset?.[0]??0)+parent.viewportOffset[0],(e.viewportOffset?.[1]??0)+parent.viewportOffset[1]];
       parent = originalParents.get(parent.id);
     }
     if (e.geometry.children) e.geometry.children = e.geometry.children.filter(id => persistentIds.has(id));
@@ -74,6 +83,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       const normalized = { ...properties };
       if (properties.position) normalized.position = vector(properties.position);
       if (properties.rotation !== undefined) normalized.rotation = rotation(properties.rotation);
+      if (properties.viewportOffset !== undefined) normalized.viewportOffset = viewport(properties.viewportOffset);
       return { ids: [id], type: "animate", properties: normalized as Partial<ElementState> };
     },
     moveTo: position => ({ ids: [id], type: "animate", properties: { position: vector(position) } }),
@@ -81,7 +91,8 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     scaleTo: scale => ({ ids: [id], type: "animate", properties: { scale } }),
     fadeIn: () => ({ ids: [id], type: "animate", properties: { opacity: 1 }, fromOpacity: 0 }),
     fadeOut: () => ({ ids: [id], type: "animate", properties: { opacity: 0 } }),
-    morphTo: (geometry, morphOptions = {}) => ({ ids: [id], type: "morph", geometry: clone(geometry), map: morphOptions.map }),
+    morphTo: (geometry, morphOptions = {}) => { numericFormat(geometry.numberFormat);return { ids: [id], type: "morph", geometry: clone(geometry), map: morphOptions.map }; },
+    countTo: values => ({ ids: [id], type: "numbers", values: clone(values) }),
   });
 
   const add = (kind: Geometry["kind"], id: string, props: ElementProps = {}, internal = false): ElementHandle => {
@@ -89,12 +100,13 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     if (used.has(id)) throw new Error(`Duplicate element ID: ${id}`);
     if (used.size >= 2000) throw new Error("Scene element limit exceeded (2000)");
     used.add(id);
-    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, space, ...geometry } = props;
+    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, space, billboard, billboardOffset, viewportOffset, ...geometry } = props;
+    numericFormat(geometry.numberFormat);
     const element: ElementState = {
       id, geometry: { kind, ...clone(geometry) }, position: vector(position), rotation: rotation(r),
       scale: scale ?? 1, opacity: opacity ?? 1, fill: fill ?? (kind === "line" || kind === "arrow" ? "none" : "#ffffff"),
       stroke: stroke ?? (kind === "line" || kind === "arrow" ? "#ffffff" : "none"), strokeWidth: strokeWidth ?? (space === "screen" ? 1 : 0.04),
-      space: space ?? "world", persistent: false,
+      space: space ?? "world", ...(billboard !== undefined ? { billboard } : {}), ...(billboardOffset !== undefined ? { billboardOffset:vector(billboardOffset) } : {}), viewportOffset: viewportOffset !== undefined ? viewport(viewportOffset) : [0,0], persistent: false,
     };
     states.set(id, element);
     lifecycle.push({ time: cursor, type: "add", ids: [id], elements: [clone(element)] });
@@ -124,6 +136,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
 
   const context: SceneContext = {
     circle: (id, props) => add("circle", id, { radius: 0.5, ...props }),
+    sphere: (id, props) => add("sphere", id, { radius: 0.5, ...props }),
     rectangle: (id, props) => add("rectangle", id, { width: 1, height: 1, ...props }),
     path: (id, props) => add("path", id, props),
     line: (id, props) => add("line", id, { points: [[0, 0], [1, 0]], ...props }),
@@ -146,9 +159,10 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       const actions = Array.isArray(actionList) ? actionList : [actionList];
       const writes = new Set<string>();
       for (const action of actions) {
+        if(action.type==="morph")numericFormat(action.geometry?.numberFormat);
         if (tracks.length >= 10000) throw new Error("Animation track limit exceeded (10000)");
         const from: Record<string, ElementState> = Object.create(null);
-        const properties = action.type === "morph" ? ["geometry"] : Object.keys(action.properties ?? {});
+        const properties = action.type === "morph" || action.type === "numbers" ? ["geometry"] : Object.keys(action.properties ?? {});
         for (const id of action.type === "camera" ? ["@camera"] : action.ids) {
           for (const property of properties) {
             const key = `${id}/${property}`;
@@ -173,6 +187,10 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
             if (e.geometry.kind === "group" || action.geometry.kind === "group") throw new Error("Morph group children individually");
             if ((e.geometry.kind === "latex" || action.geometry.kind === "latex") && !action.map) throw new Error("LaTeX morphs require an explicit map (an empty map fades all parts)");
             e.geometry = clone(action.geometry);
+          } else if (action.type === "numbers") {
+            if (e.geometry.kind !== "latex" || !e.geometry.numbers) throw new Error("countTo requires LaTeX numeric slots");
+            for (const key of Object.keys(action.values ?? {})) if (!Object.hasOwn(e.geometry.numbers,key)) throw new Error(`Unknown numeric slot: ${key}`);
+            e.geometry.numbers = { ...e.geometry.numbers, ...clone(action.values ?? {}) };
           } else Object.assign(e, clone(action.properties ?? {}));
         }
       }

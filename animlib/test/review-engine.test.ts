@@ -148,4 +148,14 @@ describe("reviewed scene boundary invariants", () => {
       expectSamePoint(renderedPoint(incoming,'dot',point),renderedPoint(previous,'dot',point));
     }
   });
+  it("bakes departing ancestors' viewport offsets into a persistent child",async()=>{
+    const a=await compileSource(`export default scene({},s=>{
+      const dot=s.circle('dot',{viewportOffset:[0.1,0.2]});const inner=s.group('inner',[dot]);const outer=s.group('outer',[inner]);
+      s.play([inner.animate({viewportOffset:[-0.3,0.4]}),outer.animate({viewportOffset:[0.5,-0.1]})],{duration:1});s.keep(dot);
+    });`);
+    const b=await compileSource(`export default scene({},s=>s.wait(1));`,{previous:evaluateScene(a,a.duration)});
+    const offset=evaluateScene(b,0).elements[0].viewportOffset!;
+    expect(offset[0]).toBeCloseTo(0.3);expect(offset[1]).toBeCloseTo(0.5);
+    expect(evaluateScene(b,0).elements.map(e=>e.id)).toEqual(['dot']);
+  });
 });

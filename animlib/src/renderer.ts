@@ -2,15 +2,15 @@
 import earcut from 'earcut';
 import colorString from 'color-string';
 import type { CompiledScene, ElementState, Frame, Geometry, Vec3 } from './types.js';
-import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3 } from './geometry.js';
-import { layoutLatex, validateLatexMap } from './latex.js';
+import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles } from './geometry.js';
+import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
 import type { LatexPath } from './latex.js';
 
 const shader=`
 struct Camera { focus: vec4f, angles: vec4f, viewport: vec4f };
 @group(0) @binding(0) var<uniform> camera: Camera;
-struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f };
-@vertex fn vertex(@location(0) world: vec3f, @location(1) color: vec4f, @location(2) screen: f32) -> Output {
+struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @location(1) normal: vec3f, @location(2) lit: f32 };
+@vertex fn vertex(@location(0) world: vec3f, @location(1) color: vec4f, @location(2) screen: f32, @location(3) normal: vec3f, @location(4) lit: f32, @location(5) layer: f32, @location(6) viewportOffset: vec2f) -> Output {
   var p=world-camera.focus.xyz;
   let cp=cos(-camera.angles.y); let sp=sin(-camera.angles.y);
   p=vec3f(p.x,p.y*cp-p.z*sp,p.y*sp+p.z*cp);
@@ -21,13 +21,21 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f };
   let halfHeight=camera.viewport.z/2.;
   var output:Output;
   output.position=vec4f(p.x/halfHeight*camera.viewport.y/camera.viewport.x,p.y/halfHeight,(depth-0.01)/(camera.angles.z*100.-0.01)*divisor,divisor);
-  if(screen>0.5) { output.position=vec4f(world.x*2./camera.viewport.x,world.y*2./camera.viewport.y,0.,1.); }
-  output.color=color;
+  if(screen>0.5) { output.position=vec4f(world.x*2./camera.viewport.x,world.y*2./camera.viewport.y,0.0001,1.); }
+  // Tiny deterministic tie bias fixes coplanar painter order while preserving 3D depth.
+  output.position.z-=layer*0.00000002*output.position.w;
+  output.position=vec4f(output.position.xy+viewportOffset*2.*output.position.w,output.position.zw);
+  var n=normal;
+  n=vec3f(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
+  n=vec3f(n.x*cy+n.z*sy,n.y,-n.x*sy+n.z*cy);
+  output.normal=n;output.lit=lit;output.color=color;
   return output;
 }
-@fragment fn fragment(input:Output) -> @location(0) vec4f { return input.color; }
+@fragment fn fragment(input:Output) -> @location(0) vec4f { var color=input.color;
+  if(input.lit>0.5){let amount=0.32+0.68*max(0.,dot(normalize(input.normal),normalize(vec3f(-0.4,0.65,1.))));color=vec4f(color.rgb*amount,color.a);}
+  return color; }
 `;
-interface DrawItem { depth:number; vertices:number[] }
+interface DrawItem { depth:number; vertices:number[]; transparent:boolean }
 type Color=[number,number,number,number];
 const colors=new Map<string,Color>();
 function parseColor(source:string):Color {
@@ -82,11 +90,15 @@ export class CanvasRenderer {
   private device:GPUDevice|undefined;
   private context:GPUCanvasContext|undefined;
   private pipeline:GPURenderPipeline|undefined;
+  private transparentPipeline:GPURenderPipeline|undefined;
+  private transparentBindGroup:GPUBindGroup|undefined;
   private uniform:GPUBuffer|undefined;
   private bindGroup:GPUBindGroup|undefined;
   private vertices:GPUBuffer|undefined;
   private capacity=0;
   private depthTexture:GPUTexture|undefined;
+  private colorTexture:GPUTexture|undefined;
+  private format:GPUTextureFormat|undefined;
   private initializing:Promise<void>|undefined;
   private disposed=false;
   constructor(private canvas:HTMLCanvasElement) {
@@ -111,7 +123,7 @@ export class CanvasRenderer {
     const max=this.device?.limits.maxTextureDimension2D??8192;
     const width=Math.min(max,Math.max(1,Math.round(this.size.width*ratio))),height=Math.min(max,Math.max(1,Math.round(this.size.height*ratio)));
     if(this.canvas.width!==width)this.canvas.width=width;if(this.canvas.height!==height)this.canvas.height=height;
-    if(this.device && (!this.depthTexture||this.depthTexture.width!==width||this.depthTexture.height!==height)) { this.depthTexture?.destroy();this.depthTexture=this.device.createTexture({size:[width,height],format:'depth24plus',usage:GPUTextureUsage.RENDER_ATTACHMENT}); }
+    if(this.device && (!this.depthTexture||this.depthTexture.width!==width||this.depthTexture.height!==height)) { this.depthTexture?.destroy();this.depthTexture=this.device.createTexture({size:[width,height],format:'depth24plus',sampleCount:4,usage:GPUTextureUsage.RENDER_ATTACHMENT});this.colorTexture?.destroy();this.colorTexture=this.device.createTexture({size:[width,height],format:this.format!,sampleCount:4,usage:GPUTextureUsage.RENDER_ATTACHMENT}); }
   }
   private async initialize():Promise<void> {
     if(this.disposed)throw new Error('Renderer is disposed.');
@@ -126,14 +138,18 @@ export class CanvasRenderer {
     const module=device.createShaderModule({code:shader});
     const compilation=await module.getCompilationInfo();
     const errors=compilation.messages.filter(m=>m.type==='error');if(errors.length)throw new Error(errors.map(m=>m.message).join('\n'));
-    context.configure({device,format:navigator.gpu.getPreferredCanvasFormat(),alphaMode:'opaque'});
-    this.pipeline=await device.createRenderPipelineAsync({layout:'auto',vertex:{module,entryPoint:'vertex',buffers:[{arrayStride:32,attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x4'},{shaderLocation:2,offset:28,format:'float32'}]}]},fragment:{module,entryPoint:'fragment',targets:[{format:navigator.gpu.getPreferredCanvasFormat(),blend:{color:{srcFactor:'src-alpha',dstFactor:'one-minus-src-alpha',operation:'add'},alpha:{srcFactor:'one',dstFactor:'one-minus-src-alpha',operation:'add'}}}]},primitive:{topology:'triangle-list',cullMode:'none'},depthStencil:{format:'depth24plus',depthWriteEnabled:true,depthCompare:'less-equal'}});
+    this.format=navigator.gpu.getPreferredCanvasFormat();
+    context.configure({device,format:this.format,alphaMode:'opaque'});
+    const descriptor:GPURenderPipelineDescriptor={layout:'auto',vertex:{module,entryPoint:'vertex',buffers:[{arrayStride:60,attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x4'},{shaderLocation:2,offset:28,format:'float32'},{shaderLocation:3,offset:32,format:'float32x3'},{shaderLocation:4,offset:44,format:'float32'},{shaderLocation:5,offset:48,format:'float32'},{shaderLocation:6,offset:52,format:'float32x2'}]}]},fragment:{module,entryPoint:'fragment',targets:[{format:navigator.gpu.getPreferredCanvasFormat(),blend:{color:{srcFactor:'src-alpha',dstFactor:'one-minus-src-alpha',operation:'add'},alpha:{srcFactor:'one',dstFactor:'one-minus-src-alpha',operation:'add'}}}]},primitive:{topology:'triangle-list',cullMode:'none'},depthStencil:{format:'depth24plus',depthWriteEnabled:true,depthCompare:'less-equal'},multisample:{count:4}};
+    this.pipeline=await device.createRenderPipelineAsync(descriptor);
+    this.transparentPipeline=await device.createRenderPipelineAsync({...descriptor,depthStencil:{...descriptor.depthStencil!,depthWriteEnabled:false}});
     this.uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
     this.bindGroup=device.createBindGroup({layout:this.pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});
+    this.transparentBindGroup=device.createBindGroup({layout:this.transparentPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});
     this.resize();
   }
   async prepare(scenes:CompiledScene[]):Promise<void> {
-    const prepareGeometry=(g:Geometry):void=>{if(g.kind==='latex')layoutLatex(g.tex??'');if(g.kind==='text')layoutLatex(textTex(g.text??''));};
+    const prepareGeometry=(g:Geometry):void=>{if(g.kind==='latex')layoutLatexGeometry(g);if(g.kind==='text')layoutLatex(textTex(g.text??''));};
     const prepareElement=(e:ElementState):void=>{prepareGeometry(e.geometry);parseColor(e.fill);parseColor(e.stroke);};
     for(const scene of scenes) {
       parseColor(scene.options.background);
@@ -144,7 +160,7 @@ export class CanvasRenderer {
         if(properties?.fill)parseColor(properties.fill);if(properties?.stroke)parseColor(properties.stroke);
         for(const state of Object.values(track.from)) {
           prepareElement(state);
-          if(track.action.type==='morph'&&track.action.geometry?.kind==='latex'&&state.geometry.kind==='latex')validateLatexMap(layoutLatex(state.geometry.tex??''),layoutLatex(track.action.geometry.tex??''),track.action.map);
+          if(track.action.type==='morph'&&track.action.geometry?.kind==='latex'&&state.geometry.kind==='latex')validateLatexMap(layoutLatexGeometry(state.geometry),layoutLatexGeometry(track.action.geometry),track.action.map);
           else if(track.action.map&&Object.keys(track.action.map).length)throw new Error('Part mappings require a LaTeX-to-LaTeX morph.');
         }
       }
@@ -162,30 +178,29 @@ export class CanvasRenderer {
     const parents=new Map<string,ElementState>();
     for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
     const items:DrawItem[]=[];
-    for(const element of frame.elements) {
+    for(const [elementIndex,element] of frame.elements.entries()) {
       if(element.geometry.kind==='group')continue;
       const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
       while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
+      const viewportOffset=[0,1].map(axis=>chain.reduce((sum,e)=>sum+(e.viewportOffset?.[axis]??0),0));
       const opacity=chain.reduce((a,e)=>a*e.opacity,1);if(opacity<=0)continue;
-      const world=(point:Vec3):Vec3=>{let p=point;for(const state of chain){p=rotate(p.map(v=>v*state.scale) as Vec3,state.rotation);p=p.map((v,i)=>v+state.position[i]) as Vec3;}return p;};
-      const addTriangles=(points:Vec3[],color:string,alpha=1):void=> {
+      const applyTransforms=(point:Vec3):Vec3=>{let p=point;for(const state of chain){p=rotate(p.map(v=>v*state.scale) as Vec3,state.rotation);p=p.map((v,i)=>v+state.position[i]) as Vec3;}return p;};
+      const world=(point:Vec3):Vec3=> {
+        if(!element.billboard||element.space==='screen')return applyTransforms(point);
+        const center=applyTransforms([0,0,0]),scale=chain.reduce((product,state)=>product*state.scale,1);
+        let local=rotate(point.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]);
+        const offset=element.billboardOffset??[0,0,0];local=local.map((v,i)=>v+(offset[i]??0)) as Vec3;
+        local=rotate(rotate(local,[0,camera.yaw,0]),[camera.pitch,0,0]);
+        return local.map((v,i)=>v+center[i]) as Vec3;
+      };
+      const addTriangles=(points:Vec3[],color:string,alpha=1,normals?:Vec3[]):void=> {
         const rgba=parseColor(color);if(!points.length||rgba[3]*opacity*alpha<=0)return;
         const vertices:number[]=[];let depth=0;
-        for(const point of points){const p=world(point);depth+=project(p,camera,width,height).depth;vertices.push(...p,rgba[0],rgba[1],rgba[2],rgba[3]*opacity*alpha,element.space==='screen'?1:0);}
-        items.push({depth:element.space==='screen'?-1e9:depth/points.length,vertices});
+        for(let i=0;i<points.length;i++){const p=world(points[i]);depth+=project(p,camera,width,height).depth;let normal=normals?.[i]??[0,0,1] as Vec3;for(const state of chain)normal=rotate(normal,state.rotation);vertices.push(...p,rgba[0],rgba[1],rgba[2],rgba[3]*opacity*alpha,element.space==='screen'?1:0,...normal,normals?1:0,elementIndex,...viewportOffset);}
+        items.push({depth:element.space==='screen'?-1e9:depth/points.length,vertices,transparent:rgba[3]*opacity*alpha<0.999999});
       };
       const contours=(paths:Vec3[][],alpha=1,color=element.fill):void=>{addTriangles(triangulateContours(paths),color,alpha);};
-      const stroke=(points:Vec3[],closed:boolean,alpha=1):void=> {
-        if(element.stroke==='none'||element.strokeWidth<=0)return;
-        for(let i=0;i<(closed?points.length:points.length-1);i++) {
-          const a=points[i],b=points[(i+1)%points.length],delta:Vec3=[b[0]-a[0],b[1]-a[1],b[2]-a[2]];
-          const length=Math.hypot(delta[0],delta[1]);
-          // Side vector in the primitive's local plane; 3D vertical segments use a stable x-axis side.
-          const side:Vec3=length>1e-10?[-delta[1]/length*element.strokeWidth/2,delta[0]/length*element.strokeWidth/2,0]:[element.strokeWidth/2,0,0];
-          const at=(p:Vec3,sign:number)=>p.map((v,j)=>v+side[j]*sign) as Vec3;
-          addTriangles([at(a,1),at(a,-1),at(b,1),at(b,1),at(a,-1),at(b,-1)],element.stroke,alpha);
-        }
-      };
+      const stroke=(points:Vec3[],closed:boolean,alpha=1):void=> {addTriangles(strokeTriangles(points,element.strokeWidth,closed),element.stroke,alpha);};
       const latexPaths=(paths:LatexPath[],size:number,alpha:number,offset:Vec3=[0,0,0]):void=> {
         for(const path of paths)contours(path.contours.map(c=>c.map(p=>p.map((v,i)=>v*size+offset[i]) as Vec3)),alpha,element.fill==='none'?element.stroke:element.fill);
       };
@@ -194,19 +209,37 @@ export class CanvasRenderer {
         for(const indices of geometry.triangles??[]){const triangle=indices.map(i=>vertices[i]).filter(Boolean);if(triangle.length===3){addTriangles(triangle,element.fill,alpha);stroke(triangle,true,alpha);}}
       };
       const drawGeometry=(geometry:Geometry,alpha=1):void=> {
-        if(geometry.kind==='text'||geometry.kind==='latex'){latexPaths(layoutLatex(geometry.kind==='text'?textTex(geometry.text??''):geometry.tex??'').paths,geometry.fontSize??(element.space==='screen'?(geometry.kind==='text'?16:24):(geometry.kind==='text'?0.4:0.6)),alpha);return;}
+        if(geometry.kind==='text'||geometry.kind==='latex'){latexPaths((geometry.kind==='text'?layoutLatex(textTex(geometry.text??'')):layoutLatexGeometry(geometry)).paths,geometry.fontSize??(element.space==='screen'?(geometry.kind==='text'?16:24):(geometry.kind==='text'?0.4:0.6)),alpha);return;}
         if(geometry.kind==='mesh'){addMesh(geometry,alpha);return;}
+        if(geometry.kind==='sphere'){const sphere=sphereTriangles(geometry.radius??1);addTriangles(sphere.points,element.fill,alpha,sphere.normals);return;}
         const shape=outline(geometry);if(!shape||!shape.points.length)return;
-        if(shape.closed)contours([shape.points],alpha);stroke(shape.points,shape.closed,alpha);
-        if(geometry.kind==='arrow'&&shape.points.length>1){const end=shape.points.at(-1)!,before=shape.points.at(-2)!,delta=end.map((v,i)=>v-before[i]),length=Math.hypot(...delta)||1,size=Math.max(0.15,element.strokeWidth*3),side:Vec3=[-delta[1]/length*size/2,delta[0]/length*size/2,0],base=end.map((v,i)=>v-delta[i]/length*size) as Vec3;addTriangles([end,base.map((v,i)=>v+side[i]) as Vec3,base.map((v,i)=>v-side[i]) as Vec3],element.stroke,alpha);}
+        if(geometry.kind==='arrow'&&shape.points.length>1) {
+          const points=shape.points.filter((p,i)=>!i||Math.hypot(...p.map((v,j)=>v-shape.points[i-1][j]))>1e-10),end=points.at(-1)!;
+          const lengths=points.slice(1).map((p,i)=>Math.hypot(...p.map((v,j)=>v-points[i][j]))),length=lengths.reduce((a,b)=>a+b,0);
+          if(length>1e-10) {
+            const headLength=Math.min(length*0.45,Math.max(element.space==='screen'?6:0.16,element.strokeWidth*4));
+            let remaining=headLength,index=points.length-2;
+            while(index>0&&remaining>lengths[index]){remaining-=lengths[index];index--;}
+            const a=points[index],b=points[index+1],ratio=1-remaining/lengths[index];
+            const base=a.map((v,i)=>lerp(v,b[i],ratio)) as Vec3;
+            const delta=end.map((v,i)=>v-base[i]),xy=Math.hypot(delta[0],delta[1]),headWidth=Math.max(element.strokeWidth*2.6,headLength*0.7);
+            const side:Vec3=xy>1e-10?[-delta[1]/xy*headWidth/2,delta[0]/xy*headWidth/2,0]:[headWidth/2,0,0];
+            stroke([...points.slice(0,index+1),base],false,alpha);
+            addTriangles([end,base.map((v,i)=>v+side[i]) as Vec3,base.map((v,i)=>v-side[i]) as Vec3],element.stroke,alpha);
+          }
+        } else {if(shape.closed)contours([shape.points],alpha);stroke(shape.points,shape.closed,alpha);}
+
       };
       const morph=element.morph;
       if(!morph){drawGeometry(element.geometry);continue;}
-      const {from,to,progress:t}=morph,shape=morphOutline(from,to,t);
+      const {from,to,progress:t}=morph;
+      if(t<=0){drawGeometry(from);continue;}if(t>=1){drawGeometry(to);continue;}
+      const shape=morphOutline(from,to,t);
       if(shape){drawGeometry({kind:from.kind==='arrow'&&to.kind==='arrow'?'arrow':'path',points:shape.points,closed:shape.closed});continue;}
+      if(from.kind==='sphere'&&to.kind==='sphere'){drawGeometry({kind:'sphere',radius:lerp(from.radius??1,to.radius??1,t)});continue;}
       if(from.kind==='mesh'&&to.kind==='mesh'&&from.vertices&&to.vertices&&from.vertices.length===to.vertices.length){const target=to.vertices!;addMesh({...to,vertices:from.vertices!.map((p,i)=>vec3(p).map((v,j)=>lerp(v,vec3(target[i])[j],t)) as Vec3)});continue;}
       if(from.kind==='latex'&&to.kind==='latex') {
-        const a=layoutLatex(from.tex??''),b=layoutLatex(to.tex??''),map=morph.map??{},targets=new Set(Object.values(map));
+        const a=layoutLatexGeometry(from),b=layoutLatexGeometry(to),map=morph.map??{},targets=new Set(Object.values(map));
         const sizeA=from.fontSize??(element.space==='screen'?24:0.6),sizeB=to.fontSize??(element.space==='screen'?24:0.6);
         for(const path of a.paths)if(!path.part||!map[path.part])latexPaths([path],sizeA,1-t);
         for(const path of b.paths)if(!path.part||!targets.has(path.part))latexPaths([path],sizeB,t);
@@ -214,7 +247,21 @@ export class CanvasRenderer {
         for(const [start,end] of Object.entries(map)) {
           const pathsA=a.paths.filter(p=>p.part===start),pathsB=b.paths.filter(p=>p.part===end);
           if(pathsA.length===pathsB.length&&pathsA.every((p,i)=>p.contours.length===pathsB[i].contours.length)) {
-            for(let i=0;i<pathsA.length;i++)contours(pathsA[i].contours.map((c,j)=>{const [source,target]=matchPoints(c.map(p=>p.map(v=>v*sizeA) as Vec3),pathsB[i].contours[j].map(p=>p.map(v=>v*sizeB) as Vec3),true,96);return source.map((p,k)=>p.map((v,l)=>lerp(v,target[k][l],t)) as Vec3);}),1,element.fill==='none'?element.stroke:element.fill);
+            for(let i=0;i<pathsA.length;i++)contours(pathsA[i].contours.map((c,j)=>{
+              const a=c.map(p=>p.map(v=>v*sizeA) as Vec3),b=pathsB[i].contours[j].map(p=>p.map(v=>v*sizeB) as Vec3);
+              // Preserve all exact corners when a glyph merely translates/scales. Sampling even
+              // an unchanged contour changes its silhouette and makes symbols pop at endpoints.
+              let equivalent=a.length===b.length;
+              if(equivalent) {
+                const center=(points:Vec3[])=>[0,1,2].map(axis=>points.reduce((sum,p)=>sum+p[axis],0)/points.length) as Vec3;
+                const ca=center(a),cb=center(b);let dot=0,length=0;
+                for(let k=0;k<a.length;k++)for(let axis=0;axis<3;axis++){dot+=(a[k][axis]-ca[axis])*(b[k][axis]-cb[axis]);length+=(a[k][axis]-ca[axis])**2;}
+                const scale=length>1e-12?dot/length:1;
+                equivalent=scale>0&&a.every((p,k)=>p.every((v,axis)=>Math.abs((v-ca[axis])*scale+cb[axis]-b[k][axis])<1e-7));
+              }
+              const [source,target]=equivalent?[a,b]:matchPoints(a,b,true,96);
+              return source.map((p,k)=>p.map((v,l)=>lerp(v,target[k][l],t)) as Vec3);
+            }),1,element.fill==='none'?element.stroke:element.fill);
           } else {
             const centerA=bounds(pathsA,sizeA),centerB=bounds(pathsB,sizeB),delta=centerA.map((v,i)=>centerB[i]-v) as Vec3;
             latexPaths(pathsA,sizeA,1-t,delta.map(v=>v*t) as Vec3);latexPaths(pathsB,sizeB,t,delta.map(v=>-v*(1-t)) as Vec3);
@@ -224,20 +271,22 @@ export class CanvasRenderer {
       }
       drawGeometry(from,1-t);drawGeometry(to,t);
     }
-    items.sort((a,b)=>b.depth-a.depth);
-    const data=new Float32Array(items.flatMap(item=>item.vertices));
+    const opaque=items.filter(item=>!item.transparent).sort((a,b)=>b.depth-a.depth),transparent=items.filter(item=>item.transparent).sort((a,b)=>b.depth-a.depth);
+    const opaqueVertices=opaque.reduce((count,item)=>count+item.vertices.length/15,0);
+    const data=new Float32Array([...opaque,...transparent].flatMap(item=>item.vertices));
     const device=this.device;
     if(data.byteLength>this.capacity){this.vertices?.destroy();this.capacity=Math.max(256,data.byteLength*2);this.vertices=device.createBuffer({size:this.capacity,usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});}
     if(data.length)device.queue.writeBuffer(this.vertices!,0,data);
     device.queue.writeBuffer(this.uniform,0,new Float32Array([...camera.target,0,camera.yaw,camera.pitch,camera.distance,camera.perspective,width,height,camera.height,0]));
     const clear=parseColor(options.background),encoder=device.createCommandEncoder();
-    const pass=encoder.beginRenderPass({colorAttachments:[{view:this.context.getCurrentTexture().createView(),clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:'clear',storeOp:'store'}],depthStencilAttachment:{view:this.depthTexture!.createView(),depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}});
+    const pass=encoder.beginRenderPass({colorAttachments:[{view:this.colorTexture!.createView(),resolveTarget:this.context.getCurrentTexture().createView(),clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:'clear',storeOp:'store'}],depthStencilAttachment:{view:this.depthTexture!.createView(),depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}});
     pass.setPipeline(this.pipeline);pass.setBindGroup(0,this.bindGroup);
-    if(data.length){pass.setVertexBuffer(0,this.vertices!);pass.draw(data.length/8);}
+    if(data.length){pass.setVertexBuffer(0,this.vertices!);if(opaqueVertices)pass.draw(opaqueVertices);
+      if(data.length/15>opaqueVertices){pass.setPipeline(this.transparentPipeline!);pass.setBindGroup(0,this.transparentBindGroup!);pass.draw(data.length/15-opaqueVertices,1,opaqueVertices);}}
     pass.end();device.queue.submit([encoder.finish()]);
   }
   dispose():void {
-    this.disposed=true;this.observer.disconnect();this.vertices?.destroy();this.uniform?.destroy();this.depthTexture?.destroy();this.context?.unconfigure();this.device?.destroy();
+    this.disposed=true;this.observer.disconnect();this.vertices?.destroy();this.uniform?.destroy();this.depthTexture?.destroy();this.colorTexture?.destroy();this.context?.unconfigure();this.device?.destroy();
     this.canvas.removeEventListener('pointerdown',this.pointerDown);this.canvas.removeEventListener('pointermove',this.pointerMove);this.canvas.removeEventListener('pointerup',this.pointerUp);this.canvas.removeEventListener('pointercancel',this.pointerUp);
   }
 }
