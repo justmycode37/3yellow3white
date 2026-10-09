@@ -26,11 +26,35 @@ async function captureRenderer() {
   const canvas={width:800,height:450,style:{},getBoundingClientRect:()=>({width:800,height:450}),getContext:()=>({configure:()=>{},unconfigure:()=>{},getCurrentTexture:()=>({createView:()=>({})})}),addEventListener:()=>{},removeEventListener:()=>{}} as unknown as HTMLCanvasElement;
   const renderer=new CanvasRenderer(canvas);
   await renderer.prepare([]);
-  return {renderer,draw(state:ElementState,view=camera){writes.length=0;renderer.render({elements:[state],camera:view,cameraAnimated:false},options);const data=writes[0];return Array.from({length:data.length/stride},(_,i)=>Array.from(data.subarray(i*stride,i*stride+3)) as Vec3);}};
+  return {renderer,vertices:()=>writes[0],draw(state:ElementState,view=camera){writes.length=0;renderer.render({elements:[state],camera:view,cameraAnimated:false},options);const data=writes[0];return Array.from({length:data.length/stride},(_,i)=>Array.from(data.subarray(i*stride,i*stride+3)) as Vec3);}};
 }
 
 describe('render review regressions',()=> {
   afterEach(()=>vi.unstubAllGlobals());
+
+  it('retains all submitted glyph attributes throughout an unchanged text morph',async()=> {
+    const {renderer,draw,vertices}=await captureRenderer();
+    try {
+      const geometry:Geometry={kind:'text',text:'A',fontSize:2};
+      const label=element(geometry,{opacity:0.45});
+      draw(label);const original=vertices();
+      for(const progress of [0.000001,0.25,0.5,0.999999]) {
+        draw({...label,morph:{from:geometry,to:structuredClone(geometry),progress}});
+        expect(vertices()).toEqual(original);
+      }
+    } finally {renderer.dispose();}
+  });
+
+  it('renders a text size morph like directly rendering its interpolated size',async()=> {
+    const {renderer,draw,vertices}=await captureRenderer();
+    try {
+      const from:Geometry={kind:'text',text:'label'},to:Geometry={...from,fontSize:32};
+      const label=element(from,{space:'screen'});
+      draw({...label,geometry:{...from,fontSize:24}});const expected=vertices();
+      draw({...label,morph:{from,to,progress:0.5}});
+      expect(vertices()).toEqual(expected);
+    } finally {renderer.dispose();}
+  });
 
   it('retains arrowhead size when a morph subdivides an unchanged arrow',async()=> {
     const {renderer,draw}=await captureRenderer();
