@@ -13,7 +13,7 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
-    "animlib": "file:../animlib",
+    "animlib": "file:../../shared/animlib",
     "@fontsource/dm-sans": "^5.2.7",
     "@fontsource/dynapuff": "^5.2.6",
     "lucide-react": "^0.468.0",

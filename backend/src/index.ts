@@ -1,0 +1,13 @@
+import { createHandler } from "./server.js";
+
+const server = Bun.serve({
+  hostname: process.env.HOST ?? "0.0.0.0",
+  port: Number(process.env.PORT ?? 8080),
+  fetch: createHandler(),
+  error(error) {
+    console.error(error);
+    return Response.json({ detail: "Internal Server Error" }, { status: 500 });
+  },
+});
+
+console.log(`Aha! backend listening on ${server.url}`);

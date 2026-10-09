@@ -26,7 +26,7 @@ npm run dev          # fullscreen demo at http://localhost:5173
 npm run typecheck
 npm test
 npm run build        # library JS, source maps, and TypeScript declarations
-npm run demo:build   # bundled static demo in frontend/animlib/dist/demo
+npm run demo:build   # bundled static demo in shared/animlib/dist/demo
 npm --workspace animlib run test:gpu  # optional native WebGPU/Dawn checks
 ```
 
@@ -35,9 +35,12 @@ accents, native scene controls, and a bottom progress bar and play/pause control
 demonstrate linear algebra, a molecule becoming 3D, and bubble sort. The demo's
 scrubber maps sequence progress to `{ scene, time }`; scenes retain separate clocks.
 
-The package lives in `frontend/animlib` and is a local npm workspace named
+The package lives in `shared/animlib` and is a local npm workspace named
 `animlib`. Build before importing
 `createPlayer` from `"animlib"` elsewhere in this project. It has not been published.
+For Bun and Node consumers, `animlib/core` exports `compileSource`, `evaluateScene`,
+`SceneSequence`, and the public types without loading the browser renderer.
+See the [shared evaluation example](../README.md#shared-scene-evaluation).
 
 ## 1. The gist
 
