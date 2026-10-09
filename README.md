@@ -25,14 +25,18 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
 ```
 
-Open http://localhost:8000
+Open http://localhost:8080
 
 - UI: `/`
 - API: `/api/hello`
+- Me (VISCon headers): `/api/me`
 - Health: `/healthz`
+
+Production (VISCon Managed): proxy terminates TLS and forwards to `0.0.0.0:8080`.
+Your app may receive `X-User-Id` and `X-User-Name` (name is percent-encoded).
 
 ## For teammates
 

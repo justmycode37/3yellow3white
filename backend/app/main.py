@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import unquote
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -17,10 +18,28 @@ app = FastAPI(
 )
 
 
+def _viscon_user(request: Request) -> dict[str, str | None]:
+    """Identity headers injected by the VISCon managed reverse proxy."""
+    raw_name = request.headers.get("x-user-name")
+    return {
+        "id": request.headers.get("x-user-id"),
+        "name": unquote(raw_name) if raw_name else None,
+    }
+
+
 @app.get("/api/hello")
-def hello() -> dict[str, str]:
+def hello(request: Request) -> dict[str, object]:
     """Sample API endpoint your frontend can call. Replace freely."""
-    return {"message": "Hello from the 3yellow3white backend"}
+    return {
+        "message": "Hello from the 3yellow3white backend",
+        "user": _viscon_user(request),
+    }
+
+
+@app.get("/api/me")
+def me(request: Request) -> dict[str, object]:
+    """Shows VISCon proxy identity headers when auth mode is enabled."""
+    return {"user": _viscon_user(request)}
 
 
 @app.get("/healthz")
