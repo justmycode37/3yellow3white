@@ -168,3 +168,9 @@ html, body, #root { min-height: 100%; background: var(--bg); }
 @media (prefers-reduced-motion: reduce) {
   .navigation-layer, .navigation-drawer, .drawer-scrim { transition: none; }
 }
+
+/* The host UI surrounds a real animlib canvas; its timeline owns playback. */
+.lesson-visual > .lesson-canvas { width: 100%; height: 100%; display: block; border-radius: 24px; }
+.player-status { position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; background: var(--art-bg); border-radius: 24px; font-size: 14px; }
+.player-error p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
+.player-controls button:disabled { opacity: .4; cursor: default; }

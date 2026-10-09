@@ -14,12 +14,19 @@ backend/app/main.py FastAPI API and frontend routes
 The built frontend is checked in because the VISCon runtime serves static files with FastAPI. To update it after editing the React source:
 
 ```sh
+npm ci
 npm ci --prefix frontend/app
 npm run app:test
 npm run app:build
 ```
 
 For a live frontend development server, run `npm run app:dev`. The source app's [README](frontend/app/README.md) describes its screens and current integration points.
+
+Lesson playback uses animlib's WebGPU canvas and clock. The app's controls drive
+play, pause, seeking, and replay; opening navigation or a dialog pauses the
+animation. Sample scenes remain local demos, including previews created by the
+mock creation flow. Playback requires a WebGPU-capable browser on HTTPS or
+localhost. An unavailable GPU shows an error with a retry action.
 
 ## Run the combined app
 

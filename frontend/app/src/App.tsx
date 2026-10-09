@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent, ReactNode } from 'react'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Atom, BookOpen, Bookmark, Check, ChevronDown, FileImage, FileText, FolderOpen, ListTree, Maximize, Menu, Pause, Play, Plus, RotateCcw, Search, SlidersHorizontal, Upload, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Atom, BookOpen, Bookmark, Check, ChevronDown, FileImage, FileText, FolderOpen, ListTree, Menu, Plus, Search, SlidersHorizontal, Upload, X } from 'lucide-react'
 import Artwork, { Spark } from './Artwork'
 import NavigationDrawer from './NavigationDrawer'
 import SettingsPage from './SettingsPage'
 import PlanPage from './PlanPage'
+import LessonPlayer from './LessonPlayer'
 import type { VideoSegment } from './plan'
 import { lessons, formatTime } from './data'
 import type { Lesson, Subject } from './data'
@@ -109,7 +110,7 @@ export default function App() {
   const subjects = (['Organic chemistry', 'Linear algebra', 'My ideas'] as Subject[]).filter(subject => visible.some(l => l.subject === subject))
 
   return <>
-    {selected ? <Player key={selected.id} lesson={selected} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary} overlayOpen={!!studio || about}/>
+    {selected ? <LessonPlayer key={selected.id} lesson={selected} theme={theme} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary} overlayOpen={!!studio || about}/>
     : <div className="app-shell">
       <header className="header">
         <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation and settings" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><Menu size={21}/></button>{menuContent}</div><button className="wordmark" onClick={() => { navigate('/'); setTab('workspace') }}>Aha!</button></div>
@@ -206,54 +207,4 @@ function Studio({ initialTab, initialFiles, initialText = '', initialTitle = '',
       <div className="studio-footer"><div><span className="privacy-dot"/> Frontend demo · files stay on your device</div><button className="primary-button" disabled={!ready} onClick={() => setStage(0)}>Create a preview <ArrowRight size={17}/></button></div>
     </>}
   </Modal>
-}
-
-function Player({ lesson, menuOpen, onMenu, menuContent, onHome, overlayOpen }: { lesson: Lesson, menuOpen: boolean, onMenu: () => void, menuContent: ReactNode, onHome: () => void, overlayOpen: boolean }) {
-  const [playing, setPlaying] = useState(true)
-  const [time, setTime] = useState(lesson.progress ? lesson.duration * lesson.progress : 0)
-  const [controls, setControls] = useState(false)
-  const last = useRef(0)
-  const screen = useRef<HTMLDivElement>(null)
-  const progress = time / lesson.duration
-  const chapter = Math.min(3, Math.floor(progress * 4))
-  const isMath = lesson.subject === 'Linear algebra'
-  const titleSets: Record<string, string[]> = {
-    carbon: ['Carbon bonds.', 'Four connections.', 'Sharing electrons.', 'Structure matters.'],
-    orbitals: ['Atomic\norbitals.', 'Where electrons\nlive.', 'Shapes in space.', 'Bonds begin here.'],
-    reactions: ['Reaction\nmechanisms.', 'Follow the\nelectrons.', 'Breaking &\nforming.', 'A new molecule.'],
-    vectors: ['Vectors.', 'Direction &\ndistance.', 'Adding journeys.', 'One new direction.'],
-    matrices: ['Matrix\ntransformations.', 'A new basis.', 'Stretch.\nRotate. Shear.', 'Space, transformed.'],
-    eigen: ['Eigenvectors.', 'Same direction.', 'A different length.', 'Av = λv.'],
-  }
-  const titles = titleSets[lesson.id] || (isMath ? titleSets.vectors : titleSets.carbon)
-  useEffect(() => {
-    if (!playing || menuOpen || overlayOpen) return
-    let frame: number
-    last.current = 0
-    const tick = (now: number) => {
-      if (last.current) setTime(old => Math.min(lesson.duration, old + (now - last.current) / 1000))
-      last.current = now; frame = requestAnimationFrame(tick)
-    }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [playing, menuOpen, overlayOpen, lesson.duration])
-  useEffect(() => { if (time >= lesson.duration) setPlaying(false) }, [time, lesson.duration])
-  useEffect(() => {
-    const keys = (e: KeyboardEvent) => {
-      if (menuOpen || overlayOpen || (e.target as HTMLElement).matches('input,select,textarea,button')) return
-      if (e.code === 'Space') { e.preventDefault(); setPlaying(old => !old) }
-      if (e.key === 'ArrowRight') { e.preventDefault(); setTime(old => Math.min(lesson.duration, old + 10)) }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); setTime(old => Math.max(0, old - 10)) }
-      if (e.key === 'Escape') onHome()
-    }
-    window.addEventListener('keydown', keys); return () => window.removeEventListener('keydown', keys)
-  }, [menuOpen, overlayOpen, lesson.duration, onHome])
-  const restart = () => { setTime(0); setPlaying(true) }
-  return <div className={`player-page ${isMath ? 'blue' : lesson.color} ${playing && !menuOpen && !overlayOpen ? 'is-playing' : ''}`} ref={screen} onMouseMove={() => setControls(true)} onMouseLeave={() => setControls(false)}>
-    <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><Menu size={23}/></button>{menuContent}</div>
-    <div className="lesson-stage" key={chapter}><div className="lesson-layout"><div className="lesson-text"><span className="lesson-subject">{lesson.subject}</span><h1>{titles[chapter].split('\n').map((line, i) => <span key={i}>{line}</span>)}</h1><div className="lesson-underline"><svg viewBox="0 0 270 22"><path d="M4 14c68-13 173-13 260-6M17 21c70-8 144-9 222-8"/></svg></div><p>{lesson.title}</p></div><div className="lesson-visual"><div className="visual-halo"/><Artwork kind={isMath ? (chapter === 2 ? 'matrix' : chapter === 3 ? 'eigen' : lesson.artwork) : chapter === 1 ? 'orbitals' : lesson.artwork} animated/><div className="visual-note">{isMath ? 'a shift in perspective' : 'little things, connected'}<svg viewBox="0 0 70 50"><path d="M65 43C35 46 9 30 12 5M4 15l8-12 10 10"/></svg></div><Spark className="visual-spark"/></div></div></div>
-    <div className={`player-controls ${controls || !playing ? 'show-controls' : ''}`}><div className="playback-buttons"><IconButton label={time >= lesson.duration ? 'Replay lesson' : playing ? 'Pause lesson' : 'Play lesson'} onClick={time >= lesson.duration ? restart : () => setPlaying(!playing)}>{time >= lesson.duration ? <RotateCcw size={19}/> : playing ? <Pause size={19} fill="currentColor"/> : <Play size={19} fill="currentColor"/>}</IconButton><span>Illustrated lesson preview</span><IconButton label="Enter fullscreen" onClick={() => { if (!document.fullscreenElement) screen.current?.requestFullscreen?.(); else document.exitFullscreen?.() }}><Maximize size={17}/></IconButton></div><div className="progress-wrap"><div className="progress-track"><span className="progress-fill" style={{ width: `${progress * 100}%` }}/><span className="progress-thumb" style={{ left: `${progress * 100}%` }}/>{[25, 50, 75].map(p => <i key={p} style={{ left: `${p}%` }}/>)}</div><input type="range" min="0" max={lesson.duration} step="0.1" value={time} onChange={e => setTime(Number(e.target.value))} aria-label="Video progress" aria-valuetext={`${formatTime(time)} of ${formatTime(lesson.duration)}`}/></div><div className="progress-meta"><span>{formatTime(time)}</span><span>{playing ? 'A little more understanding, every second.' : time >= lesson.duration ? 'That’s an aha! moment.' : 'Take your time. Curiosity can wait.'}</span><span>{formatTime(lesson.duration)}</span></div></div>
-    {time >= lesson.duration && <div className="lesson-complete"><button onClick={onHome}>Back to your library <ArrowRight size={16}/></button></div>}
-    {!playing && time < lesson.duration && <button className="paused-indicator" onClick={() => setPlaying(true)} aria-label="Resume lesson"><Play size={24} fill="currentColor"/></button>}
-  </div>
 }
