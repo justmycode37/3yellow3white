@@ -1,0 +1,43 @@
+{
+  "name": "animlib",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Framework-free, seekable realtime canvas scenes authored in JavaScript.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "demo:build": "vite build",
+    "test:gpu": "vitest run --config vitest.gpu.config.ts"
+  },
+  "dependencies": {
+    "acorn": "^8.15.0",
+    "color-string": "^2.1.4",
+    "earcut": "^3.2.4",
+    "mathjax-full": "3.2.2",
+    "quickjs-emscripten": "0.32.0",
+    "svg-pathdata": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/color-string": "^1.5.5",
+    "@types/earcut": "^3.0.0",
+    "@types/node": "^24.0.0",
+    "@webgpu/types": "^0.1.74",
+    "typescript": "^5.9.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.3",
+    "webgpu": "^0.6.2"
+  }
+}

@@ -10,6 +10,7 @@ VIScon Hackathon — hello-world scaffold your team can replace.
     index.html
     styles.css
     app.js
+    animlib/         # seekable WebGPU animation library and demo
   backend/           # replace with your API
     requirements.txt
     app/
@@ -17,6 +18,11 @@ VIScon Hackathon — hello-world scaffold your team can replace.
 ```
 
 One process serves both: FastAPI API + static frontend. Deploy infra expects this shape.
+
+The animation library is an npm workspace in `frontend/animlib`. From the
+repository root, run `npm ci`, then `npm run dev` for its standalone demo,
+`npm test` for its tests, or `npm run build` to build the library. See the
+[animlib README](frontend/animlib/README.md) for the API and development commands.
 
 ## Local run
 
