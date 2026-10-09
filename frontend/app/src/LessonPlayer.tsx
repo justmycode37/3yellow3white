@@ -37,8 +37,9 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   const duration = state.duration || lesson.duration
   const progress = Math.min(1, state.time / duration)
   const chapter = Math.min(3, Math.floor(progress * 4))
-  const isMath = lesson.subject === 'Linear algebra'
-  const titles = titleSets[lesson.id] || (isMath ? titleSets.vectors : titleSets.carbon)
+  const isMath = /algebra|analysis|mathematik/i.test(lesson.subject)
+  const isDemo = lesson.demo || !titleSets[lesson.id]
+  const titles = isDemo ? Array<string>(4).fill(lesson.title) : titleSets[lesson.id]
   const enabled = state.ready && !error && !menuOpen && !overlayOpen
 
   useEffect(() => {
@@ -88,8 +89,9 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     void action?.catch(() => {})
   }
 
-  return <div className={`player-page ${isMath ? 'blue' : lesson.color} ${state.playing ? 'is-playing' : ''}`} ref={screen} onMouseMove={() => setControls(true)} onMouseLeave={() => setControls(false)}>
+  return <div className={`player-page ${isMath ? 'blue' : lesson.color} ${isDemo ? 'is-demo' : ''} ${state.playing ? 'is-playing' : ''}`} ref={screen} onMouseMove={() => setControls(true)} onMouseLeave={() => setControls(false)}>
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
+    {isDemo && <div className="player-demo-note">Sample preview · video generation coming soon</div>}
     <div className="lesson-stage"><div className="lesson-layout"><div className="lesson-text" key={chapter}><span className="lesson-subject">{lesson.subject}</span><h1>{titles[chapter].split('\n').map((line, i) => <span key={i}>{line}</span>)}</h1><div className="lesson-underline"><svg viewBox="0 0 270 22"><path d="M4 14c68-13 173-13 260-6M17 21c70-8 144-9 222-8"/></svg></div><p>{lesson.title}</p></div><div className="lesson-visual">
       <canvas ref={canvas} className="lesson-canvas" aria-label={`Animated preview: ${lesson.title}`} role="img"/>
       {!state.ready && !error && <p className="player-status" role="status">Loading your lesson…</p>}

@@ -15,6 +15,10 @@ function SoftArrow() {
 // of the wordmark and menu. Shared by thumbnails and the lesson canvas.
 export default function Artwork({ kind, animated = false }: { kind: ArtworkType, animated?: boolean }) {
   return <svg className={`lesson-art ${animated ? 'animated-art' : ''}`} viewBox="0 0 420 270" fill="none" stroke="currentColor" strokeWidth="13" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {kind === 'idea' && <g>
+      <path d="M180 181c0-23-27-29-27-66a57 57 0 0 1 114 0c0 37-27 43-27 66Z"/>
+      <path d="M183 205h54m-43 21h32M210 25v-9M120 55l-10-10m190 10 10-10M111 118H96m213 0h15M210 179v-39m-16-13 16 14 16-14"/>
+    </g>}
     {kind === 'molecule' && <g className="molecule-drawing">
       {/* Carbon's four connections. */}
       <path d="M191 117c-13-19-30-29-47-38m87 39c15-15 30-25 46-34m-86 67c-16 15-34 27-49 38m87-35c12 17 29 26 47 37"/>

@@ -1,6 +1,6 @@
 # Aha! — VISCon Hackathon
 
-Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page reads PDF, Word, text, or Markdown files in the browser and suggests colour-coded chapters and video topics. The library, player, light and dark themes, and creation flow are interactive demos. Video generation and AI services are not connected yet.
+Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page shows a compact colour-coded curriculum and a separate plan for each subject. It reads PDF, Word, text, or Markdown files in the browser, groups them into chapters and video topics, and sends selected topics to the workspace composer. The library, player, light and dark themes, and creation flow are interactive demos. Video generation and AI services are not connected yet.
 
 ## Repository layout
 
@@ -39,7 +39,7 @@ npm ci
 npm run backend:dev
 ```
 
-Open <http://localhost:8080>. Direct visits to `/plan`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. Uploaded study material stays in browser memory; the saved plan and other preferences use local storage.
+Open <http://localhost:8080>. Direct visits to `/library`, `/plan`, `/plan/:subject`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. Uploaded study material stays in browser memory; the saved plan and other preferences use local storage.
 
 For deployment, run `npm run backend:start` instead of the previous Uvicorn
 command. The default bind address is `0.0.0.0:8080`; override it with `HOST` and

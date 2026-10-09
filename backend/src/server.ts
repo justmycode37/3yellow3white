@@ -46,7 +46,7 @@ export function createHandler(frontendDir = defaultFrontendDir) {
     if (path.includes("\0")) return Response.json({ detail: "Invalid URL" }, { status: 400 });
 
     const api = path === "/api/hello" || path === "/api/me" || path === "/healthz";
-    const page = path === "/" || path === "/plan" || path === "/settings" || /^\/watch\/[^/]+$/.test(path);
+    const page = path === "/" || path === "/plan" || /^\/plan\/[^/]+$/.test(path) || path === "/library" || path === "/settings" || /^\/watch\/[^/]+$/.test(path);
     const asset = path.startsWith("/static/");
     if (!api && !page && !asset) return notFound();
     if (request.method !== "GET" && request.method !== "HEAD") {
