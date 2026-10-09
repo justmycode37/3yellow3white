@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>animlib</title>
+  </head>
+  <body>
+    <main>
+      <canvas id="canvas" aria-label="Animated scene" tabindex="0"></canvas>
+      <p id="error" role="status" hidden></p>
+      <div class="transport" aria-label="Playback controls">
+        <button id="play" type="button" aria-label="Play" title="Play" disabled>
+          <svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pause-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+        </button>
+        <label class="sr-only" for="scrubber">Animation progress</label>
+        <input id="scrubber" aria-label="Animation progress" type="range" min="0" max="1" value="0" step="0.001" disabled />
+      </div>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "3yellow3white",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "animlib"
+  ],
+  "overrides": {
+    "@xmldom/xmldom": "0.9.12"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace animlib",
+    "build": "npm run build --workspace animlib",
+    "test": "npm run test --workspace animlib",
+    "typecheck": "npm run typecheck --workspace animlib",
+    "demo:build": "npm run demo:build --workspace animlib"
+  }
+}

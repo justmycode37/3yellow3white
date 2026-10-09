@@ -1,0 +1,114 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SourceCompiler } from "../src/compiler-client.js";
+import type { CompilerRequest, CompilerResponse } from "../src/compiler-client.js";
+import { compileSource, SceneCompileError } from "../src/compiler.js";
+
+class TestWorker {
+  static instances: TestWorker[] = [];
+  requests: CompilerRequest[] = [];
+  terminated = false;
+  onmessage: ((event: MessageEvent<CompilerResponse>) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  onmessageerror: (() => void) | null = null;
+  constructor(readonly url: URL, readonly options: WorkerOptions) { TestWorker.instances.push(this); }
+  postMessage(request: CompilerRequest): void { this.requests.push(structuredClone(request)); }
+  terminate(): void { this.terminated = true; }
+  respond(response: CompilerResponse): void { this.onmessage?.({ data: response } as MessageEvent<CompilerResponse>); }
+}
+const source = 'export default scene({}, s => { const dot = s.circle("dot"); s.play(dot.moveTo([2,0]), {duration:2}); });';
+const compilers: SourceCompiler[] = [];
+function compiler(): SourceCompiler { const instance = new SourceCompiler(); compilers.push(instance); return instance; }
+
+beforeEach(() => { TestWorker.instances = []; });
+afterEach(() => {
+  for (const instance of compilers.splice(0)) instance.dispose();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+describe("off-thread source compiler", () => {
+  it("uses the sandbox directly for headless Node consumers", async () => {
+    vi.stubGlobal("Worker", undefined);
+    const instance = compiler();
+    const scene = await instance.compile(source);
+    expect(scene.duration).toBe(2);
+    expect(scene.lifecycle[0].elements?.[0].id).toBe("dot");
+    await expect(instance.compile('export default scene({}, () => fetch("/not-allowed"));')).rejects.toBeInstanceOf(SceneCompileError);
+  });
+
+  it("starts a lazy module worker and routes overlapping responses by request ID", async () => {
+    const scene = await compileSource(source);
+    vi.stubGlobal("Worker", TestWorker);
+    const instance = compiler();
+    expect(TestWorker.instances).toHaveLength(0);
+    const first = instance.compile(source, { controls: { scale: 2 } }, { executionLimitMs: 50, prepare: () => undefined } as { executionLimitMs: number });
+    const second = instance.compile(source.replace('duration:2', 'duration:3'));
+    expect(TestWorker.instances).toHaveLength(1);
+    const worker = TestWorker.instances[0];
+    expect(worker.url.pathname).toMatch(/compiler-worker\.js$/);
+    expect(worker.options.type).toBe("module");
+    expect(worker.requests[0]).toMatchObject({ input: { controls: { scale: 2 } }, limits: { executionLimitMs: 50 } });
+    worker.respond({ id: worker.requests[1].id, ok: true, scene: { ...scene, duration: 3 } });
+    worker.respond({ id: worker.requests[0].id, ok: true, scene });
+    expect((await first).duration).toBe(2);
+    expect((await second).duration).toBe(3);
+  });
+
+  it("retains source diagnostics across the worker boundary", async () => {
+    vi.stubGlobal("Worker", TestWorker);
+    const instance = compiler();
+    const pending = instance.compile("bad source");
+    const worker = TestWorker.instances[0];
+    const diagnostic = { severity: "error" as const, code: "SYNTAX", message: "Unexpected token", line: 3, column: 12 };
+    worker.respond({ id: worker.requests[0].id, ok: false, diagnostic });
+    await expect(pending).rejects.toMatchObject({ name: "SceneCompileError", diagnostic });
+    expect(worker.terminated).toBe(false);
+  });
+
+  it("rejects pending work on worker failure and starts a fresh worker for retry", async () => {
+    vi.stubGlobal("Worker", TestWorker);
+    const instance = compiler();
+    const pending = instance.compile(source);
+    const rejected = expect(pending).rejects.toMatchObject({ diagnostic: { code: "COMPILER_WORKER", message: "Asset missing" } });
+    const worker = TestWorker.instances[0];
+    const preventDefault = vi.fn();
+    worker.onerror?.({ message: "Asset missing", preventDefault } as unknown as ErrorEvent);
+    await rejected;
+    expect(preventDefault).toHaveBeenCalled();
+    expect(worker.terminated).toBe(true);
+    const retry = instance.compile(source);
+    const retried = expect(retry).rejects.toThrow("disposed");
+    expect(TestWorker.instances).toHaveLength(2);
+    instance.dispose();
+    await retried;
+  });
+
+  it("terminates a stalled worker, rejects all outstanding requests, and cancels late responses", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("Worker", TestWorker);
+    const instance = compiler();
+    const first = instance.compile(source);
+    const second = instance.compile(source);
+    const rejected = Promise.all([
+      expect(first).rejects.toMatchObject({ diagnostic: { code: "COMPILER_TIMEOUT" } }),
+      expect(second).rejects.toMatchObject({ diagnostic: { code: "COMPILER_TIMEOUT" } }),
+    ]);
+    await vi.advanceTimersByTimeAsync(15000);
+    await rejected;
+    expect(TestWorker.instances[0].terminated).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("disposes outstanding compilation and refuses subsequent work", async () => {
+    vi.stubGlobal("Worker", TestWorker);
+    const instance = compiler();
+    const pending = instance.compile(source);
+    const rejected = expect(pending).rejects.toThrow("disposed");
+    instance.dispose();
+    await rejected;
+    expect(TestWorker.instances[0].terminated).toBe(true);
+    expect(TestWorker.instances[0].onmessage).toBeNull();
+    await expect(instance.compile(source)).rejects.toThrow("disposed");
+    instance.dispose();
+  });
+});

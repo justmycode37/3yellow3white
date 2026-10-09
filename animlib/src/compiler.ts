@@ -1,0 +1,182 @@
+import { parse } from "acorn";
+import { getQuickJS } from "quickjs-emscripten";
+import { buildScene } from "./runtime.js";
+import type { CameraState, CompileInput, CompiledScene, Diagnostic, ElementState, Geometry } from "./types.js";
+
+export class SceneCompileError extends Error {
+  constructor(public diagnostic: Diagnostic) { super(diagnostic.message); this.name = "SceneCompileError"; }
+}
+
+const kinds = new Set(["circle", "rectangle", "path", "line", "arrow", "text", "latex", "mesh", "group"]);
+function check(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
+function number(value: unknown, label: string) { check(typeof value === "number" && Number.isFinite(value) && Math.abs(value) <= 1e6, `Invalid ${label}`); }
+function vec(value: unknown, label: string, size = 3) { check(Array.isArray(value) && value.length === size, `Invalid ${label}`); value.forEach(n => number(n, label)); }
+function geometry(g: Geometry) {
+  check(g && kinds.has(g.kind), "Invalid geometry kind");
+  for (const key of ["radius", "width", "height", "fontSize"] as const) if (g[key] !== undefined) { number(g[key], key); check(g[key]! >= 0, `${key} must be nonnegative`); }
+  for (const key of ["points", "vertices"] as const) if (g[key]) {
+    check(Array.isArray(g[key]) && g[key]!.length <= 20000, `Invalid or oversized ${key}`);
+    g[key]!.forEach(p => { check(Array.isArray(p) && (p.length === 2 || p.length === 3), `Invalid ${key} coordinate`); p.forEach(v => number(v, key)); });
+  }
+  for (const key of ["text", "tex"] as const) if (g[key] !== undefined) check(typeof g[key] === "string" && g[key]!.length <= 20000, `Invalid or oversized ${key}`);
+  if (g.kind === "text") check(typeof g.text === "string", "Text requires a string");
+  if (g.kind === "latex") check(typeof g.tex === "string", "LaTeX requires a tex string");
+  if (g.kind === "path") check((g.points?.length ?? 0) >= 2, "Path requires at least two points");
+  if (g.kind === "line" || g.kind === "arrow") check((g.points?.length ?? 0) >= 2, "Line/arrow requires at least two points");
+  if (g.kind === "group") check(Array.isArray(g.children) && g.children.length <= 2000 && g.children.every(id => typeof id === "string"), "Invalid group children");
+  if (g.kind === "mesh") {
+    check(Array.isArray(g.vertices) && Array.isArray(g.triangles) && g.triangles.length <= 20000, "Mesh requires vertices and triangles");
+    for (const triangle of g.triangles) check(triangle.length === 3 && triangle.every(i => Number.isInteger(i) && i >= 0 && i < g.vertices!.length), "Invalid mesh triangle index");
+  }
+}
+function element(e: ElementState) {
+  check(e && typeof e.id === "string" && e.id.length <= 512, "Invalid element ID");
+  geometry(e.geometry); vec(e.position, "position"); vec(e.rotation, "rotation");
+  number(e.scale, "scale"); number(e.opacity, "opacity"); number(e.strokeWidth, "strokeWidth");
+  check(e.scale >= 0 && e.opacity >= 0 && e.opacity <= 1 && e.strokeWidth >= 0, "Invalid element style range");
+  for (const key of ["fill", "stroke"] as const) check(typeof e[key] === "string" && e[key].length <= 128, `Invalid ${key}`);
+  check(e.space === "world" || e.space === "screen", "Invalid element space");
+  check(typeof e.persistent === "boolean", "Invalid persistence flag");
+  check(e.morph === undefined, "Active morphs are not valid in compiled starting states");
+}
+function camera(c: CameraState) {
+  check(c && typeof c === "object", "Invalid camera");
+  for (const key of ["yaw", "pitch", "height", "distance", "perspective"] as const) number(c[key], `camera ${key}`);
+  vec(c.target, "camera target");
+  check(c.height > 0 && c.distance > 0 && c.perspective >= 0 && c.perspective <= 1, "Invalid camera range");
+}
+
+/** Validate the VM boundary: scene code may only return bounded plain animation data. */
+export function validateCompiledScene(scene: CompiledScene): void {
+  check(scene && typeof scene === "object", "Source must default-export a scene() definition");
+  number(scene.duration, "scene duration"); check(scene.duration >= 0 && scene.duration <= 86400, "Scene duration must be between 0 and 24 hours");
+  check(scene.options && ["2d", "3d"].includes(scene.options.mode) && ["hold", "advance"].includes(scene.options.end), "Invalid scene options");
+  check(typeof scene.options.orbit === "boolean" && typeof scene.options.background === "string" && scene.options.background.length <= 128, "Invalid scene display options");
+  if (scene.options.audio !== undefined) check(typeof scene.options.audio === "string" && scene.options.audio.length <= 256, "Invalid audio asset ID");
+  camera(scene.camera);
+  check(Array.isArray(scene.initial) && scene.initial.length <= 2000, "Invalid initial elements"); scene.initial.forEach(element);
+  check(Array.isArray(scene.lifecycle) && scene.lifecycle.length <= 20000, "Invalid lifecycle");
+  let totalPoints = 0;
+  const examine = (e: ElementState) => { element(e); totalPoints += (e.geometry.points?.length ?? 0) + (e.geometry.vertices?.length ?? 0); check(totalPoints <= 100000, "Scene geometry budget exceeded"); };
+  const groupGraph = new Map<string, string[]>();
+  for (const e of scene.initial) if (e.geometry.children) groupGraph.set(e.id, e.geometry.children);
+  for (const event of scene.lifecycle) {
+    number(event.time, "lifecycle time"); check(event.time >= 0 && event.time <= scene.duration, "Lifecycle outside scene duration");
+    check(["add", "remove", "keep"].includes(event.type) && Array.isArray(event.ids) && event.ids.length <= 2000 && event.ids.every(id => typeof id === "string"), "Invalid lifecycle event");
+    if (event.type === "add") {
+      check(Array.isArray(event.elements) && event.elements.length === event.ids.length, "Invalid added elements");
+      event.elements.forEach((e, i) => { check(e.id === event.ids[i], "Mismatched lifecycle ID"); examine(e); if (e.geometry.children) groupGraph.set(e.id, e.geometry.children); });
+    }
+  }
+  const visited = new Set<string>();
+  const visit = (id: string, path: Set<string>) => {
+    check(!path.has(id), `Cyclic group ${id}`); if (visited.has(id)) return;
+    const next = new Set(path).add(id); for (const child of groupGraph.get(id) ?? []) visit(child, next); visited.add(id);
+  };
+  for (const id of groupGraph.keys()) visit(id, new Set());
+  const live = new Map(scene.initial.map(e => [e.id, structuredClone(e)]));
+  const checkGroups = () => {
+    const owners = new Map<string, string>();
+    for (const e of live.values()) for (const child of e.geometry.children ?? []) {
+      check(live.has(child), `Group ${e.id} references missing child ${child}`);
+      check(!owners.has(child), `Group child ${child} has multiple parents`);
+      owners.set(child, e.id);
+    }
+  };
+  checkGroups();
+  for (const event of [...scene.lifecycle].sort((a, b) => a.time - b.time)) {
+    if (event.type === "add") {
+      for (const e of event.elements ?? []) { check(!live.has(e.id), `Duplicate element ID ${e.id}`); live.set(e.id, structuredClone(e)); }
+    } else if (event.type === "remove") {
+      for (const id of event.ids) live.delete(id);
+      for (const e of live.values()) if (e.geometry.children) e.geometry.children = e.geometry.children.filter(id => !event.ids.includes(id));
+    }
+    checkGroups();
+  }
+  check(Array.isArray(scene.tracks) && scene.tracks.length <= 10000, "Invalid animation tracks");
+  const animatedKeys = new Set(["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth"]);
+  for (const track of scene.tracks) {
+    number(track.start, "track start"); number(track.duration, "track duration");
+    check(track.start >= 0 && track.duration >= 0 && track.start + track.duration <= scene.duration + 1e-6, "Track outside scene duration");
+    check(["linear", "smooth", "in", "out"].includes(track.ease), "Invalid easing");
+    const a = track.action;
+    check(a && ["camera", "animate", "morph"].includes(a.type) && Array.isArray(a.ids) && a.ids.length <= 2000, "Invalid animation action");
+    if (a.type === "camera") {
+      camera(track.cameraFrom!);
+      check(Object.keys(a.properties ?? {}).every(key => ["yaw", "pitch", "height", "distance", "perspective", "target"].includes(key)), "Unknown camera property");
+      camera({ ...track.cameraFrom!, ...a.properties });
+    } else {
+      check(track.from && typeof track.from === "object", "Missing animation starting states");
+      for (const id of a.ids) {
+        check(typeof id === "string" && Object.hasOwn(track.from, id), "Missing animation element");
+        const from = track.from[id]; element(from);
+        check(from.id === id, "Mismatched animation starting ID");
+        if (a.type === "morph") {
+          geometry(a.geometry!);
+          if (a.map) check(typeof a.map === "object" && Object.entries(a.map).every(([x, y]) => typeof x === "string" && typeof y === "string"), "Invalid morph map");
+        } else {
+          check(Object.keys(a.properties ?? {}).every(key => animatedKeys.has(key)), "Unknown animatable property");
+          element({ ...from, ...a.properties } as ElementState);
+        }
+      }
+    }
+  }
+  check(Array.isArray(scene.controls) && scene.controls.length <= 100, "Invalid controls");
+  const ids = new Set<string>();
+  for (const c of scene.controls) {
+    check(typeof c.id === "string" && !ids.has(c.id) && typeof c.label === "string" && c.label.length <= 512, "Invalid control ID or label"); ids.add(c.id);
+    check(["slider", "toggle", "select"].includes(c.kind), "Invalid control kind");
+    if (c.kind === "slider") { number(c.value, "slider value"); number(c.default, "slider default"); number(c.min, "slider min"); number(c.max, "slider max"); check(c.min! <= c.max! && Number(c.value) >= c.min! && Number(c.value) <= c.max!, "Invalid slider range"); if (c.step !== undefined) { number(c.step, "slider step"); check(c.step > 0, "Invalid slider step"); } }
+    if (c.kind === "toggle") check(typeof c.value === "boolean" && typeof c.default === "boolean", "Invalid toggle value");
+    if (c.kind === "select") check(Array.isArray(c.options) && c.options.length <= 100 && c.options.every(o => typeof o === "string" && o.length <= 256) && c.options.includes(String(c.value)), "Invalid select options/value");
+  }
+}
+
+export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<CompiledScene> {
+  let vm: ReturnType<Awaited<ReturnType<typeof getQuickJS>>["newContext"]> | undefined;
+  try {
+    check(typeof source === "string" && source.length <= 256000, "Scene source limit exceeded (256 KB)");
+    const ast = parse(source, { ecmaVersion: "latest", sourceType: "module", locations: true });
+    const exports = ast.body.filter(node => node.type === "ExportDefaultDeclaration");
+    check(exports.length === 1, "Each source must have exactly one default-exported scene");
+    check(!ast.body.some(node => ["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration"].includes(node.type)), "Imports and additional exports are not supported; use scene and math from the provided environment");
+    const declaration = exports[0] as unknown as { start: number; declaration: { start: number } };
+    const rewritten = source.slice(0, declaration.start) + "globalThis.__animlibResult = " + source.slice(declaration.declaration.start);
+    const QuickJS = await getQuickJS();
+    vm = QuickJS.newContext();
+    vm.runtime.setMemoryLimit(32 * 1024 * 1024);
+    vm.runtime.setMaxStackSize(512 * 1024);
+    const deadline = Date.now() + (limits.executionLimitMs ?? 200);
+    vm.runtime.setInterruptHandler(() => Date.now() > deadline);
+    const execute = (code: string, file: string): string | undefined => {
+      const result = vm!.evalCode(code, file);
+      if (result.error) {
+        const error = vm!.dump(result.error) as { message?: string; stack?: string }; result.error.dispose();
+        const match = /scene\.js:(\d+)(?::(\d+))?/.exec(error.stack ?? "");
+        throw new SceneCompileError({ severity: "error", code: error.message?.includes("interrupt") ? "EXECUTION_LIMIT" : "SCENE_CODE", message: error.message ?? String(error), ...(match ? { line: Number(match[1]), column: Number(match[2] ?? 1) } : {}), hint: "Use a synchronous scene builder, bounded loops, and the provided scene API." });
+      }
+      const value = vm!.dump(result.value); result.value.dispose();
+      return typeof value === "string" ? value : undefined;
+    };
+    execute(`"use strict"; const __input = JSON.parse(${JSON.stringify(JSON.stringify(input))});
+      const __buildScene = ${buildScene.toString()};
+      const scene = (options, builder) => __buildScene(options, builder, __input);
+      let __seed = ${JSON.stringify(input.seed ?? 1)} >>> 0;
+      Math.random = () => { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };
+      const math = Object.freeze(Math);
+      globalThis.Date = undefined;
+      globalThis.Promise = undefined;`, "runtime.js");
+    execute(rewritten, "scene.js");
+    const json = execute("JSON.stringify(globalThis.__animlibResult)", "result.js");
+    check(json && json.length <= 8 * 1024 * 1024, "Invalid or oversized compiled scene");
+    const compiled = JSON.parse(json) as CompiledScene;
+    validateCompiledScene(compiled);
+    return compiled;
+  } catch (error) {
+    if (error instanceof SceneCompileError) throw error;
+    const e = error as Error & { loc?: { line: number; column: number } };
+    throw new SceneCompileError({ severity: "error", code: e.loc ? "SYNTAX" : "SCENE_VALIDATION", message: e.message ?? String(error), ...(e.loc ? { line: e.loc.line, column: e.loc.column + 1 } : {}) });
+  } finally { vm?.dispose(); }
+}
