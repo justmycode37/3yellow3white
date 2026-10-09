@@ -31,8 +31,11 @@ the library handles reproducible playback, scene handoffs, and live updates.
   and borders should remain clean throughout an animation.
 - **Support 2D, 3D, and interaction.** Scene code controls geometry and camera
   transitions between modes. Sliders and other controls update the displayed frame
-  even while paused. Scenes can request viewer rotation, which is disabled during
-  authored camera motion.
+  even while paused, with an automatic overlay panel or authored positions. Scenes
+  can contain multiple clipped 3D view regions, each rotated independently with
+  the mouse. Controls blend into the scene; `line3D` and `arrow3D` provide round
+  shafts and cone heads. Authored camera rotations take over when playback or
+  seeking crosses them.
 - **Accept live scene code through one host API.** The app can load, replace, or
   insert scenes, with one scene per source and batches supported. Successful edits
   to the active scene restart it while preserving applicable viewer settings.
@@ -56,7 +59,8 @@ evolving; the API and current limits are described in the
 
 The [demo scenes](demo/scenes.ts) exercise the three subject areas. The demo uses a
 fullscreen black canvas, mostly white drawing with selective color accents, and a
-bottom progress bar with play/pause controls.
+bottom progress bar with play/pause controls and native scene controls. Open
+`http://localhost:5173/?interactive` for a two-view interaction example.
 
 ## Development
 

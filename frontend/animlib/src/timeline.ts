@@ -31,6 +31,7 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number): Fram
   const elements = new Map(scene.initial.map(e => [e.id, structuredClone(e)]));
   let camera = structuredClone(scene.camera);
   let cameraAnimated = false;
+  const views = new Map((scene.views ?? []).map(v => [v.id, { ...structuredClone(v), cameraAnimated: false }]));
   const events = [
     ...scene.lifecycle.map((event, index) => ({ time: event.time, index, event })),
     ...scene.tracks.map((track, index) => ({ time: track.start, index: scene.lifecycle.length + index, track })),
@@ -51,10 +52,14 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number): Fram
     const track = item.track;
     const t = easeAt(track.duration === 0 ? 1 : (time - track.start) / track.duration, track.ease);
     if (track.action.type === "camera") {
-      if (time < track.start + track.duration) cameraAnimated = true;
+      const view = track.action.view ? views.get(track.action.view) : undefined;
+      const targetCamera = view?.camera ?? camera;
+      if (time < track.start + track.duration) {
+        if (view) view.cameraAnimated = true; else cameraAnimated = true;
+      }
       for (const [key, target] of Object.entries(track.action.properties ?? {})) {
         const k = key as keyof CameraState;
-        (camera as unknown as Record<string, unknown>)[k] = interpolate(track.cameraFrom?.[k], target, t);
+        (targetCamera as unknown as Record<string, unknown>)[k] = interpolate(track.cameraFrom?.[k], target, t);
       }
       continue;
     }
@@ -77,5 +82,5 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number): Fram
       }
     }
   }
-  return { elements: [...elements.values()], camera, cameraAnimated };
+  return { elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
 }
