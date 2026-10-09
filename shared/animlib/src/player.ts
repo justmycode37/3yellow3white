@@ -2,12 +2,14 @@ import { AudioClock } from "./audio.js";
 import { ControlOverlay } from "./controls.js";
 import { CanvasRenderer } from "./renderer.js";
 import { SceneSequence } from "./sequence.js";
-import type { CompiledScene, ControlValue, PlayerOptions, PlayerState, Submission, SubmitResult } from "./types.js";
+import { paletteResolver } from "./palette.js";
+import type { ColorPalette, CompiledScene, ControlValue, PlayerOptions, PlayerState, Submission, SubmitResult } from "./types.js";
 
 export class Player {
   private readonly renderer: CanvasRenderer;
   private readonly audio: AudioClock;
   private readonly sequence: SceneSequence;
+  private readonly palette: ColorPalette;
   private readonly overlay?: ControlOverlay;
   private listeners = new Set<(state: PlayerState) => void>();
   private sceneId: string | null = null;
@@ -22,9 +24,12 @@ export class Player {
   private operations: Promise<unknown> = Promise.resolve();
 
   constructor(options: PlayerOptions) {
-    this.renderer = new CanvasRenderer(options.canvas);
+    const palette = paletteResolver(options.palette).palette;
+    this.palette = palette;
+    this.renderer = new CanvasRenderer(options.canvas, palette);
     this.audio = new AudioClock(options.assets);
     this.sequence = new SceneSequence({
+      palette,
       seed: options.seed,
       executionLimitMs: options.executionLimitMs,
       prepare: async scenes => {
@@ -96,9 +101,9 @@ export class Player {
       this.renderer.render({
         elements: [], cameraAnimated: false,
         camera: { yaw: 0, pitch: 0, target: [0, 0, 0], height: 8, distance: 10, perspective: 0 },
-      }, { mode: "2d", end: "hold", orbit: false, background: "#000" });
+      }, { mode: "2d", end: "hold", orbit: false, background: this.palette.background, palette: this.palette });
     }
-    this.overlay?.update(this.sceneId ?? "", scene?.controls ?? [], scene?.options.background);
+    this.overlay?.update(this.sceneId ?? "", scene?.controls ?? [], scene ? paletteResolver(this.palette).resolve(scene.options.background) : undefined);
     this.notify();
   }
 

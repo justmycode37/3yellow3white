@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { compileSource, evaluateScene } from 'animlib'
+import { Color, compileSource, evaluateScene } from 'animlib'
 import type { PlayerState, SceneSource, Submission, SubmitResult } from 'animlib'
 import { LessonPlayback, scenePosition, sequenceTime } from '../src/lessonPlayback.ts'
 import { lessonScenes } from '../src/lessonScenes.ts'
@@ -140,8 +140,8 @@ test('disposal cancels pending initialization and detaches subscriptions', async
 
 test('every sample lesson compiles into a deterministic animlib timeline with matching duration', async () => {
   for (const lesson of [...lessons, { ...lessons[0], id: 'idea-test', title: 'My idea', duration: 120 }]) {
-    for (const background of ['#d6e2df', '#000000']) {
-      const [source] = lessonScenes(lesson, { background, ink: '#29282e', accent: '#365f80' })
+    for (const background of [Color.WHITE, Color.BLACK]) {
+      const [source] = lessonScenes(lesson, { background, ink: Color.GREY_E, accent: Color.BLUE_E })
       const scene = await compileSource(source.source)
       assert.equal(scene.duration, lesson.duration, lesson.id)
       assert.equal(scene.options.background, background)

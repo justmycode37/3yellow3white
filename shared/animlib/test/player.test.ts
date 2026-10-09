@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CompiledScene, Frame } from "../src/types.js";
 
-const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
+const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, options: undefined as CompiledScene['options'] | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
 vi.mock("../src/renderer.js", () => ({
   CanvasRenderer: class {
     onOrbitChange?: () => void;
@@ -11,7 +11,7 @@ vi.mock("../src/renderer.js", () => ({
     syncInteraction() {}
     resetInteraction() { rendering.orbit = { yaw: 0, pitch: 0 }; }
     async prepare(_scenes: CompiledScene[]) {}
-    render(frame: Frame) { rendering.frame = structuredClone(frame); }
+    render(frame: Frame, options: CompiledScene['options']) { rendering.frame = structuredClone(frame); rendering.options = structuredClone(options); }
     dispose() { rendering.disposed = true; }
   },
 }));
@@ -24,7 +24,7 @@ let frameId: number;
 let frames: Map<number, FrameRequestCallback>;
 beforeEach(() => {
   now = 0; frameId = 0; frames = new Map();
-  rendering.frame = undefined; rendering.orbit = { yaw: 0, pitch: 0 }; rendering.disposed = false;
+  rendering.frame = undefined; rendering.options = undefined; rendering.orbit = { yaw: 0, pitch: 0 }; rendering.disposed = false;
   vi.spyOn(performance, "now").mockImplementation(() => now);
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { const id = ++frameId; frames.set(id, callback); return id; });
   vi.stubGlobal("cancelAnimationFrame", (id: number) => { frames.delete(id); });
@@ -133,6 +133,20 @@ const second = `export default scene({ end: "hold" }, s => {
 const wait = (seconds: number, end = "hold") => `export default scene({end:"${end}"},s=>s.wait(${seconds}));`;
 
 describe("player navigation and live source updates", () => {
+  it("passes the host palette through compilation, playback, and clearing", async () => {
+    const player = createPlayer({ canvas: {} as HTMLCanvasElement, palette: {
+      colors: { BLACK: "#222222", WHITE: "#dddddd" }, background: "WHITE", foreground: "BLACK",
+    } });
+    try {
+      expect((await player.submit({ type: "load", scenes: [{ id: "a", source: "export default scene({},s=>s.circle('dot'));" }] })).ok).toBe(true);
+      expect(rendering.frame?.elements[0].fill).toBe("BLACK");
+      expect(rendering.options?.background).toBe("WHITE");
+      expect((await player.submit({ type: "load", scenes: [] })).ok).toBe(true);
+      expect(rendering.frame?.elements).toEqual([]);
+      expect(rendering.options?.background).toBe("WHITE");
+    } finally { player.dispose(); }
+  });
+
   it("seeks directly using reconstructed final predecessor states, clamps, and pauses", async () => {
     const player = createPlayer({ canvas: {} as HTMLCanvasElement });
     expect((await player.submit({ type: "load", scenes: [{ id: "a", source: first }, { id: "b", source: second }] })).ok).toBe(true);

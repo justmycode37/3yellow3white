@@ -1,13 +1,9 @@
-import type { CameraState, CompiledScene, ElementState, Frame, Track } from "./types.js";
-import colorString from "color-string";
+import type { CameraState, ColorValue, CompiledScene, ElementState, Frame, Track } from "./types.js";
+import { paletteResolver } from "./palette.js";
 
 export function easeAt(progress: number, ease: Track["ease"]): number {
   const t = Math.max(0, Math.min(1, progress));
   return ease === "smooth" ? t * t * (3 - 2 * t) : ease === "in" ? t * t : ease === "out" ? 1 - (1 - t) ** 2 : t;
-}
-
-function color(value: string): number[] | null {
-  return colorString.get.rgb(value);
 }
 
 function interpolate(from: unknown, to: unknown, t: number): unknown {
@@ -15,18 +11,12 @@ function interpolate(from: unknown, to: unknown, t: number): unknown {
   if (t === 1) return structuredClone(to);
   if (typeof from === "number" && typeof to === "number") return from + (to - from) * t;
   if (Array.isArray(from) && Array.isArray(to)) return from.map((x, i) => interpolate(x, to[i], t));
-  if (typeof from === "string" && typeof to === "string") {
-    const a = color(from), b = color(to);
-    if ((a || from === "none") && (b || to === "none") && (a || b)) {
-      const start=a??[b![0],b![1],b![2],0],end=b??[a![0],a![1],a![2],0];
-      return `rgba(${start.slice(0, 3).map((v, i) => Math.round(v + (end[i] - v) * t)).join(",")},${start[3] + (end[3] - start[3]) * t})`;
-    }
-  }
   return t < 1 ? from : to;
 }
 
 /** Pure evaluation: seek and normal playback return the same frame for the same inputs. */
 export function evaluateScene(scene: CompiledScene, requestedTime: number): Frame {
+  const palette = paletteResolver(scene.options.palette);
   const time = Math.max(0, Math.min(scene.duration, requestedTime));
   const elements = new Map(scene.initial.map(e => [e.id, structuredClone(e)]));
   let camera = structuredClone(scene.camera);
@@ -78,9 +68,12 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number): Fram
         }
       } else for (const [key, target] of Object.entries(track.action.properties ?? {})) {
         const start=key==='viewportOffset'?from.viewportOffset??[0,0]:from[key as keyof ElementState];
-        (e as unknown as Record<string, unknown>)[key] = interpolate(start, target, t);
+        (e as unknown as Record<string, unknown>)[key] = key === "fill" || key === "stroke" ? palette.interpolate(start as ColorValue, target as ColorValue, t) : interpolate(start, target, t);
       }
     }
+  }
+  for (const e of elements.values()) {
+    palette.validate(e.fill); palette.validate(e.stroke);
   }
   return { elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
 }

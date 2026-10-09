@@ -75,7 +75,7 @@ async function captureRenderer() {
   return { renderer, vertices(frame: Frame, orbit: { yaw: number; pitch: number }) {
     writes.length = 0;
     renderer.setOrbit(orbit);
-    renderer.render(frame, { mode: "3d", end: "hold", orbit: true, background: "#000000" });
+    renderer.render(frame, { mode: "3d", end: "hold", orbit: true, background: "BLACK" });
     const data = writes[0];
     expect(data?.length).toBeGreaterThan(12);
     return Array.from({ length: data.length / stride }, (_, index) => Array.from(data.subarray(index * stride, index * stride + 3)) as Vec3);

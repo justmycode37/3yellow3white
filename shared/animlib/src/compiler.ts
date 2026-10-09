@@ -1,6 +1,7 @@
 import { parse } from "acorn";
 import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
+import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
 import type { CameraState, CompileInput, CompiledScene, Diagnostic, ElementState, Geometry } from "./types.js";
 
 export class SceneCompileError extends Error {
@@ -47,7 +48,9 @@ function element(e: ElementState) {
   geometry(e.geometry); vec(e.position, "position"); vec(e.rotation, "rotation");
   number(e.scale, "scale"); number(e.opacity, "opacity"); number(e.strokeWidth, "strokeWidth");
   check(e.scale >= 0 && e.opacity >= 0 && e.opacity <= 1 && e.strokeWidth >= 0, "Invalid element style range");
-  for (const key of ["fill", "stroke"] as const) check(typeof e[key] === "string" && e[key].length <= 128, `Invalid ${key}`);
+  for (const key of ["fill", "stroke"] as const) {
+    try { validateColor(e[key]); } catch (error) { throw new Error(`${e.id} ${key}: ${(error as Error).message}`); }
+  }
   check(e.space === "world" || e.space === "screen", "Invalid element space");
   if (e.strokeProfile !== undefined) {
     check(e.strokeProfile === "flat" || e.strokeProfile === "round", "Invalid stroke profile");
@@ -175,6 +178,8 @@ export function validateCompiledScene(scene: CompiledScene): void {
 export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<CompiledScene> {
   let vm: ReturnType<Awaited<ReturnType<typeof getQuickJS>>["newContext"]> | undefined;
   try {
+    const resolver = paletteResolver(input.palette);
+    input = { ...input, palette: resolver.palette };
     check(typeof source === "string" && source.length <= 256000, "Scene source limit exceeded (256 KB)");
     const ast = parse(source, { ecmaVersion: "latest", sourceType: "module", locations: true });
     const exports = ast.body.filter(node => node.type === "ExportDefaultDeclaration");
@@ -199,6 +204,14 @@ export async function compileSource(source: string, input: CompileInput = {}, li
       return typeof value === "string" ? value : undefined;
     };
     execute(`"use strict"; const __input = JSON.parse(${JSON.stringify(JSON.stringify(input))});
+      const __tokens = values => new Proxy(Object.freeze(values), {
+        get(target, key) {
+          if (typeof key === "string" && key !== "toJSON" && !(key in target)) throw new Error("Unknown palette color token: " + key);
+          return Reflect.get(target, key);
+        }
+      });
+      const Color = __tokens(${JSON.stringify(Color)});
+      const palette = Object.freeze({ ...__input.palette, colors: __tokens(Object.fromEntries(Object.keys(__input.palette.colors).map(name => [name, name]))) });
       const __buildScene = ${buildScene.toString()};
       const scene = (options, builder) => __buildScene(options, builder, __input);
       let __seed = ${JSON.stringify(input.seed ?? 1)} >>> 0;
@@ -211,6 +224,7 @@ export async function compileSource(source: string, input: CompileInput = {}, li
     check(json && json.length <= 8 * 1024 * 1024, "Invalid or oversized compiled scene");
     const compiled = JSON.parse(json) as CompiledScene;
     validateCompiledScene(compiled);
+    enforceScenePalette(compiled, resolver);
     return compiled;
   } catch (error) {
     if (error instanceof SceneCompileError) throw error;

@@ -1,7 +1,7 @@
-import type { SceneSource } from 'animlib'
+import type { PaletteColor, SceneSource } from 'animlib'
 import type { Lesson } from './data'
 
-export interface LessonPalette { background: string; ink: string; accent: string }
+export interface LessonPalette { background: PaletteColor; ink: PaletteColor; accent: PaletteColor }
 
 // Sample explanations remain local demos. Each source is a real, seekable
 // animlib timeline; a future explanation engine can supply SceneSource[] here.

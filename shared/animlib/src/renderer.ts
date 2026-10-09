@@ -2,8 +2,9 @@
 import earcut from 'earcut';
 import { GeometryCache } from './cache.js';
 import { ViewInteraction } from './interaction.js';
-import colorString from 'color-string';
-import type { CameraState, CompiledScene, ElementState, Frame, Geometry, Vec3 } from './types.js';
+import { paletteResolver, parseColor } from './palette.js';
+import type { PaletteResolver } from './palette.js';
+import type { CameraState, ColorValue, ColorPalette, CompiledScene, ElementState, Frame, Geometry, Vec3 } from './types.js';
 import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles, tubeTriangles, coneTriangles } from './geometry.js';
 import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
 import type { LatexPath } from './latex.js';
@@ -38,24 +39,6 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
   return color; }
 `;
 interface DrawItem { depth:number; vertices:Float32Array; transparent:boolean; screen:boolean }
-type Color=[number,number,number,number];
-const colors=new Map<string,Color>();
-function parseColor(source:string):Color {
-  const cached=colors.get(source);if(cached)return cached;
-  if(source==='none')return [0,0,0,0];
-  const rgba=colorString.get.rgb(source);
-  let result:Color;
-  if(rgba)result=[rgba[0]/255,rgba[1]/255,rgba[2]/255,rgba[3]];
-  else {
-    const hsl=colorString.get.hsl(source),hwb=colorString.get.hwb(source);
-    if(!hsl&&!hwb)throw new Error(`Unsupported CSS color: ${source}`);
-    const hue=(hsl??hwb)![0],s=hsl?hsl[1]/100:1,l=hsl?hsl[2]/100:0.5,a=s*Math.min(l,1-l);
-    const component=(n:number)=>{const k=(n+hue/30)%12;return l-a*Math.max(-1,Math.min(k-3,9-k,1));};
-    result=[component(0),component(8),component(4),(hsl??hwb)![3]];
-    if(hwb){let w=hwb[1]/100,b=hwb[2]/100;if(w+b>1){const sum=w+b;w/=sum;b/=sum;}result=[result[0]*(1-w-b)+w,result[1]*(1-w-b)+w,result[2]*(1-w-b)+w,result[3]];}
-  }
-  colors.set(source,result);return result;
-}
 function textTex(text:string):string {return String.raw`\text{`+text.replace(/[\\{}$&#%_^~]/g,c=>({'\\':String.raw`\backslash `,'{':String.raw`\{`,'}':String.raw`\}`,'$':String.raw`\$`,'&':String.raw`\&`,'#':String.raw`\#`,'%':String.raw`\%`,'_':String.raw`\_`,'^':String.raw`\textasciicircum `,'~':String.raw`\textasciitilde `}[c]!))+'}';}
 function contains(contour:Vec3[],point:Vec3):boolean {
   let inside=false;
@@ -111,7 +94,8 @@ export class CanvasRenderer {
   private format:GPUTextureFormat|undefined;
   private initializing:Promise<void>|undefined;
   private disposed=false;
-  constructor(private canvas:HTMLCanvasElement) {
+  constructor(private canvas:HTMLCanvasElement, private hostPalette?:ColorPalette) {
+    if(hostPalette)this.hostPalette=paletteResolver(hostPalette).palette;
     this.observer=new ResizeObserver(()=>{this.resize();if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);});
     this.observer.observe(canvas);this.resize();
     canvas.addEventListener('pointerdown',this.pointerDown);canvas.addEventListener('pointermove',this.pointerMove);canvas.addEventListener('pointerup',this.pointerUp);canvas.addEventListener('pointercancel',this.pointerUp);canvas.addEventListener('lostpointercapture',this.pointerUp);
@@ -212,14 +196,15 @@ export class CanvasRenderer {
   }
   async prepare(scenes:CompiledScene[]):Promise<void> {
     const prepareGeometry=(g:Geometry):void=>{if(g.kind==='latex')layoutLatexGeometry(g);if(g.kind==='text')layoutLatex(textTex(g.text??''));};
-    const prepareElement=(e:ElementState):void=>{prepareGeometry(e.geometry);parseColor(e.fill);parseColor(e.stroke);};
     for(const scene of scenes) {
-      parseColor(scene.options.background);
+      const palette=paletteResolver(this.hostPalette??scene.options.palette);
+      const prepareElement=(e:ElementState):void=>{prepareGeometry(e.geometry);palette.resolve(e.fill);palette.resolve(e.stroke);};
+      palette.resolve(scene.options.background);
       for(const element of [...scene.initial,...scene.lifecycle.flatMap(event=>event.elements??[])])prepareElement(element);
       for(const track of scene.tracks) {
         if(track.action.geometry)prepareGeometry(track.action.geometry);
         const properties=track.action.properties as Partial<ElementState>|undefined;
-        if(properties?.fill)parseColor(properties.fill);if(properties?.stroke)parseColor(properties.stroke);
+        if(properties?.fill)palette.resolve(properties.fill);if(properties?.stroke)palette.resolve(properties.stroke);
         for(const state of Object.values(track.from)) {
           prepareElement(state);
           if(track.action.type==='morph'&&track.action.geometry?.kind==='latex'&&state.geometry.kind==='latex')validateLatexMap(layoutLatexGeometry(state.geometry),layoutLatexGeometry(track.action.geometry),track.action.map);
@@ -230,7 +215,7 @@ export class CanvasRenderer {
     if(!this.initializing)this.initializing=this.initialize().catch(error=>{this.initializing=undefined;throw error;});
     await this.initializing;
   }
-  private drawItems(frame:Frame,camera:CameraState,width:number,height:number,view?:string):DrawItem[] {
+  private drawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string):DrawItem[] {
     const parents=new Map<string,ElementState>();
     for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
     const items:DrawItem[]=[];
@@ -260,8 +245,8 @@ export class CanvasRenderer {
       const basis=element.billboard&&element.space!=='screen'
         ?axes.map(axis=>rotate(rotate(axis.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]),[camera.pitch,camera.yaw,0]))
         :normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
-      const addTriangles=(points:Vec3[],color:string,alpha=1,normals?:Vec3[]):void=> {
-        const rgba=parseColor(color);if(!points.length||rgba[3]*opacity*alpha<=0)return;
+      const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[]):void=> {
+        const rgba=parseColor(palette.resolve(color));if(!points.length||rgba[3]*opacity*alpha<=0)return;
         const vertices=new Float32Array(points.length*15),screen=element.space==='screen',a=rgba[3]*opacity*alpha;
         let sumX=0,sumY=0,sumZ=0;
         for(let i=0;i<points.length;i++) {
@@ -382,7 +367,8 @@ export class CanvasRenderer {
       return {...camera,yaw:camera.yaw+(enabled?offset.yaw*camera.perspective:0),pitch:camera.pitch+(enabled?offset.pitch*camera.perspective:0)};
     };
     const camera=effective(frame.camera,options.orbit);
-    const mainItems=this.drawItems(frame,camera,width,height);
+    const palette=paletteResolver(this.hostPalette??options.palette);
+    const mainItems=this.drawItems(frame,camera,width,height,palette);
     const mainResources={uniform:this.uniform,bindGroup:this.bindGroup,transparentBindGroup:this.transparentBindGroup!};
     const batches=[{camera,width,height,rect:undefined as number[]|undefined,items:mainItems.filter(i=>!i.screen),resources:mainResources}];
     const viewIds=new Set(this.regions.map(v=>v.id));
@@ -401,7 +387,7 @@ export class CanvasRenderer {
       if(pixelWidth<1||pixelHeight<1)continue;
       const viewWidth=width*pixelWidth/this.canvas.width,viewHeight=height*pixelHeight/this.canvas.height;
       const viewCamera=effective(region.camera,region.orbit,region.id);
-      batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:this.drawItems(frame,viewCamera,viewWidth,viewHeight,region.id),resources});
+      batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:this.drawItems(frame,viewCamera,viewWidth,viewHeight,palette,region.id),resources});
     }
     // Scene-wide screen labels stay above every regional 3D view.
     if(mainItems.some(i=>i.screen))batches.push({camera,width,height,rect:undefined,items:mainItems.filter(i=>i.screen),resources:mainResources});
@@ -416,7 +402,7 @@ export class CanvasRenderer {
     for(const batch of ordered)for(const item of batch.items){data.set(item.vertices,offset);offset+=item.vertices.length;}
     if(data.byteLength>this.capacity){this.vertices?.destroy();this.capacity=Math.max(256,data.byteLength*2);this.vertices=device.createBuffer({size:this.capacity,usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});}
     if(data.length)device.queue.writeBuffer(this.vertices!,0,data);
-    const clear=parseColor(options.background),encoder=device.createCommandEncoder();
+    const clear=parseColor(palette.resolve(options.background)),encoder=device.createCommandEncoder();
     const colorView=this.colorTexture!.createView(),target=this.context.getCurrentTexture().createView(),depthView=this.depthTexture!.createView();
     let firstVertex=0;
     for(const [index,batch] of ordered.entries()) {

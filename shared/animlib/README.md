@@ -52,6 +52,13 @@ behavior. Domain helpers for matrices, molecules, arrays, and graphs belong in t
 surrounding app. Internal dependencies are allowed; the public API requires no
 framework.
 
+The library enforces a color palette, defaulting to 3Blue1Brown's Manim colors
+with a black background and white foreground. Scene styles use typed tokens such
+as `Color.BLUE` and `Color.NONE`; raw CSS colors are rejected by TypeScript and
+runtime validation. The host can remap named slots with a custom palette through
+`createPlayer`, `SceneSequence`, or `compileSource`. Transparency is preserved.
+See [color palettes](docs/reference.md#color-palettes) for configuration and shading behavior.
+
 Rendering is WebGPU only, including 2D scenes, and initially targets modern desktop
 browsers. WebGPU needs HTTPS or localhost. The implementation is working but
 evolving; the API and current limits are described in the

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { compileSource } from "../src/compiler.js";
 import { evaluateScene } from "../src/timeline.js";
 import { SceneSequence } from "../src/sequence.js";
-import colorString from "color-string";
 
 const first = `export default scene({end:'hold'}, s => {
   const a = s.slider('a', {default:1,min:0,max:4});
@@ -91,26 +90,26 @@ describe("isolated scene compilation", () => {
   it("fades none fills and strokes through transparent color without a final-frame pop or black tint",async()=>{
     const compiled=await compileSource(`export default scene({},s=>{
       const entering=s.circle('entering',{fill:'none',stroke:'none'});
-      const exiting=s.circle('exiting',{fill:'#58c4dd',stroke:'rgba(88,196,221,0.4)'});
+      const exiting=s.circle('exiting',{fill:"BLUE",stroke:{"color": "BLUE", "opacity": 0.4}});
       const invisible=s.circle('invisible',{fill:'none',stroke:'none'});
       s.play([
-        entering.animate({fill:'#58c4dd',stroke:'rgba(88,196,221,0.4)'}),
+        entering.animate({fill:"BLUE",stroke:{"color": "BLUE", "opacity": 0.4}}),
         exiting.animate({fill:'none',stroke:'none'}),invisible.animate({fill:'none',stroke:'none'})
       ],{duration:2,ease:'linear'});
     });`);
     const first=evaluateScene(compiled,0),half=evaluateScene(compiled,1),end=evaluateScene(compiled,2);
     expect(first.elements[0].fill).toBe('none');
-    expect(first.elements[1].fill).toBe('#58c4dd');
+    expect(first.elements[1].fill).toBe("BLUE");
     for(const id of ['entering','exiting']) {
       const element=half.elements.find(e=>e.id===id)!;
-      expect(colorString.get.rgb(element.fill)).toEqual([88,196,221,0.5]);
-      expect(colorString.get.rgb(element.stroke)).toEqual([88,196,221,0.2]);
+      expect(element.fill).toEqual({color:"BLUE",opacity:0.5});
+      expect(element.stroke).toEqual({color:"BLUE",opacity:0.2});
       expect(element.opacity).toBe(1);
     }
     expect(half.elements.find(e=>e.id==='invisible')!.fill).toBe('none');
     expect(half.elements.find(e=>e.id==='invisible')!.stroke).toBe('none');
-    expect(end.elements[0].fill).toBe('#58c4dd');
-    expect(end.elements[0].stroke).toBe('rgba(88,196,221,0.4)');
+    expect(end.elements[0].fill).toBe("BLUE");
+    expect(end.elements[0].stroke).toEqual({color:"BLUE",opacity:0.4});
     expect(end.elements[1].fill).toBe('none');expect(end.elements[1].stroke).toBe('none');
     expect(evaluateScene(compiled,1)).toEqual(half);
   });
