@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Check, ChevronDown, FileText, ListTree, LoaderCircle, Plus, Upload, X } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BookOpen, Check, FileText, Layers3, ListTree, LoaderCircle, Plus, Sparkles, Upload, X } from './Icons'
 import { createStudyPlan, exampleDocument } from './plan'
-import type { PlanDocument, StudyPlan, VideoSegment } from './plan'
+import type { PlanDocument, StudyPlan } from './plan'
 
 const storageKey = 'aha-study-plan'
 
@@ -13,7 +13,7 @@ function savedPlan(): StudyPlan | null {
   return null
 }
 
-export default function PlanPage({ onCreateVideo }: { onCreateVideo: (segment: VideoSegment) => void }) {
+export default function PlanPage() {
   const [plan, setPlan] = useState<StudyPlan | null>(savedPlan)
   const [editing, setEditing] = useState(false)
   const [mode, setMode] = useState<'file' | 'text'>('file')
@@ -24,16 +24,18 @@ export default function PlanPage({ onCreateVideo }: { onCreateVideo: (segment: V
   const [error, setError] = useState('')
   const [storageNote, setStorageNote] = useState('')
   const [dragging, setDragging] = useState(false)
+  const [activeChapter, setActiveChapter] = useState(0)
   const picker = useRef<HTMLInputElement>(null)
   const reader = useRef<AbortController | null>(null)
   const busy = !!status
   const showInput = !plan || editing
   const segments = plan?.chapters.flatMap(chapter => chapter.segments) || []
+  const chapterIcons = [BookOpen, ListTree, Layers3, Sparkles]
 
   useEffect(() => () => reader.current?.abort(), [])
 
   const save = (next: StudyPlan) => {
-    setPlan(next); setEditing(false); setError(''); setStorageNote('')
+    setPlan(next); setEditing(false); setActiveChapter(0); setError(''); setStorageNote('')
     window.scrollTo({ top: 0, behavior: 'instant' })
     try { localStorage.setItem(storageKey, JSON.stringify(next)) }
     catch { setStorageNote('This plan is available here, but couldn’t be saved on this browser. Keep this page open to use it.') }
@@ -88,21 +90,30 @@ export default function PlanPage({ onCreateVideo }: { onCreateVideo: (segment: V
       <section className="plan-summary" aria-label="Plan overview">
         <div className="plan-source"><FileText size={15}/><span>{plan.sourceName}{plan.sourcePages ? ` · ${plan.sourcePages} pages` : ''}</span>{plan.example && <span className="plan-example-label">Example</span>}</div>
         <h2>{plan.title}</h2>
-        <p>{plan.chapters.length} chapters<span>·</span>{segments.length} video topics<span>·</span>~{segments.reduce((sum, segment) => sum + segment.minutes, 0)} min</p>
+        <p>{plan.chapters.length} chapters<span>·</span>{segments.length} topics to explain</p>
       </section>
-      <div className="plan-outline" aria-label="Chapters and video topics">
-        {plan.chapters.map((chapter, chapterIndex) => <section className={`plan-chapter-row chapter-tone-${chapterIndex % 5}`} key={chapter.id} aria-labelledby={`plan-chapter-${chapterIndex}`}>
-          <div className="plan-chapter-card">
-            <span className="plan-chapter-icon"><ListTree size={24} strokeWidth={1.7}/></span>
-            <div><span className="plan-chapter-kicker">Chapter {String(chapterIndex + 1).padStart(2, '0')}</span><h2 id={`plan-chapter-${chapterIndex}`}>{chapter.title}</h2><span className="plan-chapter-count">{chapter.segments.length} {chapter.segments.length === 1 ? 'video' : 'videos'}</span></div>
-          </div>
-          <ol className="plan-segments">{chapter.segments.map((segment, segmentIndex) => <li key={segment.id}><details className="plan-segment">
-            <summary><span className="segment-number">Video {String(segmentIndex + 1).padStart(2, '0')}</span><span className="segment-title">{segment.title}</span><span className="segment-card-bottom"><span className="segment-duration">~{segment.minutes} min</span><span className="segment-open-icon"><ChevronDown size={16}/></span></span></summary>
-            <div className="segment-detail"><div className="segment-source-label">Source notes{segment.pageStart && <span> · {segment.pageStart === segment.pageEnd ? `Page ${segment.pageStart}` : `Pages ${segment.pageStart}–${segment.pageEnd}`}</span>}</div><p>{segment.text || 'This topic was found in the document outline. Add your notes when creating the preview.'}</p><button className="secondary-button" onClick={() => onCreateVideo(segment)}>Create a preview <ArrowRight size={15}/></button></div>
-          </details></li>)}</ol>
-        </section>)}
+      <div className="plan-workspace" aria-label="Chapters and topics">
+        <nav className="plan-chapter-nav" aria-label="Plan chapters">
+          {plan.chapters.map((chapter, index) => {
+            const Icon = chapterIcons[index % chapterIcons.length]
+            return <button key={chapter.id} className={`plan-chapter-link chapter-tone-${index % 5} ${activeChapter === index ? 'active' : ''}`} aria-current={activeChapter === index ? 'true' : undefined} onClick={() => { setActiveChapter(index); window.document.getElementById(`plan-section-${index}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}>
+              <span className="plan-nav-icon"><Icon size={21}/></span>
+              <span className="plan-nav-copy"><span>{chapter.title}</span><small>{chapter.segments.length} {chapter.segments.length === 1 ? 'topic' : 'topics'}</small></span>
+              <ArrowUpRight className="plan-nav-arrow" size={17}/>
+            </button>
+          })}
+        </nav>
+        <div className="plan-topic-list">{plan.chapters.map((chapter, chapterIndex) => <section className={`plan-topic-panel chapter-tone-${chapterIndex % 5}`} key={chapter.id} id={`plan-section-${chapterIndex}`} aria-labelledby={`plan-chapter-${chapterIndex}`}>
+          <div className="plan-topic-heading"><div><span className="plan-chapter-kicker">Chapter {String(chapterIndex + 1).padStart(2, '0')}</span><h2 id={`plan-chapter-${chapterIndex}`}>{chapter.title}</h2></div><span className="plan-topic-count">{chapter.segments.length} {chapter.segments.length === 1 ? 'topic' : 'topics'}</span></div>
+          <ol className="plan-topic-grid">{chapter.segments.map(segment => <li key={segment.id}>
+            <div className="plan-topic-card">
+              <strong className="plan-topic-title">{segment.title}</strong>
+              <span className="plan-topic-action" aria-hidden="true"><span>Explain</span></span>
+            </div>
+          </li>)}</ol>
+        </section>)}</div>
       </div>
-      <p className="plan-method-note">Suggested from your document. Review the topics and estimated lengths before creating a video.</p>
+      <p className="plan-method-note">Suggested from your document. These topics are ready for future explanations.</p>
       {storageNote && <p className="plan-error" role="status">{storageNote}</p>}
     </>}
   </main>

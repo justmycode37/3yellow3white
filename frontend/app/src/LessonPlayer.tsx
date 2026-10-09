@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
-import { ArrowRight, Maximize, Menu, Pause, Play, RotateCcw } from 'lucide-react'
+import { ArrowRight, Maximize, MenuGlyph, Pause, Play, RotateCcw } from './Icons'
 import type { Lesson } from './data'
 import { formatTime } from './data'
 import { LessonPlayback } from './lessonPlayback'
@@ -89,13 +89,22 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   }
 
   return <div className={`player-page ${isMath ? 'blue' : lesson.color} ${state.playing ? 'is-playing' : ''}`} ref={screen} onMouseMove={() => setControls(true)} onMouseLeave={() => setControls(false)}>
-    <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><Menu size={23}/></button>{menuContent}</div>
+    <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
     <div className="lesson-stage"><div className="lesson-layout"><div className="lesson-text" key={chapter}><span className="lesson-subject">{lesson.subject}</span><h1>{titles[chapter].split('\n').map((line, i) => <span key={i}>{line}</span>)}</h1><div className="lesson-underline"><svg viewBox="0 0 270 22"><path d="M4 14c68-13 173-13 260-6M17 21c70-8 144-9 222-8"/></svg></div><p>{lesson.title}</p></div><div className="lesson-visual">
       <canvas ref={canvas} className="lesson-canvas" aria-label={`Animated preview: ${lesson.title}`} role="img"/>
       {!state.ready && !error && <p className="player-status" role="status">Loading your lesson…</p>}
       {error && <div className="player-status player-error" role="alert"><strong>This lesson couldn’t play.</strong><p>{error}</p><button className="secondary-button" onClick={() => setAttempt(old => old + 1)}>Try again</button></div>}
     </div></div></div>
-    <div className={`player-controls ${controls || !state.playing ? 'show-controls' : ''}`}><div className="playback-buttons"><button className="icon-button" disabled={!enabled} aria-label={state.ended ? 'Replay lesson' : state.playing ? 'Pause lesson' : 'Play lesson'} onClick={() => { void playback?.toggle() }}>{state.ended ? <RotateCcw size={19}/> : state.playing ? <Pause size={19} fill="currentColor"/> : <Play size={19} fill="currentColor"/>}</button><span>Animated lesson preview</span><button className="icon-button" aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} onClick={fullscreen}><Maximize size={17}/></button></div><div className="progress-wrap"><div className="progress-track"><span className="progress-fill" style={{ width: `${progress * 100}%` }}/><span className="progress-thumb" style={{ left: `${progress * 100}%` }}/>{[25, 50, 75].map(p => <i key={p} style={{ left: `${p}%` }}/>)}</div><input type="range" min="0" max={duration} step="0.1" value={state.time} disabled={!enabled} onChange={event => { void playback?.seek(Number(event.target.value)) }} aria-label="Video progress" aria-valuetext={`${formatTime(state.time)} of ${formatTime(duration)}`}/></div><div className="progress-meta"><span>{formatTime(state.time)}</span><span>{state.playing ? 'A little more understanding, every second.' : state.ended ? 'That’s an aha! moment.' : 'Take your time. Curiosity can wait.'}</span><span>{formatTime(duration)}</span></div></div>
+    <div className={`player-controls ${controls || !state.playing ? 'show-controls' : ''}`}>
+      <div className="player-control-row">
+        <button className="icon-button" disabled={!enabled} aria-label={state.ended ? 'Replay lesson' : state.playing ? 'Pause lesson' : 'Play lesson'} onClick={() => { void playback?.toggle() }}>{state.ended ? <RotateCcw size={19}/> : state.playing ? <Pause size={19} fill="currentColor"/> : <Play size={19} fill="currentColor"/>}</button>
+        <div className="player-timeline">
+          <div className="progress-wrap"><div className="progress-track"><span className="progress-fill" style={{ width: `${progress * 100}%` }}/><span className="progress-thumb" style={{ left: `${progress * 100}%` }}/></div><input type="range" min="0" max={duration} step="0.1" value={state.time} disabled={!enabled} onChange={event => { void playback?.seek(Number(event.target.value)) }} aria-label="Video progress" aria-valuetext={`${formatTime(state.time)} of ${formatTime(duration)}`}/></div>
+          <div className="progress-meta"><span>{formatTime(state.time)}</span><span>{state.playing ? 'A little more understanding, every second.' : state.ended ? 'That’s an aha! moment.' : 'Take your time. Curiosity can wait.'}</span><span>{formatTime(duration)}</span></div>
+        </div>
+        <button className="icon-button" aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} onClick={fullscreen}><Maximize size={17}/></button>
+      </div>
+    </div>
     {state.ended && <div className="lesson-complete"><button onClick={onHome}>Back to your library <ArrowRight size={16}/></button></div>}
     {enabled && !state.playing && !state.ended && <button className="paused-indicator" onClick={() => { void playback?.toggle() }} aria-label="Resume lesson"><Play size={24} fill="currentColor"/></button>}
   </div>

@@ -1,31 +1,57 @@
 import type { Artwork as ArtworkType } from './data'
 
 export function Spark({ className = '' }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 80 80" fill="none" aria-hidden="true"><path d="M40 5c2 23 9 30 35 35-25 2-33 10-35 35C36 50 30 44 5 40c24-4 32-11 35-35Z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/><path d="m61 9 2 11m-5-6 11 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+  return <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"/></svg>
 }
 
+function SoftArrow() {
+  return <g strokeWidth="18">
+    <path d="M135 195c48-35 87-83 139-118"/>
+    <path d="M231 74c13-3 29-4 41-2 8 1 11 5 11 13 1 13 0 27-2 39"/>
+  </g>
+}
+
+// Each title gets one simple idea, drawn with the soft, slightly uneven curves
+// of the wordmark and menu. Shared by thumbnails and the lesson canvas.
 export default function Artwork({ kind, animated = false }: { kind: ArtworkType, animated?: boolean }) {
-  return <svg className={`lesson-art ${animated ? 'animated-art' : ''}`} viewBox="0 0 420 270" fill="none" aria-hidden="true">
-    <defs><marker id={`arrow-${kind}`} viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="m1 1 7 4-7 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></marker></defs>
-    {kind === 'molecule' && <g className="molecule-drawing" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m149 167 1-68 59-35 59 35v68l-59 35-60-35Z"/><path d="m160 110 1 47m17 18 31 18m48-37v-47m-48-33-40 23" opacity=".45"/>
-      <path d="m269 99 49-30m-168 99-50 31m109 4v38"/>
-      <text x="324" y="70" stroke="none" fill="currentColor" fontSize="25" fontFamily="DM Sans">OH</text><text x="62" y="215" stroke="none" fill="currentColor" fontSize="23" fontFamily="DM Sans">H₃C</text><text x="199" y="265" stroke="none" fill="currentColor" fontSize="23" fontFamily="DM Sans">H</text>
-      <circle cx="150" cy="99" r="8" fill="var(--art-bg)"/><circle cx="209" cy="64" r="8" fill="var(--art-bg)"/><circle cx="268" cy="99" r="8" fill="var(--art-bg)"/><circle cx="268" cy="167" r="8" fill="var(--art-bg)"/><circle cx="209" cy="202" r="8" fill="var(--art-bg)"/><circle cx="149" cy="167" r="8" fill="var(--art-bg)"/>
-      <path d="m82 66 7-13m-21 11 13 4m246 129 12 5m-17 3 5 12" strokeWidth="2" opacity=".35"/>
+  return <svg className={`lesson-art ${animated ? 'animated-art' : ''}`} viewBox="0 0 420 270" fill="none" stroke="currentColor" strokeWidth="13" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {kind === 'molecule' && <g className="molecule-drawing">
+      {/* Carbon's four connections. */}
+      <path d="M191 117c-13-19-30-29-47-38m87 39c15-15 30-25 46-34m-86 67c-16 15-34 27-49 38m87-35c12 17 29 26 47 37"/>
+      <path d="M210 108c17-1 29 12 27 29-1 17-13 28-30 26-16-1-25-13-24-29 1-15 11-25 27-26Z"/>
+      <g fill="currentColor" stroke="none">
+        <path d="M145 67c8 1 12 7 11 14s-8 12-15 10-11-7-10-14 7-11 14-10Z"/>
+        <path d="M278 72c8 0 13 6 12 13s-6 12-14 11-12-6-11-13 6-11 13-11Z"/>
+        <path d="M142 177c8-1 13 5 12 13s-7 12-14 11-12-6-11-13 6-11 13-11Z"/>
+        <path d="M278 179c7 1 12 6 11 14s-7 12-14 10-12-7-11-14 6-11 14-10Z"/>
+      </g>
     </g>}
-    {kind === 'orbitals' && <g className="orbital-drawing" stroke="currentColor" strokeWidth="2.5">
-      <ellipse cx="210" cy="134" rx="115" ry="42" transform="rotate(-35 210 134)"/><ellipse cx="210" cy="134" rx="115" ry="42" transform="rotate(35 210 134)"/><ellipse cx="210" cy="134" rx="42" ry="115"/><circle cx="210" cy="134" r="19" fill="currentColor"/><circle cx="290" cy="69" r="10" fill="var(--art-bg)"/><circle cx="135" cy="73" r="10" fill="currentColor"/><circle cx="226" cy="238" r="10" fill="var(--art-bg)"/><path d="m316 191 7 13m-13-4 15-5m-185-7-3 9" opacity=".3" strokeLinecap="round"/>
+    {kind === 'orbitals' && <g className="orbital-drawing">
+      {/* Two soft orbital lobes, meeting around the nucleus. */}
+      <path d="M193 118c-23 1-63-7-73-32-10-23 8-40 30-34 28 7 47 32 51 52 2 9-1 13-8 14Z"/>
+      <path d="M226 152c25-1 64 9 73 35 7 23-11 38-32 31-26-8-46-32-49-51-1-9 1-14 8-15Z"/>
+      <path d="M211 124c7 0 12 5 11 12s-5 11-12 11-12-5-11-12 5-11 12-11Z" fill="currentColor" stroke="none"/>
     </g>}
-    {kind === 'reaction' && <g stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m66 159 49-29 49 29 49-29m-94-13 40 24"/><text x="207" y="128" fill="currentColor" stroke="none" fontSize="26">O</text><path d="M214 98c-12-53 64-60 76-14" markerEnd={`url(#arrow-${kind})`}/><path d="M236 163h76" markerEnd={`url(#arrow-${kind})`}/><text x="319" y="169" fill="currentColor" stroke="none" fontSize="26">OH</text><circle cx="223" cy="78" r="3" fill="currentColor"/><circle cx="233" cy="80" r="3" fill="currentColor"/><path d="M132 207c34 14 81 18 111 2" opacity=".3"/>
+    {kind === 'reaction' && <g>
+      {/* Follow a pair of electrons along one flowing arrow. */}
+      <path d="M151 153c8-42 36-71 78-68 31 2 50 23 55 48"/>
+      <path d="M259 119c7 7 14 14 22 19 4 3 7 2 10-2 6-8 10-17 14-25"/>
+      <g fill="currentColor" stroke="none">
+        <path d="M135 174c8-1 14 5 14 13s-6 13-13 13-14-5-14-12 5-13 13-14Z"/>
+        <path d="M164 190c7 0 12 6 11 13s-6 12-13 11-12-7-11-13 6-11 13-11Z"/>
+      </g>
     </g>}
-    {['vectors', 'matrix', 'eigen'].includes(kind) && <g stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <g opacity=".12">{[85, 125, 165, 205, 245, 285, 325].map(x => <path key={`x${x}`} d={`M${x} 25v220`}/>)}{[45, 85, 125, 165, 205, 245].map(y => <path key={`y${y}`} d={`M65 ${y}h285`}/>)}</g>
-      <path d="M80 205h265M125 235V35" opacity=".35" markerEnd={`url(#arrow-${kind})`}/>
-      {kind === 'vectors' && <><path d="m125 205 165-135" strokeWidth="4" markerEnd={`url(#arrow-${kind})`}/><path d="m125 205 120-5" strokeWidth="3" opacity=".5" markerEnd={`url(#arrow-${kind})`}/><path d="M290 70v135H125" strokeDasharray="5 8" opacity=".4"/><text x="296" y="60" fill="currentColor" stroke="none" fontSize="25" fontStyle="italic">v</text><path d="m247 216-4 5m-99-185 5-6" opacity=".3"/></>}
-      {kind === 'matrix' && <><path d="m125 205 58-135 135 15-58 135-135-15Z" fill="currentColor" fillOpacity=".08" strokeWidth="3"/><path d="m125 205 58-135m-58 135 135 15" strokeWidth="4" markerEnd={`url(#arrow-${kind})`}/><path d="m155 138 135 15m-98 60 58-135" opacity=".4"/><text x="270" y="61" fill="currentColor" stroke="none" fontSize="26">A</text></>}
-      {kind === 'eigen' && <><path d="m100 225 205-185" strokeWidth="3" opacity=".3"/><path d="m125 205 134-121" strokeWidth="4" markerEnd={`url(#arrow-${kind})`}/><path d="m125 205 74-67" strokeWidth="6" markerEnd={`url(#arrow-${kind})`}/><text x="258" y="94" fill="currentColor" stroke="none" fontSize="24">λv</text><text x="192" y="156" fill="currentColor" stroke="none" fontSize="22">v</text></>}
+    {kind === 'vectors' && <SoftArrow/>}
+    {kind === 'matrix' && <g strokeWidth="11">
+      {/* A little patch of space, stretched and sheared. */}
+      <path d="M173 65c34-3 71-2 106 1 14 1 21 10 16 24-11 28-19 58-28 88-4 14-11 21-26 21-34 2-70 1-103-3-14-1-20-10-16-23 10-30 20-60 29-88 4-13 9-18 22-20Z"/>
+      <path d="M226 65c-9 43-26 90-34 134M139 132c43 1 93 6 142 3" strokeWidth="9"/>
+      <path d="M135 223c38 15 95 17 136-1m-16-11c7 2 14 5 19 9 3 2 3 5 1 8l-13 15" strokeWidth="9"/>
+    </g>}
+    {kind === 'eigen' && <g>
+      {/* Different lengths, the same direction and curve. */}
+      <g transform="translate(30 65) scale(.66)"><SoftArrow/></g>
+      <g transform="translate(78 4)"><SoftArrow/></g>
     </g>}
   </svg>
 }

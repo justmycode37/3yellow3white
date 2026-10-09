@@ -37,7 +37,9 @@ html, body, #root { min-height: 100%; background: var(--bg); }
 .app-shell { max-width: 1220px; padding: 0 40px; }
 .header { height: 100px; }
 .header-start { gap: 18px; }
-.menu-toggle, .player-menu-toggle { width: 46px; height: 46px; border: 0; background: var(--surface); color: var(--ink); }
+.menu-toggle, .player-menu-toggle { width: 46px; height: 46px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); }
+.menu-toggle:hover, .player-menu-toggle:hover, .menu-toggle.is-open, .player-menu-toggle.is-open { background: transparent; color: var(--ink); }
+.menu-toggle .menu-glyph, .player-menu-toggle .menu-glyph { width: 29px; height: 29px; stroke: currentColor; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; }
 .wordmark { font-size: 33px; }
 .top-nav { gap: 4px; background: var(--surface); padding: 5px; }
 .top-nav button { min-height: 42px; padding: 10px 19px; font-size: 13px; }
@@ -65,7 +67,8 @@ html, body, #root { min-height: 100%; background: var(--bg); }
 .navigation-layer.is-open .navigation-drawer { transform: translateX(0); }
 .drawer-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-left: 10px; }
 .drawer-brand { font-family: DynaPuff, sans-serif; font-size: 38px; font-weight: 600; letter-spacing: -2px; }
-.drawer-close { width: 44px; height: 44px; background: var(--soft); }
+.drawer-close, .drawer-close:hover { width: 44px; height: 44px; border-radius: 8px; background: transparent; color: var(--ink); }
+.drawer-close-glyph { width: 29px; height: 29px; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .drawer-tagline { font-size: 13px; color: var(--muted); margin: 12px 10px 36px; }
 .drawer-links { display: flex; flex-direction: column; gap: 9px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .drawer-links > button { display: flex; align-items: center; gap: 13px; min-height: 67px; width: 100%; padding: 10px; flex-shrink: 0; border-radius: 22px; text-align: left; font-size: 15px; }
@@ -99,12 +102,21 @@ html, body, #root { min-height: 100%; background: var(--bg); }
 
 /* The lesson canvas keeps only the subject, title, illustration, and playback. */
 .player-menu-anchor { top: 28px; left: 28px; }
-.player-menu-toggle { background: #ffffff9c; color: #29282e; }
+.player-menu-toggle { background: transparent; color: var(--ink); }
 .lesson-stage { padding: 100px 0 130px; }
 .lesson-text h1 { font-family: DynaPuff, sans-serif; font-size: clamp(42px, 5vw, 72px); font-weight: 600; letter-spacing: -2px; line-height: 1.15; }
 .lesson-subject { font-size: 13px; }
 .lesson-text > p { font-size: 14px; }
 .progress-track { height: 8px; top: 8px; }
+.player-controls { width: min(640px, calc(100vw - 48px)); }
+.player-control-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; align-items: start; gap: 14px; }
+.player-control-row > .icon-button, .player-control-row > .icon-button:hover { width: 36px; height: 36px; border-radius: 8px; background: transparent; color: inherit; box-shadow: none; }
+.player-control-row > .icon-button { opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s; }
+.show-controls .player-control-row > .icon-button, .player-controls:focus-within .player-control-row > .icon-button, .player-controls:hover .player-control-row > .icon-button { opacity: 1; transform: none; }
+.player-timeline { min-width: 0; }
+.player-timeline .progress-wrap { height: 36px; }
+.player-timeline .progress-track { top: 50%; height: 8px; transform: translateY(-50%); }
+.player-timeline .progress-meta { margin-top: 4px; }
 
 @media (max-width: 1000px) {
   .app-shell { padding: 0 28px; }
@@ -145,8 +157,9 @@ html, body, #root { min-height: 100%; background: var(--bg); }
   .lesson-visual { height: 235px; margin-top: 26px; }
   .lesson-visual > .lesson-art { height: 245px; }
   .player-controls { bottom: max(27px, env(safe-area-inset-bottom)); }
-  .playback-buttons { opacity: 1; transform: none; }
-  .playback-buttons > .icon-button { width: 40px; height: 40px; }
+  .player-control-row { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 8px; }
+  .player-control-row > .icon-button, .player-control-row > .icon-button:hover { width: 40px; height: 40px; opacity: 1; transform: none; }
+  .player-timeline .progress-wrap { height: 40px; }
 }
 
 @media (max-width: 370px) {

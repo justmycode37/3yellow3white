@@ -9,5 +9,6 @@ import App from './App'
 import './styles.css'
 import './interface.css'
 import './plan.css'
+import './artwork.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>)
