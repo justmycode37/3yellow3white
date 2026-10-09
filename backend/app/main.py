@@ -1,4 +1,4 @@
-"""Hello-world FastAPI backend — replace this with your real API."""
+"""API plus the built animlib demo."""
 
 from __future__ import annotations
 
@@ -9,11 +9,16 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+DEMO_DIR = Path(__file__).resolve().parents[2] / "frontend" / "animlib" / "dist" / "demo"
+if not (DEMO_DIR / "index.html").is_file():
+    raise RuntimeError(
+        "animlib demo is not built at "
+        f"{DEMO_DIR}. From the repo root run: npm ci && npm run demo:build"
+    )
 
 app = FastAPI(
     title="3yellow3white",
-    description="VIScon Hackathon — hello world scaffold",
+    description="VIScon Hackathon — animlib demo",
     version="0.1.0",
 )
 
@@ -47,10 +52,10 @@ def healthz() -> dict[str, bool]:
     return {"ok": True}
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def index() -> FileResponse:
-    return FileResponse(FRONTEND_DIR / "index.html")
+    return FileResponse(DEMO_DIR / "index.html")
 
 
-# Serve CSS/JS/assets from /static/*
-app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+# Vite demo assets are rooted at /. API routes above stay matched first.
+app.mount("/", StaticFiles(directory=str(DEMO_DIR)), name="demo")
