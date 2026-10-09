@@ -16,6 +16,42 @@ describe('geometry interpolation',()=> {
     expect(result?.points.every(p=>p.every(Number.isFinite))).toBe(true);
     expect(morphOutline({kind:'circle'},{kind:'line',points:[[0,0],[1,1]]},0.5)).toBeNull();
   });
+  it('preserves both outlines at morph endpoints when their corner counts differ',()=> {
+    const from:Vec3[]=[[-1.5,-1,0],[1.5,-1,0],[1.5,1,0],[-1.5,1,0]];
+    const to:Vec3[]=[[-2,-0.7,0],[0.3,-1.8,0],[2,0,0],[0.2,1.6,0],[-1.7,0.9,0]];
+    const [a,b]=matchPoints(from,to,true);
+    for(const [original,matched] of [[from,a],[to,b]]) {
+      for(const corner of original)expect(matched.some(p=>p.every((v,i)=>Math.abs(v-corner[i])<1e-10))).toBe(true);
+      const area=(points:Vec3[])=>Math.abs(points.reduce((sum,p,i)=>{const q=points[(i+1)%points.length];return sum+p[0]*q[1]-p[1]*q[0];},0))/2;
+      expect(area(matched)).toBeCloseTo(area(original),10);
+    }
+  });
+  it('keeps an irregular polygon unchanged with reversed winding and a different starting corner',()=> {
+    const polygon:Vec3[]=[[-2,-1,0],[1.3,-0.7,0],[2,1.5,0],[-0.4,2,0],[-1.7,0.4,0]];
+    const reordered=[...polygon.slice(2),...polygon.slice(0,2)].reverse();
+    const [a,b]=matchPoints(polygon,reordered,true);
+    expect(a).toEqual(b);
+  });
+  it('preserves bends and endpoints in open paths with different point counts',()=> {
+    const from:Vec3[]=[[0,0,0],[0.7,0,0],[0.7,3,0]];
+    const to:Vec3[]=[[0,0,0],[0.2,1,0],[2,1,0],[2,3,0]];
+    const [a,b]=matchPoints(from,to,false);
+    for(const [original,matched] of [[from,a],[to,b]])for(const p of original) {
+      expect(matched.some(q=>q.every((v,i)=>Math.abs(v-p[i])<1e-10))).toBe(true);
+    }
+    expect(a[0]).toEqual(from[0]);expect(a.at(-1)).toEqual(from.at(-1));
+    expect(b[0]).toEqual(to[0]);expect(b.at(-1)).toEqual(to.at(-1));
+  });
+  it('does not reuse stale correspondence after a control changes an outline',()=> {
+    const a:Vec3[]=[[0,0,0],[1,0,0],[0,1,0]],b:Vec3[]=[[0,0,0],[2,0,0],[0,2,0]];
+    const original=matchPoints(a,b,true);
+    b[1][0]=4;
+    const changed=matchPoints(a,b,true);
+    expect(changed[1]).toContainEqual([4,0,0]);
+    expect(original[1]).not.toContainEqual([4,0,0]);
+    b[1][0]=2;
+    expect(matchPoints(a,b,true)).toEqual(original);
+  });
 });
 describe('3D camera',()=> {
   const camera={yaw:0,pitch:0,target:[0,0,0] as Vec3,height:8,distance:10,perspective:1};

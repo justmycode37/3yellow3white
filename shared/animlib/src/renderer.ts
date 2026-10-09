@@ -1,5 +1,6 @@
 /// <reference types="@webgpu/types" />
 import earcut from 'earcut';
+import { GeometryCache } from './cache.js';
 import { ViewInteraction } from './interaction.js';
 import { paletteResolver, parseColor } from './palette.js';
 import type { PaletteResolver } from './palette.js';
@@ -37,7 +38,7 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
   if(input.lit>0.5){let amount=0.32+0.68*max(0.,dot(normalize(input.normal),normalize(vec3f(-0.4,0.65,1.))));color=vec4f(color.rgb*amount,color.a);}
   return color; }
 `;
-interface DrawItem { depth:number; vertices:number[]; transparent:boolean; screen:boolean }
+interface DrawItem { depth:number; vertices:Float32Array; transparent:boolean; screen:boolean }
 function textTex(text:string):string {return String.raw`\text{`+text.replace(/[\\{}$&#%_^~]/g,c=>({'\\':String.raw`\backslash `,'{':String.raw`\{`,'}':String.raw`\}`,'$':String.raw`\$`,'&':String.raw`\&`,'#':String.raw`\#`,'%':String.raw`\%`,'_':String.raw`\_`,'^':String.raw`\textasciicircum `,'~':String.raw`\textasciitilde `}[c]!))+'}';}
 function contains(contour:Vec3[],point:Vec3):boolean {
   let inside=false;
@@ -47,8 +48,11 @@ function contains(contour:Vec3[],point:Vec3):boolean {
   }
   return inside;
 }
+const triangulations = new GeometryCache<Vec3[]>();
 /** Triangulates compound contours, preserving glyph holes and nested islands. */
 export function triangulateContours(contours:Vec3[][]):Vec3[] {
+  const key=JSON.stringify(contours),cached=triangulations.get(key);
+  if(cached)return cached;
   const loops=contours.map(c=>c.length>1&&Math.hypot(...c[0].map((v,i)=>v-c.at(-1)![i]))<1e-8?c.slice(0,-1):c).filter(c=>c.length>=3);
   const parents=loops.map((loop,i)=>loops.map((outer,j)=>j!==i&&contains(outer,loop[0])?j:-1).filter(j=>j>=0));
   const result:Vec3[]=[];
@@ -59,7 +63,9 @@ export function triangulateContours(contours:Vec3[][]):Vec3[] {
     for(const hole of holes){indices.push(count);count+=hole.length;}
     const triangles=earcut(vertices.flat(),indices,3);for(const index of triangles)result.push(vertices[index]);
   }
-  return result;
+  // The cache owns its points; later edits to an input contour must not alter
+  // a triangulation retained for a previous frame or scene.
+  return triangulations.set(key,result.map(p=>[...p] as Vec3),result.length*64);
 }
 export class CanvasRenderer {
   onOrbitChange:(()=>void)|undefined;
@@ -228,21 +234,52 @@ export class CanvasRenderer {
         local=rotate(local,[camera.pitch,camera.yaw,0]);
         return local.map((v,i)=>v+center[i]) as Vec3;
       };
+      // Each element's transform is affine. Evaluate it once, rather than
+      // allocating vectors and recomputing trigonometry for every vertex.
+      const origin=world([0,0,0]);
+      const axes:Vec3[]=[[1,0,0],[0,1,0],[0,0,1]];
+      const normalBasis=axes.map(axis=>{let normal=axis;for(const state of chain)normal=rotate(normal,state.rotation);return normal;});
+      const scale=chain.reduce((product,state)=>product*state.scale,1);
+      // Transform directions separately to avoid subtracting nearly equal
+      // translated points when a small object is far from the world origin.
+      const basis=element.billboard&&element.space!=='screen'
+        ?axes.map(axis=>rotate(rotate(axis.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]),[camera.pitch,camera.yaw,0]))
+        :normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
       const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[]):void=> {
         const rgba=parseColor(palette.resolve(color));if(!points.length||rgba[3]*opacity*alpha<=0)return;
-        const vertices:number[]=[];let depth=0;
-        for(let i=0;i<points.length;i++){const p=world(points[i]);depth+=project(p,camera,width,height).depth;let normal=normals?.[i]??[0,0,1] as Vec3;for(const state of chain)normal=rotate(normal,state.rotation);vertices.push(...p,rgba[0],rgba[1],rgba[2],rgba[3]*opacity*alpha,element.space==='screen'?1:0,...normal,normals?1:0,elementIndex,...viewportOffset);}
-        items.push({depth:element.space==='screen'?-1e9:depth/points.length,vertices,transparent:rgba[3]*opacity*alpha<0.999999,screen:element.space==='screen'});
+        const vertices=new Float32Array(points.length*15),screen=element.space==='screen',a=rgba[3]*opacity*alpha;
+        let sumX=0,sumY=0,sumZ=0;
+        for(let i=0;i<points.length;i++) {
+          const p=points[i],j=i*15;
+          const x=origin[0]+p[0]*basis[0][0]+p[1]*basis[1][0]+p[2]*basis[2][0];
+          const y=origin[1]+p[0]*basis[0][1]+p[1]*basis[1][1]+p[2]*basis[2][1];
+          const z=origin[2]+p[0]*basis[0][2]+p[1]*basis[1][2]+p[2]*basis[2][2];
+          sumX+=x;sumY+=y;sumZ+=z;
+          vertices[j]=x;vertices[j+1]=y;vertices[j+2]=z;
+          vertices[j+3]=rgba[0];vertices[j+4]=rgba[1];vertices[j+5]=rgba[2];vertices[j+6]=a;vertices[j+7]=screen?1:0;
+          if(normals) {
+            const n=normals[i];
+            for(let axis=0;axis<3;axis++)vertices[j+8+axis]=n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis];
+          } else {vertices[j+8]=normalBasis[2][0];vertices[j+9]=normalBasis[2][1];vertices[j+10]=normalBasis[2][2];}
+          vertices[j+11]=normals?1:0;vertices[j+12]=elementIndex;vertices[j+13]=viewportOffset[0];vertices[j+14]=viewportOffset[1];
+        }
+        // Camera depth is linear in world position, so the centroid gives the
+        // same sorting depth without projecting every vertex.
+        const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
+        items.push({depth,vertices,transparent:a<0.999999,screen});
       };
-      const contours=(paths:Vec3[][],alpha=1,color=element.fill):void=>{addTriangles(triangulateContours(paths),color,alpha);};
+      const contours=(paths:Vec3[][],alpha=1,color=element.fill):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha);};
       const stroke=(points:Vec3[],closed:boolean,alpha=1,capEnd=true):void=> {
+        if(element.stroke==='none'||element.strokeWidth<=0)return;
         if(element.strokeProfile==='round') {
           const tube=tubeTriangles(points,element.strokeWidth,closed,capEnd);
           addTriangles(tube.points,element.stroke,alpha,tube.normals);
         } else addTriangles(strokeTriangles(points,element.strokeWidth,closed),element.stroke,alpha);
       };
       const latexPaths=(paths:LatexPath[],size:number,alpha:number,offset:Vec3=[0,0,0]):void=> {
-        for(const path of paths)contours(path.contours.map(c=>c.map(p=>p.map((v,i)=>v*size+offset[i]) as Vec3)),alpha,element.fill==='none'?element.stroke:element.fill);
+        const color=element.fill==='none'?element.stroke:element.fill;
+        if(color==='none')return;
+        for(const path of paths)addTriangles(triangulateContours(path.contours).map(p=>p.map((v,i)=>v*size+offset[i]) as Vec3),color,alpha);
       };
       const addMesh=(geometry:Geometry,alpha=1):void=> {
         const vertices=(geometry.vertices??[]).map(vec3);
@@ -277,6 +314,11 @@ export class CanvasRenderer {
       if(!morph){drawGeometry(element.geometry);continue;}
       const {from,to,progress:t}=morph;
       if(t<=0){drawGeometry(from);continue;}if(t>=1){drawGeometry(to);continue;}
+      if(from.kind==='text'&&to.kind==='text'&&(from.text??'')===(to.text??'')) {
+        const defaultSize=element.space==='screen'?16:0.4;
+        drawGeometry({...from,fontSize:lerp(from.fontSize??defaultSize,to.fontSize??defaultSize,t)});
+        continue;
+      }
       const shape=morphOutline(from,to,t);
       if(shape){drawGeometry({kind:from.kind==='arrow'&&to.kind==='arrow'?'arrow':'path',points:shape.points,closed:shape.closed});continue;}
       if(from.kind==='sphere'&&to.kind==='sphere'){drawGeometry({kind:'sphere',radius:lerp(from.radius??1,to.radius??1,t)});continue;}
@@ -352,9 +394,12 @@ export class CanvasRenderer {
     const ordered=batches.map(batch=>{
       const opaque=batch.items.filter(i=>!i.transparent).sort((a,b)=>b.depth-a.depth);
       const transparent=batch.items.filter(i=>i.transparent).sort((a,b)=>b.depth-a.depth);
-      return {...batch,opaqueVertices:opaque.reduce((n,i)=>n+i.vertices.length/15,0),data:[...opaque,...transparent].flatMap(i=>i.vertices)};
+      return {...batch,opaqueVertices:opaque.reduce((n,i)=>n+i.vertices.length/15,0),items:[...opaque,...transparent],
+        floatCount:batch.items.reduce((n,i)=>n+i.vertices.length,0)};
     });
-    const data=new Float32Array(ordered.flatMap(batch=>batch.data));
+    const data=new Float32Array(ordered.reduce((n,batch)=>n+batch.floatCount,0));
+    let offset=0;
+    for(const batch of ordered)for(const item of batch.items){data.set(item.vertices,offset);offset+=item.vertices.length;}
     if(data.byteLength>this.capacity){this.vertices?.destroy();this.capacity=Math.max(256,data.byteLength*2);this.vertices=device.createBuffer({size:this.capacity,usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});}
     if(data.length)device.queue.writeBuffer(this.vertices!,0,data);
     const clear=parseColor(palette.resolve(options.background)),encoder=device.createCommandEncoder();
@@ -366,7 +411,7 @@ export class CanvasRenderer {
       const pass=encoder.beginRenderPass({colorAttachments:[{view:colorView,resolveTarget:target,clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:index===0?'clear':'load',storeOp:'store'}],depthStencilAttachment:{view:depthView,depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}});
       if(batch.rect){const [x,y,w,h]=batch.rect;pass.setViewport(x,y,w,h,0,1);pass.setScissorRect(x,y,w,h);}
       pass.setPipeline(this.pipeline);pass.setBindGroup(0,batch.resources.bindGroup);
-      const count=batch.data.length/15;
+      const count=batch.floatCount/15;
       if(count){pass.setVertexBuffer(0,this.vertices!);if(batch.opaqueVertices)pass.draw(batch.opaqueVertices,1,firstVertex);
         if(count>batch.opaqueVertices){pass.setPipeline(this.transparentPipeline!);pass.setBindGroup(0,batch.resources.transparentBindGroup);pass.draw(count-batch.opaqueVertices,1,firstVertex+batch.opaqueVertices);}}
       firstVertex+=count;pass.end();

@@ -500,16 +500,20 @@ s.play(shape.morphTo({ kind: "rectangle", width: 2, height: 1 }), {
 });
 ```
 
-Compatible outlines are resampled by arc length. Point matching aligns winding
-and the start of closed outlines before interpolation. Circles, rectangles, and
-closed paths can morph into one another; open paths, lines, and arrows can morph
+Point matching aligns winding and the start of closed outlines before
+interpolation. Matching vertex counts retain their corners; other compatible
+outlines use arc-length samples that include every corner from both shapes.
+An unchanged outline retains its exact geometry throughout the morph.
+Circles, rectangles, and closed paths can morph into one another; open paths,
+lines, and arrows can morph
 into compatible open outlines. Arrow-to-arrow morphs retain arrowheads.
 
 Meshes with matching vertex counts interpolate corresponding vertex positions.
 Use matching vertex ordering and compatible topology for meaningful mesh morphs.
 The library cannot infer the correspondence between two arbitrary 3D models.
-Other incompatible representations crossfade. Morph targets describe geometry;
-animate position, scale, rotation, and color with separate actions in the same
+Unchanged text renders once at full element opacity, with font size interpolated
+when it changes. Other incompatible representations crossfade. Morph targets
+describe geometry; animate position, scale, rotation, and color with separate actions in the same
 `play` when needed.
 
 ### Named formula parts
@@ -950,13 +954,20 @@ or rendering fallback. Set `ANIMLIB_GPU_ARTIFACTS` to a directory to save PNG fr
 ANIMLIB_GPU_ARTIFACTS=/tmp/animlib-frames npm --workspace animlib run test:gpu
 ```
 
+Run `npm --workspace animlib run bench:render` to measure CPU geometry preparation
+on the four library demonstrations. It evaluates fresh frames and reports median
+and p95 times after warmup. GPU calls are stubbed, so these measurements exclude
+GPU work and timeline evaluation and are not browser frame rates.
+
 ## 10. Current boundaries and next steps
 
 This implementation targets modest explanatory scenes. It does not establish a
-large-scene performance guarantee. TeX layout and morph correspondence are prepared
-or cached where possible, but vertex generation/upload and timeline evaluation
-still happen each frame. Selective reconstruction and GPU-side animation are
-possible improvements after measuring real scenes.
+large-scene performance guarantee. TeX layout is cached, and bounded caches reuse
+contour triangulations and morph correspondence across evaluated frames. Object
+transforms are prepared once per element, and vertex data is assembled directly
+in typed arrays. Vertex generation/upload and timeline evaluation still happen
+each frame. Selective reconstruction and GPU-side animation are possible
+improvements after measuring real scenes.
 
 Opaque meshes have depth testing. Intersecting transparent surfaces use approximate
 sorting and can render incorrectly. Default strokes are tessellated ribbons; opt-in round strokes use lit tubes

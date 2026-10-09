@@ -28,7 +28,7 @@ async function captureRenderer(palette?:ColorPalette) {
   const canvas={width:800,height:450,style:{},getBoundingClientRect:()=>({width:800,height:450}),getContext:()=>({configure:()=>{},unconfigure:()=>{},getCurrentTexture:()=>({createView:()=>({})})}),addEventListener:()=>{},removeEventListener:()=>{}} as unknown as HTMLCanvasElement;
   const renderer=new CanvasRenderer(canvas,palette);
   await renderer.prepare([]);
-  return {renderer,
+  return {renderer,vertices:()=>writes[0],
     renderColors(frame:Frame,display:CompiledScene['options']=options){
       writes.length=0;renderer.render(frame,display);
       const data=writes[0];
@@ -80,6 +80,30 @@ describe('render review regressions',()=> {
       for(const rgba of result.colors)expect(rgba.slice(0,3)).toEqual([expect.closeTo(221/255),expect.closeTo(221/255),expect.closeTo(221/255)]);
       expect(result.clear).toEqual({r:221/255,g:221/255,b:221/255,a:1});
     }finally{renderer.dispose();}
+  });
+
+  it('retains all submitted glyph attributes throughout an unchanged text morph',async()=> {
+    const {renderer,draw,vertices}=await captureRenderer();
+    try {
+      const geometry:Geometry={kind:'text',text:'A',fontSize:2};
+      const label=element(geometry,{opacity:0.45});
+      draw(label);const original=vertices();
+      for(const progress of [0.000001,0.25,0.5,0.999999]) {
+        draw({...label,morph:{from:geometry,to:structuredClone(geometry),progress}});
+        expect(vertices()).toEqual(original);
+      }
+    } finally {renderer.dispose();}
+  });
+
+  it('renders a text size morph like directly rendering its interpolated size',async()=> {
+    const {renderer,draw,vertices}=await captureRenderer();
+    try {
+      const from:Geometry={kind:'text',text:'label'},to:Geometry={...from,fontSize:32};
+      const label=element(from,{space:'screen'});
+      draw({...label,geometry:{...from,fontSize:24}});const expected=vertices();
+      draw({...label,morph:{from,to,progress:0.5}});
+      expect(vertices()).toEqual(expected);
+    } finally {renderer.dispose();}
   });
 
   it('retains arrowhead size when a morph subdivides an unchanged arrow',async()=> {
