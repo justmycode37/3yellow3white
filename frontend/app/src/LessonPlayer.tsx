@@ -47,16 +47,15 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     setPlayback(undefined)
     setStartupError('')
     // Load the renderer only when opening a lesson, keeping the workspace light.
-    void import('animlib').then(({ createPlayer }) => {
+    void import('animlib').then(({ createPlayer, Color }) => {
       if (!active || !canvas.current || !screen.current) return
-      const palette = getComputedStyle(screen.current)
       controller = new LessonPlayback(createPlayer({ canvas: canvas.current }))
       void controller.setSuspended(suspended.current)
       setPlayback(controller)
       void controller.load(lessonScenes(lesson, {
-        background: theme === 'dark' ? '#000000' : palette.getPropertyValue('--art-bg').trim(),
-        ink: palette.color,
-        accent: theme === 'dark' ? '#8acde5' : '#365f80',
+        background: theme === 'dark' ? Color.BLACK : Color.WHITE,
+        ink: theme === 'dark' ? Color.WHITE : Color.GREY_E,
+        accent: theme === 'dark' ? Color.BLUE : Color.BLUE_E,
       }), lesson.duration * (lesson.progress ?? 0))
     }).catch(error => {
       if (active) setStartupError(error instanceof Error ? error.message : String(error))

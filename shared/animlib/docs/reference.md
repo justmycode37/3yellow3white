@@ -57,7 +57,7 @@ export default scene({ mode: "2d", end: "hold" }, s => {
   const dot = s.circle("main-shape", {
     position: [-2, 0],
     radius: scale / 2,
-    fill: "#58c4dd",
+    fill: Color.BLUE,
   });
 
   s.play(dot.fadeIn(), { duration: 0.5 });
@@ -116,6 +116,78 @@ Open the demo at `http://localhost:5173/?interactive` for positioned controls an
 two independently rotatable 3D views.
 
 ## 2. The host interface
+
+### Color palettes
+
+Scene colors use the enum-like `Color` API exported by `animlib` and
+`animlib/core`. Fills, strokes, animation targets, and backgrounds accept named
+palette tokens. TypeScript rejects arbitrary strings; the scene compiler and
+renderer enforce the same rule for JavaScript callers. Raw hex, RGB, HSL, and CSS
+names are invalid even when their RGB value happens to match a palette swatch.
+Invalid submissions return diagnostics and preserve the last valid sequence.
+
+```js
+export default scene({ background: Color.BLACK }, s => {
+  const dot = s.circle("dot", { fill: Color.BLUE, stroke: Color.NONE });
+  s.play(dot.animate({ fill: Color.RED }), { duration: 1 });
+  s.line("axis", {
+    points: [[-3, 0], [3, 0]],
+    stroke: { color: Color.GREY_B, opacity: 0.4 },
+  });
+});
+```
+
+`Color.BLUE` is the literal token `"BLUE"`, so string literal tokens are also
+accepted. `Color.NONE` is `"none"`. A `ColorValue` is a token or
+`{ color: PaletteColor, opacity: number }`, with opacity from 0 to 1.
+`ElementStyle`, `ElementState`, and animated styles use this type; backgrounds
+require an opaque `PaletteColor` token. Element `opacity`, `fadeIn`, and `fadeOut`
+remain available. Scene code gets frozen `Color` and `palette` objects, with
+`palette.colors.BLUE` also returning the token `"BLUE"`. Unknown members produce
+an error instead of silently selecting the default color.
+
+The default `THREE_BLUE_ONE_BROWN_PALETTE` uses the full set of swatches and median
+aliases from [3Blue1Brown's Manim configuration](https://github.com/3b1b/manim/blob/master/manimlib/default_config.yml)
+and [constants](https://github.com/3b1b/manim/blob/master/manimlib/constants.py).
+It has a black background and white foreground, following his
+[video configuration](https://github.com/3b1b/videos/blob/master/custom_config.yml)
+and Manim's default object color. `Color.PURE_BLUE` selects pure blue;
+`Color.BLUE` selects the usual Manim blue.
+
+The host can supply a custom palette mapping the same typed slots to other colors:
+
+```ts
+import { Color, createPlayer, type ColorPalette } from "animlib";
+
+const palette: ColorPalette = {
+  colors: { BLACK: "#222222", WHITE: "#dddddd", BLUE: "#58c4dd" },
+  background: Color.WHITE,
+  foreground: Color.BLACK,
+};
+const player = createPlayer({ canvas, palette });
+// Headless equivalents:
+// new SceneSequence({ palette });
+// await compileSource(source, { palette, previous, controls, seed: 1 });
+```
+
+Custom palettes are immutable host configuration. They must define at least one
+`Color` slot, with opaque CSS values, plus background and foreground tokens present
+in that palette. Colors are required to exist in the active palette: this example
+rejects `Color.RED` because it has no RED slot. CSS values are only accepted in
+host palette definitions. Scene code cannot replace or disable the host palette.
+
+Compiled scenes, evaluated frames, and JSON handoffs retain typed tokens, so
+inherited elements resolve against the receiving palette. Color animations select
+intermediate palette swatches by Oklab distance while interpolating alpha
+continuously. This internal interpolation does not allow invalid authored colors.
+The renderer resolves tokens to RGB at the drawing boundary for every view.
+
+Enforcement applies to base drawing colors. Lighting, opacity blending,
+antialiasing, and morph crossfades still produce intermediate pixel colors;
+this is not a posterization filter. Backgrounds remain opaque. Native DOM controls
+and surrounding application CSS are outside the scene palette.
+
+### Player API
 
 The host owns the page, the editor or LLM connection, and asset loading. Animlib
 owns the animation player. The submitted code does not receive the player itself.
@@ -313,7 +385,7 @@ stroke, stroke width, and geometry. Elements expose actions such as `moveTo`,
 `rotateTo`, `scaleTo`, `fadeIn`, `fadeOut`, `animate`, and `morphTo`.
 
 ```js
-s.play(dot.animate({ scale: 1.5, fill: "#ffffff" }), { duration: 0.6 });
+s.play(dot.animate({ scale: 1.5, fill: Color.WHITE }), { duration: 0.6 });
 ```
 
 Coordinate conventions:
@@ -603,10 +675,10 @@ around an axis. `strokeWidth` is the tube's diameter in world units.
 
 ```js
 v.line3D("bond", {
-  points: [[0, 0, 0], [1.4, 0.5, 0.8]], stroke: "white", strokeWidth: 0.08,
+  points: [[0, 0, 0], [1.4, 0.5, 0.8]], stroke: Color.WHITE, strokeWidth: 0.08,
 });
 v.arrow3D("axis-z", {
-  points: [[0, 0, -2], [0, 0, 2]], stroke: "#fc6255", strokeWidth: 0.035,
+  points: [[0, 0, -2], [0, 0, 2]], stroke: Color.RED, strokeWidth: 0.035,
 });
 ```
 
@@ -629,13 +701,13 @@ are synchronous and cannot be nested. `v.play` advances the same scene clock as
 export default scene({}, s => {
   let leftCamera, rightCamera;
   s.view("left", { rect: [0, 0.15, 0.5, 0.7] }, v => {
-    v.sphere("left-ball", { position: [1, 0, 0], fill: "#58c4dd" });
+    v.sphere("left-ball", { position: [1, 0, 0], fill: Color.BLUE });
     leftCamera = v.camera;
   });
   s.view("right", {
     rect: [0.5, 0.15, 0.5, 0.7], camera: { yaw: -0.5, height: 5 },
   }, v => {
-    v.sphere("right-ball", { position: [1, 0, 0], fill: "#fc6255" });
+    v.sphere("right-ball", { position: [1, 0, 0], fill: Color.RED });
     rightCamera = v.camera;
   });
   s.wait(3);

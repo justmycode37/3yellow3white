@@ -74,7 +74,7 @@ it('locks orbit input during camera tracks while retaining viewer orientation co
   try {
     await renderer.prepare([]);renderer.setOrbit({yaw:0.5,pitch:0.2});renderer.setOrbitEnabled(false);
     const camera={yaw:0.6,pitch:0.3,target:[0,0,0] as Vec3,height:8,distance:10,perspective:1};
-    const options={mode:'3d' as const,end:'hold' as const,orbit:true,background:'#101b2c'};
+    const options={mode:'3d' as const,end:'hold' as const,orbit:true,background:"GREY_E" as const};
     renderer.render({elements:[],camera,cameraAnimated:true},options);
     let uniform=writeBuffer.mock.calls.at(-1)![2] as Float32Array;
     expect(uniform[4]).toBeCloseTo(1.1);expect(uniform[5]).toBeCloseTo(0.5);

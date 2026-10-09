@@ -70,12 +70,12 @@ describe("reviewed scene boundary invariants", () => {
       export default result;`)).rejects.toThrow(/group|child|missing/i);
   });
 
-  it("retains alpha when animating an eight-digit hexadecimal color", async () => {
+  it("retains alpha when animating a translucent Color token", async () => {
     const scene = await compileSource(`export default scene({},s=>{
-      const dot=s.circle('dot',{fill:'#ff0000ff'});
-      s.play(dot.animate({fill:'#0000ff00'}),{duration:1,ease:'linear'});
+      const dot=s.circle('dot',{fill:"PURE_RED"});
+      s.play(dot.animate({fill:{"color": "PURE_BLUE", "opacity": 0}}),{duration:1,ease:'linear'});
     });`);
-    expect(evaluateScene(scene,1).elements[0].fill).toBe('#0000ff00');
+    expect(evaluateScene(scene,1).elements[0].fill).toEqual({color:"PURE_BLUE",opacity:0});
   });
 
   it("rejects malformed morph data crossing the VM boundary", async () => {

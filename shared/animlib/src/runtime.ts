@@ -108,8 +108,8 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     numericFormat(geometry.numberFormat);
     const element: ElementState = {
       id, geometry: { kind, ...clone(geometry) }, position: vector(position), rotation: rotation(r),
-      scale: scale ?? 1, opacity: opacity ?? 1, fill: fill ?? (kind === "line" || kind === "arrow" ? "none" : "#ffffff"),
-      stroke: stroke ?? (kind === "line" || kind === "arrow" ? "#ffffff" : "none"), strokeWidth: strokeWidth ?? (space === "screen" ? 1 : 0.04),
+      scale: scale ?? 1, opacity: opacity ?? 1, fill: fill === undefined ? (kind === "line" || kind === "arrow" ? "none" : (input.palette?.foreground ?? "WHITE")) : fill,
+      stroke: stroke === undefined ? (kind === "line" || kind === "arrow" ? (input.palette?.foreground ?? "WHITE") : "none") : stroke, strokeWidth: strokeWidth ?? (space === "screen" ? 1 : 0.04),
       ...(strokeProfile !== undefined ? { strokeProfile } : {}),
       space: space ?? "world", ...(billboard !== undefined ? { billboard } : {}), ...(billboardOffset !== undefined ? { billboardOffset:vector(billboardOffset) } : {}), viewportOffset: viewportOffset !== undefined ? viewport(viewportOffset) : [0,0], ...(currentView ? { view: currentView } : {}), persistent: false,
     };
@@ -284,5 +284,5 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   };
   const returned: unknown = builder(context);
   if (returned && typeof (returned as { then?: unknown }).then === "function") throw new Error("Scene builders must be synchronous");
-  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background ?? "#000000", ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks };
+  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks };
 }
