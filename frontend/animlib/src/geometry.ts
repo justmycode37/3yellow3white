@@ -14,7 +14,8 @@ export function rotate(point: Vec3, rotation: Vec3): Vec3 {
 export interface Projection { x: number; y: number; depth: number; visible: boolean; scale: number }
 export function project(point: Vec3, camera: CameraState, width: number, height: number): Projection {
   const delta: Vec3 = point.map((v, i) => v-camera.target[i]) as Vec3;
-  const [x,y,z] = rotate(delta, [-camera.pitch, -camera.yaw, 0]);
+  // Undo world-up yaw before camera-local pitch to keep the horizon upright.
+  const [x,y,z] = rotate(rotate(delta, [0, -camera.yaw, 0]), [-camera.pitch, 0, 0]);
   const depth = camera.distance-z;
   const perspective = Math.min(1, Math.max(0, camera.perspective));
   const divisor = (1-perspective) + perspective * depth / camera.distance;
@@ -86,6 +87,76 @@ export function strokeTriangles(points:Vec3[],width:number,closed:boolean):Vec3[
   const triangles:Vec3[]=[];
   for(let i=0;i<(closed?points.length:points.length-1);i++){const a=edges[i],b=edges[(i+1)%points.length];triangles.push(a[0],a[1],b[0],b[0],a[1],b[1]);}
   return triangles;
+}
+
+export interface Surface { points: Vec3[]; normals: Vec3[] }
+const dot = (a: Vec3, b: Vec3): number => a.reduce((sum,v,i) => sum+v*b[i],0);
+const cross = (a: Vec3, b: Vec3): Vec3 => [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const unit = (v: Vec3): Vec3 => { const length=Math.hypot(...v);return v.map(n=>n/length) as Vec3; };
+function perpendicular(tangent: Vec3): Vec3 {
+  const axis=tangent.map(Math.abs).indexOf(Math.min(...tangent.map(Math.abs)));
+  const reference: Vec3=[0,0,0];reference[axis]=1;
+  return unit(cross(tangent,reference));
+}
+
+/** Shared rings make a round, lit stroke around a path in any spatial direction. */
+export function tubeTriangles(points: Vec3[], width: number, closed=false, capEnd=true): Surface {
+  points=points.filter((p,i)=>!i||Math.hypot(...p.map((v,j)=>v-points[i-1][j]))>1e-10);
+  if(closed&&points.length>1&&Math.hypot(...points[0].map((v,i)=>v-points.at(-1)![i]))<1e-10)points=points.slice(0,-1);
+  const result: Surface={points:[],normals:[]};
+  if(points.length<2||width<=0)return result;
+  const segments=16,radius=width/2;
+  const direction=(a:Vec3,b:Vec3)=>unit(b.map((v,i)=>v-a[i]) as Vec3);
+  const tangents=points.map((point,i)=>{
+    const before=direction(points[(i+points.length-1)%points.length],point);
+    const after=direction(point,points[(i+1)%points.length]);
+    if(!closed&&i===0)return after;
+    if(!closed&&i===points.length-1)return before;
+    const sum=before.map((v,j)=>v+after[j]) as Vec3;
+    return Math.hypot(...sum)>1e-8?unit(sum):after;
+  });
+  let u=perpendicular(tangents[0]);
+  const rings=points.map((point,i)=>{
+    const tangent=tangents[i],projection=u.map((v,j)=>v-tangent[j]*dot(u,tangent)) as Vec3;
+    u=Math.hypot(...projection)>1e-8?unit(projection):perpendicular(tangent);
+    const v=cross(tangent,u);
+    return Array.from({length:segments},(_,j)=>{
+      const angle=j*Math.PI*2/segments,normal=u.map((n,k)=>n*Math.cos(angle)+v[k]*Math.sin(angle)) as Vec3;
+      return { point:point.map((n,k)=>n+normal[k]*radius) as Vec3,normal };
+    });
+  });
+  for(let i=0;i<(closed?points.length:points.length-1);i++)for(let j=0;j<segments;j++){
+    const a=rings[i][j],b=rings[i][(j+1)%segments],c=rings[(i+1)%points.length][j],d=rings[(i+1)%points.length][(j+1)%segments];
+    result.points.push(a.point,b.point,c.point,c.point,b.point,d.point);
+    result.normals.push(a.normal,b.normal,c.normal,c.normal,b.normal,d.normal);
+  }
+  if(!closed)for(const i of capEnd?[0,points.length-1]:[0]){
+    const normal=tangents[i].map(v=>v*(i===0?-1:1)) as Vec3;
+    for(let j=0;j<segments;j++){
+      result.points.push(points[i],rings[i][j].point,rings[i][(j+1)%segments].point);
+      result.normals.push(normal,normal,normal);
+    }
+  }
+  return result;
+}
+
+/** A circular cone gives an arrowhead the same silhouette from every side. */
+export function coneTriangles(base: Vec3, tip: Vec3, radius: number): Surface {
+  const result: Surface={points:[],normals:[]};
+  const delta=tip.map((v,i)=>v-base[i]) as Vec3,length=Math.hypot(...delta);
+  if(length<1e-10||radius<=0)return result;
+  const axis=unit(delta),u=perpendicular(axis),v=cross(axis,u),segments=16;
+  const rim=(angle:number)=>{
+    const radial=u.map((n,i)=>n*Math.cos(angle)+v[i]*Math.sin(angle)) as Vec3;
+    return {point:base.map((n,i)=>n+radial[i]*radius) as Vec3,normal:unit(radial.map((n,i)=>n*length+axis[i]*radius) as Vec3)};
+  };
+  const capNormal=axis.map(v=>-v) as Vec3;
+  for(let i=0;i<segments;i++){
+    const a=rim(i*Math.PI*2/segments),b=rim((i+1)*Math.PI*2/segments),middle=rim((i+0.5)*Math.PI*2/segments);
+    result.points.push(a.point,b.point,tip,base,b.point,a.point);
+    result.normals.push(a.normal,b.normal,middle.normal,capNormal,capNormal,capNormal);
+  }
+  return result;
 }
 
 const sphereCache=new Map<string,{points:Vec3[];normals:Vec3[]}>();

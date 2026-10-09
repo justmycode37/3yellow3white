@@ -1,6 +1,7 @@
 import { createPlayer } from "../src/index";
 import type { PlayerState } from "../src/types";
 import { initialSources } from "./scenes";
+import { interactionSource } from "./interaction";
 import "./styles.css";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -63,7 +64,7 @@ scrubber.addEventListener("input", () => {
 canvas.addEventListener("keydown", event => {
   if (event.code === "Space") { event.preventDefault(); playButton.click(); }
 });
-const sources = initialSources.map(scene => ({ ...scene }));
+const sources = (new URLSearchParams(location.search).has("interactive") ? [interactionSource] : initialSources).map(scene => ({ ...scene }));
 const ready = player.submit({ type: "load", scenes: sources }).then(result => {
   if (!result.ok) reportError(result.diagnostics.map(diagnostic => diagnostic.message).join("\n"));
   return result;

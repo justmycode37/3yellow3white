@@ -1,4 +1,4 @@
-import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, Geometry, SceneContext, SceneOptions, Vec2, Vec3 } from "./types.js";
+import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, Geometry, SceneContext, SceneOptions, Vec2, Vec3, ViewState } from "./types.js";
 
 /** Self-contained on purpose: the function is installed inside QuickJS, never eval'd by the host. */
 export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}): CompiledScene {
@@ -21,6 +21,10 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const defaultCamera: CameraState = { yaw: mode === "3d" ? 0.55 : 0, pitch: mode === "3d" ? 0.35 : 0, target: [0, 0, 0], height: 8, distance: 12, perspective: mode === "3d" ? 1 : 0 };
   const camera = clone(input.previous?.camera ?? defaultCamera);
   let cameraNow = clone(camera);
+  const views = new Map<string, ViewState>((input.previous?.views ?? []).map(v => [v.id, { id: v.id, rect: clone(v.rect), camera: clone(v.camera), orbit: v.orbit }]));
+  const viewCameras = new Map([...views].map(([id, view]) => [id, clone(view.camera)]));
+  const declaredViews = new Set<string>();
+  let currentView: string | undefined;
   const previousElements = input.previous?.elements ?? [];
   const originalParents = new Map<string, ElementState>();
   for (const e of previousElements) for (const child of e.geometry.children ?? []) originalParents.set(child, e);
@@ -100,13 +104,14 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     if (used.has(id)) throw new Error(`Duplicate element ID: ${id}`);
     if (used.size >= 2000) throw new Error("Scene element limit exceeded (2000)");
     used.add(id);
-    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, space, billboard, billboardOffset, viewportOffset, ...geometry } = props;
+    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, strokeProfile, space, billboard, billboardOffset, viewportOffset, ...geometry } = props;
     numericFormat(geometry.numberFormat);
     const element: ElementState = {
       id, geometry: { kind, ...clone(geometry) }, position: vector(position), rotation: rotation(r),
       scale: scale ?? 1, opacity: opacity ?? 1, fill: fill ?? (kind === "line" || kind === "arrow" ? "none" : "#ffffff"),
       stroke: stroke ?? (kind === "line" || kind === "arrow" ? "#ffffff" : "none"), strokeWidth: strokeWidth ?? (space === "screen" ? 1 : 0.04),
-      space: space ?? "world", ...(billboard !== undefined ? { billboard } : {}), ...(billboardOffset !== undefined ? { billboardOffset:vector(billboardOffset) } : {}), viewportOffset: viewportOffset !== undefined ? viewport(viewportOffset) : [0,0], persistent: false,
+      ...(strokeProfile !== undefined ? { strokeProfile } : {}),
+      space: space ?? "world", ...(billboard !== undefined ? { billboard } : {}), ...(billboardOffset !== undefined ? { billboardOffset:vector(billboardOffset) } : {}), viewportOffset: viewportOffset !== undefined ? viewport(viewportOffset) : [0,0], ...(currentView ? { view: currentView } : {}), persistent: false,
     };
     states.set(id, element);
     lifecycle.push({ time: cursor, type: "add", ids: [id], elements: [clone(element)] });
@@ -135,17 +140,43 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   };
 
   const context: SceneContext = {
+    view: (id, spec, build) => {
+      idCheck(id);
+      if (currentView !== undefined) throw new Error("Views cannot be nested");
+      if (declaredViews.has(id)) throw new Error(`Duplicate view ID: ${id}`);
+      if (declaredViews.size >= 32) throw new Error("Scene view limit exceeded (32)");
+      declaredViews.add(id);
+      const inheritedCamera = views.get(id)?.camera;
+      const viewCamera: CameraState = { yaw: 0.55, pitch: 0.35, target: [0,0,0], height: 8, distance: 12, perspective: 1, ...clone(inheritedCamera ?? {}), ...clone(spec.camera ?? {}) };
+      views.delete(id);
+      views.set(id, { id, rect: clone(spec.rect), orbit: spec.orbit ?? true, camera: viewCamera });
+      viewCameras.set(id, clone(viewCamera));
+      currentView = id;
+      const { view: _view, ...scoped } = context;
+      scoped.camera = {
+        animate: properties => ({ type: "camera", ids: [], view: id, properties }),
+        to3D: properties => ({ type: "camera", ids: [], view: id, properties: { perspective: 1, yaw: 0.55, pitch: 0.35, ...properties } }),
+        to2D: properties => ({ type: "camera", ids: [], view: id, properties: { perspective: 0, yaw: 0, pitch: 0, ...properties } }),
+      };
+      try {
+        const result: unknown = build(scoped);
+        if (result && typeof (result as { then?: unknown }).then === "function") throw new Error("View builders must be synchronous");
+      } finally { currentView = undefined; }
+    },
     circle: (id, props) => add("circle", id, { radius: 0.5, ...props }),
     sphere: (id, props) => add("sphere", id, { radius: 0.5, ...props }),
     rectangle: (id, props) => add("rectangle", id, { width: 1, height: 1, ...props }),
     path: (id, props) => add("path", id, props),
     line: (id, props) => add("line", id, { points: [[0, 0], [1, 0]], ...props }),
     arrow: (id, props) => add("arrow", id, { points: [[0, 0], [1, 0]], ...props }),
+    line3D: (id, props) => add("line", id, { points: [[0,0,0],[1,0,0]], ...props, strokeProfile: "round" }),
+    arrow3D: (id, props) => add("arrow", id, { points: [[0,0,0],[1,0,0]], ...props, strokeProfile: "round" }),
     text: (id, props) => add("text", id, { fontSize: props.space === "screen" ? 16 : 0.4, ...props }),
     latex: (id, props) => add("latex", id, { fontSize: props.space === "screen" ? 24 : 0.6, ...props }),
     mesh: (id, props) => add("mesh", id, props),
     group: (id, children) => {
       const childIds = children.map(child => child.id);
+      for (const child of childIds) if (states.get(child)?.view !== currentView) throw new Error("Groups must contain elements from the same view");
       for (const child of childIds) {
         descendants(child);
         if (groups.has(child)) throw new Error(`Element ${child} already has a parent group`);
@@ -159,11 +190,12 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       const actions = Array.isArray(actionList) ? actionList : [actionList];
       const writes = new Set<string>();
       for (const action of actions) {
+        if (action.type === "camera" && action.view !== undefined && !viewCameras.has(action.view)) throw new Error(`Unknown camera view: ${action.view}`);
         if(action.type==="morph")numericFormat(action.geometry?.numberFormat);
         if (tracks.length >= 10000) throw new Error("Animation track limit exceeded (10000)");
         const from: Record<string, ElementState> = Object.create(null);
         const properties = action.type === "morph" || action.type === "numbers" ? ["geometry"] : Object.keys(action.properties ?? {});
-        for (const id of action.type === "camera" ? ["@camera"] : action.ids) {
+        for (const id of action.type === "camera" ? [`@camera:${action.view ?? ""}`] : action.ids) {
           for (const property of properties) {
             const key = `${id}/${property}`;
             if (writes.has(key)) throw new Error(`Conflicting animations for ${key} in the same play()`);
@@ -177,9 +209,12 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
           }
         }
         tracks.push({ start: cursor, duration, ease: timing.ease ?? "smooth", action: clone(action), from,
-          ...(action.type === "camera" ? { cameraFrom: clone(cameraNow) } : {}) });
+          ...(action.type === "camera" ? { cameraFrom: clone(action.view ? viewCameras.get(action.view) : cameraNow) } : {}) });
         if (action.type === "camera") {
-          cameraNow = { ...cameraNow, ...clone(action.properties ?? {}) };
+          if (action.view) {
+            if (!viewCameras.has(action.view)) throw new Error(`Unknown camera view: ${action.view}`);
+            viewCameras.set(action.view, { ...viewCameras.get(action.view)!, ...clone(action.properties ?? {}) });
+          } else cameraNow = { ...cameraNow, ...clone(action.properties ?? {}) };
         } else for (const id of action.ids) {
           const e = states.get(id)!;
           if (action.type === "morph") {
@@ -249,5 +284,5 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   };
   const returned: unknown = builder(context);
   if (returned && typeof (returned as { then?: unknown }).then === "function") throw new Error("Scene builders must be synchronous");
-  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background ?? "#000000", ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, lifecycle, tracks };
+  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background ?? "#000000", ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks };
 }

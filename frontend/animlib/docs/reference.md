@@ -31,7 +31,7 @@ npm --workspace animlib run test:gpu  # optional native WebGPU/Dawn checks
 ```
 
 The demo has a black fullscreen canvas, mostly white drawing, selective color
-accents, and only a bottom progress bar and play/pause control. Its three scenes
+accents, native scene controls, and a bottom progress bar and play/pause control. Its three scenes
 demonstrate linear algebra, a molecule becoming 3D, and bubble sort. The demo's
 scrubber maps sequence progress to `{ scene, time }`; scenes retain separate clocks.
 
@@ -89,7 +89,7 @@ helpers built from animlib's shapes, text, paths, meshes, and groups.
 - The **incoming scene** owns boundary animations, including removing previous
   objects, introducing new ones, and morphing carried objects.
 - Successful edits to the running scene restart it at time zero, preserving
-  viewer settings such as slider values and camera rotation.
+  slider values and viewer rotation unless the restart crosses an authored rotation.
 - Seeking uses current control values, without replaying historical input.
 - Scene code chooses how elements and the camera transition between 2D and 3D.
 - Viewer rotation is disabled while an authored camera animation owns the camera.
@@ -104,11 +104,13 @@ helpers built from animlib's shapes, text, paths, meshes, and groups.
 - Modern desktop browsers are the initial target.
 - A scene can have one audio track.
 
-**Controls:** providing `controlsRoot` mounts native sliders, toggles, and selects
-inside that host-owned container. Position it over the canvas with CSS. Omitting
-it leaves controls headless: read definitions from player state and update values
-through `setControl`. Orbit interaction is on the canvas. Object picking and
-dragging are future work. The minimal demo omits the control overlay.
+**Controls:** native sliders, toggles, and selects mount over the canvas by default
+using its parent as the overlay host. `controlsRoot` chooses a different host;
+`controlsRoot: false` leaves controls headless: read definitions from player state
+and update values through `setControl`. Position the canvas inside a container
+that can hold an overlay. Object picking and dragging are future work.
+Open the demo at `http://localhost:5173/?interactive` for positioned controls and
+two independently rotatable 3D views.
 
 ## 2. The host interface
 
@@ -199,6 +201,9 @@ type PlayerState = {
   time: number;
   duration: number;
   status: "empty" | "paused" | "playing" | "ended" | "blocked";
+  controls: ControlDefinition[];
+  orbitEnabled: boolean;
+  views: { id: string; rect: [number, number, number, number]; orbitEnabled: boolean }[];
 };
 
 interface Player {
@@ -559,6 +564,97 @@ Do not recreate the host's controls on every frame if that would lose focus.
 The built-in overlay maintains keyed native widgets and reconciles pending input
 updates after their compilation finishes.
 
+### Control appearance
+
+Controls sit directly over the scene with transparent backgrounds, fine slider
+tracks, compact numeric readouts, and small switches. Labels and strokes adjust
+for the scene's background color. Native inputs preserve keyboard interaction
+and focus while their values change. The host can set `--animlib-control-accent`
+on the overlay host to match its scene colors. Range inputs retain a generous
+20-pixel hit area around the thin visible track.
+
+### Overlay placement
+
+All three control methods accept `position: [x, y]` and `width`. Position is the
+widget's top-left corner in fractions of the canvas width and height, measured
+from the canvas's top-left corner. Width is in CSS pixels (default 220). Omit
+position to use the automatic panel at the top-right. Explicit positions remain
+relative to the whole canvas, including controls declared inside a view. Authors
+should leave room for each widget and the host's playback controls.
+
+```js
+const radius = s.slider("radius", {
+  label: "Radius", default: 1, min: 0.2, max: 2,
+  position: [0.04, 0.06], width: 200,
+});
+```
+
+Widgets receive pointer and keyboard input without initiating a canvas drag.
+They keep their DOM identity and focus when their value or placement changes.
+
+### Round lines and arrows in 3D
+
+`line3D` and `arrow3D` use cylindrical strokes with lit surfaces and capped ends.
+Arrowheads are circular cones, so the shaft and head stay visible while orbiting
+around an axis. `strokeWidth` is the tube's diameter in world units.
+
+```js
+v.line3D("bond", {
+  points: [[0, 0, 0], [1.4, 0.5, 0.8]], stroke: "white", strokeWidth: 0.08,
+});
+v.arrow3D("axis-z", {
+  points: [[0, 0, -2], [0, 0, 2]], stroke: "#fc6255", strokeWidth: 0.035,
+});
+```
+
+Alternatively, set `strokeProfile: "round"` on world-space lines, arrows, or paths.
+The profile stays fixed through geometric morphs. Ordinary strokes default to
+`"flat"`; round strokes require world space and respect depth testing and group
+transforms. Multi-segment round paths share rings at joins. Sharp bends and
+self-intersections can overlap; a round stroke is not a solid-modeling operation.
+
+### Independent view regions
+
+`s.view(id, options, builder)` creates a rectangular region with its own camera
+and objects. `rect` is `[left, top, width, height]` in fractions of the canvas size;
+the region must fit inside the canvas. Its default camera is 3D and orbit is enabled.
+Views share the scene's timeline, controls, and element ID namespace. View builders
+are synchronous and cannot be nested. `v.play` advances the same scene clock as
+`s.play`; create both views before scheduling simultaneous camera animations.
+
+```js
+export default scene({}, s => {
+  let leftCamera, rightCamera;
+  s.view("left", { rect: [0, 0.15, 0.5, 0.7] }, v => {
+    v.sphere("left-ball", { position: [1, 0, 0], fill: "#58c4dd" });
+    leftCamera = v.camera;
+  });
+  s.view("right", {
+    rect: [0.5, 0.15, 0.5, 0.7], camera: { yaw: -0.5, height: 5 },
+  }, v => {
+    v.sphere("right-ball", { position: [1, 0, 0], fill: "#fc6255" });
+    rightCamera = v.camera;
+  });
+  s.wait(3);
+  s.play([
+    leftCamera.animate({ yaw: 1.2 }),
+    rightCamera.animate({ yaw: -1.2 }),
+  ], { duration: 2 });
+  s.wait(3);
+});
+```
+
+Left-button dragging rotates only the view where the drag started, even when the
+pointer leaves it. Scrolling does not zoom. Regions clip their geometry and use
+independent depth buffers; overlapping regions render in declaration order, with
+the last region receiving pointer input. Regions render transparently over the scene and
+have no automatic border. Empty space outside them uses the main scene camera.
+Screen-space geometry inside a view uses CSS pixels centered on that region;
+main-scene screen labels render above all regions. Groups cannot span views.
+Kept objects retain their region and its outgoing authored camera in later scenes;
+redeclaring the same view ID can change its rectangle, camera, and orbit setting.
+`player.getState().views` reports each region's rectangle and whether orbit is enabled.
+
 ### Geometry and camera transitions
 
 2D uses the same world coordinates as 3D, with planar geometry at `z = 0` and a
@@ -589,10 +685,29 @@ changing the camera never automatically invents molecular positions or extrudes
 a 2D drawing.
 
 `orbit: true` requests pointer-drag rotation when the evaluated camera is 3D.
+Horizontal dragging rotates around world-up; vertical dragging tilts around the
+camera's right axis, keeping the horizon upright. The front of the scene follows
+the pointer. Dragging across a view's shorter dimension turns it 180 degrees;
+both axes use that same scale, independent of canvas size or pixel density.
+Viewer tilt stops just short of the poles to prevent flipping upside down.
 The rotation input is disabled during camera-animation intervals, including when
-paused within one. Saved viewer rotation remains a constant offset along the
-authored path; its contribution fades with perspective when returning to 2D.
-Editing code preserves these view settings. Viewer rotation is not baked into
+paused within one. Between authored rotations, viewer rotation stays as an offset to the camera.
+An authored yaw/pitch animation captures the viewer's current orientation as its
+starting pose and blends to the authored destination using the track's duration
+and easing. Both viewer yaw and tilt fade out, so the exact authored pose is
+reached at the end. In a fully 3D view, user-adjusted yaw takes the shortest route
+to that destination instead of unwinding accumulated viewer turns. Untouched
+authored rotations retain their original path, including intentional full turns.
+Pausing or scrubbing within the animation follows that same captured path.
+Seeking backward to before it restores the authored starting pose and clears
+the captured handoff; a subsequent drag supplies a new starting pose. Jumping
+past an animation lands on its authored destination. Zero-duration rotations
+remain immediate cuts.
+Other views retain their rotations and remain interactive unless their own cameras
+are being animated. Camera moves that only change framing do not clear rotation.
+Viewer offsets and captured handoffs are scoped by scene and view ID. Control
+updates that leave the camera tracks unchanged preserve an in-progress handoff.
+Restarting before a rotation resets it. A full `load` clears viewer state. Viewer rotation is not baked into
 the outgoing object state used for reconstruction.
 
 The renderer handles 3D vertex positions, meshes, camera projection, depth testing,
@@ -638,7 +753,8 @@ blocked. That is reported in player state rather than undoing valid code.
 ### Playback after successful changes
 
 - Replacing the active scene restarts it at zero, retaining its controls and
-  viewer rotation. Its playing/paused state is retained where playback is allowed.
+  viewer rotation unless the restart crosses an authored rotation. Its
+  playing/paused state is retained where playback is allowed.
 - Replacing a preceding scene or inserting before the active scene also restarts
   the active scene, since its reconstructed input state changed.
 - Changes strictly after the active scene keep its position.
@@ -669,7 +785,7 @@ submission. These limits protect the scene-building step; they are not a complet
 budget for subsequent TeX layout, tessellation, or GPU allocation.
 
 Current data limits include 256 KB per source, 100 scenes, 2,000 object IDs per
-builder, 100 controls, 10,000 animation tracks, and a 24-hour visual timeline.
+builder, 100 controls, 32 view regions, 10,000 animation tracks, and a 24-hour visual timeline.
 The VM boundary validates finite numbers, geometry sizes, mesh indices, object
 lifetimes, and group references. The library intentionally does not expose
 arbitrary browser callbacks in the animation data.
@@ -768,8 +884,8 @@ still happen each frame. Selective reconstruction and GPU-side animation are
 possible improvements after measuring real scenes.
 
 Opaque meshes have depth testing. Intersecting transparent surfaces use approximate
-sorting and can render incorrectly. Primitive strokes are tessellated ribbons,
-not a comprehensive 3D line/material system. Shape matching cannot infer semantic
+sorting and can render incorrectly. Default strokes are tessellated ribbons; opt-in round strokes use lit tubes
+and cones. The renderer does not provide a comprehensive material system. Shape matching cannot infer semantic
 part correspondence or arbitrary mesh topology.
 
 Not yet included: custom fonts and general text shaping, images/video textures,

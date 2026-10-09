@@ -4,6 +4,8 @@ import {create,globals} from 'webgpu';
 import {CanvasRenderer} from '../src/renderer.js';
 import {SceneSequence} from '../src/sequence.js';
 import {initialSources} from '../demo/scenes.js';
+import {interactionSource} from '../demo/interaction.js';
+import {project} from '../src/geometry.js';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {deflateSync} from 'node:zlib';
 import {join} from 'node:path';
@@ -101,6 +103,132 @@ describe('native Vulkan WebGPU rendering',()=> {
     // Restore the library demo used by the following tests.
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
+  it('clips independent view regions and renders scene screen overlays above them',async()=> {
+    const result=await sequence.submit({type:'load',scenes:[{id:'regions',source:`export default scene({},s=>{
+      s.rectangle("background",{width:100,height:100,fill:"#00ff00"});
+      s.view("left",{rect:[0.05,0.1,0.4,0.7],camera:{perspective:0,yaw:0,pitch:0}},v=>{
+        v.rectangle("red",{width:100,height:100,fill:"#ff0000"});
+        v.rectangle("local-marker",{space:"screen",width:10,height:10,fill:"#ffff00"});
+      });
+      s.view("right",{rect:[0.5,0.1,0.4,0.7],camera:{perspective:0,yaw:0,pitch:0}},v=>{
+        v.rectangle("blue",{width:100,height:100,fill:"#0000ff"});
+      });
+      s.rectangle("overlay",{space:"screen",position:[-224,0],width:10,height:10,fill:"#ffffff"});
+      s.wait(1);
+    });`}]});
+    expect(result.ok).toBe(true);
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+    const image=await pixels();
+    const at=(x:number,y:number)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3));
+    expect(at(40,200)).toEqual([255,0,0]);expect(at(340,200)).toEqual([0,0,255]);
+    expect(at(30,200)).toEqual([0,255,0]);expect(at(300,200)).toEqual([0,255,0]);
+    expect(at(96,240)).toEqual([255,255,255]);expect(at(160,216)).toEqual([255,255,0]);
+    expect(errors).toEqual([]);await artifact('independent-regions',image);
+  });
+  it('rotating one 3D region changes only its pixels',async()=> {
+    const result=await sequence.submit({type:'load',scenes:[{id:'rotate-regions',source:`export default scene({},s=>{
+      s.view("left",{rect:[0,0,0.5,1]},v=>{
+        v.sphere("left-ball",{position:[1,0.5,1],radius:0.6,fill:"#ff0000"});
+      });
+      s.view("right",{rect:[0.5,0,0.5,1]},v=>{
+        v.sphere("right-ball",{position:[1,0.5,1],radius:0.6,fill:"#0000ff"});
+      });
+      s.wait(1);
+    });`}]});
+    expect(result.ok).toBe(true);
+    renderer.resetInteraction();
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+    const before=await pixels();
+    renderer.setOrbit({yaw:1,pitch:0.2},'left');
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+    const after=await pixels();
+    let leftChanges=0,rightChanges=0;
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      const i=(y*width+x)*4;
+      if(before[i]!==after[i]||before[i+1]!==after[i+1]||before[i+2]!==after[i+2]){
+        if(x<width/2)leftChanges++;else rightChanges++;
+      }
+    }
+    expect(leftChanges).toBeGreaterThan(100);expect(rightChanges).toBe(0);
+    expect(errors).toEqual([]);await artifact('independent-rotation',after);
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('renders a continuous viewer-to-authored camera handoff while another view stays fixed',async()=> {
+    expect((await sequence.submit({type:'load',scenes:[{id:'camera-handoff',source:`export default scene({},s=>{
+      let camera;
+      s.view("left",{rect:[0,0,0.5,1]},v=>{
+        camera=v.camera;v.sphere("left-ball",{position:[1,0.5,1],radius:0.6,fill:"#ff0000"});
+      });
+      s.view("right",{rect:[0.5,0,0.5,1]},v=>{
+        v.sphere("right-ball",{position:[1,0.5,1],radius:0.6,fill:"#0000ff"});
+      });
+      s.wait(2);s.play(camera.animate({yaw:1.4,pitch:0.1}),{duration:2,ease:"linear"});s.wait(1);
+    });`}] })).ok).toBe(true);
+    renderer.resetInteraction();
+    const scene=sequence.compiled[0];
+    const draw=async(time:number)=>{
+      const frame=sequence.frame(0,time);
+      renderer.syncInteraction('camera-handoff',time,scene,frame);
+      renderer.render(frame,scene.options);
+      return pixels();
+    };
+    await draw(1);
+    renderer.setOrbit({yaw:0.6,pitch:-0.2},'left');
+    renderer.setOrbit({yaw:-0.5,pitch:0.3},'right');
+    const before=await draw(1.999),start=await draw(2);
+    expect(Buffer.from(start).equals(Buffer.from(before))).toBe(true);
+    const middle=await draw(3);
+    expect(Buffer.from(middle).equals(Buffer.from(start))).toBe(false);
+    for(let y=0;y<height;y++){
+      const from=(y*width+width/2)*4,to=(y+1)*width*4;
+      expect(Buffer.from(middle.subarray(from,to)).equals(Buffer.from(before.subarray(from,to)))).toBe(true);
+    }
+    const expected=sequence.frame(0,3);
+    expected.views![0].camera={...expected.views![0].camera,yaw:(0.55+0.6+1.4)/2,pitch:(0.35-0.2+0.1)/2};
+    renderer.setOrbit({yaw:0,pitch:0},'left');
+    renderer.render(expected,scene.options);
+    expect(Buffer.from(await pixels()).equals(Buffer.from(middle))).toBe(true);
+    await draw(4);expect(renderer.getOrbit('left')).toEqual({yaw:0,pitch:0});
+    expect(Buffer.from(await draw(3)).equals(Buffer.from(middle))).toBe(true);
+    await artifact('camera-handoff-start',start);await artifact('camera-handoff-middle',middle);
+    expect(errors).toEqual([]);
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('keeps world-up, billboard labels, CPU projection, and lighting aligned throughout an orbit',async()=> {
+    expect((await sequence.submit({type:'load',scenes:[{id:'upright-orbit',source:`export default scene({mode:"3d",orbit:false},s=>{
+      s.sphere("lit",{radius:0.5,fill:"#00ff00",stroke:"none"});
+      s.rectangle("label",{position:[0,1.5,0],billboard:true,billboardOffset:[0.2,0.1,0.25],width:0.6,height:0.3,fill:"#ff0000",stroke:"none"});
+      s.wait(1);
+    });`}] })).ok).toBe(true);
+    const base=sequence.frame(0,0);
+    for(const yaw of [0,Math.PI/2,Math.PI,3*Math.PI/2])for(const pitch of [-0.6,0.6]) {
+      const camera={...base.camera,yaw,pitch,height:8,distance:10,perspective:1};
+      renderer.render({...base,camera},sequence.compiled[0].options);
+      const image=await pixels(),xs:number[]=[],ys:number[]=[];
+      for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+        const i=(y*width+x)*4;if(image[i]>220&&image[i+1]<20){xs.push(x);ys.push(y);}
+      }
+      expect(xs.length).toBeGreaterThan(300);
+      const anchor=project([0,1.5,0],camera,width,height);
+      expect(anchor.x).toBeCloseTo(width/2); // World-up never leans sideways.
+      const scale=height/camera.height*camera.distance/(anchor.depth-0.25);
+      const expectedX=width/2+0.2*scale;
+      const expectedY=height/2-((height/2-anchor.y)/anchor.scale+0.1)*scale;
+      const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+      expect(Math.abs((minX+maxX+1)/2-expectedX)).toBeLessThan(1);
+      expect(Math.abs((minY+maxY+1)/2-expectedY)).toBeLessThan(1);
+      expect(Math.abs(maxX-minX+1-0.6*scale)).toBeLessThan(2);
+      expect(Math.abs(maxY-minY+1-0.3*scale)).toBeLessThan(2);
+      // A sphere's camera-facing normal stays facing the same screen-space light.
+      const green=image[(height/2*width+width/2)*4+1];
+      expect(green).toBeGreaterThan(205);expect(green).toBeLessThan(235);
+      await artifact(`upright-orbit-${yaw.toFixed(2)}-${pitch}`,image);
+    }
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
   it('renders intermediate geometric and named LaTeX morph frames',async()=> {
     const first=sequence.compiled[0];
     renderer.render(sequence.frame(0,2.4),first.options);
@@ -156,10 +284,12 @@ describe('native Vulkan WebGPU rendering',()=> {
       s.sphere("atom",{radius:1,fill:"#00aaff",stroke:"none"});
       s.line("bond",{points:[[0,0,0],[2,0,0]],stroke:"white",strokeWidth:0.08});s.wait(1);
     });`}]});expect(result.ok).toBe(true);
-    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);const image=await pixels();await artifact('sphere-bond-occlusion',image);
+    const frame=sequence.frame(0,0);
+    renderer.render(frame,sequence.compiled[0].options);const image=await pixels();await artifact('sphere-bond-occlusion',image);
     const at=(x:number,y:number)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3));
     const center=at(width/2,height/2);expect(center[0]).toBe(0);expect(center[2]).toBeGreaterThan(150);
-    expect(at(width/2+90,height/2)).toEqual([255,255,255]);expect(errors).toEqual([]);
+    const exposedBond=project([1.6,0,0],frame.camera,width,height);
+    expect(at(Math.round(exposedBond.x),Math.round(exposedBond.y))).toEqual([255,255,255]);expect(errors).toEqual([]);
   });
   it('retains rear alpha contributions when translucent mesh faces intersect',async()=> {
     const result=await sequence.submit({type:'load',scenes:[{id:'alpha',source:String.raw`export default scene({mode:"3d",background:"black"},s=>{
@@ -182,6 +312,32 @@ describe('native Vulkan WebGPU rendering',()=> {
       renderer.render(sequence.frame(0,1),sequence.compiled[0].options);const image=await pixels();await artifact('ultrawide-orbit-exit',image);
       expect(changedPixels(image)).toBe(0);expect(errors).toEqual([]);
     } finally {renderer.setOrbit({yaw:0,pitch:0});Object.assign(canvas,{getBoundingClientRect:()=>({width,height})});(renderer as unknown as {resize():void}).resize();}
+  });
+  it('keeps round 3D shafts and cone arrowheads visible from perpendicular sides and end-on',async()=> {
+    const result=await sequence.submit({type:'load',scenes:[{id:'round-lines',source:`export default scene({mode:"3d",orbit:false},s=>{
+      s.line3D("line",{points:[[-2,-0.7,0],[2,-0.7,0]],strokeWidth:0.15,stroke:"#58c4dd"});
+      s.arrow3D("arrow",{points:[[-2,0.7,0],[2,0.7,0]],strokeWidth:0.08,stroke:"#fc6255"});
+      s.wait(1);
+    });`}]});
+    expect(result.ok).toBe(true);
+    const base=sequence.frame(0,0),counts:number[]=[];
+    for(const [name,yaw,pitch] of [['front',0,0],['edge',0,Math.PI/2],['end',Math.PI/2,0]] as const){
+      renderer.render({...base,camera:{...base.camera,yaw,pitch,perspective:0}},sequence.compiled[0].options);
+      const image=await pixels();counts.push(changedPixels(image));await artifact('round-lines-'+name,image);
+    }
+    expect(counts[0]).toBeGreaterThan(1000);expect(counts[1]).toBeGreaterThan(1000);expect(counts[2]).toBeGreaterThan(80);
+    expect(errors).toEqual([]);
+  });
+  it('renders the interactive demo with round axes and bonds',async()=> {
+    expect((await sequence.submit({type:'load',scenes:[interactionSource]})).ok).toBe(true);
+    Object.assign(canvas,{getBoundingClientRect:()=>({width:1280,height:800})});
+    (renderer as unknown as {resize():void}).resize();
+    renderer.resetInteraction();
+    try {
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+      const image=await pixels();expect(changedPixels(image)).toBeGreaterThan(10000);
+      await artifact('interactive-demo',image);expect(errors).toEqual([]);
+    } finally {Object.assign(canvas,{getBoundingClientRect:()=>({width,height})});(renderer as unknown as {resize():void}).resize();}
   });
   it('renders full-size Latin glyph contours cleanly at device pixel ratio two',async()=> {
     vi.stubGlobal('devicePixelRatio',2);

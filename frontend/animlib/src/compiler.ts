@@ -49,6 +49,10 @@ function element(e: ElementState) {
   check(e.scale >= 0 && e.opacity >= 0 && e.opacity <= 1 && e.strokeWidth >= 0, "Invalid element style range");
   for (const key of ["fill", "stroke"] as const) check(typeof e[key] === "string" && e[key].length <= 128, `Invalid ${key}`);
   check(e.space === "world" || e.space === "screen", "Invalid element space");
+  if (e.strokeProfile !== undefined) {
+    check(e.strokeProfile === "flat" || e.strokeProfile === "round", "Invalid stroke profile");
+    check(e.strokeProfile !== "round" || e.space === "world", "Round strokes require world space");
+  }
   if (e.billboard !== undefined) check(typeof e.billboard === "boolean", "Invalid billboard flag");
   if (e.billboardOffset !== undefined) vec(e.billboardOffset,"billboard offset");
   if (e.viewportOffset !== undefined) vec(e.viewportOffset,"viewport offset",2);
@@ -70,10 +74,22 @@ export function validateCompiledScene(scene: CompiledScene): void {
   check(typeof scene.options.orbit === "boolean" && typeof scene.options.background === "string" && scene.options.background.length <= 128, "Invalid scene display options");
   if (scene.options.audio !== undefined) check(typeof scene.options.audio === "string" && scene.options.audio.length <= 256, "Invalid audio asset ID");
   camera(scene.camera);
-  check(Array.isArray(scene.initial) && scene.initial.length <= 2000, "Invalid initial elements"); scene.initial.forEach(element);
+  check(scene.views === undefined || Array.isArray(scene.views) && scene.views.length <= 32, "Invalid or oversized views");
+  const viewIds = new Set<string>();
+  for (const view of scene.views ?? []) {
+    check(typeof view.id === "string" && view.id.length > 0 && view.id.length <= 256 && !view.id.startsWith("@") && !viewIds.has(view.id), "Invalid or duplicate view ID");
+    viewIds.add(view.id);
+    vec(view.rect, "view rectangle", 4);
+    const [x,y,w,h] = view.rect;
+    check(x >= 0 && y >= 0 && w > 0 && h > 0 && x+w <= 1+1e-9 && y+h <= 1+1e-9, "View rectangle must fit within the canvas");
+    check(typeof view.orbit === "boolean", "Invalid view orbit flag");
+    camera(view.camera);
+  }
+  const checkView = (e: ElementState) => check(e.view === undefined || typeof e.view === "string" && viewIds.has(e.view), "Element references unknown view");
+  check(Array.isArray(scene.initial) && scene.initial.length <= 2000, "Invalid initial elements"); scene.initial.forEach(e => { element(e); checkView(e); });
   check(Array.isArray(scene.lifecycle) && scene.lifecycle.length <= 20000, "Invalid lifecycle");
   let totalPoints = 0;
-  const examine = (e: ElementState) => { element(e); totalPoints += (e.geometry.points?.length ?? 0) + (e.geometry.vertices?.length ?? 0); check(totalPoints <= 100000, "Scene geometry budget exceeded"); };
+  const examine = (e: ElementState) => { element(e); checkView(e); totalPoints += (e.geometry.points?.length ?? 0) + (e.geometry.vertices?.length ?? 0); check(totalPoints <= 100000, "Scene geometry budget exceeded"); };
   const groupGraph = new Map<string, string[]>();
   for (const e of scene.initial) if (e.geometry.children) groupGraph.set(e.id, e.geometry.children);
   for (const event of scene.lifecycle) {
@@ -96,6 +112,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
     for (const e of live.values()) for (const child of e.geometry.children ?? []) {
       check(live.has(child), `Group ${e.id} references missing child ${child}`);
       check(!owners.has(child), `Group child ${child} has multiple parents`);
+      check(e.view === live.get(child)!.view || e.id.startsWith("@") && e.transient, "Groups must contain elements from the same view");
       owners.set(child, e.id);
     }
   };
@@ -118,6 +135,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
     const a = track.action;
     check(a && ["camera", "animate", "morph", "numbers"].includes(a.type) && Array.isArray(a.ids) && a.ids.length <= 2000, "Invalid animation action");
     if (a.type === "camera") {
+      check(a.view === undefined || typeof a.view === "string" && viewIds.has(a.view), "Camera references unknown view");
       camera(track.cameraFrom!);
       check(Object.keys(a.properties ?? {}).every(key => ["yaw", "pitch", "height", "distance", "perspective", "target"].includes(key)), "Unknown camera property");
       camera({ ...track.cameraFrom!, ...a.properties });
@@ -125,7 +143,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
       check(track.from && typeof track.from === "object", "Missing animation starting states");
       for (const id of a.ids) {
         check(typeof id === "string" && Object.hasOwn(track.from, id), "Missing animation element");
-        const from = track.from[id]; element(from);
+        const from = track.from[id]; element(from); checkView(from);
         check(from.id === id, "Mismatched animation starting ID");
         if (a.type === "morph") {
           geometry(a.geometry!);
@@ -146,6 +164,8 @@ export function validateCompiledScene(scene: CompiledScene): void {
   for (const c of scene.controls) {
     check(typeof c.id === "string" && !ids.has(c.id) && typeof c.label === "string" && c.label.length <= 512, "Invalid control ID or label"); ids.add(c.id);
     check(["slider", "toggle", "select"].includes(c.kind), "Invalid control kind");
+    if (c.position !== undefined) { vec(c.position, "control position", 2); check(c.position.every(v => v >= 0 && v <= 1), "Control position must be within the canvas"); }
+    if (c.width !== undefined) { number(c.width, "control width"); check(c.width > 0 && c.width <= 4096, "Invalid control width"); }
     if (c.kind === "slider") { number(c.value, "slider value"); number(c.default, "slider default"); number(c.min, "slider min"); number(c.max, "slider max"); check(c.min! <= c.max! && Number(c.value) >= c.min! && Number(c.value) <= c.max!, "Invalid slider range"); if (c.step !== undefined) { number(c.step, "slider step"); check(c.step > 0, "Invalid slider step"); } }
     if (c.kind === "toggle") check(typeof c.value === "boolean" && typeof c.default === "boolean", "Invalid toggle value");
     if (c.kind === "select") check(Array.isArray(c.options) && c.options.length <= 100 && c.options.every(o => typeof o === "string" && o.length <= 256) && c.options.includes(String(c.value)), "Invalid select options/value");
