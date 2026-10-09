@@ -71,8 +71,37 @@ npm run build        # library JS and TypeScript declarations
 npm run demo:build   # bundled static demo
 ```
 
-The library is a private npm workspace named `animlib` in `frontend/animlib`.
+The library is a private npm workspace named `animlib` in `shared/animlib`.
 Build it before importing it elsewhere in this project.
+
+## Shared scene evaluation
+
+The frontend imports `createPlayer` from `animlib`. Bun and Node consumers can import
+`compileSource`, `evaluateScene`, and `SceneSequence` from `animlib/core`, which
+does not load the browser player or WebGPU renderer. Both entry points use the
+same compiler and evaluator.
+
+For a scene whose incoming state has already been computed:
+
+```js
+import { compileSource, evaluateScene } from 'animlib/core';
+
+// source is the scene's JavaScript; previous is the preceding final Frame
+// (undefined for the first scene). Pass current controls and a stable seed.
+const compiled = await compileSource(source, { previous, controls, seed: 1 });
+const endState = evaluateScene(compiled, compiled.duration);
+const contextJson = JSON.stringify(endState);
+```
+
+The final frame includes inherited persistent elements, outgoing elements, and
+the authored camera. To reconstruct a complete sequence, use `SceneSequence`
+and read `sequence.frame(index, sequence.compiled[index].duration)` after a
+successful submission. Upstream source or control changes require recomputing
+the handoff. A frame contains visual state; an LLM still needs the next scene's
+objective and any semantic context.
+
+The repository's Bun backend depends on this workspace and can import this API
+directly. Its tests cover JSON handoffs and reconstruction after control changes.
 
 For API examples, behavior details, architecture, limits, and native GPU checks,
 see the [full reference](docs/reference.md). Public types live in

@@ -8,8 +8,8 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {deflateSync} from 'node:zlib';
 import {join} from 'node:path';
 import colorString from 'color-string';
-import {lessonScenes} from '../../app/src/lessonScenes';
-import {lessons} from '../../app/src/data';
+import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
+import {lessons} from '../../../frontend/app/src/data';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
 // This is a development test adapter, never a browser renderer fallback.
