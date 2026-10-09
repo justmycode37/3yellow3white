@@ -1,4 +1,5 @@
 import type { CameraState, Geometry, Position, Vec3 } from './types.js';
+import { GeometryCache } from './cache.js';
 
 export const vec3 = (p: Position): Vec3 => [p[0], p[1], p[2] ?? 0];
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
@@ -47,17 +48,69 @@ export function resample(points: Vec3[], count: number, closed: boolean): Vec3[]
   });
 }
 function error(a: Vec3[], b: Vec3[], offset=0): number { return a.reduce((sum,p,i)=>sum+p.reduce((v,x,j)=>v+(x-b[(i+offset)%b.length][j])**2,0),0); }
+const matches = new GeometryCache<[Vec3[], Vec3[]]>();
+
+function parameterize(points: Vec3[], closed: boolean) {
+  const path = points.filter((p,i) => !i || p.some((v,j) => v !== points[i-1][j]));
+  if (closed && path.length > 1 && path[0].every((v,i) => v === path.at(-1)![i])) path.pop();
+  if (closed && path.length) path.push(path[0]);
+  const distances = [0];
+  for (let i=1;i<path.length;i++) distances.push(distances[i-1]+Math.hypot(...path[i].map((v,j)=>v-path[i-1][j])));
+  const total = distances.at(-1)!;
+  const knots = distances.map(d => total ? d/total : 0);
+  const at = (t: number): Vec3 => {
+    if (closed) t = ((t % 1) + 1) % 1;
+    if (!total || t <= 0) return [...path[0]];
+    if (t >= 1) return [...path.at(-1)!];
+    let low=0,high=knots.length-1;
+    while (low+1<high) { const middle=(low+high)>>>1;if(knots[middle]<t)low=middle;else high=middle; }
+    // Return authored vertices exactly, including when cyclic alignment adds rounding error.
+    if (Math.abs(t-knots[low])<1e-12) return [...path[low]];
+    if (Math.abs(t-knots[high])<1e-12) return [...path[high]];
+    const fraction=(t-knots[low])/(knots[high]-knots[low]);
+    return path[low].map((v,i)=>lerp(v,path[high][i],fraction)) as Vec3;
+  };
+  return { knots, at };
+}
+
+/** Match outlines without removing either endpoint's authored corners. */
 export function matchPoints(from: Vec3[], to: Vec3[], closed: boolean, count=96): [Vec3[],Vec3[]] {
+  if (!from.length || !to.length) return [from,to];
+  const key=JSON.stringify([from,to,closed,count]),cached=matches.get(key);
+  if (cached) return cached;
+  const save=(a:Vec3[],b:Vec3[]):[Vec3[],Vec3[]]=>matches.set(key,[a,b],(a.length+b.length)*64);
+  if (from.length===to.length && from.every((p,i)=>p.every((v,j)=>v===to[i][j]))) {
+    return save(from.map(p=>[...p]),to.map(p=>[...p]));
+  }
+  // Matching vertex counts can retain the original topology. This also avoids
+  // subdividing a two-point round arrow into dozens of redundant tube rings.
+  if (from.length===to.length && from.length<=count) {
+    let best=to,score=error(from,to);
+    for (const candidate of [to,[...to].reverse()]) for(let offset=0;offset<(closed?to.length:1);offset++) {
+      const candidateScore=error(from,candidate,offset);
+      if(candidateScore<score){score=candidateScore;best=candidate.map((_,i)=>candidate[(i+offset)%candidate.length]);}
+    }
+    return save(from.map(p=>[...p]),best.map(p=>[...p]));
+  }
   const a=resample(from,count,closed), b=resample(to,count,closed);
-  if (!a.length || !b.length) return [a,b];
-  let best=b, score=error(a,b);
+  let score=error(a,b),shift=0,direction=1;
   for (const candidate of [b,[...b].reverse()]) {
     for(let offset=0;offset<(closed ? count : 1);offset++) {
       const candidateScore=error(a,candidate,offset);
-      if(candidateScore<score) { score=candidateScore; best=candidate.map((_,i)=>candidate[(i+offset)%count]); }
+      if(candidateScore<score) {
+        score=candidateScore;direction=candidate===b?1:-1;
+        shift=direction===1?offset/count:(closed?(count-1-offset)/count:1);
+      }
     }
   }
-  return [a,best];
+  const source=parameterize(from,closed),target=parameterize(to,closed);
+  const wrap=(t:number)=>closed?((t%1)+1)%1:Math.max(0,Math.min(1,t));
+  // Sample the union of both outlines' corners as well as the alignment samples.
+  // Added samples subdivide edges; they never cut across an existing corner.
+  const knots=[...source.knots,...target.knots.map(t=>wrap((t-shift)*direction)),
+    ...Array.from({length:count},(_,i)=>i/(closed?count:count-1))]
+    .map(wrap).sort((x,y)=>x-y).filter((t,i,all)=>!i||t-all[i-1]>1e-12);
+  return save(knots.map(t=>source.at(t)),knots.map(t=>target.at(wrap(shift+direction*t))));
 }
 export function morphOutline(from: Geometry,to: Geometry,progress:number): { points: Vec3[]; closed:boolean } | null {
   const a=outline(from),b=outline(to);

@@ -23,6 +23,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "bench:render": "npm run build && node bench/render.mjs",
     "demo:build": "vite build",
     "test:gpu": "vitest run --config vitest.gpu.config.ts"
   },
