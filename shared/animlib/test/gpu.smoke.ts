@@ -351,4 +351,43 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(changedPixels(image)).toBeGreaterThan(10000);expect(errors).toEqual([]);
   });
 
+  it('keeps identical text, rectangles, paths and round arrows pixel-identical throughout a morph',async()=> {
+    // Also exercise opacity and a non-black background: drawing identical
+    // geometry twice can otherwise hide a compositing regression.
+    const cases=[
+      {kind:'text',text:'A',fontSize:2},
+      {kind:'rectangle',width:3,height:2},
+      {kind:'path',points:[[-2,-1],[1.3,-0.7],[2,1.5],[-0.4,2],[-1.7,0.4]],closed:true},
+      {kind:'path',points:Array.from({length:128},(_,i)=>{const a=i*Math.PI/64,r=1.5+0.2*Math.sin(5*a);return [r*Math.cos(a),r*Math.sin(a)];}),closed:true},
+      {kind:'arrow',points:[[-2,-1,0],[2,1,0]]},
+    ];
+    vi.stubGlobal('devicePixelRatio',1);(renderer as unknown as {resize():void}).resize();
+    for(const geometry of cases)for(const opacity of [1,0.45]) {
+      const method=geometry.kind==='arrow'?'arrow3D':geometry.kind;
+      const props={...geometry,opacity,fill:geometry.kind==='arrow'?'none':'#fc6255',stroke:geometry.kind==='arrow'?'#fc6255':'none',strokeWidth:0.12};
+      const result=await sequence.submit({type:'load',scenes:[{id:'identity',source:`export default scene({background:'#29394b'},s=>{
+        const shape=s.${method}('shape',${JSON.stringify(props)});
+        s.wait(1);s.play(shape.morphTo(${JSON.stringify(geometry)}),{duration:2,ease:'linear'});s.wait(1);
+      });`}]});expect(result.ok).toBe(true);
+      const draw=async(time:number)=>{renderer.render(sequence.frame(0,time),sequence.compiled[0].options);return pixels();};
+      const before=Buffer.from(await draw(0));
+      for(const time of [1,1.000001,1.5,2,2.999999,3,2]) {
+        expect(Buffer.from(await draw(time)).equals(before),`${method}, opacity ${opacity}, time ${time}`).toBe(true);
+      }
+    }
+    expect(errors).toEqual([]);
+  });
+
+  it('interpolates the font size of unchanged text without fading it',async()=> {
+    const result=await sequence.submit({type:'load',scenes:[{id:'text-size',source:`export default scene({background:'#152438'},s=>{
+      const label=s.text('label',{text:'A',fontSize:1,fill:'white',opacity:0.65});
+      s.play(label.morphTo({kind:'text',text:'A',fontSize:3}),{duration:2,ease:'linear'});s.wait(1);
+    });`}]});expect(result.ok).toBe(true);
+    const scene=sequence.compiled[0],frame=sequence.frame(0,1);
+    renderer.render(frame,scene.options);const actual=Buffer.from(await pixels());
+    const expected={...frame,elements:frame.elements.map(e=>({...e,morph:undefined,geometry:{kind:'text' as const,text:'A',fontSize:2}}))};
+    renderer.render(expected,scene.options);
+    expect(Buffer.from(await pixels()).equals(actual)).toBe(true);expect(errors).toEqual([]);
+  });
+
 });
