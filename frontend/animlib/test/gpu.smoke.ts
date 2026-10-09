@@ -154,6 +154,48 @@ describe('native Vulkan WebGPU rendering',()=> {
     renderer.resetInteraction();
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
+  it('renders a continuous viewer-to-authored camera handoff while another view stays fixed',async()=> {
+    expect((await sequence.submit({type:'load',scenes:[{id:'camera-handoff',source:`export default scene({},s=>{
+      let camera;
+      s.view("left",{rect:[0,0,0.5,1]},v=>{
+        camera=v.camera;v.sphere("left-ball",{position:[1,0.5,1],radius:0.6,fill:"#ff0000"});
+      });
+      s.view("right",{rect:[0.5,0,0.5,1]},v=>{
+        v.sphere("right-ball",{position:[1,0.5,1],radius:0.6,fill:"#0000ff"});
+      });
+      s.wait(2);s.play(camera.animate({yaw:1.4,pitch:0.1}),{duration:2,ease:"linear"});s.wait(1);
+    });`}] })).ok).toBe(true);
+    renderer.resetInteraction();
+    const scene=sequence.compiled[0];
+    const draw=async(time:number)=>{
+      const frame=sequence.frame(0,time);
+      renderer.syncInteraction('camera-handoff',time,scene,frame);
+      renderer.render(frame,scene.options);
+      return pixels();
+    };
+    await draw(1);
+    renderer.setOrbit({yaw:0.6,pitch:-0.2},'left');
+    renderer.setOrbit({yaw:-0.5,pitch:0.3},'right');
+    const before=await draw(1.999),start=await draw(2);
+    expect(Buffer.from(start).equals(Buffer.from(before))).toBe(true);
+    const middle=await draw(3);
+    expect(Buffer.from(middle).equals(Buffer.from(start))).toBe(false);
+    for(let y=0;y<height;y++){
+      const from=(y*width+width/2)*4,to=(y+1)*width*4;
+      expect(Buffer.from(middle.subarray(from,to)).equals(Buffer.from(before.subarray(from,to)))).toBe(true);
+    }
+    const expected=sequence.frame(0,3);
+    expected.views![0].camera={...expected.views![0].camera,yaw:(0.55+0.6+1.4)/2,pitch:(0.35-0.2+0.1)/2};
+    renderer.setOrbit({yaw:0,pitch:0},'left');
+    renderer.render(expected,scene.options);
+    expect(Buffer.from(await pixels()).equals(Buffer.from(middle))).toBe(true);
+    await draw(4);expect(renderer.getOrbit('left')).toEqual({yaw:0,pitch:0});
+    expect(Buffer.from(await draw(3)).equals(Buffer.from(middle))).toBe(true);
+    await artifact('camera-handoff-start',start);await artifact('camera-handoff-middle',middle);
+    expect(errors).toEqual([]);
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
   it('keeps world-up, billboard labels, CPU projection, and lighting aligned throughout an orbit',async()=> {
     expect((await sequence.submit({type:'load',scenes:[{id:'upright-orbit',source:`export default scene({mode:"3d",orbit:false},s=>{
       s.sphere("lit",{radius:0.5,fill:"#00ff00",stroke:"none"});

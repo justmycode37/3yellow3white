@@ -34,8 +34,8 @@ the library handles reproducible playback, scene handoffs, and live updates.
   even while paused, with an automatic overlay panel or authored positions. Scenes
   can contain multiple clipped 3D view regions, each rotated independently with
   the mouse. Controls blend into the scene; `line3D` and `arrow3D` provide round
-  shafts and cone heads. Authored camera rotations take over when playback or
-  seeking crosses them.
+  shafts and cone heads. Authored camera rotations blend from the viewer's current
+  angle into their destination, with consistent scrubbing along the captured path.
 - **Accept live scene code through one host API.** The app can load, replace, or
   insert scenes, with one scene per source and batches supported. Successful edits
   to the active scene restart it while preserving applicable viewer settings.

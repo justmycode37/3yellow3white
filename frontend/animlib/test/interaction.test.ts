@@ -68,7 +68,7 @@ it('lets distinct view cameras animate simultaneously',async()=>{
   expect(evaluateScene(scene,1).views?.every(v=>v.cameraAnimated)).toBe(true);
 });
 
-it('restores absolute authored rotations when playing or seeking across them in either direction',async()=>{
+it('blends into authored rotations and restores authored poses when seeking across them',async()=>{
   const scene=await compileSource(source);
   const interaction=new ViewInteraction();
   interaction.sync('scene',1,scene);
@@ -78,7 +78,8 @@ it('restores absolute authored rotations when playing or seeking across them in 
   interaction.sync('scene',1.5,scene);
   expect(interaction.get('left').yaw).toBe(0.6);
   interaction.sync('scene',3,scene);
-  expect(interaction.get('left')).toEqual({yaw:0,pitch:0});
+  expect(interaction.get('left').yaw).toBeCloseTo(0.3);
+  expect(interaction.get('left').pitch).toBeCloseTo(0.05);
   expect(interaction.get('right').yaw).toBe(0.7);
   expect(interaction.get().yaw).toBe(0.3);
   interaction.sync('scene',5,scene);
@@ -96,6 +97,91 @@ it('restores absolute authored rotations when playing or seeking across them in 
   interaction.sync('scene',5,scene);
   expect(interaction.get('right').yaw).toBe(0);
   expect(evaluateScene(scene,5).views?.[1].camera.yaw).toBe(-0.5);
+});
+
+it.each([['linear',0.25],['smooth',0.15625],['in',0.0625],['out',0.4375]] as const)(
+  'uses the viewer angle as the start with %s easing, including paused refreshes and recompilation',async(ease,progress)=>{
+    const code=`export default scene({mode:"3d",orbit:true},s=>{
+      s.wait(2);s.play(s.camera.animate({yaw:1.4,pitch:-0.2}),{duration:4,ease:"${ease}"});s.wait(1);
+    });`;
+    const scene=await compileSource(code),interaction=new ViewInteraction();
+    const pose=(time:number)=>{
+      const camera=evaluateScene(scene,time).camera,offset=interaction.get();
+      return {yaw:camera.yaw+offset.yaw,pitch:camera.pitch+offset.pitch};
+    };
+    interaction.sync('scene',1,scene);interaction.set({yaw:0.8,pitch:-0.3});
+    const start=pose(1);
+    interaction.sync('scene',2,scene);
+    expect(pose(2).yaw).toBeCloseTo(start.yaw);expect(pose(2).pitch).toBeCloseTo(start.pitch);
+    interaction.sync('scene',3,scene);
+    const expected={yaw:start.yaw+(1.4-start.yaw)*progress,pitch:start.pitch+(-0.2-start.pitch)*progress};
+    expect(pose(3).yaw).toBeCloseTo(expected.yaw);expect(pose(3).pitch).toBeCloseTo(expected.pitch);
+    for(let i=0;i<3;i++)interaction.sync('scene',3,scene);
+    interaction.sync('scene',3,await compileSource(code));
+    expect(pose(3).yaw).toBeCloseTo(expected.yaw);expect(pose(3).pitch).toBeCloseTo(expected.pitch);
+    interaction.sync('scene',6,scene);
+    expect(interaction.get()).toEqual({yaw:0,pitch:0});expect(pose(6)).toEqual({yaw:1.4,pitch:-0.2});
+  },
+);
+
+it('replays a captured handoff while scrubbing and recaptures only after rewinding before it',async()=>{
+  const scene=await compileSource(source),interaction=new ViewInteraction();
+  interaction.sync('scene',1,scene);interaction.set({yaw:0.8,pitch:0.2},'left');
+  interaction.sync('scene',3,scene);
+  const middle=interaction.get('left');
+  interaction.sync('scene',5,scene);interaction.set({yaw:1.3,pitch:0.4},'left');
+  interaction.sync('scene',3,scene);expect(interaction.get('left')).toEqual(middle);
+  interaction.sync('scene',2.5,scene);
+  expect(interaction.get('left').yaw).toBeCloseTo(0.6);
+  interaction.sync('scene',3,scene);expect(interaction.get('left')).toEqual(middle);
+  interaction.sync('scene',1,scene);expect(interaction.get('left')).toEqual({yaw:0,pitch:0});
+  interaction.set({yaw:-0.4,pitch:-0.2},'left');interaction.sync('scene',3,scene);
+  expect(interaction.get('left').yaw).toBeCloseTo(-0.2);expect(interaction.get('left').pitch).toBeCloseTo(-0.1);
+});
+
+it('takes the short yaw route after viewer spins without altering untouched authored turns',async()=>{
+  const scene=await compileSource(`export default scene({mode:"3d",orbit:true},s=>{
+    s.wait(1);s.play(s.camera.animate({yaw:0.1}),{duration:2,ease:"linear"});s.wait(1);
+    s.play(s.camera.animate({yaw:${Math.PI*4+0.1}}),{duration:2,ease:"linear"});
+  });`),interaction=new ViewInteraction();
+  interaction.sync('scene',0,scene);interaction.set({yaw:Math.PI*8-0.2-0.55,pitch:0.4});
+  interaction.sync('scene',1,scene);
+  expect(scene.camera.yaw+interaction.get().yaw).toBeCloseTo(-0.2);
+  interaction.sync('scene',2,scene);
+  expect(evaluateScene(scene,2).camera.yaw+interaction.get().yaw).toBeCloseTo(-0.05);
+  expect(interaction.get().pitch).toBeCloseTo(0.2); // A yaw-only track gently restores authored tilt too.
+  interaction.sync('scene',3,scene);expect(interaction.get()).toEqual({yaw:0,pitch:0});
+  interaction.sync('scene',5,scene);
+  expect(interaction.get().yaw).toBe(0);
+  expect(evaluateScene(scene,5).camera.yaw).toBeCloseTo(Math.PI*2+0.1);
+});
+
+it('captures parallel yaw/pitch actions once and keeps consecutive handoffs separate',async()=>{
+  const scene=await compileSource(`export default scene({mode:"3d",orbit:true},s=>{
+    s.wait(1);s.play([s.camera.animate({yaw:1}),s.camera.animate({pitch:0.1})],{duration:2,ease:"linear"});
+    s.wait(1);s.play(s.camera.animate({yaw:1.5,pitch:0.5}),{duration:2,ease:"linear"});s.wait(1);
+  });`),interaction=new ViewInteraction();
+  interaction.sync('scene',0,scene);interaction.set({yaw:0.4,pitch:0.2});
+  interaction.sync('scene',2,scene);
+  expect(interaction.get().yaw).toBeCloseTo(0.2);expect(interaction.get().pitch).toBeCloseTo(0.1);
+  interaction.sync('scene',3,scene);interaction.set({yaw:0.8,pitch:0.4});
+  interaction.sync('scene',5,scene);
+  expect(interaction.get().yaw).toBeCloseTo(0.4);expect(interaction.get().pitch).toBeCloseTo(0.2);
+  interaction.sync('scene',2,scene); // Rewind across the later track into the earlier blend.
+  expect(interaction.get().yaw).toBeCloseTo(0.2);expect(interaction.get().pitch).toBeCloseTo(0.1);
+  interaction.sync('scene',5,scene);expect(interaction.get()).toEqual({yaw:0,pitch:0});
+});
+
+it('preserves viewer angles through framing-only animations and fades them through a 3D-to-2D transition',async()=>{
+  const scene=await compileSource(`export default scene({mode:"3d",orbit:true},s=>{
+    s.wait(1);s.play(s.camera.animate({height:5}),{duration:2});s.wait(1);
+    s.play(s.camera.to2D(),{duration:2,ease:"linear"});
+  });`),interaction=new ViewInteraction();
+  interaction.sync('scene',0,scene);interaction.set({yaw:0.7,pitch:0.2});
+  interaction.sync('scene',2,scene);expect(interaction.get()).toEqual({yaw:0.7,pitch:0.2});
+  interaction.sync('scene',4,scene);expect(interaction.get()).toEqual({yaw:0.7,pitch:0.2});
+  interaction.sync('scene',5,scene);expect(interaction.get()).toEqual({yaw:0.35,pitch:0.1});
+  interaction.sync('scene',6,scene);expect(interaction.get()).toEqual({yaw:0,pitch:0});
 });
 
 it('isolates viewer state by scene and preserves it across unchanged recompilation',async()=>{
