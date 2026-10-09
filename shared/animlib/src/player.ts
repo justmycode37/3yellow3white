@@ -41,10 +41,11 @@ export class Player {
       // A failed GPU must not be asked to render again while reporting its error.
       this.notify();
     };
-    if (options.controlsRoot) {
-      this.overlay = new ControlOverlay(options.controlsRoot, (id, value) => {
+    const controlsRoot = options.controlsRoot === false ? undefined : options.controlsRoot ?? options.canvas.parentElement;
+    if (controlsRoot) {
+      this.overlay = new ControlOverlay(controlsRoot, (id, value) => {
         if (this.sceneId) return this.setControl({ scene: this.sceneId, id, value }).catch(error => this.report(error));
-      });
+      }, options.canvas.ownerDocument ? options.canvas : undefined);
     }
   }
 
@@ -87,6 +88,7 @@ export class Player {
     const scene = index < 0 ? undefined : this.sequence.compiled[index];
     if (scene) {
       const frame = this.sequence.frame(index, this.time);
+      this.renderer.syncInteraction(this.sceneId!, this.time, scene, frame);
       this.renderer.setOrbitEnabled(scene.options.orbit && frame.camera.perspective > 0 && !frame.cameraAnimated);
       this.renderer.render(frame, scene.options);
     } else {
@@ -96,7 +98,7 @@ export class Player {
         camera: { yaw: 0, pitch: 0, target: [0, 0, 0], height: 8, distance: 10, perspective: 0 },
       }, { mode: "2d", end: "hold", orbit: false, background: "#000" });
     }
-    this.overlay?.update(this.sceneId ?? "", scene?.controls ?? []);
+    this.overlay?.update(this.sceneId ?? "", scene?.controls ?? [], scene?.options.background);
     this.notify();
   }
 
@@ -122,6 +124,7 @@ export class Player {
       // Read the old clock before changing active ID, even if the active scene moved.
       this.stopClock(this.clockTime(oldCompiled[oldIndex]));
       this.error = undefined;
+      if (change.type === "load") this.renderer.resetInteraction();
       if (change.type === "load" || !activeId) {
         this.sceneId = this.sequence.sources[0]?.id ?? null;
         this.time = 0;
@@ -257,8 +260,9 @@ export class Player {
       duration: scene?.duration ?? 0,
       status: this.status,
       scenes: this.sequence.sources.map((source, index) => ({ id: source.id, duration: this.sequence.compiled[index].duration })),
-      controls: scene?.controls.map(control => ({ ...control, options: control.options?.slice() })) ?? [],
+      controls: scene?.controls.map(control => ({ ...control, ...(control.position ? { position: [...control.position] as [number,number] } : {}), options: control.options?.slice() })) ?? [],
       orbitEnabled: Boolean(scene?.options.orbit && frame && frame.camera.perspective > 0 && !frame.cameraAnimated),
+      views: (frame?.views ?? []).map(view => ({ id: view.id, rect: [...view.rect] as typeof view.rect, orbitEnabled: view.orbit && view.camera.perspective > 0 && !view.cameraAnimated })),
       ...(this.error ? { error: this.error } : {}),
     };
   }

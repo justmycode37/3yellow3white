@@ -190,7 +190,7 @@ describe("continuity review of the authored demos", () => {
             expect(label.position).toEqual(atom.position);
             const center = worldPoint(frame, atom, [0, 0, 0]);
             const points = capture.vertices({ ...frame, elements: [label] }, orbit)
-              .map(point => rotate(point.map((value, axis) => value - center[axis]) as Vec3, [-camera.pitch, -camera.yaw, 0]));
+              .map(point => rotate(rotate(point.map((value, axis) => value - center[axis]) as Vec3, [0, -camera.yaw, 0]), [-camera.pitch, 0, 0]));
             expect(points.every(point => Math.abs(point[2] - label.billboardOffset![2]) < 1e-6)).toBe(true);
             expect(label.billboardOffset![2]).toBeGreaterThan(atom.geometry.radius!);
             if (atomId === "carbon") {

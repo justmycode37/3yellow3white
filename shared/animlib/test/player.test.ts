@@ -8,6 +8,8 @@ vi.mock("../src/renderer.js", () => ({
     get orbit() { return rendering.orbit; }
     setOrbit(value: { yaw: number; pitch: number }) { rendering.orbit = value; }
     setOrbitEnabled() {}
+    syncInteraction() {}
+    resetInteraction() { rendering.orbit = { yaw: 0, pitch: 0 }; }
     async prepare(_scenes: CompiledScene[]) {}
     render(frame: Frame) { rendering.frame = structuredClone(frame); }
     dispose() { rendering.disposed = true; }
@@ -33,6 +35,7 @@ class NativeWidgetStub {
   parent?: NativeWidgetStub;
   tagName: string;
   className = "";
+  style = { setProperty(name: string, value: string) { (this as unknown as Record<string,string>)[name] = value; } } as { setProperty(name: string, value: string): void } & Record<string,string>;
   textContent = "";
   value = "";
   type = "";
@@ -50,6 +53,24 @@ class NativeWidgetStub {
 }
 
 describe("native control reconciliation", () => {
+  it("moves controls between authored positions and the automatic panel without recreating inputs", () => {
+    const document = { createElement(tag: string): NativeWidgetStub { return new NativeWidgetStub(tag, document); } };
+    const root = document.createElement("div");
+    const overlay = new ControlOverlay(root as unknown as HTMLElement, () => {});
+    const control = { id: "scale", label: "Scale", kind: "slider" as const, default: 1, value: 1, min: 0, max: 4 };
+    overlay.update("a", [control]);
+    const row = root.children[0].children[0], input = row.children.find(child => child.tagName === "INPUT");
+    expect(row.style.position).toBe("relative");
+    overlay.update("a", [{ ...control, position: [0.1, 0.2], width: 180 }]);
+    expect(row.style).toMatchObject({ position: "absolute", left: "10%", top: "20%", width: "180px" });
+    expect(row.children.find(child => child.tagName === "INPUT")).toBe(input);
+    overlay.update("a", [control]);
+    expect(row.style).toMatchObject({ position: "relative", left: "", top: "", width: "220px" });
+    overlay.update("b", []);
+    expect(root.children[0].children).toEqual([]);
+    overlay.dispose();expect(root.children).toEqual([]);
+  });
+
   it("keeps the viewer's pending slider value while scenes recompile, then applies authoritative state", async () => {
     const document = { createElement(tag: string): NativeWidgetStub { return new NativeWidgetStub(tag, document); } };
     const root = document.createElement("div");

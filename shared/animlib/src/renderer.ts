@@ -1,8 +1,9 @@
 /// <reference types="@webgpu/types" />
 import earcut from 'earcut';
+import { ViewInteraction } from './interaction.js';
 import colorString from 'color-string';
-import type { CompiledScene, ElementState, Frame, Geometry, Vec3 } from './types.js';
-import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles } from './geometry.js';
+import type { CameraState, CompiledScene, ElementState, Frame, Geometry, Vec3 } from './types.js';
+import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles, tubeTriangles, coneTriangles } from './geometry.js';
 import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
 import type { LatexPath } from './latex.js';
 
@@ -12,10 +13,10 @@ struct Camera { focus: vec4f, angles: vec4f, viewport: vec4f };
 struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @location(1) normal: vec3f, @location(2) lit: f32 };
 @vertex fn vertex(@location(0) world: vec3f, @location(1) color: vec4f, @location(2) screen: f32, @location(3) normal: vec3f, @location(4) lit: f32, @location(5) layer: f32, @location(6) viewportOffset: vec2f) -> Output {
   var p=world-camera.focus.xyz;
-  let cp=cos(-camera.angles.y); let sp=sin(-camera.angles.y);
-  p=vec3f(p.x,p.y*cp-p.z*sp,p.y*sp+p.z*cp);
   let cy=cos(-camera.angles.x); let sy=sin(-camera.angles.x);
   p=vec3f(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
+  let cp=cos(-camera.angles.y); let sp=sin(-camera.angles.y);
+  p=vec3f(p.x,p.y*cp-p.z*sp,p.y*sp+p.z*cp);
   let depth=camera.angles.z-p.z;
   let divisor=mix(1.,depth/camera.angles.z,camera.angles.w);
   let halfHeight=camera.viewport.z/2.;
@@ -26,8 +27,8 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
   output.position.z-=layer*0.00000002*output.position.w;
   output.position=vec4f(output.position.xy+viewportOffset*2.*output.position.w,output.position.zw);
   var n=normal;
-  n=vec3f(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
   n=vec3f(n.x*cy+n.z*sy,n.y,-n.x*sy+n.z*cy);
+  n=vec3f(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
   output.normal=n;output.lit=lit;output.color=color;
   return output;
 }
@@ -35,7 +36,7 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
   if(input.lit>0.5){let amount=0.32+0.68*max(0.,dot(normalize(input.normal),normalize(vec3f(-0.4,0.65,1.))));color=vec4f(color.rgb*amount,color.a);}
   return color; }
 `;
-interface DrawItem { depth:number; vertices:number[]; transparent:boolean }
+interface DrawItem { depth:number; vertices:number[]; transparent:boolean; screen:boolean }
 type Color=[number,number,number,number];
 const colors=new Map<string,Color>();
 function parseColor(source:string):Color {
@@ -82,9 +83,12 @@ export class CanvasRenderer {
   onError:((error:Error)=>void)|undefined;
   private size={width:1,height:1};
   private observer:ResizeObserver;
-  private userOrbit={yaw:0,pitch:0};
+  private interaction=new ViewInteraction();
+  private interactionScene: string | undefined;
+  private regions:NonNullable<Frame["views"]>=[];
+  private viewResources=new Map<string,{uniform:GPUBuffer;bindGroup:GPUBindGroup;transparentBindGroup:GPUBindGroup}>();
   private orbitEnabled=false;
-  private drag:{id:number;x:number;y:number}|null=null;
+  private drag:{id:number;x:number;y:number;view:string}|null=null;
   private lastFrame:Frame|undefined;
   private lastOptions:CompiledScene['options']|undefined;
   private device:GPUDevice|undefined;
@@ -104,19 +108,62 @@ export class CanvasRenderer {
   constructor(private canvas:HTMLCanvasElement) {
     this.observer=new ResizeObserver(()=>{this.resize();if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);});
     this.observer.observe(canvas);this.resize();
-    canvas.addEventListener('pointerdown',this.pointerDown);canvas.addEventListener('pointermove',this.pointerMove);canvas.addEventListener('pointerup',this.pointerUp);canvas.addEventListener('pointercancel',this.pointerUp);
+    canvas.addEventListener('pointerdown',this.pointerDown);canvas.addEventListener('pointermove',this.pointerMove);canvas.addEventListener('pointerup',this.pointerUp);canvas.addEventListener('pointercancel',this.pointerUp);canvas.addEventListener('lostpointercapture',this.pointerUp);
   }
-  get orbit():{yaw:number;pitch:number} {return {...this.userOrbit};}
-  setOrbit(orbit:{yaw:number;pitch:number}):void {this.userOrbit={...orbit};}
-  setOrbitEnabled(enabled:boolean):void {this.orbitEnabled=enabled;if(!enabled)this.drag=null;this.canvas.style.cursor=enabled?'grab':'';}
-  private pointerDown=(event:PointerEvent):void=>{if(!this.orbitEnabled)return;this.drag={id:event.pointerId,x:event.clientX,y:event.clientY};this.canvas.setPointerCapture(event.pointerId);};
+  get orbit():{yaw:number;pitch:number} {return this.interaction.get();}
+  setOrbit(orbit:{yaw:number;pitch:number},view=''):void {this.interaction.set(orbit,view);}
+  getOrbit(view=''):{yaw:number;pitch:number} {return this.interaction.get(view);}
+  syncInteraction(scene:string,time:number,compiled:CompiledScene,frame:Frame):void {
+    if(this.interactionScene!==scene)this.pointerUp();
+    this.interactionScene=scene;
+    this.interaction.sync(scene,time,compiled);
+    this.regions=frame.views??[];
+    if(this.drag&&!this.canOrbit(this.drag.view))this.pointerUp();
+  }
+  resetInteraction():void {this.pointerUp();this.interaction.reset();this.interactionScene=undefined;}
+  setOrbitEnabled(enabled:boolean):void {this.orbitEnabled=enabled;if(this.drag&&!this.canOrbit(this.drag.view))this.pointerUp();this.canvas.style.cursor=enabled||this.regions.some(v=>this.canOrbit(v.id))?'grab':'';}
+  private canOrbit(view:string):boolean {
+    if(!view)return this.orbitEnabled;
+    const region=this.regions.find(v=>v.id===view);
+    return Boolean(region?.orbit&&region.camera.perspective>0&&!region.cameraAnimated);
+  }
+  private hitView(event:PointerEvent):string|undefined {
+    const bounds=this.canvas.getBoundingClientRect();
+    const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;
+    for(const region of [...this.regions].reverse()) {
+      const [left,top,width,height]=region.rect;
+      if(x>=left&&x<left+width&&y>=top&&y<top+height)return this.canOrbit(region.id)?region.id:undefined;
+    }
+    return this.canOrbit('')?'':undefined;
+  }
+  private pointerDown=(event:PointerEvent):void=>{
+    if(event.button!==0||this.drag)return;
+    const view=this.hitView(event);if(view===undefined)return;
+    event.preventDefault();
+    this.drag={id:event.pointerId,x:event.clientX,y:event.clientY,view};this.canvas.setPointerCapture(event.pointerId);
+    this.canvas.style.cursor='grabbing';
+  };
   private pointerMove=(event:PointerEvent):void=> {
-    if(!this.orbitEnabled||!this.drag||event.pointerId!==this.drag.id)return;
-    this.userOrbit.yaw+=(event.clientX-this.drag.x)*0.008;
-    this.userOrbit.pitch=Math.max(-Math.PI/2+0.02,Math.min(Math.PI/2-0.02,this.userOrbit.pitch+(event.clientY-this.drag.y)*0.008));
+    if(!this.drag){this.canvas.style.cursor=this.hitView(event)!==undefined?'grab':'';return;}
+    if(event.pointerId!==this.drag.id||!this.canOrbit(this.drag.view))return;
+    const orbit=this.interaction.get(this.drag.view);
+    const region=this.regions.find(v=>v.id===this.drag!.view);
+    const bounds=this.canvas.getBoundingClientRect();
+    // Half a turn across the shorter view dimension, independent of CSS size/DPR.
+    const sensitivity=Math.PI/Math.max(1,Math.min(bounds.width*(region?.rect[2]??1),bounds.height*(region?.rect[3]??1)));
+    orbit.yaw-=(event.clientX-this.drag.x)*sensitivity;
+    const camera=region?.camera??this.lastFrame?.camera;
+    const authoredPitch=camera?.pitch??0;
+    orbit.pitch=Math.max(-Math.PI/2+0.02-authoredPitch,Math.min(Math.PI/2-0.02-authoredPitch,orbit.pitch-(event.clientY-this.drag.y)*sensitivity));
+    this.interaction.set(orbit,this.drag.view);
     this.drag.x=event.clientX;this.drag.y=event.clientY;this.onOrbitChange?.();
   };
-  private pointerUp=():void=>{this.drag=null;};
+  private pointerUp=(event?:PointerEvent):void=>{
+    if(!this.drag||event&&event.pointerId!==this.drag.id)return;
+    const id=this.drag.id;this.drag=null;
+    if(this.canvas.hasPointerCapture?.(id))this.canvas.releasePointerCapture(id);
+    this.canvas.style.cursor=this.orbitEnabled||this.regions.some(v=>this.canOrbit(v.id))?'grab':'';
+  };
   private resize():void {
     const rect=this.canvas.getBoundingClientRect();this.size={width:Math.max(1,rect.width||this.canvas.width||800),height:Math.max(1,rect.height||this.canvas.height||450)};
     const ratio=globalThis.devicePixelRatio||1;
@@ -177,18 +224,12 @@ export class CanvasRenderer {
     if(!this.initializing)this.initializing=this.initialize().catch(error=>{this.initializing=undefined;throw error;});
     await this.initializing;
   }
-  render(frame:Frame,options:CompiledScene['options']):void {
-    if(!this.device||!this.context||!this.pipeline||!this.uniform||!this.bindGroup||this.disposed)return;
-    this.lastFrame=frame;this.lastOptions=options;
-    const {width,height}=this.size,camera={...frame.camera};
-    // Authored camera tracks disable pointer input, not the saved viewer offset.
-    // The offset fades with perspective so returning to 2D is continuous.
-    if(options.orbit){camera.yaw+=this.userOrbit.yaw*camera.perspective;camera.pitch+=this.userOrbit.pitch*camera.perspective;}
+  private drawItems(frame:Frame,camera:CameraState,width:number,height:number,view?:string):DrawItem[] {
     const parents=new Map<string,ElementState>();
     for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
     const items:DrawItem[]=[];
     for(const [elementIndex,element] of frame.elements.entries()) {
-      if(element.geometry.kind==='group')continue;
+      if(element.geometry.kind==='group'||element.view!==view)continue;
       const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
       while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
       const viewportOffset=[0,1].map(axis=>chain.reduce((sum,e)=>sum+(e.viewportOffset?.[axis]??0),0));
@@ -199,17 +240,22 @@ export class CanvasRenderer {
         const center=applyTransforms([0,0,0]),scale=chain.reduce((product,state)=>product*state.scale,1);
         let local=rotate(point.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]);
         const offset=element.billboardOffset??[0,0,0];local=local.map((v,i)=>v+(offset[i]??0)) as Vec3;
-        local=rotate(rotate(local,[0,camera.yaw,0]),[camera.pitch,0,0]);
+        local=rotate(local,[camera.pitch,camera.yaw,0]);
         return local.map((v,i)=>v+center[i]) as Vec3;
       };
       const addTriangles=(points:Vec3[],color:string,alpha=1,normals?:Vec3[]):void=> {
         const rgba=parseColor(color);if(!points.length||rgba[3]*opacity*alpha<=0)return;
         const vertices:number[]=[];let depth=0;
         for(let i=0;i<points.length;i++){const p=world(points[i]);depth+=project(p,camera,width,height).depth;let normal=normals?.[i]??[0,0,1] as Vec3;for(const state of chain)normal=rotate(normal,state.rotation);vertices.push(...p,rgba[0],rgba[1],rgba[2],rgba[3]*opacity*alpha,element.space==='screen'?1:0,...normal,normals?1:0,elementIndex,...viewportOffset);}
-        items.push({depth:element.space==='screen'?-1e9:depth/points.length,vertices,transparent:rgba[3]*opacity*alpha<0.999999});
+        items.push({depth:element.space==='screen'?-1e9:depth/points.length,vertices,transparent:rgba[3]*opacity*alpha<0.999999,screen:element.space==='screen'});
       };
       const contours=(paths:Vec3[][],alpha=1,color=element.fill):void=>{addTriangles(triangulateContours(paths),color,alpha);};
-      const stroke=(points:Vec3[],closed:boolean,alpha=1):void=> {addTriangles(strokeTriangles(points,element.strokeWidth,closed),element.stroke,alpha);};
+      const stroke=(points:Vec3[],closed:boolean,alpha=1,capEnd=true):void=> {
+        if(element.strokeProfile==='round') {
+          const tube=tubeTriangles(points,element.strokeWidth,closed,capEnd);
+          addTriangles(tube.points,element.stroke,alpha,tube.normals);
+        } else addTriangles(strokeTriangles(points,element.strokeWidth,closed),element.stroke,alpha);
+      };
       const latexPaths=(paths:LatexPath[],size:number,alpha:number,offset:Vec3=[0,0,0]):void=> {
         for(const path of paths)contours(path.contours.map(c=>c.map(p=>p.map((v,i)=>v*size+offset[i]) as Vec3)),alpha,element.fill==='none'?element.stroke:element.fill);
       };
@@ -233,8 +279,11 @@ export class CanvasRenderer {
             const base=a.map((v,i)=>lerp(v,b[i],ratio)) as Vec3;
             const delta=end.map((v,i)=>v-base[i]),xy=Math.hypot(delta[0],delta[1]),headWidth=Math.max(element.strokeWidth*2.6,headLength*0.7);
             const side:Vec3=xy>1e-10?[-delta[1]/xy*headWidth/2,delta[0]/xy*headWidth/2,0]:[headWidth/2,0,0];
-            stroke([...points.slice(0,index+1),base],false,alpha);
-            addTriangles([end,base.map((v,i)=>v+side[i]) as Vec3,base.map((v,i)=>v-side[i]) as Vec3],element.stroke,alpha);
+            stroke([...points.slice(0,index+1),base],false,alpha,element.strokeProfile!=='round');
+            if(element.strokeProfile==='round') {
+              const head=coneTriangles(base,end,headWidth/2);
+              addTriangles(head.points,element.stroke,alpha,head.normals);
+            } else addTriangles([end,base.map((v,i)=>v+side[i]) as Vec3,base.map((v,i)=>v-side[i]) as Vec3],element.stroke,alpha);
           }
         } else {if(shape.closed)contours([shape.points],alpha);stroke(shape.points,shape.closed,alpha);}
 
@@ -280,22 +329,67 @@ export class CanvasRenderer {
       }
       drawGeometry(from,1-t);drawGeometry(to,t);
     }
-    const opaque=items.filter(item=>!item.transparent).sort((a,b)=>b.depth-a.depth),transparent=items.filter(item=>item.transparent).sort((a,b)=>b.depth-a.depth);
-    const opaqueVertices=opaque.reduce((count,item)=>count+item.vertices.length/15,0);
-    const data=new Float32Array([...opaque,...transparent].flatMap(item=>item.vertices));
-    const device=this.device;
+    return items;
+  }
+  render(frame:Frame,options:CompiledScene['options']):void {
+    if(!this.device||!this.context||!this.pipeline||!this.uniform||!this.bindGroup||this.disposed)return;
+    this.lastFrame=frame;this.lastOptions=options;this.regions=frame.views??[];
+    const {width,height}=this.size,device=this.device;
+    const effective=(camera:CameraState,enabled:boolean,view=''):CameraState=>{
+      const offset=this.interaction.get(view);
+      return {...camera,yaw:camera.yaw+(enabled?offset.yaw*camera.perspective:0),pitch:camera.pitch+(enabled?offset.pitch*camera.perspective:0)};
+    };
+    const camera=effective(frame.camera,options.orbit);
+    const mainItems=this.drawItems(frame,camera,width,height);
+    const mainResources={uniform:this.uniform,bindGroup:this.bindGroup,transparentBindGroup:this.transparentBindGroup!};
+    const batches=[{camera,width,height,rect:undefined as number[]|undefined,items:mainItems.filter(i=>!i.screen),resources:mainResources}];
+    const viewIds=new Set(this.regions.map(v=>v.id));
+    for(const [id,resource] of this.viewResources)if(!viewIds.has(id)){resource.uniform.destroy();this.viewResources.delete(id);}
+    for(const region of this.regions) {
+      let resources=this.viewResources.get(region.id);
+      if(!resources){
+        const uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+        resources={uniform,bindGroup:device.createBindGroup({layout:this.pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]}),transparentBindGroup:device.createBindGroup({layout:this.transparentPipeline!.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]})};
+        this.viewResources.set(region.id,resources);
+      }
+      const [left,top,w,h]=region.rect;
+      // Round shared edges once: adjacent regions neither overlap nor leave gaps at fractional DPR.
+      const x=Math.round(left*this.canvas.width),y=Math.round(top*this.canvas.height);
+      const pixelWidth=Math.round((left+w)*this.canvas.width)-x,pixelHeight=Math.round((top+h)*this.canvas.height)-y;
+      if(pixelWidth<1||pixelHeight<1)continue;
+      const viewWidth=width*pixelWidth/this.canvas.width,viewHeight=height*pixelHeight/this.canvas.height;
+      const viewCamera=effective(region.camera,region.orbit,region.id);
+      batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:this.drawItems(frame,viewCamera,viewWidth,viewHeight,region.id),resources});
+    }
+    // Scene-wide screen labels stay above every regional 3D view.
+    if(mainItems.some(i=>i.screen))batches.push({camera,width,height,rect:undefined,items:mainItems.filter(i=>i.screen),resources:mainResources});
+    const ordered=batches.map(batch=>{
+      const opaque=batch.items.filter(i=>!i.transparent).sort((a,b)=>b.depth-a.depth);
+      const transparent=batch.items.filter(i=>i.transparent).sort((a,b)=>b.depth-a.depth);
+      return {...batch,opaqueVertices:opaque.reduce((n,i)=>n+i.vertices.length/15,0),data:[...opaque,...transparent].flatMap(i=>i.vertices)};
+    });
+    const data=new Float32Array(ordered.flatMap(batch=>batch.data));
     if(data.byteLength>this.capacity){this.vertices?.destroy();this.capacity=Math.max(256,data.byteLength*2);this.vertices=device.createBuffer({size:this.capacity,usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});}
     if(data.length)device.queue.writeBuffer(this.vertices!,0,data);
-    device.queue.writeBuffer(this.uniform,0,new Float32Array([...camera.target,0,camera.yaw,camera.pitch,camera.distance,camera.perspective,width,height,camera.height,0]));
     const clear=parseColor(options.background),encoder=device.createCommandEncoder();
-    const pass=encoder.beginRenderPass({colorAttachments:[{view:this.colorTexture!.createView(),resolveTarget:this.context.getCurrentTexture().createView(),clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:'clear',storeOp:'store'}],depthStencilAttachment:{view:this.depthTexture!.createView(),depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}});
-    pass.setPipeline(this.pipeline);pass.setBindGroup(0,this.bindGroup);
-    if(data.length){pass.setVertexBuffer(0,this.vertices!);if(opaqueVertices)pass.draw(opaqueVertices);
-      if(data.length/15>opaqueVertices){pass.setPipeline(this.transparentPipeline!);pass.setBindGroup(0,this.transparentBindGroup!);pass.draw(data.length/15-opaqueVertices,1,opaqueVertices);}}
-    pass.end();device.queue.submit([encoder.finish()]);
+    const colorView=this.colorTexture!.createView(),target=this.context.getCurrentTexture().createView(),depthView=this.depthTexture!.createView();
+    let firstVertex=0;
+    for(const [index,batch] of ordered.entries()) {
+      const c=batch.camera;
+      device.queue.writeBuffer(batch.resources.uniform,0,new Float32Array([...c.target,0,c.yaw,c.pitch,c.distance,c.perspective,batch.width,batch.height,c.height,0]));
+      const pass=encoder.beginRenderPass({colorAttachments:[{view:colorView,resolveTarget:target,clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:index===0?'clear':'load',storeOp:'store'}],depthStencilAttachment:{view:depthView,depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}});
+      if(batch.rect){const [x,y,w,h]=batch.rect;pass.setViewport(x,y,w,h,0,1);pass.setScissorRect(x,y,w,h);}
+      pass.setPipeline(this.pipeline);pass.setBindGroup(0,batch.resources.bindGroup);
+      const count=batch.data.length/15;
+      if(count){pass.setVertexBuffer(0,this.vertices!);if(batch.opaqueVertices)pass.draw(batch.opaqueVertices,1,firstVertex);
+        if(count>batch.opaqueVertices){pass.setPipeline(this.transparentPipeline!);pass.setBindGroup(0,batch.resources.transparentBindGroup);pass.draw(count-batch.opaqueVertices,1,firstVertex+batch.opaqueVertices);}}
+      firstVertex+=count;pass.end();
+    }
+    device.queue.submit([encoder.finish()]);
   }
   dispose():void {
+    this.pointerUp();for(const resource of this.viewResources.values())resource.uniform.destroy();this.viewResources.clear();
     this.disposed=true;this.observer.disconnect();this.vertices?.destroy();this.uniform?.destroy();this.depthTexture?.destroy();this.colorTexture?.destroy();this.context?.unconfigure();this.device?.destroy();
-    this.canvas.removeEventListener('pointerdown',this.pointerDown);this.canvas.removeEventListener('pointermove',this.pointerMove);this.canvas.removeEventListener('pointerup',this.pointerUp);this.canvas.removeEventListener('pointercancel',this.pointerUp);
+    this.canvas.removeEventListener('pointerdown',this.pointerDown);this.canvas.removeEventListener('pointermove',this.pointerMove);this.canvas.removeEventListener('pointerup',this.pointerUp);this.canvas.removeEventListener('pointercancel',this.pointerUp);this.canvas.removeEventListener('lostpointercapture',this.pointerUp);
   }
 }

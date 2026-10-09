@@ -101,3 +101,36 @@ it('generates a closed sphere surface with unit normals and no degenerate pole f
   expect(sphere.points.every(p=>Math.abs(Math.hypot(...p)-0.42)<1e-8)).toBe(true);
   for(let i=0;i<sphere.points.length;i+=3){const [a,b,c]=sphere.points.slice(i,i+3),u=b.map((v,j)=>v-a[j]),v=c.map((v,j)=>v-a[j]);expect(Math.hypot(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])).toBeGreaterThan(1e-8);}
 });
+
+import { tubeTriangles, coneTriangles } from '../src/geometry.js';
+it.each(([[1,0,0],[0,1,0],[0,0,1],[1,2,3]] as Vec3[]).map(end=>({end})))('creates round tubes with unit normals perpendicular to direction $end',({end})=>{
+  const tube=tubeTriangles([[0,0,0],end],0.2);
+  const length=Math.hypot(...end),axis=end.map(v=>v/length);
+  expect(tube.points).toHaveLength(tube.normals.length);
+  expect(tube.points.every(p=>p.every(Number.isFinite))).toBe(true);
+  for(let i=0;i<16*6;i++){
+    const point=tube.points[i],normal=tube.normals[i];
+    const axial=point.reduce((sum,v,j)=>sum+v*axis[j],0);
+    expect(Math.hypot(...point.map((v,j)=>v-axial*axis[j]))).toBeCloseTo(0.1);
+    expect(Math.hypot(...normal)).toBeCloseTo(1);
+    expect(normal.reduce((sum,v,j)=>sum+v*axis[j],0)).toBeCloseTo(0);
+  }
+});
+it('handles duplicates, bends, closed loops, and degenerate round strokes without invalid vertices',()=>{
+  const path:Vec3[]=[[0,0,0],[0,0,0],[0,0,1],[1,0,1],[0,0,1],[0,0,2]];
+  expect(tubeTriangles(path,0.2).points.every(p=>p.every(Number.isFinite))).toBe(true);
+  const square:Vec3[]=[[0,0,0],[1,0,0],[1,1,0],[0,1,0]];
+  expect(tubeTriangles([...square,square[0]],0.2,true)).toEqual(tubeTriangles(square,0.2,true));
+  expect(tubeTriangles([[0,0,0],[0,0,0]],0.2).points).toEqual([]);
+  expect(tubeTriangles([[0,0,0],[1,0,0]],0).points).toEqual([]);
+});
+it('builds nondegenerate spatial cone heads with correctly oriented unit normals',()=>{
+  const cone=coneTriangles([0,0,0],[0,0,1],0.2);
+  expect(cone.normals.every(n=>Math.abs(Math.hypot(...n)-1)<1e-8)).toBe(true);
+  expect(cone.points.some(p=>p[0]>0.19)).toBe(true);expect(cone.points.some(p=>p[1]>0.19)).toBe(true);
+  for(let i=0;i<cone.points.length;i+=3){
+    const [a,b,c]=cone.points.slice(i,i+3),u=b.map((v,j)=>v-a[j]),v=c.map((v,j)=>v-a[j]);
+    expect(Math.hypot(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])).toBeGreaterThan(1e-8);
+  }
+  expect(coneTriangles([0,0,0],[0,0,0],0.2).points).toEqual([]);
+});

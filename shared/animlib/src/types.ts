@@ -33,6 +33,8 @@ export interface ElementStyle {
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
+  /** Round world-space tubes instead of flat stroke ribbons. Not animated. */
+  strokeProfile?: "flat" | "round";
   space?: "world" | "screen";
   billboard?: boolean;
   billboardOffset?: Position;
@@ -51,13 +53,37 @@ export interface ElementState {
   fill: string;
   stroke: string;
   strokeWidth: number;
+  strokeProfile?: "flat" | "round";
   space: "world" | "screen";
   billboard?: boolean;
   billboardOffset?: Vec3;
   viewportOffset?: Vec2;
+  /** Region owning this element; omitted for the main scene. */
+  view?: string;
   persistent: boolean;
   transient?: boolean;
   morph?: { from: Geometry; to: Geometry; progress: number; map?: Record<string, string> };
+}
+
+export interface ControlPlacement {
+  /** Top-left corner, in fractions of the canvas width/height. */
+  position?: Vec2;
+  /** Widget width in CSS pixels; defaults to 220. */
+  width?: number;
+}
+
+export interface ViewOptions {
+  /** [left, top, width, height], in fractions of the canvas size. */
+  rect: [number, number, number, number];
+  camera?: Partial<CameraState>;
+  orbit?: boolean;
+}
+
+export interface ViewState {
+  id: string;
+  rect: [number, number, number, number];
+  camera: CameraState;
+  orbit: boolean;
 }
 
 export interface CameraState {
@@ -83,6 +109,8 @@ export interface AnimationAction {
   properties?: Partial<ElementState> | Partial<CameraState>;
   geometry?: Geometry;
   map?: Record<string, string>;
+  /** Camera region; omitted for the main scene camera. */
+  view?: string;
   fromOpacity?: number;
   values?: Record<string, number>;
 }
@@ -96,7 +124,7 @@ export interface Track {
   cameraFrom?: CameraState;
 }
 
-export interface ControlDefinition {
+export interface ControlDefinition extends ControlPlacement {
   id: string;
   label: string;
   kind: "slider" | "toggle" | "select";
@@ -121,6 +149,7 @@ export interface CompiledScene {
   controls: ControlDefinition[];
   initial: ElementState[];
   camera: CameraState;
+  views?: ViewState[];
   lifecycle: Lifecycle[];
   tracks: Track[];
 }
@@ -129,11 +158,12 @@ export interface Frame {
   elements: ElementState[];
   camera: CameraState;
   cameraAnimated: boolean;
+  views?: (ViewState & { cameraAnimated: boolean })[];
 }
 
 export interface ElementHandle {
   readonly id: string;
-  animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset">): AnimationAction;
+  animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset" | "strokeProfile">): AnimationAction;
   moveTo(position: Position): AnimationAction;
   rotateTo(rotation: Position | number): AnimationAction;
   scaleTo(scale: number): AnimationAction;
@@ -150,6 +180,8 @@ export interface SceneContext {
   path(id: string, props: ElementProps): ElementHandle;
   line(id: string, props: ElementProps): ElementHandle;
   arrow(id: string, props: ElementProps): ElementHandle;
+  line3D(id: string, props: ElementProps): ElementHandle;
+  arrow3D(id: string, props: ElementProps): ElementHandle;
   text(id: string, props: ElementProps): ElementHandle;
   latex(id: string, props: ElementProps): ElementHandle;
   mesh(id: string, props: ElementProps): ElementHandle;
@@ -158,9 +190,10 @@ export interface SceneContext {
   wait(seconds: number): void;
   keep(element: ElementHandle): void;
   remove(element: ElementHandle): void;
-  slider(id: string, options: { label?: string; default: number; min: number; max: number; step?: number }): number;
-  toggle(id: string, options: { label?: string; default: boolean }): boolean;
-  select(id: string, options: { label?: string; default: string; options: string[] }): string;
+  view(id: string, options: ViewOptions, builder: (context: ViewContext) => void): void;
+  slider(id: string, options: ControlPlacement & { label?: string; default: number; min: number; max: number; step?: number }): number;
+  toggle(id: string, options: ControlPlacement & { label?: string; default: boolean }): boolean;
+  select(id: string, options: ControlPlacement & { label?: string; default: string; options: string[] }): string;
   previous: { get(id: string): ElementHandle; exiting(): ElementHandle };
   camera: {
     animate(properties: Partial<CameraState>): AnimationAction;
@@ -168,6 +201,8 @@ export interface SceneContext {
     to2D(properties?: Partial<CameraState>): AnimationAction;
   };
 }
+
+export type ViewContext = Omit<SceneContext, "view">;
 
 export interface SceneSource { id: string; source: string }
 export type Submission =
@@ -197,6 +232,7 @@ export interface PlayerState {
   scenes: { id: string; duration: number }[];
   controls: ControlDefinition[];
   orbitEnabled: boolean;
+  views: { id: string; rect: ViewState["rect"]; orbitEnabled: boolean }[];
   error?: string;
 }
 
@@ -209,7 +245,8 @@ export interface CompileInput {
 export interface Asset { kind: "audio"; url: string }
 export interface PlayerOptions {
   canvas: HTMLCanvasElement;
-  controlsRoot?: HTMLElement;
+  /** Defaults to an overlay on the canvas parent. false leaves controls headless. */
+  controlsRoot?: HTMLElement | false;
   assets?: Record<string, Asset>;
   seed?: number;
   executionLimitMs?: number;
