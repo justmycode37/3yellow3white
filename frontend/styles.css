@@ -1,0 +1,77 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0f1419;
+  --fg: #f4f1ea;
+  --muted: #a8b0b8;
+  --accent: #e8c547;
+  --card: #1a222b;
+  --border: #2c3640;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at top, #243040 0%, transparent 55%),
+    var(--bg);
+  color: var(--fg);
+}
+
+.card {
+  width: min(28rem, calc(100% - 2rem));
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--card);
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.lede {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+}
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1rem;
+  background: var(--accent);
+  color: #1a1508;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+.result {
+  margin: 1rem 0 0;
+  min-height: 1.5rem;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+}

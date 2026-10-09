@@ -1,4 +1,12 @@
+.DS_Store
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
 node_modules/
 dist/
 coverage/
-.DS_Store
+.idea/
+.vscode/
