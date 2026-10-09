@@ -54,3 +54,10 @@ consumers can import scene compilation and state evaluation from `animlib/core`
 without loading the renderer. See the library's
 [shared evaluation example](shared/animlib/README.md#shared-scene-evaluation).
 LLM generation and a scene submission API are not connected yet.
+
+## Automatic deployment
+
+GitHub Actions builds and tests pull requests, then deploys successful `main`
+updates directly over SSH. The app ships its pinned Bun runtime and production
+dependencies, verifies a candidate release before restarting the service, and
+rolls back if the new revision is unhealthy. See [deployment setup and recovery](docs/deployment.md).

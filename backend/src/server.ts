@@ -54,7 +54,10 @@ export function createHandler(frontendDir = defaultFrontendDir) {
     }
 
     let response: Response;
-    if (path === "/healthz") response = Response.json({ ok: true });
+    if (path === "/healthz") response = Response.json({
+      ok: true,
+      ...(process.env.APP_REVISION ? { revision: process.env.APP_REVISION } : {}),
+    });
     else if (path === "/api/me") response = Response.json({ user: user(request) });
     else if (path === "/api/hello") response = Response.json({ message: "Hello from the 3yellow3white backend", user: user(request) });
     else response = await serveFile(page ? "index.html" : path.slice("/static/".length));
