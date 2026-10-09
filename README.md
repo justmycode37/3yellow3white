@@ -22,7 +22,8 @@ One process serves both: FastAPI API + static frontend. Deploy infra expects thi
 The animation library is an npm workspace in `frontend/animlib`. From the
 repository root, run `npm ci`, then `npm run dev` for its standalone demo,
 `npm test` for its tests, or `npm run build` to build the library. See the
-[animlib README](frontend/animlib/README.md) for the API and development commands.
+[animlib README](frontend/animlib/README.md) for the library's purpose, development
+commands, and links to the API reference.
 
 ## Local run
 
