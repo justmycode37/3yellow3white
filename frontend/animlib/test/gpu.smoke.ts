@@ -8,6 +8,8 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {deflateSync} from 'node:zlib';
 import {join} from 'node:path';
 import colorString from 'color-string';
+import {lessonScenes} from '../../app/src/lessonScenes';
+import {lessons} from '../../app/src/data';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
 // This is a development test adapter, never a browser renderer fallback.
@@ -79,6 +81,25 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(observations.every(count=>count>1000)).toBe(true);
     expect(errors).toEqual([]);
     console.log('Native Vulkan rendered demo foreground pixels:',observations);
+  });
+  it('renders every Aha lesson in light and dark mode with deterministic seeking',async()=> {
+    for(const lesson of lessons) for(const dark of [false,true]) {
+      const background=dark?'#000000':'#d6e2df';
+      const result=await sequence.submit({type:'load',scenes:lessonScenes(lesson,{background,ink:dark?'#f4f1ed':'#29282e',accent:dark?'#8acde5':'#365f80'})});
+      expect(result.ok).toBe(true);
+      const scene=sequence.compiled[0];
+      renderer.render(sequence.frame(0,scene.duration/2),scene.options);
+      const middle=await pixels();
+      expect(changedPixels(middle,background)).toBeGreaterThan(500);
+      renderer.render(sequence.frame(0,scene.duration),scene.options);
+      await pixels();
+      renderer.render(sequence.frame(0,scene.duration/2),scene.options);
+      expect(Buffer.from(await pixels()).equals(Buffer.from(middle))).toBe(true);
+      await artifact('aha-'+lesson.id+(dark?'-dark':'-light'),middle);
+    }
+    expect(errors).toEqual([]);
+    // Restore the library demo used by the following tests.
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it('renders intermediate geometric and named LaTeX morph frames',async()=> {
     const first=sequence.compiled[0];

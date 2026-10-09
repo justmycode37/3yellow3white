@@ -1,4 +1,4 @@
-"""Hello-world FastAPI backend — replace this with your real API."""
+"""VISCon API and static Aha! frontend."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend" / "site"
 
 app = FastAPI(
     title="3yellow3white",
@@ -52,5 +52,13 @@ def index() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
 
 
-# Serve CSS/JS/assets from /static/*
+# The React app uses these client-side routes; serve its shell on a direct visit.
+@app.get("/plan")
+@app.get("/settings")
+@app.get("/watch/{lesson_id}")
+def app_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "index.html")
+
+
+# Vite builds CSS/JS/assets into frontend/site/, served under /static/*.
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")

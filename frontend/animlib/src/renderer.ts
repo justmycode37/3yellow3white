@@ -129,7 +129,9 @@ export class CanvasRenderer {
     if(this.disposed)throw new Error('Renderer is disposed.');
     if(globalThis.isSecureContext===false)throw new Error('This page is using an insecure connection. Open it over HTTPS (or localhost): browsers hide WebGPU on remote HTTP pages.');
     if(!globalThis.navigator?.gpu)throw new Error('WebGPU is required. Use a WebGPU-capable desktop browser on HTTPS or localhost; no rendering fallback is provided.');
-    const adapter=await navigator.gpu.requestAdapter();if(!adapter)throw new Error('WebGPU is required but no GPU adapter is available.');
+    const adapter=await navigator.gpu.requestAdapter();
+    if(this.disposed)throw new Error('Renderer is disposed.');
+    if(!adapter)throw new Error('WebGPU is required but no GPU adapter is available.');
     const device=await adapter.requestDevice();if(this.disposed){device.destroy();throw new Error('Renderer is disposed.');}
     const context=this.canvas.getContext('webgpu');if(!context){device.destroy();throw new Error('The canvas cannot create a WebGPU context.');}
     this.device=device;this.context=context;
@@ -137,12 +139,19 @@ export class CanvasRenderer {
     void device.lost.then(info=>{if(!this.disposed)this.onError?.(new Error(`WebGPU device lost: ${info.message||info.reason}`));});
     const module=device.createShaderModule({code:shader});
     const compilation=await module.getCompilationInfo();
+    // Navigation/retry can dispose this renderer during any GPU initialization
+    // await. Never let a stale renderer reconfigure a replacement's canvas.
+    if(this.disposed)throw new Error('Renderer is disposed.');
     const errors=compilation.messages.filter(m=>m.type==='error');if(errors.length)throw new Error(errors.map(m=>m.message).join('\n'));
     this.format=navigator.gpu.getPreferredCanvasFormat();
     context.configure({device,format:this.format,alphaMode:'opaque'});
     const descriptor:GPURenderPipelineDescriptor={layout:'auto',vertex:{module,entryPoint:'vertex',buffers:[{arrayStride:60,attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x4'},{shaderLocation:2,offset:28,format:'float32'},{shaderLocation:3,offset:32,format:'float32x3'},{shaderLocation:4,offset:44,format:'float32'},{shaderLocation:5,offset:48,format:'float32'},{shaderLocation:6,offset:52,format:'float32x2'}]}]},fragment:{module,entryPoint:'fragment',targets:[{format:navigator.gpu.getPreferredCanvasFormat(),blend:{color:{srcFactor:'src-alpha',dstFactor:'one-minus-src-alpha',operation:'add'},alpha:{srcFactor:'one',dstFactor:'one-minus-src-alpha',operation:'add'}}}]},primitive:{topology:'triangle-list',cullMode:'none'},depthStencil:{format:'depth24plus',depthWriteEnabled:true,depthCompare:'less-equal'},multisample:{count:4}};
-    this.pipeline=await device.createRenderPipelineAsync(descriptor);
-    this.transparentPipeline=await device.createRenderPipelineAsync({...descriptor,depthStencil:{...descriptor.depthStencil!,depthWriteEnabled:false}});
+    const pipeline=await device.createRenderPipelineAsync(descriptor);
+    if(this.disposed)throw new Error('Renderer is disposed.');
+    this.pipeline=pipeline;
+    const transparentPipeline=await device.createRenderPipelineAsync({...descriptor,depthStencil:{...descriptor.depthStencil!,depthWriteEnabled:false}});
+    if(this.disposed)throw new Error('Renderer is disposed.');
+    this.transparentPipeline=transparentPipeline;
     this.uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
     this.bindGroup=device.createBindGroup({layout:this.pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});
     this.transparentBindGroup=device.createBindGroup({layout:this.transparentPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});

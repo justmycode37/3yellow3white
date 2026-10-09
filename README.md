@@ -1,33 +1,36 @@
-# 3yellow3white
+# Aha! — VISCon Hackathon
 
-VIScon Hackathon — hello-world scaffold your team can replace.
+Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page reads PDF, Word, text, or Markdown files in the browser and suggests colour-coded chapters and video topics. The library, player, light and dark themes, and creation flow are interactive demos. Video generation and AI services are not connected yet.
 
-## Layout
+## Repository layout
 
 ```text
-3yellow3white/
-  frontend/          # replace with your UI
-    index.html
-    styles.css
-    app.js
-    animlib/         # seekable WebGPU animation library and demo
-  backend/           # replace with your API
-    requirements.txt
-    app/
-      main.py        # FastAPI entry: app.main:app
+frontend/app/       React source, styles, and plan tests
+frontend/animlib/   Seekable WebGPU animation library and demo
+frontend/site/     Built Aha! site served by FastAPI
+backend/app/main.py FastAPI API and frontend routes
 ```
 
-One process serves both: FastAPI API + static frontend. Deploy infra expects this shape.
+The built frontend is checked in because the VISCon runtime serves static files with FastAPI. To update it after editing the React source:
 
-The animation library is an npm workspace in `frontend/animlib`. From the
-repository root, run `npm ci`, then `npm run dev` for its standalone demo,
-`npm test` for its tests, or `npm run build` to build the library. See the
-[animlib README](frontend/animlib/README.md) for the library's purpose, development
-commands, and links to the API reference.
+```sh
+npm ci
+npm ci --prefix frontend/app
+npm run app:test
+npm run app:build
+```
 
-## Local run
+For a live frontend development server, run `npm run app:dev`. The source app's [README](frontend/app/README.md) describes its screens and current integration points.
 
-```bash
+Lesson playback uses animlib's WebGPU canvas and clock. The app's controls drive
+play, pause, seeking, and replay; opening navigation or a dialog pauses the
+animation. Sample scenes remain local demos, including previews created by the
+mock creation flow. Playback requires a WebGPU-capable browser on HTTPS or
+localhost. An unavailable GPU shows an error with a retry action.
+
+## Run the combined app
+
+```sh
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
@@ -35,23 +38,6 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
 ```
 
-Open http://localhost:8080
+Open <http://localhost:8080>. Direct visits to `/plan`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. Uploaded study material stays in browser memory; the saved plan and other preferences use local storage.
 
-- UI: `/`
-- API: `/api/hello`
-- Me (VISCon headers): `/api/me`
-- Health: `/healthz`
-
-Production (VISCon Managed): proxy terminates TLS and forwards to `0.0.0.0:8080`.
-Your app may receive `X-User-Id` and `X-User-Name` (name is percent-encoded).
-
-## For teammates
-
-1. Keep `backend/app/main.py` exporting `app` (or update deploy config).
-2. Replace `frontend/` contents freely — keep linking CSS/JS under `/static/…` or change the mount in `main.py`.
-3. Add API routes next to `/api/hello`.
-4. Put secrets in a local `.env` (gitignored); wire them in code as needed.
-
-## Deploy
-
-See sibling repo `hackathon-2026-infra`.
+The animation library remains a separate npm workspace. From the repository root, `npm ci` installs it, and the existing `npm run dev`, `npm test`, and `npm run build` scripts operate on that library. See its [README](frontend/animlib/README.md).
