@@ -1,0 +1,6 @@
+/* Bold, rounded strokes without extra ornament. */
+svg.aha-icon.aha-icon { stroke-width: 3.4; }
+.studio-symbol svg { display: block; width: 23px; height: 23px; }
+.studio-symbol::after { content: none; }
+.lesson-visual .visual-halo { display: none; }
+.player-page .animated-art > g { filter: none; }

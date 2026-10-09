@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent, ReactNode } from 'react'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Atom, BookOpen, Bookmark, Check, ChevronDown, FileImage, FileText, FolderOpen, ListTree, Menu, Plus, Search, SlidersHorizontal, Upload, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Atom, BookOpen, Bookmark, Check, ChevronDown, FileImage, FileText, FolderOpen, ListTree, MenuGlyph, Plus, Search, SlidersHorizontal, Upload, X } from './Icons'
 import Artwork, { Spark } from './Artwork'
 import NavigationDrawer from './NavigationDrawer'
 import SettingsPage from './SettingsPage'
 import PlanPage from './PlanPage'
 import LessonPlayer from './LessonPlayer'
-import type { VideoSegment } from './plan'
-import { lessons, formatTime } from './data'
+import { lessons, formatTime, artworkForTitle } from './data'
 import type { Lesson, Subject } from './data'
 
 function readLocal<T,>(key: string, fallback: T): T {
@@ -40,10 +39,15 @@ function Modal({ children, onClose, label, className = '' }: { children: ReactNo
 }
 
 function VideoThumbnail({ lesson, onOpen, continueWatching = false }: { lesson: Lesson, onOpen: () => void, continueWatching?: boolean }) {
+  const progress = Math.max(0, Math.min(lesson.progress ?? 0, 1))
+  const barFill = progress === 0 ? 1 : progress
   return <button className={`${continueWatching ? 'continue-widget ' : ''}video-thumbnail ${lesson.color}`} aria-label={`${continueWatching ? 'Continue watching' : 'Play'} ${lesson.title}`} onClick={onOpen}>
       {continueWatching && <span className="widget-top"><span className="label">Continue watching</span><ArrowUpRight size={17}/></span>}
       <span className="thumbnail-art"><Artwork kind={lesson.artwork}/></span>
-      <span className="thumbnail-bottom"><h4 className="thumbnail-title">{lesson.title}</h4><span className="duration">{formatTime(lesson.duration)}</span></span>
+      <span className="thumbnail-bottom">
+        <h4 className="thumbnail-title">{lesson.title}</h4>
+        <span className="thumbnail-playback" aria-hidden="true"><span className="thumbnail-progress"><span style={{ width: `${barFill * 100}%` }}/></span><span className="thumbnail-time">{formatTime(lesson.duration)}</span></span>
+      </span>
     </button>
 }
 
@@ -59,9 +63,7 @@ export default function App() {
   const [path, setPath] = useState(window.location.pathname)
   const [menu, setMenu] = useState(false)
   const [studio, setStudio] = useState<'files' | 'text' | null>(null)
-  const [planSegment, setPlanSegment] = useState<VideoSegment | null>(null)
   const [droppedFiles, setDroppedFiles] = useState<File[]>([])
-  const [about, setAbout] = useState(false)
   const [tab, setTab] = useState<'workspace' | 'library'>('workspace')
   const [filter, setFilter] = useState('All subjects')
   const [query, setQuery] = useState('')
@@ -70,7 +72,7 @@ export default function App() {
   const [bookmarks, setBookmarks] = useState<string[]>(() => readLocal('aha-bookmarks', []))
   const [customLessons, setCustomLessons] = useState<Lesson[]>(() => readLocal('aha-lessons', []))
   const [toast, setToast] = useState('')
-  const allLessons = [...customLessons, ...lessons]
+  const allLessons = useMemo(() => [...customLessons.map(lesson => ({ ...lesson, artwork: artworkForTitle(lesson.title, lesson.artwork) })), ...lessons], [customLessons])
   const continuingLesson = lessons[1]
   const selected = path.startsWith('/watch/') ? allLessons.find(l => l.id === decodeURIComponent(path.split('/')[2] || '')) : undefined
   const invalidLesson = path.startsWith('/watch/') && !selected
@@ -101,8 +103,7 @@ export default function App() {
     onWorkspace={goWorkspace}
     onLibrary={goLibrary}
     onPlan={() => navigate('/plan')}
-    onCreate={() => { setMenu(false); setPlanSegment(null); setStudio('files') }}
-    onAbout={() => { setMenu(false); setAbout(true) }}
+    onCreate={() => { setMenu(false); setStudio('files') }}
     onSettings={() => navigate('/settings')}
   />
 
@@ -110,13 +111,13 @@ export default function App() {
   const subjects = (['Organic chemistry', 'Linear algebra', 'My ideas'] as Subject[]).filter(subject => visible.some(l => l.subject === subject))
 
   return <>
-    {selected ? <LessonPlayer key={selected.id} lesson={selected} theme={theme} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary} overlayOpen={!!studio || about}/>
+    {selected ? <LessonPlayer key={selected.id} lesson={selected} theme={theme} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary} overlayOpen={!!studio}/>
     : <div className="app-shell">
       <header className="header">
-        <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation and settings" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><Menu size={21}/></button>{menuContent}</div><button className="wordmark" onClick={() => { navigate('/'); setTab('workspace') }}>Aha!</button></div>
+        <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation and settings" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={() => { navigate('/'); setTab('workspace') }}>Aha!</button></div>
         <nav className="top-nav" aria-label="Main navigation"><button className={!settings && !planning && tab === 'workspace' ? 'active' : ''} onClick={goWorkspace}><FolderOpen size={16}/> Workspace</button><button className={!settings && !planning && tab === 'library' ? 'active' : ''} onClick={goLibrary}><BookOpen size={16}/> Library</button><button className={planning ? 'active' : ''} onClick={() => navigate('/plan')}><ListTree size={16}/> Plan</button></nav>
       </header>
-      {settings ? <SettingsPage theme={theme} onTheme={setTheme} onAbout={() => setAbout(true)}/> : planning ? <PlanPage onCreateVideo={segment => { setPlanSegment(segment); setStudio('text') }}/> : <main>
+      {settings ? <SettingsPage theme={theme} onTheme={setTheme}/> : planning ? <PlanPage/> : <main>
         <section className="welcome"><h1>Workspace</h1></section>
 
         {invalidLesson && <div className="not-found"><p>This explanation isn’t in your library yet.</p><button onClick={() => navigate('/')}>Back to your workspace <ArrowRight size={16}/></button></div>}
@@ -124,11 +125,11 @@ export default function App() {
         <section className="bento" aria-label="Create and explore">
           <div className="upload-widget butter" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); setDroppedFiles(Array.from(e.dataTransfer.files)); setStudio('files') }}>
             <div className="widget-top"><span className="label">New video</span><Plus size={18}/></div>
-            <div className="upload-body"><div className="simple-upload-icon"><Upload size={27} strokeWidth={1.5}/></div><h2>Drop your material here</h2></div>
+            <div className="upload-body"><div className="simple-upload-icon"><Upload size={27}/></div><h2>Drop your material here</h2></div>
             <div className="upload-bottom"><button className="primary-button" onClick={() => setStudio('files')}>Choose files <Plus size={15}/></button><button className="simple-text-button" onClick={() => setStudio('text')}>Use text <ArrowRight size={14}/></button></div>
           </div>
           <VideoThumbnail lesson={continuingLesson} onOpen={() => openLesson(continuingLesson)} continueWatching/>
-          <div className="side-widgets"><button className="idea-widget sage" onClick={() => setStudio('text')}><div className="widget-top"><span className="label">Start with text</span><ArrowUpRight size={17}/></div><FileText className="idea-icon" size={30} strokeWidth={1.4}/><h3>A question.<br/> An idea.</h3><span className="text-link">Add text <Plus size={15}/></span></button></div>
+          <div className="side-widgets"><button className="idea-widget sage" onClick={() => setStudio('text')}><div className="widget-top"><span className="label">Start with text</span><ArrowUpRight size={17}/></div><FileText className="idea-icon" size={30}/><h3>A question.<br/> An idea.</h3><span className="text-link">Add text <Plus size={15}/></span></button></div>
         </section>
 
         <section className="library-section" id="library">
@@ -144,25 +145,24 @@ export default function App() {
             <label className="search-box"><Search size={17}/><input placeholder="Search videos" aria-label="Search your library" value={query} onChange={e => setQuery(e.target.value)}/>{query && <button aria-label="Clear search" onClick={() => setQuery('')}><X size={14}/></button>}</label>
           </div>
           {subjects.map(subject => <div className="subject-group" key={subject}>
-            <div className="subject-heading"><span className="subject-symbol">{subject === 'Organic chemistry' ? <Atom size={20} strokeWidth={1.5}/> : subject === 'Linear algebra' ? <ArrowUpRight size={19} strokeWidth={1.5}/> : <FileText size={18} strokeWidth={1.5}/>}</span><h3>{subject}</h3></div>
+            <div className="subject-heading"><span className="subject-symbol">{subject === 'Organic chemistry' ? <Atom size={20}/> : subject === 'Linear algebra' ? <ArrowUpRight size={19}/> : <FileText size={18}/>}</span><h3>{subject}</h3></div>
             <div className="video-grid">{visible.filter(l => l.subject === subject).map((lesson, index) => <VideoCard key={lesson.id} lesson={lesson} saved={bookmarks.includes(lesson.id)} onOpen={() => openLesson(lesson)} onToggleSaved={() => toggleSaved(lesson.id)} index={index}/>)}</div>
           </div>)}
           {!visible.length && <div className="empty-library"><h3>{savedOnly ? 'No saved videos' : 'No videos found'}</h3><button className="secondary-button" onClick={() => { setQuery(''); setFilter('All subjects'); setSavedOnly(false) }}>Clear filters</button></div>}
         </section>
       </main>}
-      <footer><span className="footer-logo">Aha!</span><button onClick={() => setAbout(true)}>About</button></footer>
+      <footer><span className="footer-logo">Aha!</span></footer>
     </div>}
-    {studio && <Studio initialTab={studio} initialFiles={droppedFiles} initialText={planSegment?.text} initialTitle={planSegment?.title} onClose={() => { setStudio(null); setDroppedFiles([]); setPlanSegment(null) }} onCreate={lesson => { setCustomLessons(old => [lesson, ...old]); setStudio(null); setDroppedFiles([]); setPlanSegment(null); setFilter('All subjects'); setSavedOnly(false); setQuery(''); navigate('/'); setTab('library'); setToast('Your video is ready.'); setTimeout(() => document.getElementById('library')?.scrollIntoView({ behavior: 'smooth' }), 120) }}/>}
-    {about && <Modal label="About Aha!" onClose={() => setAbout(false)} className="about-modal"><IconButton label="Close about" onClick={() => setAbout(false)}><X size={20}/></IconButton><div className="wordmark">Aha!</div><h2>For that moment<br/>when it all clicks.</h2><p>Some things make more sense when you can see them. Aha! is a little space to turn your curiosity into visual explanations.</p><div className="about-demo"><Spark/><div><strong>A hackathon work in progress</strong><p>This is the interactive frontend. Sample lessons and the creation flow are demos; uploaded files stay on your device. The explanation engine is on its way.</p></div></div><button className="primary-button" onClick={() => setAbout(false)}>Keep exploring <ArrowRight size={16}/></button></Modal>}
+    {studio && <Studio initialTab={studio} initialFiles={droppedFiles} onClose={() => { setStudio(null); setDroppedFiles([]) }} onCreate={lesson => { setCustomLessons(old => [lesson, ...old]); setStudio(null); setDroppedFiles([]); setFilter('All subjects'); setSavedOnly(false); setQuery(''); navigate('/'); setTab('library'); setToast('Your video is ready.'); setTimeout(() => document.getElementById('library')?.scrollIntoView({ behavior: 'smooth' }), 120) }}/>}
     {toast && <div className="toast" role="status"><span><Check size={16}/></span>{toast}</div>}
   </>
 }
 
-function Studio({ initialTab, initialFiles, initialText = '', initialTitle = '', onClose, onCreate }: { initialTab: 'files' | 'text', initialFiles: File[], initialText?: string, initialTitle?: string, onClose: () => void, onCreate: (lesson: Lesson) => void }) {
+function Studio({ initialTab, initialFiles, onClose, onCreate }: { initialTab: 'files' | 'text', initialFiles: File[], onClose: () => void, onCreate: (lesson: Lesson) => void }) {
   const [tab, setTab] = useState(initialTab)
   const [files, setFiles] = useState<File[]>([])
-  const [text, setText] = useState(initialText)
-  const [title, setTitle] = useState(initialTitle)
+  const [text, setText] = useState('')
+  const [title, setTitle] = useState('')
   const subject: Subject = 'My ideas'
   const [dragging, setDragging] = useState(false)
   const [stage, setStage] = useState(-1)
@@ -197,7 +197,7 @@ function Studio({ initialTab, initialFiles, initialText = '', initialTitle = '',
   const fileChanged = (e: ChangeEvent<HTMLInputElement>) => { addFiles(Array.from(e.target.files || [])); e.target.value = '' }
   return <Modal onClose={stableClose} label="Create a new explanation" className="studio-modal"><div className="studio-header"><div className="studio-symbol butter"><Spark/></div><IconButton label="Close studio" onClick={stableClose}><X size={21}/></IconButton></div>
     {stage >= 0 ? <div className="creation-state"><div className="creation-orbit"><Artwork kind="orbitals" animated/></div><div className="eyebrow">A LITTLE PREVIEW OF WHAT’S TO COME</div><h2>Making room<br/>for understanding.</h2><div className="creation-steps">{['Gathering your ideas', 'Finding the bigger picture', 'Setting the scene'].map((label, i) => <div className={i <= stage ? 'done' : ''} key={label}><span>{i < stage ? <Check size={13}/> : i + 1}</span>{label}</div>)}</div><p className="demo-disclaimer">This demo uses a sample lesson.<br/>Your files stay on this device.</p><button className="text-link" onClick={() => setStage(-1)}>Back to your idea <ArrowLeft size={15}/></button></div>
-    : <><div className="studio-intro"><h2>{initialTitle || 'New video'}</h2></div><div className="studio-tabs"><button className={tab === 'files' ? 'active' : ''} onClick={() => setTab('files')}><Upload size={16}/> Files</button><button className={tab === 'text' ? 'active' : ''} onClick={() => setTab('text')}><FileText size={16}/> Text</button></div>
+    : <><div className="studio-intro"><h2>New video</h2></div><div className="studio-tabs"><button className={tab === 'files' ? 'active' : ''} onClick={() => setTab('files')}><Upload size={16}/> Files</button><button className={tab === 'text' ? 'active' : ''} onClick={() => setTab('text')}><FileText size={16}/> Text</button></div>
       <input ref={picker} type="file" multiple onChange={fileChanged} hidden aria-label="Choose source files"/>
       {tab === 'files' ? <><div className={`dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={dropped}><button className="dropzone-target" onClick={() => picker.current?.click()}>{preview ? <img className="upload-preview" src={preview} alt="Your uploaded source"/> : <span className="upload-icon"><Upload size={25}/></span>}<strong>{files.length ? 'Add another file' : 'Drop files here'}</strong><span className="choose-file">{files.length ? 'Choose files' : 'Browse files'} <Plus size={14}/></span></button></div>{files.length > 0 && <div className="file-list">{files.map((file, i) => <div key={`${file.name}-${i}`}><span className="file-icon">{file.type.startsWith('image/') ? <FileImage size={19}/> : <FileText size={19}/>}</span><div><strong>{file.name}</strong><small>{file.size < 1024 * 1024 ? `${Math.max(1, Math.round(file.size / 1024))} KB` : `${(file.size / 1024 / 1024).toFixed(1)} MB`}</small></div><button aria-label={`Remove ${file.name}`} onClick={() => setFiles(old => old.filter((_, index) => index !== i))}><X size={15}/></button></div>)}</div>}</>
       : <div className="thought-input"><textarea id="thought" aria-label="Your idea" value={text} onChange={e => setText(e.target.value)} placeholder="Write a question or idea…" maxLength={10000}/><div><span>{text.length.toLocaleString()} / 10,000</span></div></div>}

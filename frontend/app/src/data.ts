@@ -21,4 +21,16 @@ export const lessons: Lesson[] = [
   { id: 'eigen', title: 'Meet the eigenvectors', subtitle: 'The directions that stay themselves', subject: 'Linear algebra', duration: 188, artwork: 'eigen', color: 'sage' },
 ]
 
+export function artworkForTitle(title: string, fallback: Artwork): Artwork {
+  const topics: [RegExp, Artwork][] = [
+    [/\beigen(?:vectors?|values?)?\b/i, 'eigen'],
+    [/\b(?:matrix|matrices|transformations?)\b/i, 'matrix'],
+    [/\bvectors?\b/i, 'vectors'],
+    [/\borbitals?\b/i, 'orbitals'],
+    [/\b(?:reactions?|electrons?)\b/i, 'reaction'],
+    [/\b(?:carbon|molecules?|bonds?)\b/i, 'molecule'],
+  ]
+  return topics.find(([pattern]) => pattern.test(title))?.[1] ?? fallback
+}
+
 export const formatTime = (value: number) => `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, '0')}`
