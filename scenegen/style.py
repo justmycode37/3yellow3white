@@ -42,7 +42,7 @@ Simplicity (the most important rule; clutter is the most common failure):
 - A scene ends with only the core objects the story still needs (e.g. grid, basis
   vectors, the example vector, the current matrix). Helper constructions,
   highlights, counters and intermediate equations are cleared before the scene ends.
-- No numeric counters/decimal readouts on the geometry; put numbers in the panel.
+- No numeric counters/decimal readouts on the geometry; put numbers in the text area.
 
 Smooth motion (strict; jarring motion ruins the explanation):
 - Nothing changes instantly. Every visible change is an animation with a smooth
@@ -67,9 +67,10 @@ On-screen text (strict):
   motion, side-by-side comparison).
 
 Layout (keep it identical in every scene):
-- Geometry on the left two thirds of the frame; a fixed text panel on the right
-  third (dark backing rectangle, thin border) for formulas and matrices. Geometry
-  never enters the panel; text never sits on the grid except short object labels.
+- Geometry on the left two thirds of the frame; the right third is a fixed text
+  area for formulas and matrices. It is just empty space: NO box, border, frame,
+  backing rectangle or panel shape around text anywhere. Geometry never enters the
+  text area; text never sits on the grid except short object labels.
 - Labels sit beside what they name with a visible gap and move with it; nothing
   touches or overlaps, including during motion.
 - Minimum text height about 0.35 scene units; keep 0.4+ margin from the frame edge.

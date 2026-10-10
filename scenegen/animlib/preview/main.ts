@@ -10,7 +10,8 @@ type Topic = { title: string; scenes: Scene[] };
 
 const $ = (id: string) => document.getElementById(id)!;
 const data: { title: string; topics: Topic[] } = await (await fetch("/preview.json")).json();
-const player = createPlayer({ canvas: $("canvas") as HTMLCanvasElement });
+// animlib only shows scene controls (sliders, toggles) when given a host element.
+const player = createPlayer({ canvas: $("canvas") as HTMLCanvasElement, controlsRoot: $("stage") });
 const scrubber = $("scrubber") as HTMLInputElement, playButton = $("play") as HTMLButtonElement;
 let state: PlayerState = player.getState(), topic = 0, autoplay = false;
 

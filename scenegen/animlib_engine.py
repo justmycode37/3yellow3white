@@ -158,7 +158,7 @@ Hard rules:
   top of the old one. Rotate a whole grid by putting its lines in a group and using
   `rotateTo`; for other linear maps morph each line's points to its image.
 - Formulas use `s.latex` with named parts so later scenes can morph them; keep them
-  in the right-hand panel area, clear of the geometry.
+  in the right-hand text area (no box around it), clear of the geometry.
 - Interactive elements use animlib controls with exactly the ids listed above:
   `const k = s.slider("id", {{ label, default, min, max, step, position: [x, y], width }})`,
   `s.toggle("id", {{ label, default }})`, `s.select("id", {{ label, default, options }})`.
@@ -166,7 +166,7 @@ Hard rules:
   ordinary JavaScript so the picture is correct for ANY value at ANY time (the
   builder is re-run when the viewer moves a control). Place controls over the
   bottom-left of the geometry area (e.g. `position: [0.05, 0.80]`), clear of the
-  formula panel and of the objects. Add no controls other than the listed ones.
+  formula area and of the objects. Add no controls other than the listed ones.
   (animlib has no draggable points; sliders, toggles and selects are the tools.)
 - Kept objects must be created from the control values too, so the next scene
   inherits whatever the viewer chose.
