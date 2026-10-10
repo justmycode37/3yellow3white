@@ -122,6 +122,23 @@ test("overlapping formulas are rejected", async () => {
   expect(results[1]).toBe("ok");
 });
 
+test("a control that does nothing on the final frame is rejected", async () => {
+  const craft = await readFile(new URL("../../backend/prompts/scene-craft.md", import.meta.url), "utf8");
+  const scene = (radius: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    const k = s.slider("size", { label: "Size", default: 1, min: 0, max: 2, step: 0.1 });
+    s.circle("dot", { radius: ${radius}, position: [0, 0] });
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new VisualizationPromptRunner({ run: async task => {
+    for (const output of [scene("0.3"), scene("0.2 * k + 0.1")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: craft, prompt: `Generate this scene:\n${JSON.stringify({ planning: { current: { visualDescription: "2D (because it is a plane): a dot" } } })}`, validate: async () => {} });
+  expect(results[0]).toContain("without effect at the end: size");
+  expect(results[1]).toBe("ok");
+});
+
 test("a lesson plan must mark every scene as 3D or 2D with a reason", async () => {
   const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
   const plan = (description: string) => JSON.stringify({ plan: { scenes: [{ id: "beat-1", visualDescription: description }] } });

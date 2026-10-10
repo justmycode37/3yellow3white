@@ -1,7 +1,7 @@
 // animlib lays out LaTeX in the renderer, not when a scene is compiled, so a scene
 // with an unsupported command passes validation and then stops the player
 // ("Invalid LaTeX: ..."). This runs the renderer's own layout on every formula.
-import { evaluateScene } from "animlib/core";
+import { compileSource, evaluateScene } from "animlib/core";
 import type { CompiledScene } from "animlib/core";
 import { layoutLatexGeometry } from "../../shared/animlib/dist/latex.js";
 
@@ -139,3 +139,23 @@ export function layoutProblems(frames: LayoutFrame[]): string[] {
 export const LAYOUT_HINT = "Show less at once: fade out formulas that are no longer needed before adding the next, keep at most three " +
   "formulas in the right-hand column, leave a clear gap (at least half a line) between neighbours, and make each fit inside the frame " +
   "(smaller fontSize or a shorter formula). A 2x2 matrix at fontSize 0.46 is about 1.1 units tall, so stack matrices at least 1.5 units apart.";
+
+interface ControlInfo { id: string; kind: string; default: unknown; min?: number; max?: number; options?: string[] }
+
+/** Controls that do nothing on the final held frame, where viewers pause and play with them. */
+export async function deadControls(source: string, compiled: CompiledScene, previous?: unknown): Promise<string[]> {
+  const picture = (scene: CompiledScene) => JSON.stringify(evaluateScene(scene, scene.duration).elements);
+  const dead: string[] = [];
+  for (const control of compiled.controls as unknown as ControlInfo[]) {
+    const other = control.kind === "toggle" ? !control.default
+      : control.kind === "select" ? control.options?.find(option => option !== control.default)
+      : control.default === control.min ? control.max : control.min;
+    if (other === undefined) continue;
+    const changed = await compileSource(source, { previous, controls: { [control.id]: other } } as never);
+    if (picture(changed) === picture(compiled)) dead.push(control.id);
+  }
+  return dead;
+}
+
+export const DEAD_CONTROL_HINT = "These controls change nothing on the final frame of the scene. The scene holds there, and that is " +
+  "when viewers try the control: compute the end picture (positions, shapes, numbers) from the control's value as well.";

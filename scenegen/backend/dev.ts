@@ -17,7 +17,7 @@ import type { AgentRunner, AgentTask } from "../../backend/src/agents/runtime.js
 import { compileSource } from "animlib/core";
 import type { Frame } from "animlib/core";
 import { createPiGenerator, sceneSource } from "../../backend/src/agents/generator.js";
-import { renderProblems } from "./scene-checks.ts";
+import { DEAD_CONTROL_HINT, deadControls, renderProblems } from "./scene-checks.ts";
 import { PLANNING_CONTRACT } from "../../backend/src/agents/planning.js";
 import { createThumbnailGenerator, thumbnailAgentConfig } from "../../backend/src/agents/thumbnail.js";
 
@@ -66,6 +66,8 @@ export class VisualizationPromptRunner implements AgentRunner {
       // Formulas and view membership only show up in the player; check them here so a broken scene cannot be published.
       const compiled = await compileSource(sceneSource(output), { previous: previousFrame(task.prompt) });
       const problems = renderProblems(compiled);
+      const dead = await deadControls(sceneSource(output), compiled, previousFrame(task.prompt));
+      if (dead.length) problems.push(`Controls without effect at the end: ${dead.join(", ")}.\n${DEAD_CONTROL_HINT}`);
       if (problems.length) throw new Error(problems.join("\n\n"));
     });
     return this.inner.run({ ...task, systemPrompt, validate });

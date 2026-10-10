@@ -19,7 +19,7 @@ import { PiAgentRunner, validationMessage } from "../../backend/src/agents/runti
 import { sceneSource } from "../../backend/src/agents/generator.js";
 import { validateScenePlan } from "../../backend/src/agents/scene-plan.js";
 import { SCENE_AGENT_INSTRUCTIONS } from "../../backend/src/narration/handoff.js";
-import { renderProblems } from "./scene-checks.ts";
+import { DEAD_CONTROL_HINT, deadControls, renderProblems } from "./scene-checks.ts";
 
 const [videoId, indexArg, ...flags] = process.argv.slice(2);
 const index = Number(indexArg);
@@ -73,6 +73,8 @@ async function validate(output: string) {
   }
   if (planned) validateScenePlan(compiled, evaluateScene(compiled, duration), planned);
   const problems = renderProblems(compiled);
+  const dead = await deadControls(sceneSource(output), compiled, input.previousFrame);
+  if (dead.length) problems.push(`Controls without effect at the end: ${dead.join(", ")}.\n${DEAD_CONTROL_HINT}`);
   if (problems.length) throw new Error(problems.join("\n\n"));
 }
 
