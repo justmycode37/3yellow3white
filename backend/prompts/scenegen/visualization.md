@@ -1,29 +1,11 @@
 # Visualization prompt (scenegen)
 
-<!-- This file replaces backend/prompts/scene-craft.md when the app runs through
-     scenegen/backend/dev.ts. Edit it freely: it is re-read for every scene, so the next
-     generated scene uses your changes without a restart. Narration, audio, captions,
-     the lesson plan and the animlib reference are added by the backend, unchanged. -->
-
-## Contract with the rest of the pipeline (from the backend's scene-craft.md)
-
-Make the scene's purpose visible. Show a concrete change before naming its rule; every causal claim needs a visible reason, such as a correspondence, comparison, or quantity changing together with its geometry. Use the running example and exact values established in the script. Do not choose new values that contradict the speech.
-
-Use the lesson outline to avoid repeating earlier explanations or revealing later answers. Set up the next scene's needs. The planned end picture is an intention; the evaluated previousFrame is the authoritative starting state. Retrieve carried objects with s.previous.get(id), animate the same object, and keep the declared carry IDs. Do not recreate a lookalike under a different ID. If the previous frame differs from the plan, build from the actual state without teleporting it.
-
-Keep the fewest objects that explain the idea. Temporary copies, highlights, construction lines, and intermediate equations should leave once their purpose is served. Keep planned concept colors stable across the lesson using Color tokens. Neutral labels may use WHITE. Color alone should not be the only way to distinguish concepts.
-
-Use motion to explain instead of filling the canvas with the narration. Prefer geometry, short labels, formulas, and meaningful numbers; use brief explanatory text when the topic needs it. Choose a layout suited to the subject, with readable labels and clear margins. A fixed formula area is useful when geometry would otherwise collide with equations, but is not required for every lesson. Labels should move with the thing they name. Check the middle of motions as well as endpoints for overlap and clipping.
-
-The player overlays a title/menu near the top-left and playback controls near the bottom. Keep essential labels and the main inference clear of those areas. Do not assume an empty fullscreen canvas when choosing framing.
-
-Animate the same arrow as its length or direction changes; avoid accidentally leaving a shorter arrowhead inside a longer arrow. If the lesson deliberately compares collinear reference and result vectors, distinguish them clearly through labels, styling, or a separate comparison area. Derive coupled geometry and readouts from the same values. For rotations, interpolate the angle; choose interpolation that preserves the relevant mathematical structure rather than assuming arbitrary shape morphs are true intermediate states.
-
-Give the main inference room to be seen. Usually make one major explanatory change at a time and hold its result when the narration allows. Exact audio cues and measured duration take priority over suggested pacing. Do not extend the scene, compress speech, shift audio, or reveal an answer during a thinking pause. Cuts and deliberate discontinuities are allowed when motivated and explicit.
-
-Use 3D for spatial subjects when it helps explain them. Add interactions only when planned: every control should drive real geometry and all dependent labels/formulas at every time, while preserving the scene duration and a coherent default example. Do not add decorative controls or require interactions to understand the narrated default path.
-
-Before calling validate_output, review the source for: the purpose actually shown; facts and values agreeing with speech; no premature reveal; readable text; no leftover copies; smooth, meaningful motion; planned carry/cleanup IDs; and a clean final picture. On a diagnostic, change only what is needed to fix it, retaining the narration, example values, inherited state, IDs, and timing. Return the complete corrected source.
+<!-- The working copy of the scenegen visualization rules. Main ships a frozen copy in
+     backend/prompts/scenegen/visualization.md; when the app runs through
+     scenegen/backend/dev.ts this file is used in its place. Edit it freely: it is
+     re-read for every scene, so the next generated scene uses your changes without a
+     restart. The backend adds its own scene-craft.md, narration, audio, captions, the
+     lesson plan and the animlib reference, unchanged. -->
 
 ## Visual style (scenegen)
 
@@ -112,6 +94,16 @@ Interactivity:
 - Keep interactive elements wherever they help: a planned slider, toggle or select
   must be built and must drive the real geometry; 3D views are rotatable.
   Do not drop a planned interaction to simplify the scene.
+- Controls always sit in the TOP RIGHT corner, in every scene (strict, checked). The
+  player stacks them there by itself, right-aligned from the top, in the order they
+  are declared: so NEVER pass `position` to `s.slider`, `s.toggle` or `s.select`.
+  `width` is optional and at most 220. Declare a control that also exists in the
+  previous scene first, so it keeps its place.
+- A control must keep working for as long as it is shown, above all on the final
+  held frame, where viewers pause and play with it: the end picture and its numbers
+  are computed from the control's value too, not only one stretch in the middle.
+- The top right corner belongs to the controls: no formula, label or geometry in the
+  top third of the right-hand text area, whether or not this scene has a control.
 
 How to build 3D with animlib:
 - Follow the plan: if the scene's visualDescription starts with "3D:", the scene must
@@ -150,6 +142,24 @@ Layout (keep it identical in every scene):
   area for formulas and matrices. It is just empty space: NO box, border, frame,
   backing rectangle or panel shape around text anywhere. Geometry never enters the
   text area; text never sits on the grid except short object labels.
+- The right third from top to bottom: controls in the top third (kept empty when
+  there are none), formulas and matrices in the middle and lower part, starting
+  below the controls. The same in every scene, so nothing jumps between scenes.
+- Formula column budget (strict, checked): at most THREE formulas or matrices in the
+  column at once, and at most 7 formulas and labels on screen in total. Before a new
+  formula comes in, fade out one the viewer no longer needs, or morph the old one
+  into the new one. Do not keep a growing list of every result so far.
+- Formulas never overlap or touch (strict, checked). Place them from their real
+  size: a 2x2 matrix at fontSize 0.46 is about 1.1 units tall and 2.6 wide, a single
+  line about 0.5 tall. Stack with a clear gap of at least half a line: matrices at
+  least 1.5 units apart centre to centre, single lines at least 0.8.
+- Everything stays inside the frame (strict, checked). The window can be as narrow
+  as 1.5 times its height, so with the usual camera height 8 keep all text within
+  x from -5.6 to 5.6 and y from -3.6 to 3.6. Centre the column near x = 4 and make
+  wide formulas smaller or shorter rather than letting them run off the edge.
+- Show only what the student needs for THIS step. One idea on screen at a time: the
+  objects being talked about, their labels, and the one formula that states the
+  point. Fade out the rest, including dimmed "ghost" copies of earlier formulas.
 - Labels sit beside what they name with a visible gap and move with it; nothing
   touches or overlaps, including during motion.
 - Minimum text height about 0.35 scene units; keep 0.4+ margin from the frame edge.

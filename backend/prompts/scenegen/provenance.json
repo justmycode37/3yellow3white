@@ -5,12 +5,16 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md",
-      "sha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3"
+      "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
+      "pullRequest": 59,
+      "sha256": "76471267cd523675d8420ce59a7c45c8569164118f22514bc16502cee65c2978"
     },
     {
       "file": "planning.md",
       "source": "scenegen/prompts/planning.md",
-      "sha256": "36af6cbcaaa3f858e515c1f8709f0893a537f73e8528a2e47875a27e21428533"
+      "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
+      "pullRequest": 59,
+      "sha256": "4a96995d665ca2dd2fe6de6e49701144747edbe1eba3eb674aa16b690cf3c5e0"
     },
     {
       "file": "topics-system.md",
