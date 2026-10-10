@@ -8,6 +8,7 @@ import { transparencyCases } from './transparency-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
 import { initialSources } from '../demo/scenes.js';
 import { interactionSource } from '../demo/interaction.js';
+import { plantSource } from '../demo/plant.js';
 import { lessonScenes } from '../../../frontend/app/src/lessonScenes.js';
 import { lessons } from '../../../frontend/app/src/data.js';
 import type { ColorValue, SceneSource } from '../src/types.js';
@@ -174,6 +175,31 @@ export async function runWebGLTests() {
         fallback.render(sequence.frame(0,0),sequence.compiled[0].options);
         assert(foreground(pixels(replacement))>15000,'Replacement did not render');
       } finally {fallback.dispose();assert(surface.isConnected,'Original canvas ownership not restored');surface.remove();}
+    });
+    await test('curved paths: holes, Bézier morphs and deterministic seek', async () => {
+      await load(`export default scene({},s=>{
+        s.path('ring',{d:'M-2 -2H2V2H-2Z M-1 -1H1V1H-1Z',fill:Color.PURE_GREEN});
+      });`);
+      const ring=draw();
+      assert(at(ring,canvas,320,240).join()==='0,0,0','Compound path filled its hole');
+      assert(at(ring,canvas,230,240).join()==='0,255,0','Missing compound path fill');
+      await load(`export default scene({},s=>{
+        const p=s.path('curve',{d:'M-2 -1C-2 1 2 1 2 -1Z',fill:Color.PURE_GREEN});
+        s.play(p.morphTo({kind:'path',d:'M-2 -1C-2 3 2 3 2 -1Z'}),{duration:2,ease:'linear'});
+      });`);
+      assert(at(draw(0),canvas,320,180).join()==='0,0,0','Initial curve has the wrong bounds');
+      assert(at(draw(2),canvas,320,180).join()==='0,255,0','Curve morph did not expand');
+      const middle=draw(1);draw(0);draw(2);
+      assert(!different(middle,draw(1)),'Curved morph seek was nondeterministic');
+    });
+    await test('curved plant: production player geometry and growth', async () => {
+      await load(plantSource.source);
+      const duration=sequence.compiled[0].duration,finished=draw(duration);
+      assert(foreground(finished)>10000,'Plant did not render');
+      artifact(canvas,'Curved plant');
+      assert(different(finished,draw(2)),'Plant growth did not change the image');
+      const bending=draw(5.5);draw(duration);draw(0);
+      assert(!different(bending,draw(5.5)),'Plant bending changed after seeking');
     });
     await test('all production demos, LaTeX morphs and deterministic seek', async () => {
       const result = await sequence.submit({ type: 'load', scenes: initialSources }); assert(result.ok, JSON.stringify(result));

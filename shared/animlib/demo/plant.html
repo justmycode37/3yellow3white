@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>animlib curved plant</title>
+<style>
+  html,body{margin:0;width:100%;height:100%;background:#000}
+  body{display:grid;place-items:center}
+  canvas{display:block;width:min(100vw,109.524vh);height:min(100vh,91.304vw)}
+  button{position:fixed;right:24px;bottom:20px;background:#222;color:#eee;border:1px solid #555;border-radius:6px;padding:8px 14px;cursor:pointer;font:14px system-ui}
+  body.capture button{display:none}
+</style>
+<canvas aria-label="A plant with three curved leaves, a green stem and branching roots in brown soil."></canvas>
+<button type="button">Replay growth</button>
+<script type="module">
+  import { createPlayer } from '../src/index.ts';
+  import { plantSource } from './plant.ts';
+  const query=new URLSearchParams(location.search);
+  if(query.has('capture'))document.body.classList.add('capture');
+  const player=createPlayer({canvas:document.querySelector('canvas')});
+  const ready=(async()=>{
+    const result=await player.submit({type:'load',scenes:[plantSource]});
+    if(!result.ok)throw new Error(JSON.stringify(result.diagnostics));
+    await player.seek({scene:'plant',time:player.getState().duration});
+    document.body.dataset.ready='true';
+  })();
+  window.animlibDemo={player,ready};
+  document.querySelector('button').onclick=async()=>{
+    await ready;await player.seek({scene:'plant',time:0});await player.play();
+  };
+  window.addEventListener('pagehide',()=>player.dispose(),{once:true});
+</script>
+</html>

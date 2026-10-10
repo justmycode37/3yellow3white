@@ -1,6 +1,7 @@
 import { parse } from "acorn";
 import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
+import { validatePath } from "./path.js";
 import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
 import type { CameraState, CompileInput, CompiledScene, ControlValue, Diagnostic, ElementState, Geometry, ReactiveUpdate } from "./types.js";
 import { mergeReactiveUpdates, validateReactiveBindings } from './reactive.js';
@@ -36,7 +37,8 @@ function geometry(g: Geometry) {
       check(Math.abs(Number(value.toFixed(decimals))) < 10 ** digits, `Numeric slot ${id} exceeds its reserved digit width`);
     }
   }
-  if (g.kind === "path") check((g.points?.length ?? 0) >= 2, "Path requires at least two points");
+  if (g.d !== undefined || g.curve !== undefined) check(g.kind === "path", "Only paths support d or curve");
+  if (g.kind === "path") validatePath(g);
   if (g.kind === "line" || g.kind === "arrow") check((g.points?.length ?? 0) >= 2, "Line/arrow requires at least two points");
   if (g.kind === "group") check(Array.isArray(g.children) && g.children.length <= 2000 && g.children.every(id => typeof id === "string"), "Invalid group children");
   if (g.isolated !== undefined) check(g.kind === "group" && typeof g.isolated === "boolean", "Only groups support isolation");
@@ -94,7 +96,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
   check(Array.isArray(scene.initial) && scene.initial.length <= 2000, "Invalid initial elements"); scene.initial.forEach(e => { element(e); checkView(e); });
   check(Array.isArray(scene.lifecycle) && scene.lifecycle.length <= 20000, "Invalid lifecycle");
   let totalPoints = 0;
-  const examine = (e: ElementState) => { element(e); checkView(e); totalPoints += (e.geometry.points?.length ?? 0) + (e.geometry.vertices?.length ?? 0); check(totalPoints <= 100000, "Scene geometry budget exceeded"); };
+  const examine = (e: ElementState) => { element(e); checkView(e); totalPoints += (e.geometry.kind === 'path' ? validatePath(e.geometry) : e.geometry.points?.length ?? 0) + (e.geometry.vertices?.length ?? 0); check(totalPoints <= 100000, "Scene geometry budget exceeded"); };
   const groupGraph = new Map<string, string[]>();
   for (const e of scene.initial) if (e.geometry.children) groupGraph.set(e.id, e.geometry.children);
   for (const event of scene.lifecycle) {

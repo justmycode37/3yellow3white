@@ -24,8 +24,9 @@ the library handles reproducible playback, scene handoffs, and live updates.
   and morphs carried objects where their identity matters. Unrelated subjects
   should have deliberate exits and entrances, without whole-scene crossfades or
   arbitrary reuse of an atom as a sorting bar.
-- **Support useful morphs and readable mathematics.** Compatible shapes match
-  points automatically. LaTeX morphs use explicit mappings between named parts;
+- **Support useful morphs and readable mathematics.** Compatible curved paths
+  interpolate corresponding control points; other compatible single outlines
+  match points automatically. LaTeX morphs use explicit mappings between named parts;
   unmatched parts fade in or out. Authors need stable formula anchors and numbers
   that count between values without shifting surrounding symbols. Text, arrows,
   and borders should remain clean throughout an animation.
@@ -48,7 +49,10 @@ the library handles reproducible playback, scene handoffs, and live updates.
 ## Scope
 
 The core provides shapes, paths, text, LaTeX, meshes, groups, animation, and player
-behavior. The default player renders and handles input on its canvas; it creates
+behavior. Paths support straight segments, smooth curves through points, and SVG
+path data for Bézier curves, arcs, and compound shapes with holes. Both GPU
+backends render these through the same geometry pipeline. The default player
+renders and handles input on its canvas; it creates
 no surrounding DOM. Generic drag/spring/custom behaviors and live attachments or
 connectors compose with the authored timeline. Isolated groups let overlapping
 parts fade as one object. Domain helpers for matrices, molecules, arrays, and graphs belong in the
@@ -96,6 +100,15 @@ s.play(object.fadeOut(), { duration: 1 });
 Drag and spring are independent behaviors. Hosts can register additional behavior
 factories through `createPlayer({ canvas, behaviors })`; compiled scenes contain
 only declarative data. See [behaviors and bindings](docs/reference.md#behaviors-and-live-bindings).
+
+Open `http://localhost:5173/plant.html` for a plant built from curved paths, with
+replayable leaf growth and Bézier bending. `s.path` accepts SVG path data in `d`
+or `points` with `curve: 'smooth'`; see
+[curved paths](docs/reference.md#curved-paths-and-organic-shapes).
+The [plant scene source](demo/plant.ts) uses the production player and renderer.
+The demo opens on the finished plant; **Replay growth** plays the animation.
+Use `plant.html?capture` to hide the replay button for screenshots.
+
 DOM controls now require an explicit `controlsRoot`; existing applications that
 want the native overlay should pass `canvas.parentElement` or another host.
 
@@ -105,10 +118,10 @@ Use Node.js 22.16 or newer. From the repository root:
 
 ```sh
 npm ci
+npm run build        # library JS and declarations; required by consumers in tests
 npm run dev          # demo at http://localhost:5173
 npm run typecheck
 npm test
-npm run build        # library JS and TypeScript declarations
 npm run demo:build   # bundled static demo
 ```
 
@@ -183,9 +196,11 @@ and limits.
 
 ### WebGL2 browser checks
 
-Start `npm run dev -- --port 5178 --strictPort` and open
+Start `npm --workspace animlib run dev -- --port 5178 --strictPort` and open
 `http://localhost:5178/webgl-test.html`. Click **Run browser tests**; the page runs
 real rendering/readback and playback assertions with WebGPU forced unavailable.
+These include curved fills, compound-path holes, Bézier morphing, and the plant's
+growth and deterministic seeking.
 `window.webglTests` resolves to the report (`failed: 0` means success). These checks
 are separate from portable mocked unit tests and native `test:gpu` checks.
 

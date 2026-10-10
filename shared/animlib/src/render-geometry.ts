@@ -8,6 +8,8 @@ import type { DrawItem } from './composition.js';
 import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles, tubeTriangles, coneTriangles } from './geometry.js';
 import { layoutLatex, layoutLatexGeometry } from './latex.js';
 import type { LatexPath } from './latex.js';
+import { morphPathContours, pathContours } from './path.js';
+import type { PathContour } from './path.js';
 
 export function textTex(text:string):string {return String.raw`\text{`+text.replace(/[\\{}$&#%_^~]/g,c=>({'\\':String.raw`\backslash `,'{':String.raw`\{`,'}':String.raw`\}`,'$':String.raw`\$`,'&':String.raw`\&`,'#':String.raw`\#`,'%':String.raw`\%`,'_':String.raw`\_`,'^':String.raw`\textasciicircum `,'~':String.raw`\textasciitilde `}[c]!))+'}';}
 function contains(contour:Vec3[],point:Vec3):boolean {
@@ -79,6 +81,10 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     const axes:Vec3[]=[[1,0,0],[0,1,0],[0,0,1]];
     const normalBasis=axes.map(axis=>{let normal=axis;for(const state of chain)normal=rotate(normal,state.rotation);return normal;});
     const scale=chain.reduce((product,state)=>product*state.scale,1);
+    // Subpixel local error at the element's projected scale. Power-of-two buckets
+    // let nearby zoom levels share tessellation without ever exceeding 0.25px here.
+    const pixelsPerUnit=element.space==='screen'?scale:project(origin,camera,width,height).scale*scale;
+    const pathTolerance=2**Math.floor(Math.log2(0.25/Math.max(1e-9,pixelsPerUnit)));
     // Transform directions separately to avoid subtracting nearly equal
     // translated points when a small object is far from the world origin.
     const basis=element.billboard&&element.space!=='screen'
@@ -125,6 +131,10 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
         addTriangles(tube.points,element.stroke,alpha,tube.normals,'stroke');
       } else addTriangles(strokeTriangles(points,element.strokeWidth,closed),element.stroke,alpha,undefined,'stroke');
     };
+    const drawPath=(paths:PathContour[],alpha=1):void=> {
+      contours(paths.filter(path=>path.closed).map(path=>path.points),alpha);
+      for(const path of paths)stroke(path.points,path.closed,alpha);
+    };
     const latexPaths=(paths:LatexPath[],size:number,alpha:number,offset:Vec3=[0,0,0]):void=> {
       const color=element.fill==='none'?element.stroke:element.fill;
       if(color==='none')return;
@@ -139,6 +149,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       if(geometry.kind==='text'||geometry.kind==='latex'){latexPaths((geometry.kind==='text'?layoutLatex(textTex(geometry.text??'')):layoutLatexGeometry(geometry)).paths,geometry.fontSize??(element.space==='screen'?(geometry.kind==='text'?16:24):(geometry.kind==='text'?0.4:0.6)),alpha);return;}
       if(geometry.kind==='mesh'){addMesh(geometry,alpha);return;}
       if(geometry.kind==='sphere'){const sphere=sphereTriangles(geometry.radius??1);addTriangles(sphere.points,element.fill,alpha,sphere.normals);return;}
+      if(geometry.kind==='path'&&(geometry.d!==undefined||geometry.curve==='smooth')){drawPath(pathContours(geometry,pathTolerance),alpha);return;}
       const shape=outline(geometry);if(!shape||!shape.points.length)return;
       if(geometry.kind==='arrow'&&shape.points.length>1) {
         const points=shape.points.filter((p,i)=>!i||Math.hypot(...p.map((v,j)=>v-shape.points[i-1][j]))>1e-10),end=points.at(-1)!;
@@ -169,7 +180,9 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       drawGeometry({...from,fontSize:lerp(from.fontSize??defaultSize,to.fontSize??defaultSize,t)});
       continue;
     }
-    const shape=morphOutline(from,to,t);
+    const curved=morphPathContours(from,to,t,pathTolerance);
+    if(curved){drawPath(curved);continue;}
+    const shape=morphOutline(from,to,t,pathTolerance);
     if(shape){drawGeometry({kind:from.kind==='arrow'&&to.kind==='arrow'?'arrow':'path',points:shape.points,closed:shape.closed});continue;}
     if(from.kind==='sphere'&&to.kind==='sphere'){drawGeometry({kind:'sphere',radius:lerp(from.radius??1,to.radius??1,t)});continue;}
     if(from.kind==='mesh'&&to.kind==='mesh'&&from.vertices&&to.vertices&&from.vertices.length===to.vertices.length){const target=to.vertices!;addMesh({...to,vertices:from.vertices!.map((p,i)=>vec3(p).map((v,j)=>lerp(v,vec3(target[i])[j],t)) as Vec3)});continue;}

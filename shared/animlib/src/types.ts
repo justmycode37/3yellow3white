@@ -25,6 +25,10 @@ export interface Geometry {
   height?: number;
   points?: Position[];
   closed?: boolean;
+  /** SVG path data in local XY coordinates (positive Y up); Z closes each contour. */
+  d?: string;
+  /** Smooth Catmull–Rom interpolation through path points; omitted means straight edges. */
+  curve?: "linear" | "smooth";
   text?: string;
   tex?: string;
   fontSize?: number;

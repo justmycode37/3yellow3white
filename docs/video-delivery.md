@@ -117,7 +117,7 @@ and audio. Restoration rebuilds GPU resources, redraws, and permits explicit res
 
 `npm test` includes forced fallback/lifetime tests; these do not establish visual
 correctness. To run automated real-browser rendering checks, start
-`npm run dev -- --port 5178 --strictPort`, open
+`npm --workspace animlib run dev -- --port 5178 --strictPort`, open
 `http://localhost:5178/webgl-test.html`, and click **Run browser tests**.
 The page forces WebGPU unavailable locally, compiles real GLSL, reads actual pixels,
 and reports every assertion. Automation can await `window.webglTests` and inspect

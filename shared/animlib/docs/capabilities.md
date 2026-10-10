@@ -10,8 +10,9 @@ Keep these instructions in nonspoken planning; they are not narration.
 ## Visual building blocks
 
 - **2D geometry:** circles, rectangles, open or closed paths, lines, arrows,
-  and groups. Curves and plots can be constructed from sampled points. Use these
-  for diagrams, axes, grids, bars, regions, vectors, and correspondences.
+  and groups. Paths support smooth curves through points, precise Bézier curves,
+  SVG path data, and compound outlines with holes. Use these for organic shapes
+  such as leaves, curved diagrams, plots, axes, grids, bars, regions, and vectors.
 - **Text and mathematics:** short vector-rendered labels and mathematical LaTeX,
   including fractions, scripts, and matrices. Named formula parts allow specific
   symbols or terms to move between equations; anchored parts can stay fixed.
@@ -32,8 +33,14 @@ Objects can move, rotate, scale, change style, fade in or out, and animate toget
 or in sequence, with explicit holds. Groups can move as one object; isolated
 groups let overlapping components fade as one composited object.
 
-Compatible closed outlines (circles, rectangles, closed paths) can morph into
-each other; compatible open outlines (paths, lines, arrows) can also morph.
+Compatible single closed outlines (circles, rectangles, single-contour closed
+paths) can morph into each other; compatible open outlines (paths, lines, arrows)
+can also morph.
+Curved paths with matching segment structures can bend by interpolating their
+control points; corresponding parts such as leaf veins need coordinated morphs.
+Compound paths can morph when their contours and segment structures correspond;
+incompatible compound paths crossfade. The author must preserve contour order
+and meaningful correspondence rather than relying on semantic shape matching.
 Arrow-to-arrow morphs retain arrowheads. Formula morphs require explicit
 one-to-one correspondence between named parts; unmatched parts fade in or out.
 Mesh morphs need corresponding vertices and compatible topology. Other
@@ -124,6 +131,8 @@ not built into animlib. Suitable requests include:
   and clear the comparison highlight before the next step.
 - Plot a sampled function and vary one parameter with a slider, updating the
   curve and its numeric label together.
+- Grow a plant from a stem, curved leaves, and branching roots; group each leaf
+  with its vein at the attachment point and coordinate their bends.
 
 State the exact example values and teaching relation. Do not assume symbolic
 algebra, chemistry simulation, automatic graph layout, or an algorithm simulator.
@@ -135,6 +144,14 @@ run asynchronous builders.
 
 - No images or video textures, imported 3D models, photorealistic materials,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
+- SVG support accepts path geometry, not complete SVG files or their styling.
+  Filled contours must be closed, simple, and nonintersecting; nested contours
+  create holes. Open paths are stroked. Smooth curves through points can overshoot;
+  explicit Bézier controls give more precise boundaries and pointed leaf tips.
+- Curved paths use bounded tessellation, so extreme zoom or very complex shapes
+  can expose approximation limits. Curved outlines do not add general path
+  picking or automatic surface-clipped connectors; those retain their existing
+  supported shapes.
 - Text uses bundled glyphs. Custom fonts, emoji, broad international text
   coverage, full document TeX, and automatic multiline text layout are not
   available. Use short labels and supported mathematical notation; narration
