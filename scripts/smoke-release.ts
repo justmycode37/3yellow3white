@@ -3,6 +3,13 @@ import { createHandler } from "../backend/src/server.js";
 import { compileSource, evaluateScene } from "animlib/core";
 import { buildStorylineMessages } from "../backend/src/storyline-prompt.js";
 import { parseStoryline } from "../backend/src/narration/markdown.js";
+import { createModelRuntime } from "../backend/src/agents/auth.js";
+import { agentConfig } from "../backend/src/agents/config.js";
+
+// Import the actual Pi SDK under the shipped Bun runtime without making paid calls.
+const agentRuntime = await createModelRuntime(agentConfig({ AGENT_AUTH_MODE: "api-key", OPENAI_API_KEY: "container-fixture" }));
+assert(agentRuntime.getModel("openai", "gpt-5.4"), "Pinned agent model is missing");
+assert((await Bun.file(new URL("../shared/animlib/docs/reference.md", import.meta.url)).text()).includes("s.wait"));
 
 const revision = (await Bun.file(new URL("../REVISION", import.meta.url)).text()).trim();
 assert.equal(process.env.APP_REVISION, revision);

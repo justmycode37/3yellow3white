@@ -22,7 +22,7 @@ FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libstdc++6 \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 1001 --create-home app \
-    && mkdir -p /data/videos /data/narration && chown -R app:app /data
+    && mkdir -p /data/videos /data/narration /data/agents && chown -R app:app /data
 WORKDIR /app
 COPY --from=build /app/bin/bun /usr/local/bin/bun
 COPY --from=build /app/package.json /app/REVISION ./
@@ -32,6 +32,7 @@ COPY --from=build /app/backend/src/ backend/src/
 COPY --from=build /app/backend/prompts/ backend/prompts/
 COPY --from=build /app/shared/animlib/package.json shared/animlib/package.json
 COPY --from=build /app/shared/animlib/dist/ shared/animlib/dist/
+COPY --from=build /app/shared/animlib/docs/reference.md shared/animlib/docs/reference.md
 COPY --from=build /app/shared/video/ shared/video/
 COPY --from=build /app/frontend/site/ frontend/site/
 COPY --from=build /app/scripts/ scripts/

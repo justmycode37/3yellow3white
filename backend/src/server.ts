@@ -3,6 +3,7 @@ import { isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VideoService } from './videos.js';
 import { narrationRoutes } from "./narration/routes.js";
+import type { NarrationService } from "./narration/service.js";
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
 
@@ -24,10 +25,10 @@ function inside(root: string, path: string) {
   return suffix !== ".." && !suffix.startsWith(`..${sep}`) && !isAbsolute(suffix);
 }
 
-export function createHandler(frontendDir = defaultFrontendDir, videoService?: VideoService) {
+export function createHandler(frontendDir = defaultFrontendDir, videoService?: VideoService, narrationService?: NarrationService) {
   const root = resolve(frontendDir);
   let videos = videoService;
-  const narration = narrationRoutes();
+  const narration = narrationRoutes(narrationService);
 
   async function serveFile(path: string) {
     const candidate = resolve(root, path);
