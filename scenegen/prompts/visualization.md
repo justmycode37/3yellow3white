@@ -1,9 +1,9 @@
 # Visualization prompt (scenegen)
 
-<!-- The scenegen visualization rules, added to every scene prompt after
-     scene-craft.md. Re-read for every scene, so an edit applies to the next generated
-     scene without a restart. After editing, update the checksums in provenance.json and
-     backend/test/scenegen-prompts.test.ts. -->
+<!-- The scenegen visualization rules. When the app runs through
+     scenegen/backend/dev.ts they are added to every scene prompt right after the
+     backend's scene-craft.md. Re-read for every scene, so an edit applies to the next
+     generated scene without a restart. -->
 
 ## Visual style (scenegen)
 
@@ -88,12 +88,15 @@ Focus (strict; the viewer must always know where to look):
   `ab` is 0.46 x 0.35, `a^2+2ab` is 1.8 x 0.5, `(a+b)^2` is 1.6 x 0.57.
   To frame one term of a longer formula, make that term its own `s.latex` element,
   so its position and size are known.
-- Frames are checked against the text's real rendered bounds (animlib's bounds
-  query, which a scene cannot call itself). The numbers above are your first
-  estimate; when validation answers with "use position [...], width ..., height
-  ..." for a frame, those are measured values: copy them exactly instead of
+- Size every frame from MEASURED bounds, not from the estimate alone. The scene code
+  cannot measure text, but you can: call inspect_scene on your candidate and ask
+  for the bounds of the text a frame surrounds, then set the frame to those bounds
+  plus 0.15 on every side, centred on them. The numbers above are only the first
+  guess. Validation measures the same bounds; when it answers with "use position
+  [...], width ..., height ..." for a frame, copy those values exactly instead of
   adjusting by eye. The same measured bounds decide whether anything overlaps, is
-  cut off at the edge, or has a line running through it.
+  cut off at the edge, or has a line running through it, so use inspect_scene to
+  check label and formula bounds against their neighbours and the frame edge too.
 - FOCUS PULSE, for 3D objects and for lines and arrows: the object smoothly grows to
   1.15 times its size and returns, about 1.2 s in total (`obj.scaleTo(1.15)` for
   0.6 s, then `obj.scaleTo(1)` for 0.6 s). For a line or arrow, thicken it instead:

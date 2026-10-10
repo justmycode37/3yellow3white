@@ -1,9 +1,9 @@
 # Planning additions (scenegen)
 
-<!-- Appended to the lesson-planning prompt. The plan decides which controls and views
-     each scene has; the scene agent must then build exactly those. Re-read per lesson.
-     After editing, update the checksums in provenance.json and
-     backend/test/scenegen-prompts.test.ts. -->
+<!-- The scenegen planning rules. When the app runs through scenegen/backend/dev.ts
+     they are appended to the lesson-planning prompt. The plan decides which controls
+     and views each scene has; the scene agent must then build exactly those.
+     Re-read per lesson. -->
 
 When writing the plan:
 

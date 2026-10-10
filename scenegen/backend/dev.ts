@@ -1,14 +1,15 @@
-// The team's backend, unchanged, plus extra checks on what the agents return.
-// The prompts are the backend's own (backend/prompts/scenegen/); this wrapper adds
-// validation (lesson plans must mark every scene 3D or 2D and keep yellow for the
-// highlight; scenes must pass the render checks in scene-checks.ts) and trims the
-// previous scene's frame in the scene prompt down to what the model can use.
+// The team's backend, unchanged, plus the scenegen rules and checks.
+// scenegen/prompts/planning.md is appended to the lesson-planning prompt and
+// scenegen/prompts/visualization.md to the scene prompt (after scene-craft.md); both are
+// re-read on use. The wrapper also adds validation (lesson plans must mark every scene
+// 3D or 2D and keep yellow for the highlight; scenes must pass the render checks in
+// scene-checks.ts) and trims the previous scene's frame in the scene prompt.
 // Failures go back to the model like any other validation error and are logged to
 // out/scenegen-check-failures.log.
 //
 // Run from backend/ (so .env.local and data/ resolve as usual):
 //   bun ../scenegen/backend/dev.ts
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { createHandler } from "../../backend/src/server.js";
 import { VideoService } from "../../backend/src/videos.js";
 import { NarrationService } from "../../backend/src/narration/service.js";
@@ -20,10 +21,13 @@ import type { Frame } from "animlib/core";
 import { createPiGenerator, sceneSource } from "../../backend/src/agents/generator.js";
 import { DEAD_CONTROL_HINT, deadControls, renderProblems } from "./scene-checks.ts";
 import { PLANNING_CONTRACT } from "../../backend/src/agents/planning.js";
-import { scenegenPrompt } from "../../backend/src/agents/scenegen-prompts.js";
+import { loadPrompt } from "../../backend/src/agents/prompts.js";
+import { ChromiumScenePreview } from "../../backend/src/agents/scene-preview.js";
 import { createThumbnailGenerator, thumbnailAgentConfig } from "../../backend/src/agents/thumbnail.js";
 
 const LOG_DIR = new URL("../../out/", import.meta.url);
+/** The scenegen rules: scenegen/prompts/<name>.md, re-read on every use. */
+export const scenegenPrompt = (name: "visualization" | "planning") => readFile(new URL(`../prompts/${name}.md`, import.meta.url), "utf8");
 
 /** Adds the scenegen checks to the validate hook of planning and scene tasks. */
 export class CheckedRunner implements AgentRunner {
@@ -32,16 +36,18 @@ export class CheckedRunner implements AgentRunner {
     if (!task.validate) return this.inner.run(task);
     const context = `${task.logContext?.videoId ?? "?"} ${task.logContext?.stage ?? ""} ${task.logContext?.sceneIndex ?? ""}`.trim();
     if (task.systemPrompt.includes(PLANNING_CONTRACT)) { // lesson authoring: plan + script
-      return this.inner.run({ ...task, validate: async output => {
+      return this.inner.run({ ...task, systemPrompt: `${task.systemPrompt}\n\n${await scenegenPrompt("planning")}`, validate: async output => {
         await task.validate!(output);
         await report(context, planProblems(output));
       } });
     }
-    if (!task.systemPrompt.includes(await scenegenPrompt("visualization"))) return this.inner.run(task); // review, thumbnails, ...
+    const [craft, visualization] = await Promise.all([loadPrompt("scene-craft"), scenegenPrompt("visualization")]);
+    if (!task.systemPrompt.includes(craft)) return this.inner.run(task); // review, thumbnails, ...
+    const systemPrompt = task.systemPrompt.replace(craft, () => craft + "\n\n" + visualization);
     // Formulas, view membership and layout only show up in the player; check them here so a broken scene cannot be published.
     const packet = scenePacket(task.prompt);
     const planned3D = /^\s*3D\s*:/i.test(packet.json?.planning?.current?.visualDescription ?? "");
-    return this.inner.run({ ...task, prompt: slimPrompt(task.prompt, packet), validate: async output => {
+    return this.inner.run({ ...task, systemPrompt, prompt: slimPrompt(task.prompt, packet), validate: async output => {
       await task.validate!(output);
       const previous = packet.json?.previousFrame;
       const compiled = await compileSource(sceneSource(output), { previous });
@@ -112,9 +118,10 @@ export function slimPrompt(prompt: string, packet: ScenePacket = scenePacket(pro
 if (import.meta.main) {
   const narration = new NarrationService();
   const config = agentConfig();
+  const preview = process.env.SCENE_PREVIEW !== "0" ? new ChromiumScenePreview() : undefined;
   const videos = new VideoService(process.env.VIDEO_DB_PATH ?? "data/videos.sqlite",
     createPiGenerator(new CheckedRunner(new PiAgentRunner(config)), narration, config.dataDir,
-      { outputMode: config.sceneOutputMode, timingMode: config.sceneTimingMode }), "pi",
+      { outputMode: config.sceneOutputMode, timingMode: config.sceneTimingMode, preview }), "pi",
     createThumbnailGenerator(new PiAgentRunner(thumbnailAgentConfig())));
   const handler = createHandler(undefined, videos, narration);
   const localNarration = process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1";
@@ -132,7 +139,7 @@ if (import.meta.main) {
   });
   console.log(`Aha! backend (scenegen checks) listening on ${server.url}`);
   let stopping = false;
-  const shutdown = async () => { if (stopping) return; stopping = true; server.stop(true); await videos.close(); process.exit(0); };
+  const shutdown = async () => { if (stopping) return; stopping = true; server.stop(true); await videos.close(); await preview?.close(); process.exit(0); };
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
 }

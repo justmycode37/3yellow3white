@@ -8,7 +8,7 @@ import type { AssistantMessage, Context } from '@earendil-works/pi-ai';
 import { createModelRuntime } from '../src/agents/auth.js';
 import { agentConfig } from '../src/agents/config.js';
 import { PiAgentRunner } from '../src/agents/runtime.js';
-import type { AgentRunMetrics } from '../src/agents/runtime.js';
+import type { AgentRunMetrics, AgentTask } from '../src/agents/runtime.js';
 
 const roots: string[] = [];
 afterEach(async () => { await Promise.all(roots.splice(0).map(path => rm(path, { recursive: true, force: true }))); });
@@ -42,6 +42,85 @@ async function harness(outputs: AssistantMessage[], wait?: (ms: number, signal?:
   return { runner: new PiAgentRunner(config, async () => runtime, wait), contexts, runtime };
 }
 const base = { systemPrompt: 'Author a complete scene.', prompt: 'Generate a scene.' };
+
+function sceneCall(name: string, args: Record<string, string | number[] | string[]>, id = crypto.randomUUID()) {
+  const result = reply('', 'toolUse');
+  result.content = [{ type: 'toolCall', id, name, arguments: args }];
+  return result;
+}
+const inspectionReport = { viewport: { width: 960, height: 540 }, times: [1], warnings: [], bounds: [], truncated: false, note: 'sampled' };
+const previewImage = { type: 'image' as const, mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGOQi7rzHwAEQgJUZSSrPwAAAABJRU5ErkJggg==' };
+
+test('scene tools return candidate references, diagnostics and actual image content without submitting', async () => {
+  const { runner, contexts } = await harness([
+    sceneCall('inspect_scene', { output: 'draft', times: [1], objectIds: ['label'] }),
+    sceneCall('preview_scene', { candidateId: 'candidate-1', times: [1] }),
+    sceneCall('inspect_scene', { output: 'repaired', times: [1] }),
+    reply('{"candidateId":"candidate-2"}'),
+  ]);
+  const checked: string[] = [], inspected: string[] = [], previewed: string[] = [];
+  const sceneTools: NonNullable<AgentTask['sceneTools']> = {
+    async inspect(source, options) { inspected.push(source); expect(options.times).toEqual([1]); return inspectionReport; },
+    async preview(source) { previewed.push(source); return [{ time: 1, image: previewImage }]; },
+  };
+  expect(await runner.run({ ...base, outputMode: 'validated-reference', sceneTools,
+    validate: async source => { checked.push(source); } })).toBe('repaired');
+  expect(checked).toEqual(['draft', 'repaired', 'repaired']);
+  expect(inspected).toEqual(['draft', 'repaired']); expect(previewed).toEqual(['draft']);
+  const result = contexts[2].messages.find(m => m.role === 'toolResult' && m.toolName === 'preview_scene');
+  expect(result?.content).toContainEqual(previewImage);
+  expect(JSON.stringify(result)).toContain('candidate-1');
+});
+
+test('preview failures and exhausted budgets remain repairable without accepting an unknown reference', async () => {
+  const { runner, contexts } = await harness([
+    call('validate_output', 'draft'),
+    sceneCall('preview_scene', { candidateId: 'missing' }),
+    sceneCall('preview_scene', { candidateId: 'candidate-1' }),
+    sceneCall('preview_scene', { candidateId: 'candidate-1' }),
+    reply('{"candidateId":"candidate-1"}'),
+  ]);
+  let previews = 0;
+  expect(await runner.run({ ...base, outputMode: 'validated-reference', validate: async () => {}, sceneTools: {
+    inspect: async () => inspectionReport, preview: async () => { previews++; throw new Error('Chromium unavailable'); },
+  } })).toBe('draft');
+  expect(previews).toBe(1);
+  const messages = JSON.stringify(contexts.at(-1));
+  expect(messages).toContain('Unknown candidateId'); expect(messages).toContain('Chromium unavailable');
+  expect(messages).toContain('preview budget exhausted');
+});
+
+test('inspection rejects ambiguous sources and enforces four calls across a run', async () => {
+  const { runner, contexts } = await harness([
+    sceneCall('inspect_scene', { output: 'draft', candidateId: 'candidate-1' }),
+    ...Array.from({ length: 4 }, () => sceneCall('inspect_scene', { output: 'draft' })),
+    reply('draft'),
+  ]);
+  let inspected = 0;
+  expect(await runner.run({ ...base, validate: async () => {}, sceneTools: {
+    inspect: async () => { inspected++; return inspectionReport; },
+  } })).toBe('draft');
+  expect(inspected).toBe(3);
+  expect(JSON.stringify(contexts.at(-1))).toContain('exactly one');
+  expect(JSON.stringify(contexts.at(-1))).toContain('inspection budget exhausted');
+  const names = contexts[0].messages.flatMap(m => m.role === 'system' ? (m.toolsAdded ?? []).map(t => t.name) : []);
+  expect(names).toContain('inspect_scene'); expect(names).not.toContain('preview_scene');
+});
+
+test('provider retries do not replenish scene preview budget', async () => {
+  const transient = { ...reply('', 'error'), errorMessage: 'OpenAI API error (503): temporary' };
+  const { runner, contexts } = await harness([
+    sceneCall('preview_scene', { output: 'draft' }), sceneCall('preview_scene', { output: 'draft' }), transient,
+    sceneCall('preview_scene', { output: 'draft' }), reply('draft'),
+  ], async () => {});
+  let previews = 0;
+  expect(await runner.run({ ...base, validate: async () => {}, sceneTools: {
+    inspect: async () => inspectionReport,
+    preview: async () => { previews++; return [{ time: 1, image: previewImage }]; },
+  } })).toBe('draft');
+  expect(previews).toBe(2);
+  expect(JSON.stringify(contexts.at(-1))).toContain('preview budget exhausted');
+});
 
 test('validated references preserve the review turn and select the final candidate rather than first valid output', async () => {
   const { runner, contexts } = await harness([call('validate_output', 'first', 'v1'), call('validate_output', 'revised', 'v2'), reply('{"candidateId":"candidate-2"}')]);

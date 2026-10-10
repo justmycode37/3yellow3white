@@ -6,6 +6,7 @@ import type { ThumbnailArtwork, ThumbnailPath } from '../../../shared/video/thum
 import type { VideoRequest } from '../../../shared/video/contract.js';
 import type { AgentRunner, AgentTask } from './runtime.js';
 import { agentConfig } from './config.js';
+import { loadPrompt } from './prompts.js';
 
 export function thumbnailAgentConfig(env: Record<string, string | undefined> = process.env) {
   return { ...agentConfig(env), model: env.THUMBNAIL_MODEL ?? 'gpt-6.1-sol', thinking: 'low' as const };
@@ -84,7 +85,7 @@ export function parseThumbnailSVG(source: string): ThumbnailArtwork {
 
 export async function thumbnailTask(request: VideoRequest, signal: AbortSignal, images?: AgentTask['images']): Promise<AgentTask> {
   const [style, examples] = await Promise.all([
-    readFile(new URL('../../prompts/thumbnail.md', import.meta.url), 'utf8'),
+    loadPrompt('thumbnail'),
     readFile(new URL('../../prompts/thumbnail-examples.json', import.meta.url), 'utf8'),
   ]);
   return {

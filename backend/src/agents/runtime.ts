@@ -1,6 +1,6 @@
 import { createAgentUsageObserver } from '../token-usage.js';
 import { createAgentSession, DefaultResourceLoader, defineTool, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
-import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
+import type { ModelRuntime, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import type { AssistantMessage, ImageContent } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
 import { createModelRuntime } from "./auth.js";
@@ -11,6 +11,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { logEvent } from '../logging.js';
 import type { LogFields } from '../logging.js';
 import { fileURLToPath } from 'node:url';
+import type { InspectionOptions, InspectionReport, PreviewOptions } from './scene-inspection.js';
+import type { PreviewFrame } from './scene-preview.js';
 
 const webAccessExtension = fileURLToPath(import.meta.resolve('pi-web-access/dist/index.js'));
 
@@ -52,6 +54,11 @@ export interface AgentTask {
   images?: ImageContent[];
   logContext?: Pick<LogFields, 'videoId' | 'stage' | 'sceneIndex'>;
   outputMode?: 'text' | 'validated-reference' | 'submit' | 'submit-only';
+  /** Scene-only, nonterminal tools. Sources still pass the authoritative validator. */
+  sceneTools?: {
+    inspect(output: string, options: InspectionOptions, signal: AbortSignal): Promise<InspectionReport>;
+    preview?: (output: string, options: PreviewOptions, signal: AbortSignal) => Promise<PreviewFrame[]>;
+  };
   /** Called once on success or failure; carries no prompt, source, credentials, or error text. */
   onMetrics?: (metrics: AgentRunMetrics) => void;
 }
@@ -72,11 +79,12 @@ export class PiAgentRunner implements AgentRunner {
   async run(task: AgentTask): Promise<string> {
     const started = performance.now();
     const metrics: AgentRunMetrics = { elapsedMs: 0, providerCalls: 0, turns: [], validations: [] };
+    const sceneBudget = { inspections: 0, previews: 0 };
     try {
       const agentRunId = crypto.randomUUID();
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          const result = await this.runAttempt(task, metrics);
+          const result = await this.runAttempt(task, metrics, sceneBudget);
           if (attempt > 1) logEvent('agent.recovered', { ...task.logContext, agentRunId, providerAttempt: attempt });
           return result;
         } catch (error) {
@@ -101,7 +109,7 @@ export class PiAgentRunner implements AgentRunner {
   }
 
   /** Recreate the conversation so failed partial output never enters a retry. */
-  private async runAttempt(task: AgentTask, metrics: AgentRunMetrics): Promise<string> {
+  private async runAttempt(task: AgentTask, metrics: AgentRunMetrics, sceneBudget: { inspections: number; previews: number }): Promise<string> {
     const mode = task.outputMode ?? 'text';
     const isSubmission = mode === 'submit' || mode === 'submit-only';
     const controller = new AbortController();
@@ -125,7 +133,8 @@ export class PiAgentRunner implements AgentRunner {
       if (!auth) throw new AgentError("AUTH", "Agent login is missing. Run agents:login.");
       const model = runtime.getModel(this.config.provider, this.config.model);
       if (!model) throw new AgentError("MODEL", "AGENT_MODEL is not in the pinned Pi model catalog.");
-      const completion = AGENT_COMPLETION_INSTRUCTIONS[mode];
+      const completion = AGENT_COMPLETION_INSTRUCTIONS[mode] + (task.sceneTools && mode === 'validated-reference'
+        ? '\nYou may also select a candidateId returned by inspect_scene or preview_scene; both run the same host validation before inspection. No extra validate_output call is needed for that candidate.' : '');
       const settingsManager = SettingsManager.inMemory({ compaction: { enabled: false }, retry: { enabled: false, provider: { maxRetries: 0 } } });
       const resourceLoader = new DefaultResourceLoader({ cwd: this.config.agentDir, agentDir: this.config.agentDir, settingsManager,
         additionalExtensionPaths: [webAccessExtension],
@@ -136,6 +145,13 @@ export class PiAgentRunner implements AgentRunner {
       if (webExtensions.errors.length) throw new AgentError('CONFIG', 'Could not load pi-web-access. Check the installed package and web-search.json configuration.');
       const webTools = webExtensions.extensions.flatMap(extension => [...extension.tools.keys()]);
       const candidates = new Map<string, string>();
+      const remember = (output: string) => {
+        for (const [id, source] of candidates) if (source === output) return id;
+        if (candidates.size >= 12) throw new Error('Candidate limit reached. Select or inspect an existing candidate.');
+        const id = `candidate-${candidates.size + 1}`;
+        candidates.set(id, output);
+        return id;
+      };
       const submissions = new Map<string, string>();
       let currentAssistant: AssistantMessage | undefined;
       const validationTool = defineTool({ name: "validate_output", label: "Validate output",
@@ -146,10 +162,9 @@ export class PiAgentRunner implements AgentRunner {
           try {
             if (mode !== 'text' && !output.trim()) throw new Error('Output must not be empty.');
             await validate(output, 'tool');
-            if (mode === 'validated-reference') {
+            if (mode === 'validated-reference' || task.sceneTools) {
               signal.throwIfAborted();
-              const candidateId = `candidate-${candidates.size + 1}`;
-              candidates.set(candidateId, output);
+              const candidateId = remember(output);
               return { content: [{ type: 'text', text: JSON.stringify({ valid: true, candidateId }) }], details: {} };
             }
             return { content: [{ type: "text", text: "Valid." }], details: {} };
@@ -172,7 +187,62 @@ export class PiAgentRunner implements AgentRunner {
           } catch (error) { return { content: [{ type: 'text', text: validationMessage(error) }], details: {}, isError: true }; }
         },
       });
-      const customTools = task.validate ? [...(mode === 'submit-only' ? [] : [validationTool]), ...(isSubmission ? [submissionTool] : [])] : [];
+      const customTools: ToolDefinition[] =
+        task.validate ? [...(mode === 'submit-only' ? [] : [validationTool]), ...(isSubmission ? [submissionTool] : [])] : [];
+      if (task.sceneTools) {
+        if (!task.validate) throw new AgentError('CONFIG', 'Scene inspection requires a host validator.');
+        const select = async ({ output, candidateId }: { output?: string; candidateId?: string }) => {
+          signal.throwIfAborted();
+          if ((output === undefined) === (candidateId === undefined)) throw new Error('Provide exactly one of output or candidateId.');
+          if (candidateId !== undefined) {
+            const source = candidates.get(candidateId);
+            if (source === undefined) throw new Error('Unknown candidateId. Use the ID returned by validate_output or inspect_scene.');
+            return { output: source, candidateId };
+          }
+          if (!output?.trim()) throw new Error('Output must not be empty.');
+          await validate(output, 'tool');
+          return { output, candidateId: remember(output) };
+        };
+        const selector = {
+          candidateId: Type.Optional(Type.String({ maxLength: 64 })),
+          output: Type.Optional(Type.String({ maxLength: 256000 })),
+        };
+        customTools.push(defineTool({ name: 'inspect_scene', label: 'Inspect scene layout',
+          description: 'Inspect a complete scene before final submission. Pass output once or reuse a candidateId. Returns sampled advisory text collisions, framing, small-text warnings, and optional object bounds at 960×540. At most four inspections per run, including retries; does not finish the task.',
+          parameters: Type.Object({ ...selector,
+            times: Type.Optional(Type.Array(Type.Number({ minimum: 0 }), { minItems: 1, maxItems: 24 })),
+            objectIds: Type.Optional(Type.Array(Type.String({ maxLength: 256 }), { maxItems: 20 })),
+            includeAnimating: Type.Optional(Type.Boolean()),
+          }),
+          async execute(_id, args) {
+            try {
+              if (sceneBudget.inspections++ >= 4) throw new Error('Scene inspection budget exhausted (four calls). Finish using the available feedback.');
+              const candidate = await select(args);
+              const report = await task.sceneTools!.inspect(candidate.output, args, signal);
+              return { content: [{ type: 'text', text: JSON.stringify({ candidateId: candidate.candidateId, ...report }) }], details: {} };
+            } catch (error) { return { content: [{ type: 'text', text: validationMessage(error) }], details: {}, isError: true }; }
+          },
+        }));
+        if (task.sceneTools.preview) customTools.push(defineTool({ name: 'preview_scene', label: 'Preview scene frames',
+          description: 'Render 1–6 scene frames with the production WebGL2 renderer on CPU, before final submission. Reuse candidateId or provide complete output. Optional local times and focusObjectId for a crop. At most two batches per run, including retries; use the second to verify a repair. Still frames cannot verify continuous motion or audio sync.',
+          parameters: Type.Object({ ...selector,
+            times: Type.Optional(Type.Array(Type.Number({ minimum: 0 }), { minItems: 1, maxItems: 6 })),
+            focusObjectId: Type.Optional(Type.String({ maxLength: 256 })),
+          }),
+          async execute(_id, args) {
+            try {
+              if (sceneBudget.previews++ >= 2) throw new Error('Scene preview budget exhausted (two batches). Finish using the available feedback.');
+              const candidate = await select(args);
+              const frames = await task.sceneTools!.preview!(candidate.output, args, signal);
+              return { content: [
+                { type: 'text' as const, text: JSON.stringify({ candidateId: candidate.candidateId, viewport: { width: 960, height: 540 },
+                  times: frames.map(f => f.time), focusObjectId: args.focusObjectId, remainingPreviews: 2 - sceneBudget.previews }) },
+                ...frames.flatMap(frame => [{ type: 'text' as const, text: `Local time: ${frame.time}s` }, frame.image]),
+              ], details: {} };
+            } catch (error) { return { content: [{ type: 'text', text: validationMessage(error) }], details: {}, isError: true }; }
+          },
+        }));
+      }
       ({ session } = await createAgentSession({ modelRuntime: runtime, model, thinkingLevel: this.config.thinking,
         cwd: this.config.agentDir, agentDir: this.config.agentDir, settingsManager, resourceLoader,
         sessionManager: SessionManager.inMemory(), tools: [...customTools.map(tool => tool.name), ...webTools], customTools }));

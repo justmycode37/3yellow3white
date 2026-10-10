@@ -1280,6 +1280,13 @@ formula is laid out together, preserving fractions, scripts, and normal spacing.
 The library-specific `\animpart{name}{TeX}` marker identifies a part without
 changing its visual content. It is consumed before MathJax typesetting.
 
+The bundled TeX packages are `base`, `ams`, `newcommand`, and `html`; additional
+extensions are not loaded. Use ordinary fractions, scripts, Greek letters,
+matrices, `\mathbf`, `\vec`, `\mathrm`, and `\text`. Do not assume commands from
+other packages such as `\ce`, `\cancel`, or `\si` are available. For example, write
+water as `\mathrm{H_2O}`. Set color through the element's palette `fill` or named
+formula parts, rather than relying on a TeX color extension.
+
 ```js
 export default scene({ mode: "2d" }, s => {
   const equation = s.latex("equation", {

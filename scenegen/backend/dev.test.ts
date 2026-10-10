@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { scenegenPrompt } from "../../backend/src/agents/scenegen-prompts.js";
+import { loadPrompt } from "../../backend/src/agents/prompts.js";
 import { CheckedRunner } from "./dev.ts";
 
 test("a scene with a formula the player cannot render is rejected", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (tex: string) => `export default scene({ mode: "2d", end: "hold" }, s => { s.latex("f", { tex: ${JSON.stringify(tex)}, position: [0, 0] }); s.wait(1); });`;
   const results: string[] = [];
   const runner = new CheckedRunner({ run: async task => {
@@ -19,7 +19,7 @@ test("a scene with a formula the player cannot render is rejected", async () => 
 });
 
 test("a 3D part created outside its model's view is rejected", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (late: boolean) => `export default scene({ mode: "2d", end: "hold" }, s => {
     let view;
     s.view("model", { rect: [0, 0, 0.6, 1], orbit: true, camera: { target: [0, 0, 0], height: 6, distance: 10 } }, v => {
@@ -41,7 +41,7 @@ test("a 3D part created outside its model's view is rejected", async () => {
 });
 
 test("a control with its own position is rejected, so controls stay top right", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (options: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
     const k = s.slider("factor", { label: "Factor", default: 1, min: 0, max: 2, step: 0.1${options} });
     s.circle("dot", { radius: 0.2 * k + 0.1, position: [0, 0] });
@@ -58,7 +58,7 @@ test("a control with its own position is rejected, so controls stay top right", 
 });
 
 test("overlapping formulas are rejected", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (gap: number) => `export default scene({ mode: "2d", end: "hold" }, s => {
     s.latex("a", { tex: "A=\\\\begin{bmatrix}1&1\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [3, 1] });
     s.latex("b", { tex: "B=\\\\begin{bmatrix}2&0\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [3, ${1 - gap}] });
@@ -75,7 +75,7 @@ test("overlapping formulas are rejected", async () => {
 });
 
 test("a control that does nothing on the final frame is rejected", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (radius: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
     const k = s.slider("size", { label: "Size", default: 1, min: 0, max: 2, step: 0.1 });
     s.circle("dot", { radius: ${radius}, position: [0, 0] });
@@ -92,7 +92,7 @@ test("a control that does nothing on the final frame is rejected", async () => {
 });
 
 test("a dot drawn behind the line it sits on is rejected", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (z: number) => `export default scene({ mode: "2d", end: "hold" }, s => {
     s.circle("dot", { radius: 0.12, position: [0, 0, ${z}], fill: Color.GOLD });
     s.line("curve", { points: [[0, -2], [0, 2]], stroke: Color.GREEN, strokeWidth: 0.06 });
@@ -109,7 +109,7 @@ test("a dot drawn behind the line it sits on is rejected", async () => {
 });
 
 test("3D on the main scene and flat text in a 3D view are rejected", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const main3d = `export default scene({ mode: "3d", orbit: true, end: "hold" }, s => { s.sphere("ball", { radius: 0.5, position: [0, 0, 0], fill: Color.RED }); s.wait(1); });`;
   const inView = (billboard: boolean) => `export default scene({ mode: "2d", end: "hold" }, s => {
     s.view("model", { rect: [0, 0, 0.6, 1], orbit: true, camera: { target: [0, 0, 0], height: 6, distance: 12, yaw: 0.6, pitch: 0.35 } }, v => {
@@ -130,7 +130,7 @@ test("3D on the main scene and flat text in a 3D view are rejected", async () =>
 });
 
 test("the previous frame's bulk geometry is left out of the scene prompt", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const vertices = Array.from({ length: 500 }, (_, i) => [i, 0, 0]);
   const packet = { previousFrame: { elements: [{ id: "bowl", geometry: { kind: "mesh", vertices } }, { id: "dot", geometry: { kind: "circle", radius: 0.2 } }] }, planning: {} };
   let sent = "";
@@ -142,7 +142,7 @@ test("the previous frame's bulk geometry is left out of the scene prompt", async
 });
 
 test("an arrow through a label, or a label cut off at the edge, is rejected", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (labelAt: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
     s.arrow("flow", { points: [[-2, 0], [2, 0]], stroke: Color.BLUE, strokeWidth: 0.05 });
     s.latex("value", { tex: "=16", fontSize: 0.5, position: ${labelAt} });
@@ -160,7 +160,7 @@ test("an arrow through a label, or a label cut off at the edge, is rejected", as
 });
 
 test("a focus frame that does not hug its formula is rejected with the measured size", async () => {
-  const visualization = await scenegenPrompt("visualization");
+  const visualization = await loadPrompt("scene-craft");
   const scene = (frame: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
     s.latex("formula", { tex: "a^2+2ab", fontSize: 0.5, position: [3, 1, 0.1] });
     s.rectangle("focus", { ${frame}, fill: Color.NONE, stroke: Color.YELLOW, strokeWidth: 0.03 });
@@ -211,4 +211,16 @@ test("tasks without validation, such as reviews, pass through untouched", async 
   const task = { systemPrompt: "review this lesson", prompt: "lesson" };
   await new CheckedRunner({ run: async received => { seen.push(received); return "ok"; } }).run(task);
   expect(seen[0]).toBe(task);
+});
+
+test("the scenegen rules are added to the planning and scene prompts", async () => {
+  const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
+  const { scenegenPrompt } = await import("./dev.ts");
+  const craft = await loadPrompt("scene-craft");
+  const seen: string[] = [];
+  const runner = new CheckedRunner({ run: async task => { seen.push(task.systemPrompt); return ""; } });
+  await runner.run({ systemPrompt: `timing\n\n${craft}\n\nreference`, prompt: "Generate this scene:\n{}", validate: async () => {} });
+  await runner.run({ systemPrompt: `guidance\n\n${PLANNING_CONTRACT}`, prompt: "lesson", validate: async () => {} });
+  expect(seen[0]).toBe(`timing\n\n${craft}\n\n${await scenegenPrompt("visualization")}\n\nreference`);
+  expect(seen[1]).toBe(`guidance\n\n${PLANNING_CONTRACT}\n\n${await scenegenPrompt("planning")}`);
 });
