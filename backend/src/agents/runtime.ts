@@ -1,5 +1,6 @@
 import { createAgentSession, DefaultResourceLoader, defineTool, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
+import type { ImageContent } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
 import { createModelRuntime } from "./auth.js";
 import { agentConfig, AgentError, agentFailure } from "./config.js";
@@ -10,6 +11,7 @@ export interface AgentTask {
   prompt: string;
   validate?: (output: string) => Promise<void>;
   signal?: AbortSignal;
+  images?: ImageContent[];
 }
 export interface AgentRunner { run(task: AgentTask): Promise<string> }
 
@@ -28,9 +30,9 @@ export class PiAgentRunner implements AgentRunner {
     try {
       signal.throwIfAborted();
       const runtime = await (this.runtime ??= this.runtimeFactory().catch(error => { this.runtime = undefined; throw error; }));
-      const auth = await runtime.getAuth("openai", { signal });
+      const auth = await runtime.getAuth(this.config.provider, { signal });
       if (!auth) throw new AgentError("AUTH", "Agent login is missing. Run agents:login.");
-      const model = runtime.getModel("openai", this.config.model);
+      const model = runtime.getModel(this.config.provider, this.config.model);
       if (!model) throw new AgentError("MODEL", "AGENT_MODEL is not in the pinned Pi model catalog.");
       const settingsManager = SettingsManager.inMemory({ compaction: { enabled: false }, retry: { enabled: false, provider: { maxRetries: 0 } } });
       const resourceLoader = new DefaultResourceLoader({ cwd: this.config.agentDir, agentDir: this.config.agentDir, settingsManager,
@@ -54,7 +56,7 @@ export class PiAgentRunner implements AgentRunner {
       session.subscribe(event => { if (event.type === "turn_start" && ++turns > 12) controller.abort(new AgentError("TURN_LIMIT", "Agent exceeded its turn limit.")); });
       let prompt = task.prompt;
       for (let attempt = 0; attempt < 3; attempt++) {
-        await session.prompt(prompt);
+        await session.prompt(prompt, attempt === 0 ? { images: task.images } : undefined);
         signal.throwIfAborted();
         const last = [...session.messages].reverse().find(message => message.role === "assistant");
         if (!last || last.stopReason !== "stop") throw agentFailure(new Error(last?.errorMessage ?? "Incomplete model response"));

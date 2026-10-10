@@ -22,7 +22,7 @@ def get_json(path, **kwargs):
     return json.loads(request(path, **kwargs))
 
 assert get_json("/healthz") == {"ok": True, "revision": revision}
-assert get_json("/api/me")["user"]["id"] == "container-check"
+assert get_json("/api/me")["user"]["id"] == "shared-user"
 for path in ["/", "/plan", "/settings", "/watch/demo"]:
     html = request(path).decode()
     assets = re.findall(r'(?:src|href)="(/static/[^\"]+)"', html)
@@ -49,5 +49,5 @@ assert any(item["id"] == job_id for item in get_json("/api/videos"))
 scene = job["scenes"][0]
 audio = request(f"/api/videos/{job_id}/audio/{scene['id']}")
 assert audio[:4] == b"RIFF", "Missing stored WAV audio"
-assert get_json("/api/videos", owner="another-owner") == [], "Owner isolation failed"
+assert any(item["id"] == job_id for item in get_json("/api/videos", owner="another-owner")), "Shared library failed"
 print(f"Published HTTP, identity, assets, and persistent video/audio passed ({mode}).")

@@ -15,7 +15,7 @@ export AHA_RUNTIME_ENV="$work/runtime.env" AHA_BIND_ADDRESS=127.0.0.1 AHA_PORT=0
 mkdir "$work/videos" "$work/narration" "$work/agents"
 # Keep literal dollars/quotes to verify that secrets are not interpolated.
 # shellcheck disable=SC2016
-printf '%s\n' 'CONTAINER_LITERAL=literal-$value-with-"quotes"' > "$work/runtime.env"
+printf '%s\n' 'CONTAINER_LITERAL=literal-$value-with-"quotes"' 'VIDEO_GENERATOR=simulated' > "$work/runtime.env"
 # Pass settings in a file: sudo correctly strips exported shell variables.
 cat > "$work/compose.env" <<SETTINGS
 AHA_IMAGE=$AHA_IMAGE

@@ -9,9 +9,9 @@ the existing QuickJS compiler with memory and execution limits.
 
 One model runtime owns credentials. Pi persists subscription refreshes with file
 locking. The host saves scripts, narration IDs, and validated scene sources per
-video under `AGENT_DATA_DIR`; completed stages are reused on restart. Narration
-currently completes before scene generation begins. Scenes are then published
-progressively with their audio and captions.
+video under `AGENT_DATA_DIR`; completed stages are reused on restart. Each completed narration scene becomes available immediately; scene code generation
+overlaps later speech. Code agents run sequentially with the previous scene’s evaluated
+end-state. Scenes are published progressively with audio, word timings, and captions.
 
 ## Local setup
 
@@ -31,10 +31,31 @@ These npm commands run from `backend/`, so Bun reads the same `.env.local` for
 login and the server. Credentials default to `~/.aha/pi/auth.json`, outside the
 checkout. To override this, use the same absolute `PI_CODING_AGENT_DIR` for every
 command. Each developer logs in separately. A persistent `host-id` identifies
-each installation. Without `VIDEO_GENERATOR=pi`, previews use the existing
+each installation. Pi is the default. Set `VIDEO_GENERATOR=simulated` explicitly to use the existing
 simulated generator. Queued simulated jobs retain that generator after enabling Pi.
 Login refuses to overwrite a saved registration: stop the backend and log out
 before logging in again, so an old remote session is not left behind.
+
+## Reuse an existing local Pi login
+
+If this machine is already logged into Pi using its `openai-codex` provider,
+set these values in the ignored `backend/.env.local`:
+
+```dotenv
+AGENT_AUTH_MODE=subscription
+AGENT_PROVIDER=openai-codex
+PI_CODING_AGENT_DIR=/home/your-user/.pi/agent
+```
+
+The backend uses Pi's supported provider and the original credential file directly,
+including its locked refresh handling. It does not copy tokens or fall back to an
+OpenAI API key. Run `npm run agents:status` and `npm run agents:check` to verify this
+configuration. Aha's login/logout commands do not replace or remove a shared Pi
+registration; manage that login through Pi or ChatGPT Settings.
+
+`AGENT_PROVIDER` defaults to `openai` for new Aha registrations. API-key mode uses
+that provider. Select an ElevenLabs voice available in the account owning the
+configured key; the example Alexander voice may belong to a different account.
 
 ## Switch to an API key
 
@@ -105,9 +126,8 @@ Revocation does not erase documents, scripts, audio, or scenes on the VM.
 
 Authentication failures, limits, timeouts, and invalid output fail the video job
 with a safe message; completed scenes remain playable. Shutdown cancels the
-active agent and leaves unfinished videos resumable. Speech keeps its existing
-policy: interrupted/failed narration needs explicit retry because the last
-request may have been billed. Failed video jobs do not automatically retry.
+active agent and leaves unfinished videos resumable. Video restart recovery resumes interrupted narration using cached chunks; the last
+unsaved speech request may be billed again. Failed narration still needs explicit retry. Failed video jobs do not automatically retry.
 
 Backend tests exercise real Pi sessions with an injected model stream and fake
 speech. They cover auth isolation, revocation failure, tool restrictions,

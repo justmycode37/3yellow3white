@@ -24,12 +24,12 @@ export async function createModelRuntime(config: AgentConfig, options: { login?:
     if (!config.apiKey?.trim()) throw new AgentError("AUTH", "API-key mode requires OPENAI_API_KEY.");
     credentials = new InMemoryCredentialStore();
     await credentials.modify("openai", async () => ({ type: "api_key", key: config.apiKey }));
-  } else if (!options.login && readStoredCredential("openai", authPath(config))?.type !== "oauth") {
-    throw new AgentError("AUTH", "No Aha subscription login. Run npm run agents:login with the same PI_CODING_AGENT_DIR.");
+  } else if (!options.login && readStoredCredential(config.provider, authPath(config))?.type !== "oauth") {
+    throw new AgentError("AUTH", `No ${config.provider} subscription login in PI_CODING_AGENT_DIR. Use an existing Pi login or run agents:login with AGENT_PROVIDER=openai.`);
   }
   const runtime = await ModelRuntime.create({ authPath: authPath(config), credentials,
     modelsPath: null, allowModelNetwork: false, refreshOnCreate: false, signal: options.signal });
-  const provider = runtime.getProvider("openai")!;
+  const provider = runtime.getProvider(config.provider)!;
   // Explicit mode: subscription runs cannot fall back to an environment API key.
   // API-key runs never read or overwrite the persisted subscription credentials.
   runtime.registerNativeProvider({ ...provider, auth: config.authMode === "subscription" ? { oauth: provider.auth.oauth } : { apiKey: provider.auth.apiKey } });
@@ -37,6 +37,7 @@ export async function createModelRuntime(config: AgentConfig, options: { login?:
 }
 
 export async function revokeSubscription(config: AgentConfig, fetcher: typeof fetch = fetch) {
+  if (config.provider !== 'openai') throw new AgentError('REVOKE', 'This is a shared Pi login. Manage its registration through Pi or ChatGPT Settings; Aha will not delete it.');
   const credential = readStoredCredential("openai", authPath(config));
   if (!credential) return false;
   if (credential.type !== "oauth" || typeof credential.clientId !== "string") throw new AgentError("AUTH", "No current OpenAI subscription registration is stored here. Disconnect legacy logins through account settings.");
