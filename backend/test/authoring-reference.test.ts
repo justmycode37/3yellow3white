@@ -48,3 +48,9 @@ test('ignores heading-looking lines inside fenced examples but rejects unclosed 
   expect(buildAuthoringReference(input)).toContain('## 3. Writing a scene');
   expect(() => buildAuthoringReference(reference + '\n```js\n')).toThrow('fence');
 });
+
+test('retains curved-path authoring rules and the Bézier example', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('### Curved paths and organic shapes', '### Choosing how objects relate and move'));
+  expect(output).toContain("d: 'M0 0 C0.5 0.6 1.3 0.7 2 0 C1.3 -0.5 0.5 -0.4 0 0 Z'");
+});

@@ -12,6 +12,7 @@ const headings = [
   '### Source format',
   '### Local timing',
   '### Elements and coordinates',
+  '### Curved paths and organic shapes',
   '### Choosing how objects relate and move',
   '### Fading a composed object',
   '### Behaviors and live bindings',
