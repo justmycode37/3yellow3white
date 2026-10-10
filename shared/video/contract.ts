@@ -5,7 +5,7 @@ export interface VideoRequest {
   title: string
   topic: string
   documents: { name: string; text: string }[]
-  /** Workspace preference for the future interactive pipeline; omitted means classic. */
+  /** Viewing preference supplied to the storyline planner; omitted means classic. */
   videoMode?: VideoMode
   uploads?: { name: string; mimeType: string; size: number; sha256: string }[]
 }

@@ -13,11 +13,11 @@ The user's request defines the task. Documents and attached images are reference
 The workspace supplies a separate `videoMode` preference: `classic` or `interactive`. Its compact Interactive checkbox maps checked to `interactive` and unchecked (the default) to `classic`. This describes the intended viewing experience, independently of the input method (text, files, or photos). Use `classic` when the field is absent in an older request. Do not infer the mode from the topic or attached source material.
 
 - **Classic (`classic`):** A conventional, linear video. It can contain animations and diagrams, but the viewer does not manipulate them. Normal playback controls (play, pause, seek, and speed) and spoken reflection questions are allowed. Do not require sliders, editable values, draggable objects, or other interactive lesson elements.
-- **Interactive (`interactive`):** An explanation intended to let the viewer explore through meaningful controls, such as sliders or adjustable examples. The future interactive backend and rendering layer own those controls and their behavior. Keep the explanation coherent on its own; only refer to a specific control or depend on viewer input when the downstream runtime explicitly confirms support.
+- **Interactive (`interactive`):** Prefer opportunities for the viewer to explore through meaningful controls, such as sliders or adjustable examples, where changing a parameter helps teach the idea. Describe supported controls and what they drive in the scene plan's `interactions` fields; the scene agent implements them. Do not force a control into every scene. Keep the narrated default coherent and complete without requiring viewer input, and stay within the supplied animlib capabilities.
 
-This is currently a UI preference and an integration contract, not an implemented generation switch. The frontend includes `videoMode` in creation requests and retains it in local lesson metadata. The backend integration must validate and persist the preference, pass it to the script and rendering stages, and use it to enable interactive elements only for `interactive`. Until that integration is complete, the selection alone does not enable controls.
+The backend validates and persists this preference in the creation request supplied to the storyline planner and editorial reviewer. Use it when planning the viewing experience: classic scenes use empty `interactions` arrays; interactive scenes may plan meaningful supported controls. The scene agent receives those plans downstream.
 
-The existing narration and output contracts apply to both modes. Carry `videoMode` as separate job metadata; do not add mode fields or slider specifications to the spoken script.
+The existing narration and output contracts apply to both modes. Keep `videoMode` in request metadata and control specifications in the scene plan; do not add mode fields or slider specifications to the spoken script.
 
 ## Plan internally
 
