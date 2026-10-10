@@ -2,15 +2,20 @@ import { createPlayer } from "../src/index";
 import type { PlayerState } from "../src/types";
 import { initialSources } from "./scenes";
 import { interactionSource } from "./interaction";
+import { loadNarration, narrationTranscript } from "./narration";
 import "./styles.css";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const playButton = document.getElementById("play") as HTMLButtonElement;
 const scrubber = document.getElementById("scrubber") as HTMLInputElement;
 const errorMessage = document.getElementById("error") as HTMLParagraphElement;
+const narrationId = new URLSearchParams(location.search).get("narration");
+let narrationError: unknown;
+const narration = narrationId ? await loadNarration(narrationId).catch(error => { narrationError = error; return undefined; }) : undefined;
+const updateTranscript = narration ? narrationTranscript(narration.package) : undefined;
 const player = createPlayer({
   canvas,
-  assets: { "scene-tone": { kind: "audio", url: new URL("./assets/scene-tone.wav", import.meta.url).href } },
+  assets: narration?.assets ?? { "scene-tone": { kind: "audio", url: new URL("./assets/scene-tone.wav", import.meta.url).href } },
 });
 let state = player.getState();
 
@@ -20,6 +25,7 @@ function reportError(error: unknown): void {
 }
 function update(next: PlayerState): void {
   state = next;
+  updateTranscript?.(next);
   const playing = next.status === "playing";
   document.getElementById("play-icon")!.hidden = playing;
   document.getElementById("pause-icon")!.hidden = !playing;
@@ -64,10 +70,11 @@ scrubber.addEventListener("input", () => {
 canvas.addEventListener("keydown", event => {
   if (event.code === "Space") { event.preventDefault(); playButton.click(); }
 });
-const sources = (new URLSearchParams(location.search).has("interactive") ? [interactionSource] : initialSources).map(scene => ({ ...scene }));
+const sources = (narration?.scenes ?? (narrationId ? [] : new URLSearchParams(location.search).has("interactive") ? [interactionSource] : initialSources)).map(scene => ({ ...scene }));
 const ready = player.submit({ type: "load", scenes: sources }).then(result => {
   if (!result.ok) reportError(result.diagnostics.map(diagnostic => diagnostic.message).join("\n"));
+  if (narrationError) reportError(narrationError);
   return result;
 }).catch(reportError);
-Object.assign(window, { animlibDemo: { player, ready, sources } });
+Object.assign(window, { animlibDemo: { player, ready, sources, narration: narration?.package } });
 window.addEventListener("pagehide", () => player.dispose(), { once: true });
