@@ -2,6 +2,10 @@
 
 For the purpose and core requirements, see the [README](../README.md).
 
+For deposited coordinate import and `s.molecule` batched display beads, see
+[Molecular coordinates](molecules.md). Parsing and smooth density-envelope
+generation are host-side; scene source uses compact coordinates or finished meshes.
+
 A framework-free TypeScript library for code-authored, realtime GPU animations
 on a canvas.
 Scenes are written in ordinary JavaScript. Each scene builds a local, seekable
@@ -1280,6 +1284,13 @@ formula is laid out together, preserving fractions, scripts, and normal spacing.
 The library-specific `\animpart{name}{TeX}` marker identifies a part without
 changing its visual content. It is consumed before MathJax typesetting.
 
+The bundled TeX packages are `base`, `ams`, `newcommand`, and `html`; additional
+extensions are not loaded. Use ordinary fractions, scripts, Greek letters,
+matrices, `\mathbf`, `\vec`, `\mathrm`, and `\text`. Do not assume commands from
+other packages such as `\ce`, `\cancel`, or `\si` are available. For example, write
+water as `\mathrm{H_2O}`. Set color through the element's palette `fill` or named
+formula parts, rather than relying on a TeX color extension.
+
 ```js
 export default scene({ mode: "2d" }, s => {
   const equation = s.latex("equation", {
@@ -1575,7 +1586,13 @@ export default scene({}, s => {
 ```
 
 Left-button dragging rotates only the view where the drag started, even when the
-pointer leaves it. Scrolling does not zoom. Regions clip their geometry and use
+pointer leaves it. Set `orbitHitTest: "geometry"` alongside `orbit: true` to require
+a hit on a visible sphere, circle, rectangle, or triangle mesh before starting
+orbit. Standalone text, paths, lines and empty space do not start rotation;
+billboard labels stay upright and may sit over pickable model surfaces. Keep
+explanatory text outside the model view. Omit this option for legacy region-wide
+orbit. Pan gestures remain available across the region. The setting is saved in
+evaluated frames and inherited with a view. Scrolling does not zoom. Regions clip their geometry and use
 independent depth buffers; overlapping regions render in declaration order, with
 the last region receiving pointer input. Regions render transparently over the scene and
 have no automatic border. Empty space outside them uses the main scene camera.
@@ -2050,7 +2067,7 @@ comprehensive physically based material system. Shape matching cannot infer sema
 part correspondence or arbitrary mesh topology.
 
 Not yet included: custom fonts and general text shaping, standalone images/video textures,
-environment maps, image bump/normal maps, displacement, bloom, arbitrary mesh receivers or self-shadowing, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
+environment maps, image bump/normal maps on procedural primitives, displacement, bloom, arbitrary mesh receivers or self-shadowing, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
 infinite scenes, branching navigation, playback-rate controls,
 video export, or mobile-browser support guarantees. The initial control surface
 is sliders, toggles, selects, and requested orbit rotation.
@@ -2332,8 +2349,10 @@ model-generation workflows. `GET`/`HEAD /api/models/<sha256>.glb` serve immutabl
 binary assets with an ETag and cache headers. Storage defaults to `data/models`;
 set `MODEL_ASSET_DIR` to persistent storage in deployment. Model bytes are cached
 independently of video jobs; deleting a video does not garbage-collect shared
-models. Automatic cross-format conversion, mesh optimization, LODs and previews
-are future additions.
+models. Automatic cross-format conversion, mesh optimization, LODs and asset thumbnails
+are future additions. Agent inspection, browser previews, and native visual review
+receive the same published model assets; isolated renderers decode verified bytes
+without fetching external URLs.
 
 Open `/model-viewer.html` in the demo to import a local GLB, orbit, highlight named
 parts, and replay rotation. `/models.html` runs focused WebGL2/WebGPU browser

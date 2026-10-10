@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Three-joint robot arm\n\n## Beat 1: Three-joint robot arm\n\nContent needed: 3D: Create exactly one 20-second silent single-scene visualization showcase: Three-joint robot arm. Show a three-revolute-joint robot arm following a smooth end-effector path through a bounded workspace. Derive links and end-effector from one forward-kinematics chain; show local joint axes, keep links rigid and joints connected, and avoid presenting an arbitrary floating end point as solved inverse kinematics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Three-joint robot arm",
+    "centralQuestion": "Three-joint robot arm",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Three-joint robot arm. Show a three-revolute-joint robot arm following a smooth end-effector path through a bounded workspace. Derive links and end-effector from one forward-kinematics chain; show local joint axes, keep links rigid and joints connected, and avoid presenting an arbitrary floating end point as solved inverse kinematics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Three-joint robot arm",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Three-joint robot arm",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Show a three-revolute-joint robot arm following a smooth end-effector path through a bounded workspace. Derive links and end-effector from one forward-kinematics chain; show local joint axes, keep links rigid and joints connected, and avoid presenting an arbitrary floating end point as solved inverse kinematics."
+        ],
+        "visualDescription": "3D: Create exactly one 20-second silent single-scene visualization showcase: Three-joint robot arm. Show a three-revolute-joint robot arm following a smooth end-effector path through a bounded workspace. Derive links and end-effector from one forward-kinematics chain; show local joint axes, keep links rigid and joints connected, and avoid presenting an arbitrary floating end point as solved inverse kinematics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Three-joint robot arm. Show a three-revolute-joint robot arm following a smooth end-effector path through a bounded workspace. Derive links and end-effector from one forward-kinematics chain; show local joint axes, keep links rigid and joints connected, and avoid presenting an arbitrary floating end point as solved inverse kinematics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

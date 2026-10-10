@@ -1,0 +1,24 @@
+[
+  {
+    "id": "engine",
+    "duration": 16.000000000000135,
+    "objects": 82,
+    "vertices": 11274,
+    "triangles": 16156,
+    "textureCount": 76,
+    "materialCount": 77,
+    "unchangedSampledFrames": 321,
+    "compiledGeometryAndTimelineIdentical": true
+  },
+  {
+    "id": "minecraft",
+    "duration": 16,
+    "objects": 91,
+    "vertices": 3992,
+    "triangles": 5844,
+    "textureCount": 33,
+    "materialCount": 70,
+    "unchangedSampledFrames": 321,
+    "compiledGeometryAndTimelineIdentical": true
+  }
+]

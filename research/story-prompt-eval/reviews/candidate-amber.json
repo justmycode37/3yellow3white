@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "verdict": "pass",
+  "summary": "The definitions, moving-witness argument and fixed-domain bound earn the requested distinction; the visual plan preserves the endpoint and supports the reasoning.",
+  "issues": [],
+  "checks": [
+    "The pointwise and uniform definitions correctly differ in whether N may depend on x; both require every later index.",
+    "For n >= 1, x_n = (1/2)^(1/n) lies below one and has error 1/2 > 1/4. Choosing it after an arbitrary threshold proves failure of uniform convergence without contradicting fixed-point convergence.",
+    "The limit is zero below one and one at one. Endpoint error is zero; errors below one approach but never attain one, so their supremum is one.",
+    "On fixed [0,a], 0 < a < 1, x^n <= a^n <= a^N < epsilon supplies a common threshold independent of x.",
+    "Exactly four scenes and one explicitly invited five-second pause are present; beat-4 withholds the maximum annotation until Reveal.",
+    "470 spoken words plus five seconds of silence estimate approximately 212-254 seconds at 150-125 words per minute with the prescribed 10% allowance, consistent with roughly four minutes; audio timing was not measured.",
+    "Entity meanings, carry/cleanup and adjacent scenes preserve true power curves, endpoint conventions and error identity through restriction; all interactions arrays are empty."
+  ]
+}

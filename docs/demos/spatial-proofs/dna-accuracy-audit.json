@@ -1,0 +1,57 @@
+{
+  "source": "https://www.rcsb.org/structure/1BNA",
+  "coordinateIdentity": "All 486 atom records exactly match vendored PDB ATOM records; fresh official RCSB ATOM records independently matched on 2026-10-10.",
+  "sequenceA": "CGCGAATTCGCG",
+  "sequenceB": "CGCGAATTCGCG",
+  "complementaryAntiparallelPairs": 12,
+  "covalentBonds": 544,
+  "covalentDistanceAngstrom": [
+    1.2237352654884144,
+    1.6066315694645121
+  ],
+  "watsonCrickHeavyAtomContacts": 32,
+  "contactDistanceAngstrom": [
+    2.610056129664647,
+    3.249272072326353
+  ],
+  "displayTransform": "[x,z,-y] rotation has determinant +1; uniform scale .22 preserves chirality and relative distances. No atom motion at seven sampled times.",
+  "limitations": "1.90 A experimental structure; no hydrogens, solvent or dynamics. 75% radii are display scaling, not physical volume. Contact distances alone do not establish hydrogen-bond energies.",
+  "variants": [
+    {
+      "region": "Twelve base pairs",
+      "display": "Clearer atoms (75%)",
+      "atoms": 486,
+      "meshes": 5,
+      "maxCenterErrorAngstrom": 1.2434497875801753e-14,
+      "maxRadiusErrorSceneUnits": 2.1094237467877974e-15,
+      "duration": 14
+    },
+    {
+      "region": "Twelve base pairs",
+      "display": "Full molecular volume (100%)",
+      "atoms": 486,
+      "meshes": 5,
+      "maxCenterErrorAngstrom": 1.1234667099445444e-14,
+      "maxRadiusErrorSceneUnits": 2.55351295663786e-15,
+      "duration": 14
+    },
+    {
+      "region": "Central two pairs",
+      "display": "Clearer atoms (75%)",
+      "atoms": 82,
+      "meshes": 4,
+      "maxCenterErrorAngstrom": 3.972054645195637e-15,
+      "maxRadiusErrorSceneUnits": 8.881784197001252e-16,
+      "duration": 14
+    },
+    {
+      "region": "Central two pairs",
+      "display": "Full molecular volume (100%)",
+      "atoms": 82,
+      "meshes": 4,
+      "maxCenterErrorAngstrom": 5.0242958677880805e-15,
+      "maxRadiusErrorSceneUnits": 8.881784197001252e-16,
+      "duration": 14
+    }
+  ]
+}

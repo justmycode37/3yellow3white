@@ -10,7 +10,7 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+      - /tmp:rw,noexec,nosuid,size=512m,mode=1777
     env_file:
       - path: ${AHA_RUNTIME_ENV:-./runtime.env}
         format: raw

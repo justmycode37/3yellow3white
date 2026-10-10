@@ -1,0 +1,44 @@
+{
+  "elapsedMs": 160389.76640000002,
+  "providerCalls": 2,
+  "turns": [
+    {
+      "index": 1,
+      "elapsedMs": 152867.53239999997,
+      "providerMs": 148350.65330000006,
+      "stopReason": "toolUse",
+      "inputTokens": 30406,
+      "outputTokens": 6567,
+      "reasoningTokens": 4142,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 6985
+    },
+    {
+      "index": 2,
+      "elapsedMs": 7518.092699999921,
+      "providerMs": 7517.682999999961,
+      "stopReason": "stop",
+      "inputTokens": 6788,
+      "outputTokens": 141,
+      "reasoningTokens": 127,
+      "cacheReadTokens": 30208,
+      "cacheWriteTokens": 0,
+      "textChars": 29,
+      "toolArgumentChars": 0
+    }
+  ],
+  "validations": [
+    {
+      "kind": "tool",
+      "elapsedMs": 4515.2518000000855,
+      "valid": true
+    },
+    {
+      "kind": "final",
+      "elapsedMs": 0.32880000001750886,
+      "valid": true
+    }
+  ]
+}

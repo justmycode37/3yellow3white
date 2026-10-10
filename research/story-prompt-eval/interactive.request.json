@@ -1,0 +1,6 @@
+{
+  "title": "When a downhill step goes too far",
+  "topic": "Create a roughly 3-minute lesson in exactly 3 scenes for first-year university students who know derivatives. Explain gradient descent on f(x)=x squared using the update x_next=x-eta*2*x. Start from the familiar update rule, then show why a larger step can overshoot or diverge. Default starting point x=1 and eta=0.25. Explain contraction for 0<eta<1, alternating signs for 0.5<eta<1, the eta=1 two-cycle from this starting point, eta=0 no movement, and divergence for eta>1. Use one optional supported slider for eta from 0 to 1.2, with a coherent narrated default that requires no input; dependent points and labels must agree. No scripted pauses. Distinguish this quadratic example from guarantees for arbitrary objectives. Do not make a whole video; output only narration and per-scene explanation/visualization plans.",
+  "videoMode": "interactive",
+  "documents": []
+}

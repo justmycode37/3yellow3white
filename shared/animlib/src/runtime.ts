@@ -1,8 +1,9 @@
 import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, ElementStyle, Geometry, ReactiveDependency, ReactiveProperties, ReactiveUpdate, SceneContext, SceneOptions, SliderHandle, SliderOptions, Vec2, Vec3, ViewState } from "./types.js";
 import type { createSurfaceBuilders } from "./surfaces.js";
 import type { createSolidBuilders } from "./solids.js";
+import type { createMoleculeBuilders } from './molecules.js';
 
-type MeshBuilders = ReturnType<typeof createSurfaceBuilders> & ReturnType<typeof createSolidBuilders>;
+type MeshBuilders = ReturnType<typeof createSurfaceBuilders> & ReturnType<typeof createSolidBuilders> & ReturnType<typeof createMoleculeBuilders>;
 
 /** Self-contained on purpose: the function is installed inside QuickJS, never eval'd by the host. */
 export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}, installReactive?: (update: (values: Record<string, ControlValue>, changed: string[], time?: number) => ReactiveUpdate[]) => void, meshBuilders?: MeshBuilders): CompiledScene {
@@ -25,7 +26,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const defaultCamera: CameraState = { yaw: mode === "3d" ? 0.55 : 0, pitch: mode === "3d" ? 0.35 : 0, target: [0, 0, 0], height: 8, distance: 12, perspective: mode === "3d" ? 1 : 0 };
   const camera = clone(input.previous?.camera ?? defaultCamera);
   let cameraNow = clone(camera);
-  const views = new Map<string, ViewState>((input.previous?.views ?? []).map(v => [v.id, { id: v.id, rect: clone(v.rect), camera: clone(v.camera), orbit: v.orbit }]));
+  const views = new Map<string, ViewState>((input.previous?.views ?? []).map(v => [v.id, { id: v.id, rect: clone(v.rect), camera: clone(v.camera), orbit: v.orbit, ...(v.orbitHitTest ? {orbitHitTest:v.orbitHitTest} : {}) }]));
   const viewCameras = new Map([...views].map(([id, view]) => [id, clone(view.camera)]));
   const declaredViews = new Set<string>();
   let currentView: string | undefined;
@@ -172,7 +173,8 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       const inheritedCamera = views.get(id)?.camera;
       const viewCamera: CameraState = { yaw: 0.55, pitch: 0.35, target: [0,0,0], height: 8, distance: 12, perspective: 1, ...clone(inheritedCamera ?? {}), ...clone(spec.camera ?? {}) };
       views.delete(id);
-      views.set(id, { id, rect: clone(spec.rect), orbit: spec.orbit ?? true, camera: viewCamera });
+      if (spec.orbitHitTest !== undefined && spec.orbitHitTest !== 'geometry') throw new Error('orbitHitTest must be "geometry"');
+      views.set(id, { id, rect: clone(spec.rect), orbit: spec.orbit ?? true, camera: viewCamera, ...(spec.orbitHitTest ? {orbitHitTest:spec.orbitHitTest} : {}) });
       viewCameras.set(id, clone(viewCamera));
       currentView = id;
       const { view: _view, ...scoped } = context;
@@ -253,6 +255,16 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     cone: (id, props = {}) => generatedMesh(id, meshBuilders!.cone(props), props),
     torus: (id, props = {}) => generatedMesh(id, meshBuilders!.torus(props), props),
     tube: (id, props) => generatedMesh(id, meshBuilders!.tube(props), props),
+    molecule: (id, props) => {
+      idCheck(id);
+      const meshes = meshBuilders!.molecule(props);
+      const children = meshes.map((geometry, i) => generatedMesh(`${id}/batch-${i}`, geometry, {
+        fill: props.fill, stroke: props.stroke, strokeWidth: props.strokeWidth, strokeProfile: props.strokeProfile, material: props.material, space: props.space,
+      }));
+      for (const child of children) groups.add(child.id);
+      return add('group', id, {children: children.map(child => child.id), position: props.position, rotation: props.rotation,
+        scale: props.scale, opacity: props.opacity, space: props.space, castShadow: props.castShadow, viewportOffset: props.viewportOffset});
+    },
     behavior: (target, behavior) => {
       descendants(target.id);
       behaviors.push({ target: target.id, behavior: clone(behavior) });

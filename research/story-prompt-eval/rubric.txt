@@ -1,0 +1,15 @@
+Script-and-plan evaluation only. No claim about rendered animation, spoken delivery, retention, or production inference quality.
+
+Read each script and its complete scene plan against its exact request. Rate each dimension 0 (missing/wrong), 1 (material weakness), 2 (usable but clear improvement needed), 3 (strong). Record concrete passage/scene evidence; don't reward preferred wording or narrative format.
+1. Audience and scope: requested knowledge and coverage, not substituted simpler topic.
+2. Explanatory bridge: viewer can reconstruct why conclusion follows; appropriate causal mechanism, deductive argument, interpretation, or comparison.
+3. Representation: stated encoding, observable relation/operation, speech-to-visual referents; evidence for inference rather than labels repeating it.
+4. Accuracy and boundaries: calculations, assumptions, analogies, limits, uncertainty, source fidelity.
+5. Progression and pacing: dependencies, attention, first operation vs repetition, duration and scene constraints without padding or fragmentation.
+6. Viewer reasoning: purposeful reachable tasks when useful/requested; complete default explanation; requested pause policy and reveal order.
+7. Handoff: semantic identity, compatible adjacent states, useful per-scene instructions without rigid layout/API choreography.
+
+Separately list material errors and nonblocking improvements. Good scripts can start with a definition, show a formula early, have no question/pause, use multiple linked operations in one scene, or remain nonmathematical. Judge the request and inference, not those choices alone.
+Estimated duration uses (60 * spoken_words / words_per_minute + explicit_pause_seconds) * 1.1, with 125–150 wpm as a planning range. This is not measured audio. Flag major under/overruns with evidence; do not prefer padding to adequate explanation.
+
+Paired samples are exploratory, one output per topic per prompt. Different topics are not repeat runs of an identical scenario. Scores do not establish statistical superiority. Contract-only controls retain production format, renderer capabilities, and visual policy; they remove only narrative guidance.

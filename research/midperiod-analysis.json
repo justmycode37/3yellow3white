@@ -1,0 +1,183 @@
+{
+  "scope": "All substantive 2018 and 2019 local 3Blue1Brown English transcripts, excluding qa3, qa4, and fourier-series-montage, plus three 2020 probability videos.",
+  "source_commit": "0bce59666e3b16b449d414da253beb11257b5da6",
+  "source_url_template": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/{YEAR}/{SLUG}/english/sentence_timings.json",
+  "method": "Read every transcript row, in order within each video, using timestamped prose. Recovered missing portions of truncated batches in subsequent reads. Findings concern narration, stated visual encodings, and narrated operations, not independently observed frames or editing. Times are approximate source-caption locators, not frame-verified measurements.",
+  "full_read_count": 31,
+  "sampled_count": 0,
+  "full_read_keys": ["2018/basel-problem", "2018/borsuk-ulam", "2018/dandelin-spheres", "2018/derivatives-and-transforms", "2018/divergence-and-curl", "2018/feynmans-lost-lecture", "2018/fourier-transforms", "2018/pi-was-628", "2018/quaternions", "2018/quaternions-and-3d-rotation", "2018/sphere-area", "2018/turbulence", "2018/uncertainty-principle", "2018/wallis-product", "2018/winding-numbers", "2019/bayes-theorem", "2019/bayes-theorem-quick", "2019/clacks", "2019/clacks-solution", "2019/clacks-via-light", "2019/cramers-rule", "2019/differential-equations", "2019/eulers-formula-dynamically", "2019/fourier-series", "2019/heat-equation", "2019/pdes", "2019/prime-spirals", "2019/windmills", "2020/better-bayes", "2020/binomial-distributions", "2020/pdfs"],
+  "data_cautions": [
+    "Caption text includes transcription errors; do not treat mathematical wording as independently checked fact. For instance Wallis appears as Wallace, and some math formulas lose superscripts or punctuation.",
+    "Basel has only 16 rows, several spanning minutes, so some supporting spans are broad even though all text was read.",
+    "Some rows have impossible or irregular timestamps: final punctuation rows in uncertainty-principle and better-bayes have end before start; differential-equations has a reversed interval near 21:46. Use approximate locators and verify against video before precision timing claims.",
+    "The narration reports visual actions, color roles, and simulations, but this read does not verify actual colors, camera trajectories, dwell times, synchronization, or the quality of individual rendered frames.",
+    "Medical/test figures in better-bayes are historical hypothetical teaching examples in the transcript, not present-day medical advice or validated clinical performance."
+  ],
+  "findings": [
+    {
+      "id": "M1",
+      "claim": "Openings usually establish a specific tension the viewer can want resolved: an unexpected result, a choice with competing intuitions, or a visual whose mechanism is hidden. The topic name alone is rarely the entire motivation.",
+      "evidence": [
+        {"video": "2018/basel-problem", "span": "00:00–03:23", "observation": "States the inverse-square sum, reveals pi squared over six, asks why pi belongs, and converts the question into brightness of a line of lighthouses.", "quote": "What is pi doing here?"},
+        {"video": "2019/clacks", "span": "00:04–02:27", "observation": "Introduces blocks and counts three, 31, 314, and 3141 collisions before naming the pi pattern. A narrated wait for the final collision turns a count into a miniature reveal."},
+        {"video": "2019/prime-spirals", "span": "01:01–04:27", "observation": "Carefully defines polar plotting, then asks why spirals, rays, gaps, and the counts 20 and 280 appear; immediately separates the prime-number mystery from plotting artifacts."},
+        {"video": "2020/binomial-distributions", "span": "00:00–02:54", "observation": "Asks which seller to choose when percentages and sample sizes disagree; gives an early provisional answer and promises to unpack its assumptions."},
+        {"video": "2020/pdfs", "span": "00:02–02:42", "observation": "An unknown coin weight leads to the apparent contradiction of assigning probabilities to individual continuous values."}
+      ],
+      "limits": "Not a universal spectacular cold open: divergence-and-curl begins with definitions; eulers-formula-dynamically begins with the derivative property; heat-equation opens with a previous-episode recap."
+    },
+    {
+      "id": "M2",
+      "claim": "The narrator teaches the representation before relying on it, making the visual grammar part of the explanation. Axes, colors, positions, bars, and motions receive explicit mathematical meanings.",
+      "evidence": [
+        {"video": "2018/winding-numbers", "span": "03:22–06:34", "observation": "Compares paired input/output planes, vector fields, and color mapping. Hue encodes direction, brightness encodes magnitude, and black marks zero; points imaginatively visit output space, acquire color, and return."},
+        {"video": "2018/quaternions", "span": "20:27–23:17", "observation": "Defines the label, pink point, fixed unit sphere, inside/outside regions, and point at infinity. Warns that all visible positions represent unit quaternions despite apparent distances."},
+        {"video": "2019/pdes", "span": "03:40–06:19", "observation": "Defines the rod's spatial axis, temperature graph, time-dependent surface, and partial derivatives; distinguishes time drawn as an axis from time represented through animation."},
+        {"video": "2019/prime-spirals", "span": "00:22–02:05", "observation": "Explains radius and radian angle, then constructs points 1,1; 2,2; 3,3 before any pattern interpretation."},
+        {"video": "2020/pdfs", "span": "02:49–05:37", "observation": "Explicitly changes the reader's interpretation from bar height to bar area, then derives density units and continuous curves from finer buckets."}
+      ],
+      "limits": "The transcript supports narrated encoding instructions, not a claim that all these encodings were visually legible in the rendered videos."
+    },
+    {
+      "id": "M3",
+      "claim": "Visual actions are often the reasoning itself: preserve a quantity while transforming the setup, then read an easier result. The explanation repeatedly connects an operation to its mathematical consequence.",
+      "evidence": [
+        {"video": "2018/basel-problem", "span": "03:33–15:18", "observation": "Inverse Pythagoras licenses replacing one lighthouse with two without changing apparent brightness. Repeated circle doubling generates the line of lighthouses; the invariant carries the known value into the limit."},
+        {"video": "2018/sphere-area", "span": "02:29–08:25", "observation": "Outward projection stretches width and contracts height; similar triangles show reciprocal scale factors, explaining preserved area rather than merely asserting equal surfaces."},
+        {"video": "2019/clacks-solution", "span": "02:38–06:41", "observation": "Rescaling velocities turns energy conservation into a circle and momentum conservation into a line. Their intersections determine the next collision state."},
+        {"video": "2019/clacks-via-light", "span": "10:27–12:56", "observation": "Reflecting the world while continuing the ray straight converts bounce counting into counting equal angular sectors."},
+        {"video": "2019/windmills", "span": "07:39–11:23", "observation": "Colors encode the counts on either side; a pivot switch exchanges one same-color point for another, proving count invariance, and a half-turn forces every point to switch sides."}
+      ],
+      "limits": "Not every attractive motif has a physical mechanism: wallis-product explicitly retains lighthouses even though multiplying distances no longer has the earlier physical brightness interpretation."
+    },
+    {
+      "id": "M4",
+      "claim": "Representations are chosen by the question they make easier, and switching representations is frequently the central intellectual move. The narrator explains why the switch earns its complexity.",
+      "evidence": [
+        {"video": "2018/derivatives-and-transforms", "span": "01:59–05:35; 08:56–12:55; 13:30–14:05", "observation": "Derivative becomes local stretch rather than graph slope; fixed-point convergence becomes repeated contraction. The ending acknowledges that this representation can be clumsy for a whole function."},
+        {"video": "2018/feynmans-lost-lecture", "span": "11:48–13:11; 16:14–20:33", "observation": "Moves from orbital positions to velocity vectors rooted at one point, obtains a circle, then reconnects its tangency directions to the ellipse construction introduced earlier."},
+        {"video": "2019/cramers-rule", "span": "03:14–09:24", "observation": "A failed dot-product interpretation of coordinates motivates signed areas, which transform uniformly through the determinant and permit recovery of unknown coordinates."},
+        {"video": "2020/better-bayes", "span": "09:58–13:04; 17:51–20:21", "observation": "A multiplication rule fails for probabilities but becomes exact for odds. The formula comparison is framed as a design choice with tradeoffs, not a uniquely correct notation."},
+        {"video": "2018/pi-was-628", "span": "03:19–05:27", "observation": "Uses Euler's shifting conventions to argue that representational choices should serve a concrete problem rather than an abstract standardization dispute."}
+      ]
+    },
+    {
+      "id": "M5",
+      "claim": "The common movement is concrete case to operational intuition to notation, with formulas presented as compressed descriptions of something the viewer has already done mentally. Quantitative detail is retained when it makes the mechanism precise.",
+      "evidence": [
+        {"video": "2018/fourier-transforms", "span": "02:40–10:35; 12:32–18:26", "observation": "Builds winding and center-of-mass behavior before translating rotation into a complex exponential and averaging into an integral; then corrects normalization to obtain the actual Fourier transform."},
+        {"video": "2019/bayes-theorem", "span": "03:24–07:48; 08:37–10:13", "observation": "Counts 200 farmers and ten librarians, then selected subsets, before writing the general theorem; switches counts to areas to make the diagram portable and continuous."},
+        {"video": "2019/pdes", "span": "08:01–13:17", "observation": "Neighbor averaging becomes a second difference, then a second spatial derivative. The formula is motivated by a local update rule."},
+        {"video": "2019/prime-spirals", "span": "04:28–10:19", "observation": "Visualizes counting in steps of six, then 44, before naming residue classes, coprimality, and Euler's totient function."},
+        {"video": "2020/binomial-distributions", "span": "05:38–08:50", "observation": "Simulation anticipates the probability, then counting arrangements and multiplying independent probabilities produces the binomial expression and checks the numerical result."}
+      ],
+      "limits": "This is an order of explanation, not a ban on early equations: pdes shows an equation before unpacking it; eulers-formula-dynamically starts from an equation and derives motion; Cramer's rule states prerequisite knowledge."
+    },
+    {
+      "id": "M6",
+      "claim": "Pacing is explicitly managed around dependencies and cognitive load: promise a destination, announce a detour, narrow attention, recap what matters, then return to the original question. Long explanations are not uniformly slow; they alternate overview and local detail.",
+      "evidence": [
+        {"video": "2018/borsuk-ulam", "span": "00:17–00:35; 03:06–03:15; 09:16–10:39; 14:30–17:29", "observation": "Promises a necklace/topology connection, labels the sidestep, anticipates the viewer's concern that the puzzle was abandoned, then marks the sphere-to-division correspondence as the key observation."},
+        {"video": "2018/fourier-transforms", "span": "06:44–07:02; 17:08–18:26", "observation": "Recaps the original signal, wound-up graph, and center-of-mass plot as a three-part construct, then later reassembles the full formula after all refinements."},
+        {"video": "2018/sphere-area", "span": "05:57–08:25", "observation": "Cuts to a two-dimensional cross-section for one scale factor, then explicitly reminds viewers why the triangle calculation was needed.", "quote": "Deep in the weeds like this, it's sometimes easy to forget why we're doing this."},
+        {"video": "2019/heat-equation", "span": "06:36–12:30", "observation": "Calls boundary conditions a necessary detour, motivates why a PDE solution can fail to model the rod, and explicitly returns to the main route after fixing endpoints."},
+        {"video": "2019/fourier-series", "span": "00:31–01:46; 09:47–12:48; 22:14–24:26", "observation": "Invites lingering on the opening construction, spends time earning a generalization into complex outputs, and finally returns to the original physical heat problem."}
+      ],
+      "limits": "These are rhetorical pacing instructions and approximate story locations; no unverified average shot length or actual pause-duration claims."
+    },
+    {
+      "id": "M7",
+      "claim": "Audience interaction is usually cognitively specific: predict a result, justify a relation, run a small experiment, generalize a case, or compute a missing step. The viewer is assigned a mathematical role, not merely asked whether the content is interesting.",
+      "evidence": [
+        {"video": "2018/dandelin-spheres", "span": "05:12–05:24; 08:31–08:37", "observation": "After supplying the creative sphere construction, invites viewers to finish the proof; separately offers a pause for tangent-length equality."},
+        {"video": "2018/derivatives-and-transforms", "span": "08:14–08:43; 10:05–10:10; 11:54–12:08", "observation": "Asks viewers to iterate a function on a calculator, think through graph-based stability, then predict what happens near the other fixed point."},
+        {"video": "2018/sphere-area", "span": "11:42–15:14", "observation": "Turns the second proof into five progressively dependent questions, from ring circumference to the final fourfold area relation."},
+        {"video": "2019/cramers-rule", "span": "10:47–11:48", "observation": "Gives enough setup for the three-dimensional extension, then leaves the generalization to the viewer and explicitly locates learning in that work."},
+        {"video": "2019/windmills", "span": "08:39–09:23", "observation": "Requests a pause to explain why the blue/brown counts remain fixed before giving the pivot-exchange argument."},
+        {"video": "2020/binomial-distributions", "span": "10:29–10:44", "observation": "Asks viewers to explain why multiplying the amount of data concentrates the likelihood curve."}
+      ],
+      "limits": "Frequent rhetorical questions also serve transitions, so do not count every question mark as a genuine exercise. pi-was-628 has much less active mathematical work than sphere-area."
+    },
+    {
+      "id": "M8",
+      "claim": "A wrong first idea is often deliberately made plausible and then broken, so the eventual definition or correction answers a felt need. This is guided discovery with explicit counterexamples.",
+      "evidence": [
+        {"video": "2018/winding-numbers", "span": "08:33–13:30; 13:38–19:17", "observation": "The all-colors boundary test first looks like a 2D sign-change test, but subdivision fails; winding number is introduced specifically because it composes additively.", "quote": "being wrong is a regular part of doing math"},
+        {"video": "2019/cramers-rule", "span": "03:14–05:46", "observation": "Tries extracting coordinates with transformed dot products, shows that general transformations do not preserve them, and uses the failure to seek something that transforms predictably."},
+        {"video": "2019/heat-equation", "span": "06:36–09:54", "observation": "Sine-wave decay and even a static line solve the interior PDE but fail the simulated boundary behavior, creating a concrete reason to introduce boundary conditions."},
+        {"video": "2020/better-bayes", "span": "08:43–12:22", "observation": "A useful small-prior multiplication approximation yields an impossible 100% prediction for a larger prior; that failure motivates replacing probability with odds."},
+        {"video": "2019/windmills", "span": "05:18–07:21", "observation": "Starts with two and three points, then an interior fourth point breaks the naïve picture and shifts attention to choosing a central starting line."}
+      ]
+    },
+    {
+      "id": "M9",
+      "claim": "Visual intuition is repeatedly distinguished from proof, literal physics, and representational artifacts. The narration makes simplifications visible and often repairs them quantitatively or labels what remains unproved.",
+      "evidence": [
+        {"video": "2018/divergence-and-curl", "span": "00:30–01:20; 06:07–07:36", "observation": "Admits shortened vector arrows and scope restrictions; explains imagined fluid as an analogy for electric fields rather than an actual electric fluid."},
+        {"video": "2018/quaternions", "span": "16:32–16:40; 22:06–22:29", "observation": "Calls apparent stretching a projection artifact and reminds the viewer that all projected unit quaternions have the same actual magnitude."},
+        {"video": "2018/turbulence", "span": "09:17–10:13", "observation": "Warns that observing a 2D slice of a 3D flow is different from truly two-dimensional turbulence, then uses vortex stretching to explain the dimensional distinction."},
+        {"video": "2018/wallis-product", "span": "18:43–22:02", "observation": "After the apparent conclusion, exposes an unjustified limit interchange, shows a counterexample grid, and cites dominated convergence plus ordering cautions to repair the argument."},
+        {"video": "2019/differential-equations", "span": "12:14–13:02; 14:48–15:56; 23:27–24:10", "observation": "Separates physical velocity from abstract state-space motion; warns about vector scaling; demonstrates inaccurate finite stepping before reducing the timestep."},
+        {"video": "2019/fourier-series", "span": "06:26–09:28; 14:47–14:53", "observation": "Separates finite approximation from an infinite limiting statement, acknowledges convergence issues, and explicitly says the drawn rotation is slowed by ten."}
+      ],
+      "limits": "Some deep technical repairs are deferred to external resources; it would be wrong to describe every video as a complete rigorous proof."
+    },
+    {
+      "id": "M10",
+      "claim": "The quantitative/qualitative balance follows the explanatory goal. Numbers discriminate hypotheses or verify behavior; qualitative imagery explains what those numbers do. The videos do not consistently avoid computation or consistently derive every numerical result.",
+      "evidence": [
+        {"video": "2018/divergence-and-curl", "span": "04:05–04:10; 10:19–11:26", "observation": "Explicitly postpones computation in favor of meaning, then supplies only a geometric sense of dot/cross-product notation.", "quote": "I'm purposely delaying discussion of computations here"},
+        {"video": "2018/turbulence", "span": "03:11–04:42; 06:33–09:04", "observation": "Begins with qualitative swirling, mixing, and unpredictability, then presents the 5/3 scaling law without a full derivation; its role is an example of order in chaos."},
+        {"video": "2019/clacks-solution", "span": "09:00–13:02", "observation": "After the geometric mechanism, computes the relevant arctangent and discusses its approximation error to explain why the integer collision count agrees."},
+        {"video": "2019/differential-equations", "span": "09:39–11:01; 23:05–25:28", "observation": "Explicitly separates analytic solutions, qualitative understanding, and computation; ends with a small Python Euler-step procedure after discussing the phase portrait."},
+        {"video": "2020/better-bayes", "span": "05:53–06:56; 12:23–14:41", "observation": "Sets mental numerical estimation as an objective, uses exact odds updates, and repeatedly compares them with concrete population counts."}
+      ]
+    },
+    {
+      "id": "M11",
+      "claim": "Endings often extract a transferable way of thinking or open the next dependency rather than simply restate an answer. The puzzle is treated as a vehicle for reusable mathematical habits.",
+      "evidence": [
+        {"video": "2018/dandelin-spheres", "span": "10:05–12:27", "observation": "Reflects on equivalence of definitions and decomposes apparent genius into habits acquired through experience."},
+        {"video": "2018/borsuk-ulam", "span": "17:30–18:59", "observation": "Generalizes to higher dimensions and explains that geometric objects matter for the other problems they encode."},
+        {"video": "2019/clacks-solution", "span": "14:03–14:57", "observation": "Repeats the transferable lesson of translating dynamics into geometry, then promises a richer second solution.", "quote": "I don't want you to come away just remembering a neat puzzle"},
+        {"video": "2019/windmills", "span": "12:40–15:39", "observation": "Draws a teaching lesson about hindsight and difficulty, then identifies the mathematical habit of finding invariants."},
+        {"video": "2019/prime-spirals", "span": "20:17–21:57", "observation": "Treats the initial plotting whimsy as incidental but values the chain of questions because prior exploration makes later definitions familiar."},
+        {"video": "2020/binomial-distributions", "span": "10:45–12:12", "observation": "Ends by showing why maximum likelihood does not itself answer the purchasing question, motivating Bayes and density functions in the next part."}
+      ],
+      "limits": "Several endings deliberately withhold completion: clacks is the puzzle installment; quaternions defers the 3D rotation application; its short sequel routes viewers to an external interactive tutorial."
+    }
+  ],
+  "inventory": [
+    {"key":"2018/basel-problem","coverage":"full","hook":"Why pi squared occurs in a rational inverse-square sum.","arc":"Sum -> physical brightness -> invariant lighthouse replacement -> doubling circles -> limiting line -> missing even terms.","visual_role":"Light/screens and geometry construct and preserve the sought quantity.","exception":"Coarse multi-minute caption rows; guest-authored Ben Hambrecht credit."},
+    {"key":"2018/borsuk-ulam","coverage":"full","hook":"Promise of a necklace puzzle and topology connection.","arc":"Fair division -> sphere theorem and proof -> continuous necklace -> sphere encoding -> antipodal allocation -> generalization.","visual_role":"Coordinates encode cuts and allocation; narrated animation explicitly called the literal map at 17:02–17:07."},
+    {"key":"2018/dandelin-spheres","coverage":"full","hook":"Choose one proof showing why math is beautiful; equivalence of ellipse definitions.","arc":"Three definitions -> precise target -> creative spheres -> guided equal-length proof -> reflection on invention.","visual_role":"Add objects, identify tangencies, substitute equal lengths; a separate simpler picture isolates the tangent lemma."},
+    {"key":"2018/derivatives-and-transforms","coverage":"full","hook":"A missing perspective in first-year calculus.","arc":"Graph slope -> local stretch -> positive/zero/negative examples -> infinite fraction -> fixed-point contraction/repulsion.","visual_role":"Zooming and repeated mapping supply the causal explanation for stability.","exception":"Explicitly says transformational view is not globally better and can be clunky."},
+    {"key":"2018/divergence-and-curl","coverage":"full","hook":"Direct concept introduction.","arc":"Vector fields -> imagined fluid -> sources/sinks and rotation -> Maxwell and population phase-space examples -> geometric notation.","visual_role":"Physical metaphor is moved across non-fluid domains; vectors are explicitly scaled for legibility.","exception":"Computation delayed and outsourced; long funding-model outro."},
+    {"key":"2018/feynmans-lost-lecture","coverage":"full","hook":"Peculiar ellipse construction connects to a lost Feynman lecture.","arc":"Geometry construction/proof -> orbital conservation laws -> velocity circle -> rotated tangent construction -> ellipse.","visual_role":"A planted geometric construction is retrieved to identify the physical orbit.","exception":"MinutePhysics guest framing, historical introduction, acknowledges reduced elementarity."},
+    {"key":"2018/fourier-transforms","coverage":"full","hook":"Preview of animated transform; recover frequencies from mixed sound.","arc":"Sound mixture -> winding graph -> center of mass -> frequency spikes -> linearity -> application -> complex notation/integral -> normalization.","visual_role":"Three linked representations are defined and recapped; formula reconstructs their operations."},
+    {"key":"2018/pi-was-628","coverage":"full","hook":"Historical surprise in pi/tau conventions.","arc":"Euler used 6.28 -> Euler also spread 3.14 -> varied conventions -> problem-centered flexibility.","visual_role":"Mostly historical documents/notation referred to by narration; not a geometric derivation.","exception":"Short essay-like counterexample to a universal problem-proof template."},
+    {"key":"2018/quaternions","coverage":"full","hook":"Promise to understand the displayed 4D multiplication motion.","arc":"History/usefulness -> Linelander and circle projection -> Flatlander and sphere projection -> hypersphere -> multiplication/right-hand rule -> left action/right action.","visual_role":"Dimensional analogy, tracked reference points, and explicit projection semantics build a new mental object.","exception":"Longest in this subset at ~31:39; defers 3D rotation application."},
+    {"key":"2018/quaternions-and-3d-rotation","coverage":"full","hook":"Announcement/context for offsite explorable videos.","arc":"Practical orientation motivation -> alternatives/gimbal lock -> 2D complex rotation -> quaternion sandwich -> external tutorial.","visual_role":"Introduces the operation the linked interactive tutorial will explain.","exception":"Not a self-contained proof of the sandwich or half-angle rule."},
+    {"key":"2018/sphere-area","coverage":"full","hook":"Feel why a sphere has the area of four equal-radius circles.","arc":"Cylinder strategy -> local stretching/cancellation -> limiting justification -> circle unwrapping -> five-exercise alternate proof -> broader shadow theorem.","visual_role":"Projection, cross-sections, similar triangles, and limiting rectangles are linked to preserved area."},
+    {"key":"2018/turbulence","coverage":"full","hook":"Ordinary room airflow revealed in a laser-lit slice.","arc":"Demo story -> qualitative definition -> hard equations -> energy cascade/scaling result -> dimensional caveat -> vortex stretching.","visual_role":"Observation motivates math; narrated physical footage supplies phenomena to interpret.","exception":"5/3 law presented rather than derived; physical demonstration rather than all abstract animation."},
+    {"key":"2018/uncertainty-principle","coverage":"full","hook":"Make the quantum principle feel reasonable.","arc":"Turn-signal timing -> sound -> Fourier concentration -> Doppler radar -> de Broglie -> wavepacket position/momentum -> interpretation.","visual_role":"Same duration/frequency tradeoff travels across examples; narration flags oversimplification and exaggerated animation."},
+    {"key":"2018/wallis-product","coverage":"full","hook":"Unexpected infinite product and an independently discovered proof.","arc":"Competing products -> lighthouse distance products -> roots-of-unity lemmas -> observer ratio -> limit -> rigor repair -> sine product.","visual_role":"Geometry and complex algebra alternate; lighthouse metaphor deliberately retained without physical interpretation."},
+    {"key":"2018/winding-numbers","coverage":"full","hook":"A colorful equation-solving algorithm and a meta-lesson about composition.","arc":"1D bisection -> 2D color maps -> naïve all-color test -> counterexample -> winding/additivity -> corrected solver -> fundamental theorem of algebra.","visual_role":"Color is a mathematical encoding; reversing paths cancels winding; failed subdivision motivates the invariant."},
+    {"key":"2019/bayes-theorem","coverage":"full","hook":"Recognize when a major formula is needed, via a librarian/farmer judgment.","arc":"Relevance -> concrete sample counts -> symbolic theorem -> area diagram -> reasoning lessons -> context/priors caveat.","visual_role":"Restriction of sample space and relative area enact Bayesian conditioning."},
+    {"key":"2019/bayes-theorem-quick","coverage":"full","hook":"Short footnote offering a pure mathematical derivation.","arc":"Two ways to count AND -> identity -> why main video used a richer story -> correlation/independence warning.","visual_role":"Proportions describe conditional subsets.","exception":"Explicit counterexample to claims that all videos require a long motivating narrative."},
+    {"key":"2019/clacks","coverage":"full","hook":"Two blocks generate digits of pi in their collision count.","arc":"Setup -> escalating masses/counts -> computational absurdity -> central mystery -> circle hint -> viewer challenge.","visual_role":"Narrated simulation supplies the surprising data; sounds intentionally mark counts.","exception":"Puzzle installment ends before either promised proof."},
+    {"key":"2019/clacks-solution","coverage":"full","hook":"Recall pi collision puzzle and promise a reusable phase-space lesson.","arc":"Conservation -> rescaled circle/line -> collision hops -> equal arcs -> arctangent -> integer count/error -> general lesson.","visual_role":"Dynamics become geometry; operations map back to block behavior throughout."},
+    {"key":"2019/clacks-via-light","coverage":"full","hook":"Mirror illusions help solve serious problems.","arc":"Position-space analogy fails -> rescale -> energy/momentum become optics -> reflect world -> count sectors -> recap.","visual_role":"An exact correspondence permits a geometric unfolding that makes the count accessible."},
+    {"key":"2019/cramers-rule","coverage":"full","hook":"Computation as a test of conceptual understanding; geometry of an inefficient rule.","arc":"Linear system as inverse transformation -> failed dot products -> signed coordinate areas -> determinant scaling -> numeric check -> generalization exercise.","visual_role":"Parallelogram area and transformed area ratio derive the algorithm."},
+    {"key":"2019/differential-equations","coverage":"full","hook":"Laws of change as a language for the world.","arc":"Projectile warmup -> pendulum equation/failed simple solution -> state space/vector field -> stability/other domains -> numerical stepping -> limits of prediction.","visual_role":"Trajectories encode both angle and velocity; parameter changes and timestep changes reveal behavior.","exception":"Long survey with code, substantial prerequisites, and imperfect transcript timing near romance analogy."},
+    {"key":"2019/eulers-formula-dynamically","coverage":"full","hook":"Start from exponential's derivative property.","arc":"Position equals velocity -> doubled/negative multipliers -> imaginary multiplier -> perpendicular velocity -> circular trajectory -> notation teaser.","visual_role":"Vectors turn a differential equation into the unique motion satisfying it.","exception":"Very short direct construction; little historical or puzzle framing."},
+    {"key":"2019/fourier-series","coverage":"full","hook":"Rotating vectors can trace arbitrary drawings with a short formula.","arc":"Visual wonder -> heat context/linearity -> infinite wave sums -> complex-output drawings -> rotating exponentials -> averages isolate coefficients -> numerical implementation -> original case.","visual_role":"Multiplying to stop one vector and averaging away others is the actual coefficient-extraction argument."},
+    {"key":"2019/heat-equation","coverage":"full","hook":"Solve a previously introduced PDE with boundary and initial constraints.","arc":"Three-observation roadmap -> sine/exponential solution -> physical failure at endpoints -> boundary condition -> cosine/frequency corrections -> next installment.","visual_role":"Simulation challenges a plausible analytic solution; curvature and decay explain the frequency-squared factor."},
+    {"key":"2019/pdes","coverage":"full","hook":"Predict heat distribution; preview Fourier drawing connection.","arc":"Rod/temperature/time representations -> partial derivative language -> local neighbor averaging -> second differences -> continuous second derivative -> higher dimensions.","visual_role":"Graph and color temperature encodings support a local-to-global mechanism."},
+    {"key":"2019/prime-spirals","coverage":"full","hook":"Striking prime plots, missing arms, and scale-dependent patterns.","arc":"Define polar plot -> separate artifacts from primes -> mod-six warmup -> 44/710 approximations -> totient counts -> distribution histograms -> deep theorem -> value of play.","visual_role":"Zoom/filter/count operations disentangle mechanisms; visual regularity is separated from proof.","exception":"Deep number-theory theorem stated rather than proved."},
+    {"key":"2019/windmills","coverage":"full","hook":"IMO puzzle hard for exceptional students yet solution accessible.","arc":"Read and draw setup -> difficulty context -> small cases -> centrality -> colored count invariant -> half/full-turn argument -> lessons on hindsight/invariants.","visual_role":"Orientation and color make the invariant explicit; pivot changes explain conservation of counts."},
+    {"key":"2020/better-bayes","coverage":"full","hook":"Accurate medical tests can have low predictive value; formulas as design choices.","arc":"Population counts -> common error -> mental-estimation target -> Bayes factor approximation -> failure -> odds repair -> examples -> compare forms/tradeoffs.","visual_role":"Filtering concrete populations grounds each ratio and checks symbolic updates.","exception":"Hypothetical historical test example, not clinical guidance."},
+    {"key":"2020/binomial-distributions","coverage":"full","hook":"Which online seller wins when ratings and review counts conflict?","arc":"Preview succession rule -> modeling assumptions -> simulations -> binomial count/formula -> parameter sweep/likelihood -> failure of peak-only answer -> next part.","visual_role":"Highlighted histogram bar becomes a second curve as success rate varies, converting one probability into a function of the unknown."},
+    {"key":"2020/pdfs","coverage":"full","hook":"What is the probability of a precise unknown coin probability?","arc":"Continuous-value paradox -> area buckets -> refinement -> density/units -> integral and measure-theory caveats -> return to unknown coin.","visual_role":"Changing bucket width while preserving area-probability meaning motivates the curve and distinguishes density from probability."}
+  ]
+}

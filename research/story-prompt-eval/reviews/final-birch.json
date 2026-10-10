@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "verdict": "pass",
+  "summary": "The lesson distinguishes attributed reports from interpretations and earns a qualified financial-motive conclusion using only the fictional packet.",
+  "issues": [],
+  "checks": [
+    "The 4 May notice, announced 10 May start, 11 May diary and 12 May manager letter match the supplied packet; the rent quotation is preserved.",
+    "The narration connects the announced cut, subsequent reported stoppage and one writer's rent concern to possible financial pressure, without treating chronology alone as proof.",
+    "The manager's attribution remains a claim with no identified agitators; missing corroboration is not presented as proof that the claim is false.",
+    "The closing interpretation preserves uncertainty about a single cause and all workers' motives, matching the planned qualified visual conclusion.",
+    "The two-scene handoff retains attributed source identities, colors and dates; supported timeline and text primitives suffice, with no equations, scripted pauses or interactions.",
+    "193 spoken words and no pauses estimate approximately 85-102 seconds at 125-150 words per minute with the supplied 10% allowance, consistent with roughly 90 seconds; no measured audio was supplied."
+  ]
+}

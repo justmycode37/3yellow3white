@@ -1,0 +1,4 @@
+[
+  "SCENE_VALIDATION: Numeric slot k exceeds its reserved digit width",
+  "Text overlap in settled scene state (1280x720):\n\"minimum-label\" and \"window-label\" at 0.000 seconds; intersection pixels [757.2, 341.6, 791.5, 343.2]\nSeparate these labels, remove obsolete text, or use a single text/LaTeX element for one expression. Preserve semantic IDs, inherited state, narration and exact duration. Repair the source and call validate_output again. Checks sample settled text; moving text and shape collisions still need visual review."
+]

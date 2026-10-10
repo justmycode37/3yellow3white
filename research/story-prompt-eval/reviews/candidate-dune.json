@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The counting explanation and prevalence comparison are well supported, but the decisive spoken probability is numerically wrong and conflicts with the planned visual result.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The Reveal says 'Nine out of a hundred eight: ninety percent.' Recalculation gives 9/108 = 1/12, approximately 8.3%, not 90%. This is the central requested result and contradicts the visual fraction and the subsequent distinction from sensitivity. Correct the spoken result to approximately 8.3% while preserving the explanation that all 108 positives form the denominator; regenerate any dependent audio/timing after editing speech."
+    }
+  ],
+  "checks": [
+    "The supplied rates recompute to 9/10 = 90% sensitivity and 99/990 = 10% false-positive rate; the positive total is 108.",
+    "The second population correctly gives 90 true positives and 90 false positives with rates fixed, hence 90/180 = 50%.",
+    "The regrouping operation preserves condition colors and adds a separate test-result encoding, exposing why conditioning changes the denominator.",
+    "Exactly three scenes include one explicitly invited six-second pause; the fraction and probability are withheld until its Reveal.",
+    "363 spoken words plus six seconds of silence estimate approximately 166-198 seconds at 150-125 words per minute with the prescribed allowance, consistent with roughly three minutes; audio timing was not measured.",
+    "The narrative labels the example hypothetical and nonmedical, introduces the changed population explicitly, preserves cohort totals and keeps interactions empty."
+  ]
+}

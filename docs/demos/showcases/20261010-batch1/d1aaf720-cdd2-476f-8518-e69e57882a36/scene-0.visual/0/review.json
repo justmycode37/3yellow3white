@@ -1,0 +1,72 @@
+{
+  "sourceSha256": "973057e99a4cf390aa9013f0d5e2f2ee13deb7395e465c51795478069824a889",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9333333333333313,
+        4.15555555555555,
+        5.3777777777777676,
+        7.799999999999981
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.244444444444417,
+        12.688888888888853,
+        15.133333333333288,
+        16.99999999999995,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9333333333333313,
+        4.15555555555555,
+        5.3777777777777676,
+        7.799999999999981
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.244444444444417,
+        12.688888888888853,
+        15.133333333333288,
+        16.99999999999995,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 12.688888888888853,
+      "objectIds": [
+        "equal-area-conclusion"
+      ],
+      "problem": "In both aspect ratios, the final equality's fraction extends into the reserved bottom 12% playback-control region, reaching approximately 92% of viewport height. The main conclusion remains exposed to control occlusion throughout the final hold.",
+      "fix": "Move the lower annotation block upward enough to keep the entire equality above 88% viewport height, preserving spacing between formulas and clearance from the orbit."
+    }
+  ]
+}

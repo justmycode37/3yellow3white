@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The script repeats the tradeoff without teaching its mechanism, and the still-label visual plan contradicts the planned causal explanation and requested scope.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The spoken explanation only restates carbon in and water out. It never connects carbon dioxide uptake to photosynthesis or explains how one open passage permits both exchanges, why moist interior versus drier outside air matters, or that the directions are net movements rather than one-way filtering. Supply the essential causal reasoning in age-appropriate speech and an observable shared-passage model; the richer keyPoints and entity descriptions cannot substitute for missing speech."
+    },
+    {
+      "severity": "error",
+      "sceneId": null,
+      "detail": "All three visualDescription fields explicitly prohibit paths, the shared passage, and mechanism, leaving a still leaf and conclusion sentence. That fails the request to show the causal tradeoff and conflicts with the entities, purposes, whyNow, keyPoints, and carry lists, which presume an introduced pore, guard cells, gases, and changing width. Align the scene plans and handoffs around a feasible schematic that shows both exchanges through the same opening and their restriction as it narrows, preserving particle meaning and attachment."
+    },
+    {
+      "severity": "error",
+      "sceneId": null,
+      "detail": "Only 72 spoken words and no pauses produce roughly 32-38 seconds using the supplied pacing range and allowance, far below the requested roughly two minutes. Develop the missing causal explanation within the existing three scenes to support the requested scope; do not fill the gap with unannounced silence or repeated conclusions."
+    }
+  ],
+  "checks": [
+    "The script has exactly three scenes, no equations, no scripted pauses, and empty interactions as requested for classic mode.",
+    "The line 'Some water loss continues' avoids claiming that narrowing instantly eliminates every route of water loss, and no conscious plant decision is asserted.",
+    "The learning goal and shared keyInsight contain causal ingredients, but the actual parsed speech omits photosynthesis and the mechanism connecting pore width to both exchanges.",
+    "The carry lists include guard cells and gases that the still-leaf visual descriptions never introduce; the planned later narrowing is not represented.",
+    "Supported shapes, paths, and arrows could depict the required schematic exchange; no unavailable renderer feature is needed to correct the omission.",
+    "This is a model review of supplied content; no external biological fact-check or unavailable validate_output run is claimed."
+  ]
+}

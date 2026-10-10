@@ -1,0 +1,106 @@
+[00:00–00:06] You know that feeling you get when you have two mirrors facing each other, and it gives the illusion of there being an infinite tunnel of rooms.
+[00:06–00:16] Or, if they're at an angle with each other, it makes you feel like you're a part of a strange kaleidoscopic world with many copies of yourself, all separated by angled pieces of glass.
+[00:17–00:25] What many people may not realize is that the idea underlying these illusions can be surprisingly helpful for solving serious problems in math.
+[00:30–00:35] We've already seen two videos describing the block-collision puzzle, with its wonderfully surprising answer.
+[00:36–00:41] Big block comes in from the bright, lots of clacks, the total number of clacks looks like pi, and we want to know why.
+[00:42–00:51] Here, we see one more perspective explaining what's going on, where if the connection to pi wasn't surprising enough, we add one more unexpected connection to optics.
+[00:51–00:54] But we're doing more than just answering the same question twice.
+[00:54–01:00] This alternate solution gives a much richer understanding of the whole setup, and it makes it easier to answer other questions.
+[01:00–01:08] And fun side note, it happens to be core to how I coded the accurate simulations of these blocks without requiring absurdly small time steps and huge computation time.
+[01:09–01:14] The solution from the last video involved a coordinate plane, where each point encodes a pair of velocities.
+[01:16–01:21] Here, we'll do something similar, but the points of our plane are going to encode the pair of positions of both blocks.
+[01:21–01:32] Again, the idea is that by representing the state of a changing system with individual points in some space, problems in dynamics turn into problems in geometry, which hopefully are more solvable.
+[01:34–01:49] Specifically, let the x-coordinate of a 2D plane represent the distance from the wall to the left edge of the first block, what I'll call d1, and let the y-coordinate represent the distance from the wall to the right edge of the second block, what we'll call d2.
+[01:51–02:00] That way, the line y equals x shows us where the two blocks clack into each other, since this happens whenever d1 is equal to d2.
+[02:02–02:05] Here's what it looks like for our scenario to play out.
+[02:05–02:15] As the two distances of our blocks change, the two dimensional points of our configuration space move around, with positions that always fully encode the information of those two distances.
+[02:16–02:26] You may notice that at the bottom there, it's bounded by a line, where d2 is the same as the small block's width, which, if you think about it, is what it means for the small block to hit the wall.
+[02:27–02:29] You may be able to guess where we're going with this.
+[02:29–02:36] The way this point bounces between the two bounding lines is a bit like a beam of light bouncing between two mirrors.
+[02:39–02:41] The analogy doesn't quite work, though.
+[02:42–02:46] In the lingo of optics, the angle of incidence doesn't equal the angle of reflection.
+[02:47–02:48] Just think of the first collision.
+[02:49–03:00] A beam of light coming in from the right would bounce off a 45 degree angled mirror, this x equals y line, in such a way that it ends up going straight down, which would mean that only the second block is moving.
+[03:01–03:08] This does happen in the simplest case, where the second block has the same mass as the first, and picks up all of its momentum like a croquet ball.
+[03:09–03:20] But in the general case, for other mass ratios, that first block keeps much of its momentum, so the trajectory of our point in this configuration space won't be pointed straight down, it'll be down and to the left a bit.
+[03:21–03:31] And even if it's not immediately clear why this analogy with light would actually be helpful, and trust me, it will be helpful in many ways, run with me here and see if we can fix this for the general case.
+[03:31–03:34] Seeking analogies in math is very often a good idea.
+[03:35–03:39] As with the last video, it's helpful to rescale the coordinates.
+[03:39–03:50] In fact, motivated by precisely what we did then, you might think to rescale the coordinates so that x is not equal to d1, but is equal to the square root of the first mass, m1, times d1.
+[03:51–03:59] This has the effect of stretching our space horizontally, so changes in our big block's position now result in larger changes to the x-coordinate itself.
+[04:00–04:09] And likewise, let's write the y-coordinate as square root of m2 times d2, even though in this particular case the second mass is 1, so it doesn't make a difference, but let's keep things symmetric.
+[04:10–04:23] Maybe this strikes you as making things uglier, and kind of a random thing to do, but as with last time, when we include square roots of masses like this, everything plays more nicely with the laws of conserving energy and momentum.
+[04:23–04:45] Specifically, the conservation of energy will translate into the fact that our little point in the space is always moving at the same speed, which in our analogy you might think of meaning there's a constant speed of light, and the conservation of momentum will translate to the fact that as our point bounces off the mirrors of our setup, so to speak, the angle of incidence equals the angle of reflection.
+[04:46–04:53] Doesn't that seem bizarre in kind of a delightful way, that the laws of kinematics should translate to laws of optics like this?
+[04:54–04:57] To see why it's true, let's roll up our sleeves and work out the actual math.
+[04:59–05:01] Focus on the velocity vector of our point in the diagram.
+[05:02–05:04] It shows which direction it's moving and how quickly.
+[05:05–05:09] Now keep in mind, this is not a physical velocity, like the velocities of the moving blocks.
+[05:10–05:20] Instead, it's a more abstract rate of change in the context of this configuration space, whose two dimensions worth of possible directions encode both velocities of the block.
+[05:25–05:33] The x component of this little vector is the rate of change of x, and likewise its y component is the rate of change of y.
+[05:34–05:37] What is the rate of change for the x-coordinate?
+[05:39–05:45] x is the square root of m1 times d1, and the mass doesn't change, so it depends only on how d1 changes.
+[05:46–05:48] What's the rate at which d1 changes?
+[05:49–05:50] Well, that's the velocity of the big block.
+[05:51–05:52] Let's call that v1.
+[05:53–05:59] Likewise, the rate of change for y is going to be the square root of m2 times v2.
+[06:00–06:05] Now, notice what the magnitude of our little configuration space changing vector is.
+[06:05–06:17] Using the Pythagorean theorem, it's the square root of the sum of each of these component rates of change squared, which is square root of m1 times v1 squared plus m2 times v2 squared.
+[06:18–06:23] This inner expression should look awfully familiar, it's exactly twice the kinetic energy of our system.
+[06:23–06:31] So the speed of our point in the configuration space is some function of the total energy, and that stays constant throughout the whole process.
+[06:31–06:38] Remember, a core over-idealizing assumption to this is that there's no energy lost to friction or to any of the collisions.
+[06:40–06:41] All right, so that's pretty cool.
+[06:41–06:45] With these rescaled coordinates, our little point is always moving with a constant speed.
+[06:46–06:55] And I know it's not obvious why you would care, but among other things, it's important for the next step, where the conservation of momentum implies that these two bounding lines act like mirrors.
+[06:59–07:03] First, let's understand this line d1 equals d2 a little bit better.
+[07:04–07:08] In our new coordinates, it's no longer that nice 45 degree x equals y line.
+[07:08–07:17] Instead, if we do a little algebraic manipulation here, we can see that that line is x over square root m1 equals y over square root m2.
+[07:18–07:23] Rearranging a little bit more, we see that's a line with a slope of square root m2 over m1.
+[07:23–07:26] That's a nice expression to tuck away in the back of your mind.
+[07:29–07:44] After the blocks collide, meaning our point hits this line, the way to figure out how they move is to use the conservation of momentum, which says that the value m1 times v1 plus m2 times v2 is the same both before and after the collision.
+[07:45–07:52] Now notice, this looks like a dot product between two column vectors, m1m2 and v1v2.
+[07:52–08:03] Rewriting it slightly for our rescaled coordinates, the same thing could be written as a dot product between a column vector with the square roots of the masses, and one with the rates of change for x and y.
+[08:04–08:14] I know this probably seems like a complicated way to talk about a comparatively simple momentum equation, but there is a good reason for shifting the language to one of dot products in our new coordinates.
+[08:15–08:21] Notice that second vector is simply the rate of change vector for the point in our diagram that we've been looking at.
+[08:21–08:32] The key now is that this square root of the masses vector points in the same direction as our collision line, since the rise over run is square root m2 over square root of m1.
+[08:33–08:40] Now if you're unfamiliar with the dot product, there is another video on this channel describing it, but real quick let's go over what it means geometrically.
+[08:40–08:52] The dot product of two vectors equals the length of the first one multiplied by the length of the projection of the second one onto that first, where it's considered negative if they point in opposite directions.
+[08:53–08:59] You often see this written as the product of the lengths of the two vectors, and the cosine of the angle between them.
+[09:04–09:16] So look back at this conservation of momentum expression, telling us that the dot product between this square root of the masses vector and our little change vector has to be the same, both before and after the collision.
+[09:17–09:27] Since we just saw that this change vector has a constant magnitude, the only way for this dot product to stay the same is if the angle that it makes with the collision line stays the same.
+[09:28–09:35] In other words, again using the lingo of optics, the angle of incidence and the angle of reflection off this collision line must be equal.
+[09:36–09:43] Similarly, when the small block bounces off the wall, our little vector gets reflected about the x direction, since only its y coordinate changes.
+[09:44–09:48] So our configuration point is bouncing off that horizontal line as if it was a mirror.
+[09:50–09:57] So step back a moment and think about what this means for our original question of counting block collisions and trying to understand why on earth pi would show up.
+[09:58–10:00] We can translate it to a completely different question.
+[10:01–10:11] If you shine a beam of light at a pair of mirrors, meeting each other at some angle, let's say theta, how many times would that light bounce off of the mirrors as a function of that angle?
+[10:12–10:17] Remember, the mass ratio of our blocks completely determines this angle theta in the analogy.
+[10:19–10:23] Now I can hear some of you complaining, haven't we just replaced one tricky setup with another?
+[10:24–10:26] This might make for a cute analogy, but how is it progress?
+[10:27–10:33] It's true that counting the number of light bounces is hard, but now we have a helpful trick.
+[10:33–10:43] When the beam of light hits the mirror, instead of thinking of that beam as reflected about the mirror, think of the beam as going straight, while the whole world gets flipped through the mirror.
+[10:43–10:48] It's as if the beam is passing through a piece of glass into an illusory looking glass universe.
+[10:49–10:51] Think of actual mirrors here.
+[10:51–10:57] This wire on the left will represent a laser beam coming into the mirror, and the one on the right will represent its reflection.
+[10:58–11:05] The illusion is that the beam goes straight through the mirror, as if passing through a window separating us from another room.
+[11:05–11:12] But notice, crucially, for this illusion to work, the angle of incidence has to equal the angle of reflection.
+[11:13–11:18] Otherwise, the flipped copy of the reflected beam won't line up with the first part.
+[11:19–11:24] So all of that work we did, rescaling coordinates and futzing through the momentum equations, was certainly necessary.
+[11:25–11:27] But now we get to enjoy the fruits of our labor.
+[11:28–11:35] Watch how this helps us elegantly solve the question of how many mirror bounces there will be, which is also the question of how many block collisions there will be.
+[11:39–11:46] Every time the beam hits a mirror, don't think of the beam as getting reflected, let it continue straight while the world gets reflected.
+[11:47–11:58] As this goes on, the illusion to the beam of light is that instead of getting bounced around between two angled mirrors many times, it's passing through a sequence of angled pieces of glass all the same angle apart.
+[12:00–12:07] Right now I'm showing you all of the reflected copies of the bouncing trajectory, which I think has a very striking beauty to it.
+[12:11–12:16] But for a clearer view, let's just focus on the original bouncing beam and the illusory straight one.
+[12:17–12:23] The question of counting bounces turns into a question of how many pieces of glass this illusory beam crosses.
+[12:24–12:26] How many reflected copies of the world does it pass into?
+[12:34–12:49] Well, calling the angle between the mirrors theta, the answer here is however many times you can add theta to itself before you get more than halfway around a circle, which is to say before you add up to more than pi total radians.
+[12:51–12:56] Written as a formula, the answer to this question is the floor of pi divided by theta.
+[12:57–12:58] So let's review.
+[12:59–13:06] We started by drawing a configuration space for our colliding blocks where the x and the y coordinates represented the two distances from the wall.
+[13:07–13:16] This kind of looked like light bouncing between two mirrors, but to make the analogy work properly we needed to rescale the coordinates by the square roots of the masses.
+[13:16–13:27] This made it so that the slope of one of our lines was square root of m2 divided by square root of m1, so the angle between those bounding lines will be the inverse tangent of that slope.
+[13:28–13:38] To figure out how many bounces there are between two mirrors like this, think of the illusion of the beam going straight through a sequence of looking glass universes separated by a semi-circular fan of windows.
+[13:39–13:46] The answer then comes down to how many times the value of this angle fits into 180 degrees, which is pi radians.
+[13:47–13:56] From here, to understand why exactly the digits of pi show up when the mass ratio is a power of 100, is exactly what we did in the last video, so I won't repeat myself here.
+[13:57–14:17] And finally, as we reflect now on how absurd the initial appearance of pi seemed, and on the two solutions we've now seen, and on how unexpectedly helpful it can be to represent the state of your system with points in some space, I leave you with this quote from the computer scientist Alan Kay, A change in perspective is worth 80 IQ points.

@@ -1,4 +1,5 @@
-import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { setTimeout as delay } from 'node:timers/promises';
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { alignWords, validateAlignment } from "./alignment.js";
@@ -15,7 +16,19 @@ const PROCESSING_VERSION = "narration-v1.1";
 const validId = /^[a-f0-9]{64}$/;
 export async function atomicWrite(path: string, data: string | Uint8Array) {
   const tmp = `${path}.${randomUUID()}.tmp`;
-  await writeFile(tmp, data, { mode: 0o600 }); await rename(tmp, path);
+  try {
+    await writeFile(tmp, data, { mode: 0o600 });
+    for (let attempt = 0; ; attempt++) {
+      try { await rename(tmp, path); return; }
+      catch (error) {
+        // Windows readers/antivirus may briefly prevent replacement. Never unlink
+        // the destination: readers must always see either the old or new state.
+        const code = (error as NodeJS.ErrnoException).code;
+        if (attempt >= 4 || !['EPERM', 'EACCES', 'EBUSY'].includes(code ?? '')) throw error;
+        await delay(10 * 2 ** attempt);
+      }
+    }
+  } catch (error) { await unlink(tmp).catch(() => {}); throw error; }
 }
 async function json<T>(path: string): Promise<T> { return JSON.parse(await readFile(path, "utf8")); }
 function split(text: string): string[] {

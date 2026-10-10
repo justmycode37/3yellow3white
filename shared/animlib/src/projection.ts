@@ -47,4 +47,3 @@ export function projectedTriangle(points: Vec3[], screen: boolean, camera: Camer
   projected = clip(projected, p => p[1]);
   return clip(projected, p => height - p[1]);
 }
-

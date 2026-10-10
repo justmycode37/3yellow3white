@@ -1,0 +1,134 @@
+[00:03–00:12] After seeing how we think about ordinary differential equations in chapter 1, we turn now to an example of a partial differential equation, the heat equation.
+[00:13–00:23] To set things up, imagine you have some object, like a piece of metal, and you know how the heat is distributed across it at any one moment, that is, what's the temperature of every individual point along this plate.
+[00:24–00:30] The question is, how will this distribution change over time, as the heat flows from warmer spots to cooler ones?
+[00:31–00:38] The image on the left shows the temperature of an example plate using color, with the graph of that temperature being shown on the right.
+[00:39–00:46] To take a concrete one-dimensional example, let's say you have two different rods at different temperatures, where that temperature is uniform along each one.
+[00:47–00:54] You know that when you bring them into contact, the temperature will flow from the hot one to the cool one, tending to make the whole thing equal over time.
+[00:54–00:56] But how exactly?
+[00:56–01:00] What will the temperature distribution be at each point in time?
+[01:01–01:11] As is typical with differential equations, the idea is that it's easier to describe how this setup changes from moment to moment than it is to jump straight to a description of the full evolution.
+[01:11–01:19] We write this rule of change in the language of derivatives, though as you'll see, we'll need to expand our vocabulary a bit beyond ordinary derivatives.
+[01:20–01:23] And don't worry, we'll learn how to read the equations you're seeing now in just a minute.
+[01:24–01:37] Variations of the heat equation show up in many other parts of math and physics, like Brownian motion, the black-Scholes equations from finance, and all sorts of diffusion, so there are many dividends to be had from a deep understanding of this one setup.
+[01:38–01:46] In the last video we looked at ways of building understanding while acknowledging the truth that most differential equations are simply too difficult to actually solve.
+[01:46–01:54] And indeed, PDEs tend to be even harder than ODEs, largely because they involve modeling infinitely many values changing in concert.
+[01:55–01:58] But our main character for today is an equation we can actually solve.
+[01:59–02:11] In fact, if you've ever heard of Fourier series, you may be interested to know that this is the physical problem which Babyface Fourier over here was trying to solve when he stumbled across the corner of math that is now so replete with his name.
+[02:12–02:19] We'll dig into Fourier series much more deeply in the next chapter, but I would like to give you at least a little hint of the beautiful connection which is to come.
+[02:22–02:30] This animation you're seeing right now shows how lots of little rotating vectors, each rotating at some constant integer frequency, can trace out an arbitrary shape.
+[02:31–02:45] To be clear, what's happening is that these vectors are being added together, tip to tail, at each moment, and you might imagine that the last one has some sort of pencil at its tip, tracing a path as it goes.
+[02:45–02:55] For finitely many vectors, this tracing usually won't be a perfect replica of the target shape, which in this animation is a lowercase f, but the more circles you include, the closer it gets.
+[02:56–03:02] What you're seeing now uses only 100 circles, and I think you'd agree that the deviations from the real shape are negligible.
+[03:03–03:11] What's mind-blowing is that just by tweaking the initial size and angle of each vector, that gives you enough control to approximate any curve you want.
+[03:15–03:20] At first, this might seem like an idle curiosity, a neat art project, but little more.
+[03:20–03:26] In fact, the math that makes this possible is the same as the math describing the physics of heat flow.
+[03:29–03:31] But we're getting ahead of ourselves.
+[03:32–03:39] Step one is simply to build up the heat equation, and for that, let's start by being clear about what the function we're analyzing is exactly.
+[03:40–03:49] We have a rod in one dimension, and we're thinking of it as sitting on an x-axis, so each point of that rod is labeled with a unique number, x.
+[03:51–03:57] The temperature is some function of that position, t of x, shown here as a graph above it.
+[03:58–04:04] But really, since the value changes over time, we should think of this function as having one more input, t, for time.
+[04:05–04:19] You could, if you wanted, think of this input space as being two-dimensional, representing space and time together, with the temperature being graphed as a surface above it, each slice across time, showing you what that distribution looks like at any given moment.
+[04:22–04:26] Or you could simply think of this graph of temperature changing with time.
+[04:26–04:27] Both are equivalent.
+[04:30–04:36] This surface is not to be confused with what I was showing earlier, the temperature graph of a two-dimensional body.
+[04:36–04:46] Be mindful when you're studying equations like these of whether time is being represented with its own axis, or if it's being represented with literal changes over time, say in an animation.
+[04:47–04:57] Last chapter, we looked at some systems where just a handful of numbers changed over time, like the angle and angular velocity of a pendulum, describing that change in the language of derivatives.
+[04:57–05:03] But when we have an entire function changing with time, the mathematical tools become slightly more intricate.
+[05:03–05:13] Because we're thinking of this temperature function with multiple dimensions to its input space, in this case one for space and one for time, there are multiple different rates of change at play.
+[05:14–05:20] There's the derivative with respect to x, how rapidly the temperature changes as you move along the rod.
+[05:21–05:32] You might think of this as the slope of our surface when you slice it parallel to the x-axis, or given a tiny step in the x-direction and the tiny change to temperature caused by it, giving a ratio between the two.
+[05:34–05:43] But there's also the rate at which a single point on the rod changes with time, what you might think of as the slope of the surface when you slice it in the other direction, parallel to the time axis.
+[05:44–05:50] Each one of these derivatives tells only part of the story for how this temperature function changes, so we call them partial derivatives.
+[05:51–05:58] To emphasize this point, the notation changes a little, replacing the letter D with a special curly D, sometimes called del.
+[05:59–06:04] Personally, I think it's a little silly to change the notation for this since it's essentially the same operation.
+[06:04–06:19] I would rather see notation that emphasizes that the delT terms up in the numerators refer to different changes, one is a small change to temperature after a small change in time, the other is a small change to temperature after a small step in space.
+[06:22–06:33] To reiterate a point I made in the calculus series, I do think it's healthy to initially read derivatives like this as a literal ratio between a small change to the function's output and the small change to the input that caused it.
+[06:34–06:45] Just keep in mind that what this notation is meant to encode is the limit of that ratio for smaller and smaller nudges to the input, rather than a specific value of the ratio for a finitely small nudge.
+[06:45–06:49] This goes for partial derivatives just as much as it does for ordinary derivatives.
+[06:52–06:56] The heat equation is written in terms of these partial derivatives.
+[06:57–07:03] It tells us that the way this function changes with respect to time depends on how it changes with respect to space.
+[07:03–07:08] More specifically, it's proportional to the second partial derivative with respect to x.
+[07:09–07:17] At a high level, the intuition is that at points where the temperature distribution curves, it tends to change more quickly in the direction of that curvature.
+[07:18–07:23] Since a rule like this is written using partial derivatives, we call it a partial differential equation.
+[07:24–07:36] This has the funny result that to an outsider, the name sounds like a tamer version of ordinary differential equations, when quite to the contrary, partial differential equations tend to tell a much richer story than ODEs, and are much harder to solve in general.
+[07:37–07:47] The general heat equation applies to bodies in any number of dimensions, which would mean more inputs to our temperature function, but it'll be easiest for us to stay focused on the one-dimensional case of a rod.
+[07:48–07:53] As it is, graphing this in a way which gives time its own axis already pushes our visuals into the third dimension.
+[07:55–07:58] So I threw out this equation, but where does this come from?
+[07:58–08:00] How could you think up something like this yourself?
+[08:01–08:08] Well, for that let's simplify things by describing a discrete version of the setup, where you have only finitely many points x in a row.
+[08:09–08:16] This is sort of like working in a pixelated universe where instead of having a continuum of temperatures, we have a finite set of separate values.
+[08:17–08:18] The intuition here is simple.
+[08:18–08:25] For a particular point, if its two neighbors on either side are on average hotter than it is, it will heat up.
+[08:26–08:28] If they're cooler on average, it'll cool down.
+[08:29–08:37] Here, specifically focus on these three neighboring points x1, x2, and x3, with corresponding temperatures T1, T2, and T3.
+[08:37–08:43] What we want to compare is the average of T1 and T3 with the value of T2.
+[08:45–08:49] When this difference is greater than zero, T2 will tend to heat up.
+[08:50–08:53] And the bigger the difference, the faster it heats up.
+[08:55–09:01] Likewise, if it's negative, T2 will tend to cool down, at a rate proportional to that difference.
+[09:02–09:12] More formally, we write that the derivative of T2 with respect to time is proportional to the difference between its neighbors and its own value.
+[09:12–09:15] Alpha here is simply a proportionality constant.
+[09:16–09:27] To write this in a way which will ultimately explain the second derivative in the heat equation, let me rearrange this right hand a bit in terms of the difference between T1 and T2, and the difference between T2 and T3.
+[09:28–09:30] You can quickly check that these two are the same.
+[09:30–09:39] The top has half of T1, and in the bottom there are two minus signs in front of T1, so it's positive, and the half has been factored out.
+[09:40–09:43] Likewise, both have half of T3.
+[09:44–09:53] Then on the bottom we have a negative T2 that's effectively written twice, so when you take half of that it's the same as the single negative T2 written up top.
+[09:55–10:00] Like I said, the reason to rewrite it is that it takes us a step closer to the language of derivatives.
+[10:01–10:05] In fact, let's write these as delta T1 and delta T2.
+[10:05–10:10] It's the same value on the right hand side, but we're adding a new perspective to how to think about it.
+[10:11–10:16] Instead of comparing the average of the neighbors to T2, we're thinking about the difference of the differences.
+[10:17–10:19] Here, take a moment to gut check that this makes sense.
+[10:19–10:27] If those two differences are the same, then the average of T1 and T3 is the same as T2, so T2 will not tend to change.
+[10:28–10:41] If delta T2 is bigger than delta T1, meaning the difference of the differences is positive, notice how the average of T1 and T3 is bigger than T2, so T2 tends to increase.
+[10:42–10:54] And on the flip side, if the difference of the differences is negative, which means delta T2 is smaller than delta T1, it corresponds to an average of these neighbors being less than T2.
+[10:54–11:02] We could be especially compact with our notation and write this whole term, the difference between the differences, as delta delta T1.
+[11:03–11:05] This is known in the lingo as a second difference.
+[11:05–11:13] If it feels a little weird to think about, keep in mind, it's essentially a compact way of writing the idea of how much T2 differs from the average of its neighbors.
+[11:13–11:15] It just has this extra factor of one half, is all.
+[11:16–11:21] And that factor doesn't really matter, because either way we're writing this equation in terms of some proportionality constant.
+[11:22–11:28] The upshot is that the rate of change for the temperature of a point is proportional to the second difference around it.
+[11:29–11:36] As we go from this finite context to the infinite continuous case, the analog of a second difference is the second derivative.
+[11:38–11:47] Instead of looking at the difference between the temperature values at points some fixed distance apart, you instead consider what happens as you shrink the size of that step towards zero.
+[11:48–11:55] And in calculus, instead of talking about absolute differences, which would also approach zero, you think in terms of the rate of change.
+[11:55–11:59] In this case, what's the rate of change in temperature per unit distance?
+[12:00–12:02] And remember, there are two separate rates of change at play.
+[12:02–12:08] How does that temperature change as time progresses, and how does the temperature change as you move along the rod?
+[12:08–12:11] The core intuition remains the same as what we had in the discrete case.
+[12:12–12:20] To know how a point differs from its neighbors, look not just at how the function changes from one point to the next, but at how the rate of change itself changes.
+[12:22–12:31] Now in calculus land, we write this as del-squared t over del x-squared, the second partial derivative of our function with respect to x.
+[12:32–12:39] Notice how this slope increases at points where the graph curves upwards, meaning the rate of change of the rate of change is positive.
+[12:40–12:48] Similarly, that slope decreases at points where the graph curves downwards, where the rate of change of this rate of change is negative.
+[12:49–12:53] Tuck that away as a meaningful intuition for problems well beyond the heat equation.
+[12:53–12:58] Second derivatives give a measure of how a value compares to the average of its neighbors.
+[12:59–13:02] Hopefully that gives some satisfying added color to the equation.
+[13:02–13:17] It's already pretty intuitive when you read it as saying that curved points tend to flatten out, but I think there's something even more satisfying about seeing a partial differential equation like this arise almost mechanistically from thinking about each point as simply tending towards the average of its neighbors.
+[13:18–13:23] Take a moment to compare what this feels like to the case of ordinary differential equations.
+[13:23–13:33] For example, if we have multiple bodies in space tugging at each other with gravity, what we're analyzing is a handful of changing numbers, in this case the coordinates of each object.
+[13:34–13:41] The rate of change for any one of these values depends on the values of the other numbers, and we often write this down as a system of equations.
+[13:41–13:49] On the left, we have the derivative of each value with respect to time, and on the right there's some combination of all the other values.
+[13:50–14:08] In our partial differential equation, the difference is that we have infinitely many values changing from a continuum, and again, the way that any one of these values changes depends on the other values, but quite helpfully, each one only depends on its immediate neighbors in some limiting sense of the word neighbor.
+[14:09–14:20] So here, the relation on the right hand side is not a sum or product of the other numbers, it's instead a kind of derivative, just a derivative with respect to space instead of with respect to time.
+[14:20–14:29] In a sense, when you think about it, this one partial differential equation is like a system of infinitely many equations, one for each point on the rod.
+[14:31–14:36] You might wonder about objects which are spread out in more than one dimension, like a plate, or something three dimensional.
+[14:36–14:44] In that case the equation looks quite similar, but you include the second derivative with respect to the other spatial directions as well.
+[14:45–14:55] And adding up all of these second spatial derivatives like this is common enough as an operation that it has its own special name, the Laplacian, often written as this upside down triangle squared.
+[14:56–15:03] It's essentially a multivariable version of the second derivative, and the intuition for this equation is no different from the one dimensional case.
+[15:03–15:13] This Laplacian can still be thought of as measuring how different is a point from the average of its neighbors, but now these neighbors aren't just left and right of it, they're all around.
+[15:15–15:20] For the curious among you, I did a couple of videos during my time at Khan Academy on this operator if you want to go check them out.
+[15:20–15:26] For those of you with multivariable calculus under your belt, it's nice to think about as the divergence of the gradient.
+[15:26–15:31] But you don't have to worry about that, for our purposes let's stay focused on the one dimensional case.
+[15:31–15:35] If you feel like you understand all of this, pat yourself on the back.
+[15:35–15:42] Being able to read a PDE is no joke, and it's a powerful addition to have to your vocabulary for describing the world around you.
+[15:43–15:49] But after all of this time spent interpreting the equations, I say it's high time we start solving them, don't you?
+[15:49–15:55] And trust me, there are few pieces of math quite as satisfying as what Poodlehaired Fourier over here developed to solve this problem.
+[15:56–15:58] All this and more in the next chapter.
+[16:04–16:10] I was originally motivated to cover this particular topic when I got an early view of Steve Strogatz's new book Infinite Powers.
+[16:11–16:18] This isn't a sponsored message or anything like that, but all cards on the table I do have two selfish ulterior motives for mentioning it.
+[16:18–16:27] The first is that Steve has been a really strong, maybe even pivotal, advocate for the channel since the very beginning, and I've had an itch to repay that kindness for quite a while.
+[16:27–16:31] And the second is to make more people love math, and calculus in particular.
+[16:32–16:37] That might not sound selfish, but think about it, when more people love math, the potential audience base for these videos gets bigger.
+[16:38–16:43] And frankly there are few better ways to get people loving the subject than to expose them to Strogatz's writing.
+[16:43–16:55] So if you have friends who you know who you think would enjoy the ideas of calculus but maybe have been a bit intimidated by math in the past, this book does a really outstanding job communicating the heart of the subject, both substantively and accessibly.
+[16:55–17:04] Its main theme is the idea of constructing solutions to complex real-world problems from simple idealized building blocks, which as you'll see is exactly what Fourier did.
+[17:05–17:10] And for those of you who already know and love the subject, you will find no shortage of fresh insights and enlightening stories.
+[17:10–17:12] I certainly enjoyed it.
+[17:12–17:16] Again, I kinda know that sounds like an ad, but it's not, I just actually think you'll enjoy the book.

@@ -1,0 +1,22 @@
+{
+  "id": "silent-kepler",
+  "scriptHash": "36d6cde43ab1c4a020bdb375bbfe939a216a45fffd5c2c5a0cd82ea949d69157",
+  "totalScenes": 1,
+  "scenes": [
+    {
+      "id": "beat-1",
+      "title": "Kepler orbit and equal areas",
+      "context": "3D: Create exactly one 20-second silent single-scene visualization showcase: Kepler orbit and equal areas. Show an eccentric bound Kepler orbit around a focus, integrated or solved with correct nonuniform orbital speed. Sweep equal-time area sectors near periapsis and apoapsis. Use a restrained orbital plane and a real 3D planet; do not mistake the ellipse center for the focus. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "startSec": 0,
+      "durationSec": 20,
+      "audio": {
+        "id": "silent-kepler",
+        "url": "http://127.0.0.1:5211/silence.wav",
+        "sha256": "cefe45b0c941084dfdaebce63b3e6b3ffee756334276589bbd5a33e4ebd85db3",
+        "sampleCount": 480000
+      },
+      "utterances": [],
+      "pauses": []
+    }
+  ]
+}

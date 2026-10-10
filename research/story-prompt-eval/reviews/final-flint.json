@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The opening source comparison is appropriately cautious, but the final narration invents a definitive sole cause and universal motive that the packet cannot support.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The Reveal states 'The wage cut was the sole cause of the stoppage, and every worker stopped for that reason.' The supplied notice establishes an announced cut, the diary reports several workers stopped and records only its writer's rent concern, and the manager offers an uncorroborated attribution. None establishes a sole cause or every worker's motive. Restore a qualified interpretation that the cut may have contributed and explicitly preserve uncertainty about other motives; align the speech with the planned 'Cut may have contributed' conclusion and the earlier narration's limits."
+    }
+  ],
+  "checks": [
+    "The source dates, announced 10% cut starting 10 May and exact diary quotation match the supplied fictional packet.",
+    "The opening interpretation distinguishes one writer's stated concern from a group-wide motive, and the manager's allegation is properly attributed with no agitators identified.",
+    "The final spoken assertion contradicts the source limits, the scene's keyPoints and the qualified visual ending; nonspoken caveats cannot repair that spoken conclusion.",
+    "Exactly two classic scenes, no equations and no scripted pauses meet the structural request; retained source identities, dates and colors support the comparison using available primitives.",
+    "185 spoken words and no pauses estimate approximately 81-98 seconds at 125-150 words per minute with the supplied 10% allowance, consistent with roughly 90 seconds; no measured audio was supplied."
+  ]
+}

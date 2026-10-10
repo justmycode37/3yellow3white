@@ -1,0 +1,12 @@
+# Viewing mode policy
+
+Apply the request's `videoMode` independently of the topic or input method. Missing mode means `classic`. This policy governs lesson planning, editorial review, scene authoring, and scene repairs; keep it out of spoken narration.
+
+- **Classic (`classic`):** Explain through a complete linear animation. Every planned `interactions` array is empty. Do not create lesson controls, editable values, draggable objects, custom input behaviors, or mouse/touch camera orbit. Set `orbit: false` on the main scene and every subview, including 3D views. Authored camera motion, ordinary playback controls, and spoken reflection questions are allowed.
+- **Interactive (`interactive`):** Use 0–2 supported sliders, toggles, or selects per scene when varying a parameter teaches something. No minimum count or quota applies. Plan each control's ID, type, label, driven quantities/range, and discovery. Scene authors must implement exactly those controls and keep geometry and dependent labels/formulas synchronized. Camera orbit may be enabled where inspecting a spatial relationship helps: keep the main scene non-orbiting and use a dedicated model view with `orbit: true, orbitHitTest: "geometry"`. Keep explanatory text outside that orbiting view; text and empty canvas must not rotate the model. Do not invent unplanned dragging or custom input behaviors. The narrated default must remain complete, coherent, and the same duration without any viewer input.
+
+Choose 2D or 3D by what makes the relationship easiest to understand; neither mode requires 3D. Record the choice and its explanatory reason in each scene's `view` field. A flat diagram, cross-section, or separate comparison can stand alone without a compulsory return to 3D. Dimensionality never overrides the viewing mode.
+
+Compatibility: when the host explicitly supplies `legacyPlan: true`, a saved job predates this policy. Preserve its approved interaction/view contract so it can resume; do not retroactively rewrite its script, plan, audio, or cached scenes. This flag is host-owned and is never an option for a newly authored lesson.
+
+Saved instruction version 1 scenes predate the targeted-orbit policy: preserve their approved orbit contract when resuming or repairing them. The host supplies instructionVersion; only new version 2 lessons must enforce geometry-targeted orbit. Other applicable viewing-mode and quality requirements remain in effect.

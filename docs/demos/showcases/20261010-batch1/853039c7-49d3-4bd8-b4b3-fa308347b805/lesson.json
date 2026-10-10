@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Attention matrix and token mixing\n\n## Beat 1: Attention matrix and token mixing\n\nContent needed: 2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Attention matrix and token mixing. Show a small concrete query-key dot-product matrix, row-wise softmax weights and weighted value mixing for one selected token. Choose reproducible numeric vectors; connect one highlighted matrix row to the resulting mixed vector without crowding every number onto screen. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Attention matrix and token mixing",
+    "centralQuestion": "Attention matrix and token mixing",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Attention matrix and token mixing. Show a small concrete query-key dot-product matrix, row-wise softmax weights and weighted value mixing for one selected token. Choose reproducible numeric vectors; connect one highlighted matrix row to the resulting mixed vector without crowding every number onto screen. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Attention matrix and token mixing",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Attention matrix and token mixing",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Show a small concrete query-key dot-product matrix, row-wise softmax weights and weighted value mixing for one selected token. Choose reproducible numeric vectors; connect one highlighted matrix row to the resulting mixed vector without crowding every number onto screen."
+        ],
+        "visualDescription": "2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Attention matrix and token mixing. Show a small concrete query-key dot-product matrix, row-wise softmax weights and weighted value mixing for one selected token. Choose reproducible numeric vectors; connect one highlighted matrix row to the resulting mixed vector without crowding every number onto screen. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Attention matrix and token mixing. Show a small concrete query-key dot-product matrix, row-wise softmax weights and weighted value mixing for one selected token. Choose reproducible numeric vectors; connect one highlighted matrix row to the resulting mixed vector without crowding every number onto screen. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

@@ -24,8 +24,18 @@ test('retains every authoring section verbatim while excluding host and developm
   expect(output.length).toBeLessThan(reference.length);
   expect(output).toContain(between('### Procedural textures and materials', '### Function and parametric surfaces'));
   expect(output).toContain('### Retained reactive bindings');
+  for (const heading of ['### Shaded meshes', '### Function and parametric surfaces',
+    '### Basic solids and swept tubes', '### Curved paths and organic shapes']) expect(output).toContain(heading);
   expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
   expect(output).toContain(between('## Object bounds', '## Overlap inspection'));
+});
+
+test('retains the complete texture/material contract including reactive controls and limits', () => {
+  const output = buildAuthoringReference(reference);
+  for (const term of ['bumpStrength', 'metalness', 'roughness', 'emissiveIntensity',
+    'localPosition * scale + offset', 'whole-object', 'For procedural materials, no environment maps or image/video textures']) {
+    expect(output).toContain(term);
+  }
 });
 
 test('normalizes line endings deterministically without changing authoring prose', () => {

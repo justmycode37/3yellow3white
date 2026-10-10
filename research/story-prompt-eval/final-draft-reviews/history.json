@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "verdict": "pass",
+  "summary": "The two-scene lesson stays within the fictional packet, distinguishes a source's report from causal evidence, and supports a suitably qualified wage-related interpretation without assigning a stoppage date or universal motive.",
+  "issues": [],
+  "checks": [
+    "Compared the full narration and plan with the supplied fictional packet. The 10% cut, the exact rent quotation, several workers stopping work, the manager's attribution, and the stated evidence gaps are supported; no additional events or sources are introduced.",
+    "Document dates are kept distinct from event dates: 4 May dates the announcement, 10 May is the announced wage-cut start, 11 May dates the diary, and 12 May dates the letter. The draft does not establish the actual stoppage date or independently confirm implementation of the cut.",
+    "The diary's rent concern is scoped to its writer in both speech and visuals. The script does not assert that this writer participated in the stoppage or that every worker shared the concern.",
+    "The manager letter is evidence of an attribution, not proof that agitators caused the stoppage. Unidentified agents are not treated as evidence that agitators did not exist.",
+    "The inferential bridge is explicit: the announced wage cut and specific financial concern support a plausible connection, while the manager supplies no identified agents. The conclusion remains plausibly contributed, with other motives and the extent of shared concern unresolved.",
+    "The timeline encodes order, uses source ownership, and avoids a dated stoppage marker, invented crowd size, or unqualified causal arrow. Its removal and the retained notice and diary are consistent with the next scene's actual planned starting state.",
+    "Exactly two scenes, empty interactions arrays, no equations, and no scripted pauses match the request. The final mechanical-results row reports 197 spoken words, giving approximately 93 seconds at 140 words per minute with the stated margin; the estimate range is 87–104 seconds.",
+    "This is an editorial model review of the supplied script and plan, not independent historical verification. No external sources, rendered frames, generated audio, or validate_output check were used."
+  ]
+}

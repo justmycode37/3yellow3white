@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The final spoken claim invents a definitive cause and universal motive that the fictional evidence cannot establish, contradicting the lesson's preceding reasoning and plan.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The reveal asserts that the wage cut was the sole cause and every worker stopped for that reason. The packet provides only an announced cut, one diarist's rent concern and reported stoppage, and an uncorroborated manager attribution; it cannot establish either exclusivity or all workers' motives. Restore a qualified interpretation that the cut may have contributed and explicitly retain the evidence limits. Align the spoken conclusion with the plan's 'Cut may have contributed' visual and its rejection of a definitive cause."
+    }
+  ],
+  "checks": [
+    "The dates and announced 10% wage cut agree with the supplied packet: notice 4 May, proposed start 10 May, diary 11 May, manager letter 12 May.",
+    "The diary quotation is accurate and beat-1 correctly limits it to one writer's concern; it does not support a universal motive.",
+    "The manager letter identifies no agitators. Its attribution alone does not establish causation, and missing corroboration does not prove it false.",
+    "The final sole-cause claim contradicts the preceding speech that one worker's worry must not become everyone's motive, as well as the planned qualified end picture.",
+    "The two-scene format, 185 spoken words, no equations, no scripted pauses, and empty interactions fit the requested approximate duration and classic mode.",
+    "Attributed source labels, dates, and timeline carry are feasible with supported primitives. This model review uses only supplied fictional evidence; no external verification or unavailable validate_output run is claimed."
+  ]
+}

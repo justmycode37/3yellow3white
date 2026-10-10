@@ -74,6 +74,10 @@ for (const outputMode of [undefined, 'text', 'validated-reference'] as const) {
     expect(tasks[1].outputMode).toBeUndefined();
     expect(tasks[2].outputMode).toBe(outputMode ?? 'text');
     expect(tasks[2].validate).toBeFunction();
+    expect(tasks[0].sceneTools).toBeUndefined();
+    expect(tasks[1].sceneTools).toBeUndefined();
+    expect(tasks[2].sceneTools?.inspect).toBeFunction();
+    expect(tasks[2].sceneTools?.preview).toBeUndefined();
     expect(tasks[2].prompt).toContain('saved-narration.beat-1');
   });
 }

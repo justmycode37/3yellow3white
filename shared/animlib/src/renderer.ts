@@ -12,15 +12,15 @@ import { VERTEX_FLOATS, textureWGSL } from './texture-shader.js';
 import { WebGLBackend } from './webgl.js';
 import { ViewInteraction } from './interaction.js';
 import { paletteResolver, parseColor } from './palette.js';
-import type { CameraState, ColorPalette, CompiledScene, ElementState, Frame, Geometry, InteractionSnapshot, Vec3 } from './types.js';
-import { add, sub, cameraRay, planePoint } from './spatial.js';
+import type { CameraState, ColorPalette, CompiledScene, Frame, InteractionSnapshot, Vec3 } from './types.js';
+import { add, sub, cameraRay, planePoint, pick } from './spatial.js';
 import { composeItems } from './composition.js';
 import type { DrawItem } from './composition.js';
 import { GPUCompositor } from './gpu-compositor.js';
 import { rotate } from './geometry.js';
-import { buildDrawItems, textTex } from './render-geometry.js';
+import { buildDrawItems } from './render-geometry.js';
 export { triangulateContours } from './render-geometry.js';
-import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
+import { validateRenderableScene } from './render-validation.js';
 
 const shader=`
 struct Camera { focus: vec4f, angles: vec4f, viewport: vec4f, light: vec4f, ambient: vec4f };
@@ -241,7 +241,17 @@ export class CanvasRenderer {
     const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;
     for(const region of [...this.regions].reverse()) {
       const [left,top,width,height]=region.rect;
-      if(x>=left&&x<left+width&&y>=top&&y<top+height)return pan||this.canOrbit(region.id)?region.id:undefined;
+      if(x>=left&&x<left+width&&y>=top&&y<top+height) {
+        if(pan)return region.id;
+        if(!this.canOrbit(region.id))return;
+        if(region.orbitHitTest==='geometry') {
+          const snapshot=this.interactionSnapshot(region.id);if(!snapshot)return;
+          const px=(x-left)/width*snapshot.width,py=(y-top)/height*snapshot.height;
+          const targets=new Set(snapshot.frame.elements.filter(e=>e.view===region.id).map(e=>e.id));
+          if(!pick(snapshot.frame,cameraRay(px,py,snapshot.camera,snapshot.width,snapshot.height),targets,snapshot.camera,snapshot.width,snapshot.height,region.id,[px,py]))return;
+        }
+        return region.id;
+      }
     }
     return pan||this.canOrbit('')?'':undefined;
   }
@@ -342,24 +352,7 @@ export class CanvasRenderer {
   }
   async prepare(scenes:CompiledScene[]):Promise<void> {
     if(this.disposed)throw new Error('Renderer is disposed.');
-    const prepareGeometry=(g:Geometry):void=>{if(g.kind==='latex')layoutLatexGeometry(g);if(g.kind==='text')layoutLatex(textTex(g.text??''));};
-    for(const scene of scenes) {
-      const palette=paletteResolver(this.hostPalette??scene.options.palette);
-      const prepareElement=(e:ElementState):void=>{prepareGeometry(e.geometry);palette.resolve(e.fill);palette.resolve(e.stroke);};
-      palette.resolve(scene.options.background);
-      if (scene.options.lighting && scene.options.lighting !== "studio" && scene.options.lighting.receiver) palette.resolve(scene.options.lighting.receiver.fill ?? "GREY_D");
-      for(const element of [...scene.initial,...scene.lifecycle.flatMap(event=>event.elements??[])])prepareElement(element);
-      for(const track of scene.tracks) {
-        if(track.action.geometry)prepareGeometry(track.action.geometry);
-        const properties=track.action.properties as Partial<ElementState>|undefined;
-        if(properties?.fill)palette.resolve(properties.fill);if(properties?.stroke)palette.resolve(properties.stroke);
-        for(const state of Object.values(track.from)) {
-          prepareElement(state);
-          if(track.action.type==='morph'&&track.action.geometry?.kind==='latex'&&state.geometry.kind==='latex')validateLatexMap(layoutLatexGeometry(state.geometry),layoutLatexGeometry(track.action.geometry),track.action.map);
-          else if(track.action.map&&Object.keys(track.action.map).length)throw new Error('Part mappings require a LaTeX-to-LaTeX morph.');
-        }
-      }
-    }
+    for(const scene of scenes)validateRenderableScene(scene,this.hostPalette);
     if(!this.initializing)this.initializing=this.initialize().catch(error=>{this.initializing=undefined;throw error;});
     await this.initializing;
   }

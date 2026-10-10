@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DNA → protein · animlib reconstruction</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #101112; color: #dedede; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(1280px, 96vw, calc((100vh - 270px) * 16 / 9)); min-width: min(96vw, 640px); margin: 18px auto; }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    h1 { font-size: 18px; font-weight: 500; margin: 0 0 5px; }
+    .note, a, #status { font-size: 12px; color: #aaa; }
+    a:hover { color: white; }
+    .screen { width: 100%; aspect-ratio: 16 / 9; background: black; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #captions { min-height: 78px; display: grid; place-items: center; padding: 12px 5%; font-size: clamp(15px, 1.6vw, 21px); text-align: center; line-height: 1.35; white-space: pre-line; background: #080808; }
+    .controls { display: flex; align-items: center; gap: 14px; padding: 17px 0; }
+    button { background: #242627; color: #ddd; border: 1px solid #3a3b3c; border-radius: 5px; padding: 8px 13px; cursor: pointer; }
+    button:disabled { opacity: .45; cursor: default; }
+    button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid #9bcbd1; outline-offset: 3px; }
+    #timeline { flex: 1; min-width: 50px; accent-color: #a3bec1; }
+    #clock { font-size: 12px; font-variant-numeric: tabular-nums; min-width: 86px; text-align: right; }
+    #chapters { display: flex; gap: 8px; flex-wrap: wrap; }
+    #chapters button { font-size: 12px; color: #aaa; }
+    #chapters button[aria-current="true"] { border-color: #a3bec1; color: #fff; }
+    #error { color: #ffc5ba; white-space: pre-wrap; }
+    footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    @media (max-width: 600px) { main { margin-top: 16px; } header { display: block; } header a { display: inline-block; margin-top: 8px; } .controls { gap: 8px; } #captions { min-height: 74px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header><div><h1 id="title">DNA → protein</h1><span class="note">Independent animlib reconstruction · silent · original subtitles</span></div><a id="reference" hidden target="_blank" rel="noopener noreferrer">Original reference ↗</a></header>
+    <section aria-label="Animation player">
+      <div class="screen"><canvas id="canvas" width="1280" height="720" tabindex="0" aria-label="Reconstructed molecular animation"></canvas></div>
+      <div id="captions" aria-label="Subtitles"></div>
+      <div class="controls"><button id="play" disabled>Play</button><input id="timeline" type="range" min="0" max="1" value="0" step="0.01" disabled aria-label="Playback position" /><span id="clock">0:00 / 0:00</span></div>
+      <nav id="chapters" aria-label="Chapters"></nav>
+      <p id="error" role="alert" hidden></p>
+    </section>
+    <footer><span id="status">Loading native scenes…</span><span><a id="download" hidden>Silent MP4</a> <a id="subtitle-download" hidden>Subtitles (VTT)</a></span></footer>
+  </main>
+  <script type="module" src="./dna-protein.ts"></script>
+</body>
+</html>

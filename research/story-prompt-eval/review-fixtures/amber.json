@@ -1,0 +1,375 @@
+{
+  "request": {
+    "title": "Pointwise is not uniform",
+    "topic": "Write a roughly 4-minute lesson in exactly 4 scenes for second-year mathematics students who know limits and epsilon notation. Begin with the definitions of pointwise and uniform convergence, then make the quantifier difference meaningful using f_n(x)=x^n on [0,1] and on [0,a] for fixed 0<a<1. Explain why taking n large for each fixed x does not give one n for every x, and why the restricted interval fixes this. A plot may support the argument but must not stand in for it. Include one reachable prediction and one brief pause. Preserve the endpoint x=1 and the distinction between pointwise limit and uniform error.",
+    "videoMode": "classic",
+    "documents": []
+  },
+  "draft": {
+    "schemaVersion": 1,
+    "markdown": "# Pointwise is not uniform\n\n## Beat 1 — Who chooses the threshold?\n\nContent needed: Define pointwise convergence on D as: for every x in D and epsilon>0 there exists N such that all n>=N satisfy |f_n(x)-f(x)|<epsilon. Uniform convergence: for every epsilon>0 there exists N such that for every x in D and every n>=N the inequality holds. Compare N(x,epsilon) with N(epsilon).\n\nNarration: Pointwise convergence means this: for each point x and each positive tolerance epsilon, there is a threshold N beyond which every function value is within epsilon of the limit at that point. The threshold may depend on x.\n\nNarration: Uniform convergence asks for more. For each positive epsilon, one threshold must work at every point, for every index beyond that threshold. We choose N before anyone chooses x.\n\nNarration: Both definitions require all later indices. The difference is whether the threshold can adapt to the point. For x to the power n, how much does that freedom matter? Compare the interval from zero to one with an interval stopping short of one.\n\n## Beat 2 — Find the actual limit\n\nContent needed: For n>=1, f_n(x)=x^n on [0,1]. The pointwise limit is zero for 0<=x<1 and one at x=1. Preserve the open endpoint at (1,0) and filled endpoint at (1,1). Error is x^n below one and zero at one. Illustrate with n=1,2,8,32 and fixed probes x=1/2,9/10,1.\n\nNarration: Fix x strictly between zero and one. Repeated multiplication by that fixed number gives a geometric sequence tending to zero. At zero, every term is already zero. But at one, every power is one. The pointwise limit is zero below one, and one at the endpoint.\n\nNarration: This endpoint matters for the error. Below one, the error is x to the power n. At one, the error is zero: the function and its limit are both one.\n\nNarration: One half settles toward zero quickly; nine tenths more slowly. Each fixed point eventually meets any positive tolerance. But this lets the threshold change with the point. It supplies no threshold for the whole interval.\n\n## Beat 3 — Defeat every threshold\n\nContent needed: Fix epsilon=1/4. For every n>=1 choose x_n=(1/2)^(1/n)<1. Its limit value is zero and its error is 1/2. The witness changes with n. For each n, sup over [0,1] of |f_n-f| equals one, approached below one but never attained; endpoint error remains zero. A sampled plot supports this algebraic argument but cannot prove it.\n\nNarration: Set the tolerance to one quarter. For any index n, choose x to be the nth root of one half. This point is below one, so its limit value is zero. Yet its nth power is one half. The error exceeds our tolerance.\n\nNarration: Whatever threshold you propose, choose an index beyond it and then this point. Your threshold fails. The point moves toward one; we are not claiming that one fixed point fails forever. Uniform convergence must withstand this changing choice.\n\nNarration: At every index, errors approach one as x approaches one from below, while the error at one itself is zero. The supremum error is one, although no point attains it. Every fixed point converges, but the uniform error never shrinks. Our defeating point proves failure; the graph illustrates it.\n\n## Beat 4 — Stop short of one\n\nContent needed: Restrict to [0,a] for fixed 0<a<1; the limit is zero everywhere. For n>=1, x^n preserves order on nonnegative x. Withhold maximum-error location and value until Reveal. Show maximum error a^n, tending to zero. Choose N with a^N<epsilon, then x^n<=a^n<=a^N<epsilon for every x in [0,a] and n>=N. N may depend on fixed a and epsilon, not x.\n\nNarration: Restrict the domain to zero through a, with a fixed below one. The limit is zero throughout. For each positive index, raising nonnegative numbers to that power preserves their order.\n\nInvitation (spoken): Where is the largest error on this shorter interval? Take a moment to predict it.\n\nPause: 5s\n\nReveal (spoken): At a. Every error is at most a to the power n. That bound tends to zero because a is fixed below one. Choose N so that a to the power N is below epsilon. Every later power is smaller, so this N works for every x.\n\nNarration: N may depend on a and epsilon, but not x. Pointwise convergence handles each fixed point separately. Uniform convergence requires one threshold for the entire fixed domain.",
+    "plan": {
+      "audience": "Second-year mathematics students",
+      "prerequisites": [
+        "Limits and epsilon notation",
+        "Geometric sequences with ratio strictly between zero and one",
+        "Powers, roots, and the meaning of a supremum"
+      ],
+      "learningGoal": "Distinguish pointwise and uniform quantifiers, prove x^n is not uniformly convergent on [0,1], and establish uniform convergence on every fixed [0,a] with 0<a<1.",
+      "centralQuestion": "Why does a threshold for each fixed point fail to control every point, and why does a fixed cutoff below one fix this?",
+      "keyInsight": "Every proposed threshold on [0,1] can be defeated by a new point close enough to one; on [0,a], the common error bound a^n tends to zero and controls all points simultaneously.",
+      "runningExample": "f_n(x)=x^n for integer n>=1 on [0,1], then [0,a] for fixed 0<a<1. Illustrative indices 1,2,8,32; fixed probes 1/2,9/10,1; tolerance 1/4; witness x_n=(1/2)^(1/n). A drawing may use a=3/4 while the proof retains general fixed a.",
+      "misconceptions": [
+        "A threshold depending on x automatically works for every x.",
+        "The limit at x=1 is zero.",
+        "Function height at x=1 is an error of one.",
+        "The supremum error must be attained.",
+        "A moving witness contradicts convergence at a fixed x.",
+        "The fixed-a proof also applies when a varies toward one with n."
+      ],
+      "entities": [
+        {
+          "id": "threshold-rule",
+          "meaning": "The quantified common error inequality introduced in beat-1. N(x,epsilon) versus N(epsilon) is the logical distinction. Reintroduced in beat-4 as N(a,epsilon), with a fixed and no x dependence; preserve formula-part meaning.",
+          "color": "WHITE"
+        },
+        {
+          "id": "domain-axis",
+          "meaning": "Unit-coordinate x and y scaffold introduced in beat-2 and retained through beat-4. Restriction removes points above a without silently changing coordinates or scale.",
+          "color": "WHITE"
+        },
+        {
+          "id": "power-curve",
+          "meaning": "The same family f_n(x)=x^n in beats 2–4. Curve, probe coordinates and numerical readouts share integer n; recalculate true curves when n changes. Beat-4 restricts the domain, not the function values.",
+          "color": "BLUE"
+        },
+        {
+          "id": "limit-graph",
+          "meaning": "Pointwise limit introduced in beat-2: zero for x<1 and one at x=1. Preserve open (1,0) and filled (1,1) endpoints through beat-3, without a connecting jump segment. Restriction in beat-4 removes x=1, leaving zero throughout [0,a].",
+          "color": "GREEN"
+        },
+        {
+          "id": "error-measure",
+          "meaning": "Vertical distance |f_n-f| in beats 2–4, not function height where f is nonzero. Zero at x=1, one half at moving witnesses, supremum one on [0,1], and maximum a^n on [0,a]. Update annotations when domain changes.",
+          "color": "YELLOW"
+        },
+        {
+          "id": "fixed-probes",
+          "meaning": "Temporary fixed x probes 1/2,9/10,1 in beat-2; each stays fixed as n changes, then exits before the moving witness.",
+          "color": "GREY"
+        },
+        {
+          "id": "moving-witness",
+          "meaning": "Beat-3 point x_n=(1/2)^(1/n)<1: changes with n while graph height and error remain one half; distinct from the endpoint x=1.",
+          "color": "PURPLE"
+        },
+        {
+          "id": "tolerance",
+          "meaning": "Fixed error tolerance epsilon=1/4 in beat-3, compared with error one half; removed before domain restriction.",
+          "color": "RED"
+        },
+        {
+          "id": "cutoff-a",
+          "meaning": "Fixed endpoint 0<a<1 in beat-4, illustrated at 3/4 if needed. Coordinate stays fixed as n increases; do not identify it as maximum-error location before the prediction reveal.",
+          "color": "TEAL"
+        }
+      ],
+      "scenes": [
+        {
+          "id": "beat-1",
+          "purpose": "Establish exactly how the two definitions differ in threshold dependence.",
+          "whyNow": "The request explicitly begins with definitions; these supply the distinction tested by the following power example.",
+          "keyPoints": [
+            "Pointwise convergence allows N(x,epsilon).",
+            "Uniform convergence chooses N before x on a fixed domain.",
+            "Both require all n>=N."
+          ],
+          "visualDescription": "2D (because logical quantifier order is a planar relation): Begin with the full pointwise definition, then the uniform definition, showing the same absolute-error inequality and all n>=N in both. Associate each N with its allowed inputs. Keep common formula parts stable while emphasizing the changed order of x and N; use deliberate entrances rather than unsupported split/merge formula morphs. Introduce x^n only after the definitions, with no conclusions. Use black background, clean mathematical serif labels, vector formulas and white scaffold within the player-safe area; no decorative framing.",
+          "endsWith": "Both definitions and their threshold dependencies remain legible. The power example is named but unevaluated.",
+          "carry": [
+            "threshold-rule"
+          ],
+          "cleanup": [],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Definitions first, second-year audience, and the prescribed comparison of x^n on two domains."
+            }
+          ],
+          "interactions": []
+        },
+        {
+          "id": "beat-2",
+          "purpose": "Determine the actual pointwise limit and its corresponding error, preserving the endpoint.",
+          "whyNow": "The definitions require a specified limit before uniform error can be tested in beat-3.",
+          "keyPoints": [
+            "Geometric decay at each fixed x<1.",
+            "The endpoint x=1 stays one.",
+            "Error is x^n below one and zero at one.",
+            "Different fixed points can require different thresholds."
+          ],
+          "visualDescription": "2D (because scalar function graphs directly show fixed inputs and value errors): Begin from the preceding definitions; use the common error expression as a bridge, then remove the definitions. Construct axes in unit coordinates on [0,1] by [0,1]. Display exact power curves at n=1,2,8,32, keeping only curves needed for the active comparison. Hold probes at x=1/2,9/10,1 fixed while n changes. Construct the green limit as narration derives it: zero on [0,1), an open circle at (1,0) and a filled point at (1,1), with no joining segment. Yellow error measures distance to this green limit, including zero at x=1 despite its height one. Curve and probes use the same integer n. Preserve these core relationships for the moving-witness proof and later restriction; finite plots are illustrative. Remove temporary fixed probes at the end.",
+          "endsWith": "The current power curve, full pointwise limit, axes and correct error relation remain, including endpoint error zero. Definitions and temporary probes have exited.",
+          "carry": [
+            "domain-axis",
+            "power-curve",
+            "limit-graph",
+            "error-measure"
+          ],
+          "cleanup": [
+            "threshold-rule",
+            "fixed-probes"
+          ],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "The function x^n on [0,1] and explicit preservation of x=1 and the limit-versus-error distinction."
+            }
+          ],
+          "interactions": []
+        },
+        {
+          "id": "beat-3",
+          "purpose": "Prove nonuniform convergence using a point chosen after every proposed threshold.",
+          "whyNow": "Beat-2 identified the pointwise limit and the unproven common threshold; this scene supplies a counterexample before the domain is restricted.",
+          "keyPoints": [
+            "Fix tolerance 1/4.",
+            "For every n, x_n=(1/2)^(1/n) has error 1/2.",
+            "An index beyond any N and its witness defeat uniform convergence.",
+            "The witness changes with n, consistent with pointwise convergence.",
+            "Supremum error is one and is not attained."
+          ],
+          "visualDescription": "2D (because a scalar graph paired with the witness algebra makes the quantifier failure explicit): Preserve the actual preceding axes, curve, limit and error. Introduce epsilon=1/4 and calculate x_n=(1/2)^(1/n) from the same integer n as the blue curve. Its vertical yellow error from zero to one half stays constant while its purple x position moves toward one. Keep it strictly below one and visibly distinct from the endpoint whose error remains zero. Show the witness algebra only as narrated; the universal choice of x_n proves the claim, not the samples. After the threshold argument, show that x^n approaches one from below as x approaches one for each fixed n, then introduce sup error=1 with an unattained annotation. Never label a sampled maximum as one. Remove witness and tolerance when their explanation finishes; keep the original domain for the next restriction.",
+          "endsWith": "The same core graph remains with supremum error one and endpoint error zero clearly distinguished. Temporary witness and tolerance have exited.",
+          "carry": [
+            "domain-axis",
+            "power-curve",
+            "limit-graph",
+            "error-measure"
+          ],
+          "cleanup": [
+            "moving-witness",
+            "tolerance"
+          ],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Explain why point-dependent thresholds do not give one threshold for all points, with proof beyond a plot."
+            }
+          ],
+          "interactions": []
+        },
+        {
+          "id": "beat-4",
+          "purpose": "Derive one uniform bound on the fixed restricted domain and conclude the comparison.",
+          "whyNow": "The preceding failure occurs arbitrarily close to one; a fixed cutoff supplies a bound shared by all remaining points. This final scene answers the opening question.",
+          "keyPoints": [
+            "Fix 0<a<1 and restrict the limit to zero on [0,a].",
+            "Use order preservation to predict the maximum-error location.",
+            "After the sole pause, reveal maximum error a^n.",
+            "Choose N with a^N<epsilon; x^n<=a^n<=a^N for all x<=a and n>=N.",
+            "The threshold depends on the fixed domain and epsilon, not x."
+          ],
+          "visualDescription": "2D (because the uniform estimate is an order bound on a one-dimensional domain): Continue from the actual previous graph. Remove the old supremum annotation before marking a fixed cutoff a, optionally drawn at 3/4 but retaining general 0<a<1. Remove domain and graph portions above a, including x=1, without changing retained coordinates or values. The limit remains zero. Establish order preservation, then hold the graph during the announced five-second prediction pause without highlighting a as the maximum or showing a^n. At Reveal mark the error at a and display 0<=|f_n(x)|=x^n<=a^n. Hold a fixed as integer n increases, deriving graph and bound from the same values. Show a^N<epsilon, then x^n<=a^n<=a^N for n>=N, making the single threshold explicit. Reintroduce the compact threshold-rule with N(a,epsilon) independent of x. Conclude on the actual bound and restricted graph, without a decorative recap card. Estimated total scope is about four minutes; measured narration determines timing.",
+          "endsWith": "The restricted graph and zero limit remain with maximum error at fixed a, the complete common-bound inequality, and a threshold independent of x.",
+          "carry": [],
+          "cleanup": [],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Fixed 0<a<1, exactly four scenes, roughly four minutes, one reachable prediction and one brief pause."
+            }
+          ],
+          "interactions": []
+        }
+      ]
+    }
+  },
+  "parsedScenes": [
+    {
+      "id": "beat-1",
+      "title": "Who chooses the threshold?",
+      "context": "Content needed: Define pointwise convergence on D as: for every x in D and epsilon>0 there exists N such that all n>=N satisfy |f_n(x)-f(x)|<epsilon. Uniform convergence: for every epsilon>0 there exists N such that for every x in D and every n>=N the inequality holds. Compare N(x,epsilon) with N(epsilon).\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-1.u1",
+          "role": "narration",
+          "text": "Pointwise convergence means this: for each point x and each positive tolerance epsilon, there is a threshold N beyond which every function value is within epsilon of the limit at that point. The threshold may depend on x.",
+          "source": {
+            "start": 377,
+            "end": 609,
+            "line": 7
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-1.u2",
+          "role": "narration",
+          "text": "Uniform convergence asks for more. For each positive epsilon, one threshold must work at every point, for every index beyond that threshold. We choose N before anyone chooses x.",
+          "source": {
+            "start": 611,
+            "end": 799,
+            "line": 9
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-1.u3",
+          "role": "narration",
+          "text": "Both definitions require all later indices. The difference is whether the threshold can adapt to the point. For x to the power n, how much does that freedom matter? Compare the interval from zero to one with an interval stopping short of one.",
+          "source": {
+            "start": 801,
+            "end": 1054,
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "id": "beat-2",
+      "title": "Find the actual limit",
+      "context": "Content needed: For n>=1, f_n(x)=x^n on [0,1]. The pointwise limit is zero for 0<=x<1 and one at x=1. Preserve the open endpoint at (1,0) and filled endpoint at (1,1). Error is x^n below one and zero at one. Illustrate with n=1,2,8,32 and fixed probes x=1/2,9/10,1.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-2.u1",
+          "role": "narration",
+          "text": "Fix x strictly between zero and one. Repeated multiplication by that fixed number gives a geometric sequence tending to zero. At zero, every term is already zero. But at one, every power is one. The pointwise limit is zero below one, and one at the endpoint.",
+          "source": {
+            "start": 1358,
+            "end": 1627,
+            "line": 17
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-2.u2",
+          "role": "narration",
+          "text": "This endpoint matters for the error. Below one, the error is x to the power n. At one, the error is zero: the function and its limit are both one.",
+          "source": {
+            "start": 1629,
+            "end": 1786,
+            "line": 19
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-2.u3",
+          "role": "narration",
+          "text": "One half settles toward zero quickly; nine tenths more slowly. Each fixed point eventually meets any positive tolerance. But this lets the threshold change with the point. It supplies no threshold for the whole interval.",
+          "source": {
+            "start": 1788,
+            "end": 2019,
+            "line": 21
+          }
+        }
+      ]
+    },
+    {
+      "id": "beat-3",
+      "title": "Defeat every threshold",
+      "context": "Content needed: Fix epsilon=1/4. For every n>=1 choose x_n=(1/2)^(1/n)<1. Its limit value is zero and its error is 1/2. The witness changes with n. For each n, sup over [0,1] of |f_n-f| equals one, approached below one but never attained; endpoint error remains zero. A sampled plot supports this algebraic argument but cannot prove it.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-3.u1",
+          "role": "narration",
+          "text": "Set the tolerance to one quarter. For any index n, choose x to be the nth root of one half. This point is below one, so its limit value is zero. Yet its nth power is one half. The error exceeds our tolerance.",
+          "source": {
+            "start": 2395,
+            "end": 2614,
+            "line": 27
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-3.u2",
+          "role": "narration",
+          "text": "Whatever threshold you propose, choose an index beyond it and then this point. Your threshold fails. The point moves toward one; we are not claiming that one fixed point fails forever. Uniform convergence must withstand this changing choice.",
+          "source": {
+            "start": 2616,
+            "end": 2868,
+            "line": 29
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-3.u3",
+          "role": "narration",
+          "text": "At every index, errors approach one as x approaches one from below, while the error at one itself is zero. The supremum error is one, although no point attains it. Every fixed point converges, but the uniform error never shrinks. Our defeating point proves failure; the graph illustrates it.",
+          "source": {
+            "start": 2870,
+            "end": 3172,
+            "line": 31
+          }
+        }
+      ]
+    },
+    {
+      "id": "beat-4",
+      "title": "Stop short of one",
+      "context": "Content needed: Restrict to [0,a] for fixed 0<a<1; the limit is zero everywhere. For n>=1, x^n preserves order on nonnegative x. Withhold maximum-error location and value until Reveal. Show maximum error a^n, tending to zero. Choose N with a^N<epsilon, then x^n<=a^n<=a^N<epsilon for every x in [0,a] and n>=N. N may depend on fixed a and epsilon, not x.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-4.u1",
+          "role": "narration",
+          "text": "Restrict the domain to zero through a, with a fixed below one. The limit is zero throughout. For each positive index, raising nonnegative numbers to that power preserves their order.",
+          "source": {
+            "start": 3561,
+            "end": 3754,
+            "line": 37
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-4.u2",
+          "role": "invitation",
+          "text": "Where is the largest error on this shorter interval? Take a moment to predict it.",
+          "source": {
+            "start": 3756,
+            "end": 3858,
+            "line": 39
+          }
+        },
+        {
+          "kind": "pause",
+          "id": "beat-4.p3",
+          "durationSec": 5,
+          "source": {
+            "start": 3860,
+            "end": 3869,
+            "line": 41
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-4.u4",
+          "role": "reveal",
+          "text": "At a. Every error is at most a to the power n. That bound tends to zero because a is fixed below one. Choose N so that a to the power N is below epsilon. Every later power is smaller, so this N works for every x.",
+          "source": {
+            "start": 3871,
+            "end": 4100,
+            "line": 43
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-4.u5",
+          "role": "narration",
+          "text": "N may depend on a and epsilon, but not x. Pointwise convergence handles each fixed point separately. Uniform convergence requires one threshold for the entire fixed domain.",
+          "source": {
+            "start": 4102,
+            "end": 4285,
+            "line": 45
+          }
+        }
+      ]
+    }
+  ]
+}

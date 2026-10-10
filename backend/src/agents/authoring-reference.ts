@@ -58,7 +58,7 @@ const headings = [
   '### Scene-agent publication',
 ];
 
-/** Authoring-only benchmark candidate; preserves retained sections verbatim (LF). */
+/** Production scene-authoring reference; preserves retained sections verbatim (LF). */
 export function buildAuthoringReference(reference: string): string {
   const lines = reference.replaceAll('\r\n', '\n').split('\n');
   const sections: { heading: string; line: number }[] = [];

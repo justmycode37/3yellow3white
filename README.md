@@ -73,8 +73,9 @@ The backend also normalizes AI-written storyline Markdown through `/api/narratio
 common label, formatting, pause, and table variations), generates
 ElevenLabs narration with word timings and explicit pauses, and provides a
 validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
-The storyline writer should receive `backend/prompts/guidance.md`; its section 16
-specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent.
+The storyline writer receives `backend/prompts/guidance.md`; its **Output contract**
+specifies the Markdown handoff. `buildStorylineMessages` also loads the shared
+viewing-mode policy and animation capabilities.
 
 ## Automatic deployment
 
@@ -116,14 +117,10 @@ Saved plans and source names remain in browser storage; raw files remain in memo
 only until submission or navigation. Condensed notes and references are
 model-authored, and the extracted original material is retained in the saved plan.
 
-Original scenegen prompt files in `backend/prompts/scenegen/` remain byte-for-byte
-intact, with source hashes in `provenance.json`. The course planner appends grouping
-and duration requirements, allows up to 40 lessons, and validates their topic
-groups, order, and 2–5 minute estimates. Existing saved plans remain readable.
-
-The full original visualization/planning rules are active, including 3D by default,
-interaction targets, fixed layout, and pacing. Existing host contracts still govern
-narration timing, API capabilities, and the user's classic/interactive choice.
-App-specific scene guidance remains separate in `backend/prompts/scene-craft.md`;
-it is not part of the copied source. The standalone Python pipeline and its
-storyboard/animation prompts are not imported.
+Instruction ownership and prompt assembly are documented in
+[instruction architecture](docs/instruction-architecture.md). Teaching guidance,
+viewing-mode rules, scene craft, and API semantics each have one canonical source.
+The course planner loads `topics-system.md` and `topics-format.md`, appends grouping
+and duration requirements, and validates up to 40 lessons and their 2–5 minute
+estimates. Existing saved plans remain readable; completed generation artifacts
+are reused rather than rewritten when prompts change.

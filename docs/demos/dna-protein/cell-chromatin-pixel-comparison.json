@@ -1,0 +1,240 @@
+[
+  {
+    "time": 0,
+    "width": 1280,
+    "differentChannels": 16,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000004339430232810432
+  },
+  {
+    "time": 7,
+    "width": 1280,
+    "differentChannels": 2,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 5.42428779101304e-7
+  },
+  {
+    "time": 10,
+    "width": 1280,
+    "differentChannels": 9,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000002440929505955868
+  },
+  {
+    "time": 14,
+    "width": 1280,
+    "differentChannels": 12,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000003254572674607824
+  },
+  {
+    "time": 18,
+    "width": 1280,
+    "differentChannels": 9,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000002440929505955868
+  },
+  {
+    "time": 20,
+    "width": 1280,
+    "differentChannels": 5,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.00000135607194775326
+  },
+  {
+    "time": 23,
+    "width": 1280,
+    "differentChannels": 6,
+    "maxChannelDelta": 29,
+    "meanAbsoluteDelta": 0.00003797001453709128
+  },
+  {
+    "time": 26,
+    "width": 1280,
+    "differentChannels": 0,
+    "maxChannelDelta": 0,
+    "meanAbsoluteDelta": 0
+  },
+  {
+    "time": 30,
+    "width": 1280,
+    "differentChannels": 0,
+    "maxChannelDelta": 0,
+    "meanAbsoluteDelta": 0
+  },
+  {
+    "time": 33,
+    "width": 1280,
+    "differentChannels": 4,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000001084857558202608
+  },
+  {
+    "time": 36,
+    "width": 1280,
+    "differentChannels": 14,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000003797001453709128
+  },
+  {
+    "time": 37,
+    "width": 1280,
+    "differentChannels": 10,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.00000271214389550652
+  },
+  {
+    "time": 38,
+    "width": 1280,
+    "differentChannels": 267,
+    "maxChannelDelta": 6,
+    "meanAbsoluteDelta": 0.0000824491744233982
+  },
+  {
+    "time": 39,
+    "width": 1280,
+    "differentChannels": 45,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.00001220464752977934
+  },
+  {
+    "time": 40,
+    "width": 1280,
+    "differentChannels": 0,
+    "maxChannelDelta": 0,
+    "meanAbsoluteDelta": 0
+  },
+  {
+    "time": 44,
+    "width": 1280,
+    "differentChannels": 0,
+    "maxChannelDelta": 0,
+    "meanAbsoluteDelta": 0
+  },
+  {
+    "time": 0,
+    "width": 960,
+    "differentChannels": 32,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000011571060776996732
+  },
+  {
+    "time": 7,
+    "width": 960,
+    "differentChannels": 2,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 7.231912985622957e-7
+  },
+  {
+    "time": 10,
+    "width": 960,
+    "differentChannels": 21,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000007593508634904105
+  },
+  {
+    "time": 14,
+    "width": 960,
+    "differentChannels": 12,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000004339147791373774
+  },
+  {
+    "time": 18,
+    "width": 960,
+    "differentChannels": 13,
+    "maxChannelDelta": 4,
+    "meanAbsoluteDelta": 0.000012294252075559027
+  },
+  {
+    "time": 20,
+    "width": 960,
+    "differentChannels": 1,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 3.6159564928114787e-7
+  },
+  {
+    "time": 23,
+    "width": 960,
+    "differentChannels": 7,
+    "maxChannelDelta": 29,
+    "meanAbsoluteDelta": 0.00005098498654864185
+  },
+  {
+    "time": 26,
+    "width": 960,
+    "differentChannels": 3,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.0000010847869478434436
+  },
+  {
+    "time": 30,
+    "width": 960,
+    "differentChannels": 0,
+    "maxChannelDelta": 0,
+    "meanAbsoluteDelta": 0
+  },
+  {
+    "time": 33,
+    "width": 960,
+    "differentChannels": 3,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.0000010847869478434436
+  },
+  {
+    "time": 36,
+    "width": 960,
+    "differentChannels": 9,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 0.000003254360843530331
+  },
+  {
+    "time": 37,
+    "width": 960,
+    "differentChannels": 15,
+    "maxChannelDelta": 23,
+    "meanAbsoluteDelta": 0.000045199456160143484
+  },
+  {
+    "time": 38,
+    "width": 960,
+    "differentChannels": 266,
+    "maxChannelDelta": 6,
+    "meanAbsoluteDelta": 0.00010269316439584599
+  },
+  {
+    "time": 39,
+    "width": 960,
+    "differentChannels": 35,
+    "maxChannelDelta": 2,
+    "meanAbsoluteDelta": 0.000013017443374121323
+  },
+  {
+    "time": 40,
+    "width": 960,
+    "differentChannels": 0,
+    "maxChannelDelta": 0,
+    "meanAbsoluteDelta": 0
+  },
+  {
+    "time": 44,
+    "width": 960,
+    "differentChannels": 0,
+    "maxChannelDelta": 0,
+    "meanAbsoluteDelta": 0
+  },
+  {
+    "boundary": 24,
+    "width": 1280,
+    "differentChannels": 3,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 8.13643168651956e-7
+  },
+  {
+    "boundary": 24,
+    "width": 960,
+    "differentChannels": 1,
+    "maxChannelDelta": 1,
+    "meanAbsoluteDelta": 3.6159564928114787e-7
+  }
+]

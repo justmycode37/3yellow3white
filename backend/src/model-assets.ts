@@ -9,6 +9,8 @@ import type { ModelAsset } from 'animlib/core';
 import { atomicWrite } from './narration/service.js';
 
 export interface ModelProvenance { source?: string; license?: string; attribution?: string }
+/** Trusted host payload for isolated renderers; no network/filesystem URLs are followed there. */
+export interface RenderModelAssets { assets:Record<string,ModelAsset>; files:Record<string,string> }
 export class ModelAssets {
   constructor(readonly directory=resolve(process.env.MODEL_ASSET_DIR??'data/models')){}
   async publish(bytes:Uint8Array,provenance:ModelProvenance={}):Promise<{id:string;asset:ModelAsset}> {
@@ -28,6 +30,17 @@ export class ModelAssets {
     const supplied=Object.fromEntries(Object.entries(provenance).filter(([,value])=>value!==undefined));
     await atomicWrite(metadataPath,JSON.stringify({asset,provenance:{...previous,...supplied}}));
     return {id:`model-${sha256}`,asset};
+  }
+  async forRendering(assets:Record<string,ModelAsset>):Promise<RenderModelAssets> {
+    const files:Record<string,string>={};
+    for(const asset of Object.values(assets)) {
+      if(!asset.sha256||!/^[a-f0-9]{64}$/.test(asset.sha256)||asset.url!==`/api/models/${asset.sha256}.glb`)throw new Error('Invalid published model identity');
+      if(files[asset.url])continue;
+      const bytes=await readFile(join(this.directory,`${asset.sha256}.glb`));
+      if(createHash('sha256').update(bytes).digest('hex')!==asset.sha256)throw new Error('Published model hash mismatch');
+      files[asset.url]=bytes.toString('base64');
+    }
+    return {assets:structuredClone(assets),files};
   }
   async importURL(url:string,provenance:ModelProvenance={},signal?:AbortSignal){return this.publish(await downloadModel(url,signal),{...provenance,source:url});}
   async handle(request:Request):Promise<Response> {

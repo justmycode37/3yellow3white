@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The central spoken probability is arithmetically wrong and contradicts both the visual plan and the lesson's intended distinction.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The reveal says 'Nine out of a hundred eight: ninety percent.' In fact 9/108=1/12, approximately 8.3%; 90% is 9/10, the sensitivity. Correct the spoken result to approximately 8.3% and keep it aligned with the correct planned fraction and subsequent comparison. The current sentence teaches precisely the denominator confusion the lesson is meant to resolve."
+    }
+  ],
+  "checks": [
+    "The supplied population partitions correctly: 10+990=1000, sensitivity 9/10=90%, and false-positive rate 99/990=10%.",
+    "The positive-only denominator is 9+99=108; recalculation gives 9/108=0.083333..., not the spoken 90%.",
+    "At 10% prevalence with the same total and rates, 0.9*100=90 and 0.1*900=90, so 90/180=50% as stated.",
+    "The sole six-second pause follows a specific spoken invitation; all required counts precede it, and the visual fraction is withheld until the reveal.",
+    "The visual plan preserves condition colors independently of positive outlines, regroups the same selected individuals, and explicitly substitutes a different population for the prevalence comparison.",
+    "Exactly three scenes, 363 spoken words plus the six-second pause, and empty interactions fit roughly three minutes in classic mode. The narration explicitly identifies a toy example rather than medical advice.",
+    "Count diagrams and labels are feasible with supported primitives and batched marks; no external medical verification or unavailable validate_output run is claimed."
+  ]
+}

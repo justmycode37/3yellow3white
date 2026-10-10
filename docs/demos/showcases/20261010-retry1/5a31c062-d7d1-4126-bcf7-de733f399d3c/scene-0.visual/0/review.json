@@ -1,0 +1,93 @@
+{
+  "sourceSha256": "569f579d62a90c291e61202fcfa7b74dc2837b69fd1bcfe5e5da10efd4991de2",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3,
+        5.374999999999997,
+        7.8333333333333215,
+        10.250000000000004
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        11.458333333333345,
+        12.666666666666687,
+        15.125000000000037,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3,
+        5.374999999999997,
+        7.8333333333333215,
+        10.250000000000004
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        11.458333333333345,
+        12.666666666666687,
+        15.125000000000037,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 10.25,
+      "objectIds": [
+        "connected-river",
+        "flow-front",
+        "watershed"
+      ],
+      "problem": "Neither aspect ratio shows an identifiable blue river or advancing flow trace. The operation samples and final hold look effectively unchanged, so the requested downhill-flow demonstration is not visible.",
+      "fix": "Correct the water and trace visibility against the terrain, including depth/compositing and camera occlusion. Preserve their terrain-derived coordinates and downhill timing; verify a visible connected river, advancing front and completed trace."
+    },
+    {
+      "timeSec": 20,
+      "objectIds": [
+        "high-elevation-rock",
+        "low-elevation-grass",
+        "continuous-terrain",
+        "rock-label"
+      ],
+      "problem": "The terrain appears green throughout, including the high ridges. The gray rocky-high-ground legend has no visible corresponding region, so the requested elevation/material distinction is missing.",
+      "fix": "Ensure the existing elevation skins visibly render over their corresponding terrain regions, preserving the thresholds, continuous geometry and restrained grass/rock colors."
+    },
+    {
+      "timeSec": 20,
+      "objectIds": [
+        "procedural-note"
+      ],
+      "problem": "The procedural disclaimer sits within the reserved bottom 12% playback-control area in both aspect ratios.",
+      "fix": "Move the disclaimer upward until its complete glyph bounds clear the bottom control region, retaining separation from the legend."
+    }
+  ]
+}

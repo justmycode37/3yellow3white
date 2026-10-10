@@ -1,0 +1,74 @@
+{
+  "sourceSha256": "295bea10a444047e168ca5b53753083ddd145670ffc1d18e8dd176ce5aace6a2",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9249999999999976,
+        4.149999999999993,
+        5.374999999999989,
+        7.824999999999981
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.25000000000001,
+        12.675000000000045,
+        13.900000000000063,
+        15.12500000000008,
+        17.400000000000105,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9249999999999976,
+        4.149999999999993,
+        5.374999999999989,
+        7.824999999999981
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.25000000000001,
+        12.675000000000045,
+        13.900000000000063,
+        15.12500000000008,
+        17.400000000000105,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 12.675,
+      "objectIds": [
+        "focus-label",
+        "periapsis-label",
+        "apoapsis-label"
+      ],
+      "problem": "In both aspect ratios, the ellipse passes through the periapsis and apoapsis lettering. The completed apoapsis sector boundary also runs through the focus label, leaving these annotations crossed by geometry during the final hold.",
+      "fix": "Adjust the three label offsets to clear the ellipse and sector boundaries throughout the motion, retaining their referents and keeping their full bounds inside the viewport."
+    }
+  ]
+}

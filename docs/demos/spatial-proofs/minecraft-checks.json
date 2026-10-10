@@ -1,0 +1,47 @@
+{
+  "duration": 16,
+  "contact": [
+    {
+      "time": 3,
+      "point": [
+        0.5,
+        1.68,
+        0.28500000000000003
+      ],
+      "trunkFaceX": 0.5
+    },
+    {
+      "time": 6,
+      "point": [
+        0.5,
+        1.68,
+        0.28500000000000003
+      ],
+      "trunkFaceX": 0.5
+    },
+    {
+      "time": 9,
+      "point": [
+        0.5,
+        1.68,
+        0.28500000000000003
+      ],
+      "trunkFaceX": 0.5
+    }
+  ],
+  "releaseTime": 9.4,
+  "footSamples": 321,
+  "counts": {
+    "elements": 91,
+    "meshes": 70,
+    "vertices": 3992,
+    "triangles": 5844
+  },
+  "verified": [
+    "Compile",
+    "Three exact contact points",
+    "Damage follows contact",
+    "Release follows third impact",
+    "Static feet sampled at 20Hz"
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Why retrying can charge twice\n\n## Beat 1 — A payment succeeds, but the client cannot tell\n\nContent needed: Client and payment-server lifelines; downward time is schematic. Purchase P is one book for $20. Show the server commit charge C17 before sending its success response. Lose the response, then show the client's timeout. BLUE means purchase request, GOLD means committed payment, GREEN means success result, and RED marks delivery failure.\n\nNarration: Your app sends a payment request: buy one book for twenty dollars. The server commits the payment and sends back a success response, including charge identifier C seventeen. But that response disappears on the way back. Your app waits, then reports a timeout. Look at the server's ledger: the charge already exists. The timeout tells the client that it did not receive a response in time. It does not tell the client whether the payment happened.\n\n## Beat 2 — One symptom, two histories\n\nContent needed: Compare the existing lost-response history with an alternative where the first request never reaches the server. These are possible histories, not simultaneous purchases. Both client observations are timeouts; only the first ledger contains a charge. Show hypothetical ordinary retry consequences, then clear them and return to the original history.\n\nNarration: Now compare another possible history. This time, the outgoing request never reaches the server. No payment happens, but the client still sees a timeout. From that timeout alone, these histories are indistinguishable. In one, retrying needs to create the payment. In the other, creating it again could charge twice. Simply treating every arriving request as a new purchase cannot handle both cases safely. We need the server to recognize another attempt at the same intended purchase.\n\n## Beat 3 — Give the operation a remembered identity\n\nContent needed: Reconstruct the original example with protection from the first attempt, not by adding a record after the old commit. Client selects key K7 before sending. Show one atomic commit boundary containing charge C17 and the association K7 → payload P, result C17. Lose the response, retry with K7 and unchanged P, compare the record, and return C17 with no ledger addition. Atomicity includes coordination of concurrent attempts. Contrast an absent record only where the first attempt never arrived.\n\nNarration: Before its first attempt, the client assigns this purchase an idempotency key, K seven. Every retry sends that same key. The server atomically commits the payment together with a record linking the key, the request's payload, and the result. They become committed together; saving the key later would leave a gap where a retry could repeat the charge. When the response is lost, the retry finds that record and returns C seventeen without another payment. If the first request never arrived, there is no record, so the retry performs the operation for the first time. Concurrent attempts must also be coordinated so they cannot both create a payment.\n\n## Beat 4 — The key's promise has boundaries\n\nContent needed: Sequentially compare same purchase P with K7, new intended purchase P2 with K8 even for identical goods, and a changed $25 payload with K7. Reject the changed payload. Show a service-defined key scope and retention interval without inventing a duration; record expiry does not erase the charge. Classic playback only; no pauses or interactions.\n\nNarration: Another attempt at this purchase keeps K seven. A new intended purchase gets a new key, even if it buys the same book for the same price. Reusing K seven with a changed payload must be rejected: one identity cannot mean two different operations. Check the service's key scope and retention period, too. Outside that scope, or after the record expires, the old key may no longer prevent another charge. Within those boundaries, a matching retry recovers the remembered outcome instead of repeating the purchase.\n",
+  "plan": {
+    "audience": "Junior developers who have made HTTP requests and need to design safe payment retries.",
+    "prerequisites": [
+      "A client sends requests to a server and receives responses.",
+      "A timeout means a response did not arrive within a waiting period."
+    ],
+    "learningGoal": "Explain why a payment timeout is ambiguous and apply an idempotency key per intended purchase, with atomic effect/result storage, payload checks, and service-defined scope and retention limits.",
+    "centralQuestion": "How can a retry safely complete a purchase when a timeout does not tell us whether the first payment happened?",
+    "keyInsight": "The same client timeout can conceal either no operation or a committed operation; a stable key and an atomic stored payload/result association let the server distinguish those histories and return the existing result when the effect already occurred.",
+    "runningExample": "Purchase P buys one book for $20. The server commits charge C17 but its response is lost. A protected version selects key K7 before the first attempt and retries K7 with unchanged P. A separate intended purchase P2 uses K8 even for the same item and amount; K7 with a $25 payload is rejected.",
+    "misconceptions": [
+      "A timeout proves the payment failed.",
+      "Every retry is a new intended purchase.",
+      "Recording a key after an independent payment commit is enough.",
+      "An idempotency key can be reused with a changed payload.",
+      "An idempotency guarantee applies indefinitely across every account and endpoint."
+    ],
+    "entities": [
+      {
+        "id": "client",
+        "meaning": "App issuing purchase requests and observing responses or timeouts in beat-1 through beat-4; alternate histories in beat-2 repeat the same logical participant.",
+        "color": "WHITE"
+      },
+      {
+        "id": "server",
+        "meaning": "Payment service receiving requests, committing effects and returning results in beat-1 through beat-4; its ledger is separate from client knowledge.",
+        "color": "WHITE"
+      },
+      {
+        "id": "purchase",
+        "meaning": "BLUE intended purchase P and its payload, one book for $20, conserved across retries in beat-1 through beat-4. Beat-4 introduces a distinctly labeled new intent P2 with identical item and amount; it is not a retry of P.",
+        "color": "BLUE"
+      },
+      {
+        "id": "committed-charge",
+        "meaning": "GOLD payment effect C17, $20. Present after commit in beat-1 and history A of beat-2; same illustrative charge identity in the protected reconstruction in beat-3. Stays one charge through matching retries. Its existence is independent of response delivery and record expiry in beat-4.",
+        "color": "GOLD"
+      },
+      {
+        "id": "result",
+        "meaning": "GREEN success result containing C17, initially lost in beat-1, linked to the atomic record in beat-3 and returned unchanged on a matching retry. Distinct from the payment effect itself.",
+        "color": "GREEN"
+      },
+      {
+        "id": "trace",
+        "meaning": "Schematic message paths with downward event order, carried beat-1 to beat-2; deliberately reconstructed with protection from the start in beat-3, then used for request comparisons in beat-4. No horizontal distance or time spacing asserts measured latency.",
+        "color": "GREY"
+      },
+      {
+        "id": "alternate-history",
+        "meaning": "Temporary beat-2 history B: request never arrives, ledger empty, same timeout. An alternative to history A, never an additional purchase in that history.",
+        "color": "GREY"
+      },
+      {
+        "id": "hypothetical-retries",
+        "meaning": "Temporary beat-2 unprotected retry outcomes illustrating a possible duplicate in A and first payment in B; cleared before introducing the protected mechanism.",
+        "color": "GOLD"
+      },
+      {
+        "id": "key-record",
+        "meaning": "PURPLE K7 and its association to unchanged payload P and GREEN result C17, introduced in beat-3 as part of the same atomic commit as C17; retained for beat-4 comparisons. Record scope/lifetime limits lookup, while expiry does not reverse the payment.",
+        "color": "PURPLE"
+      },
+      {
+        "id": "comparison-requests",
+        "meaning": "Temporary beat-4 comparison requests: retry P/K7, new intent P2/K8, and conflicting K7/$25. Request identity and payload remain explicitly labeled; rejection creates no payment.",
+        "color": "BLUE"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Separate a committed payment from the client's knowledge of its result.",
+        "whyNow": "Opens with the concrete failure that makes an ordinary retry ambiguous and prepares a comparison with a request that never arrived.",
+        "keyPoints": [
+          "A client requests one intended purchase.",
+          "The server commits one payment.",
+          "The response is lost, leaving a timeout at the client."
+        ],
+        "visualDescription": "2D (because message delivery, commit order, and client knowledge are planar relations): Construct client and payment-server lifelines with time progressing downward, not to a measured scale. A BLUE request arrow carries purchase P: one book, $20. At the server, create one GOLD ledger entry C17 for $20 before a GREEN success response travels back. Break only the response arrow with a RED loss mark. Show a timeout beside the client after that loss. This is a schematic protocol trace, not measured network timing. Keep the purchase, ledger entry, and returned result distinct. Prepare trace identity for comparison in beat-2 and repair in beat-3; do not yet show a key or a second payment.",
+        "endsWith": "The client has a timeout; the server has exactly one committed $20 charge C17; the success response failed to arrive.",
+        "carry": [
+          "client",
+          "server",
+          "purchase",
+          "committed-charge",
+          "result",
+          "trace"
+        ],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Payment response is lost after the server commits; junior-developer audience and request/response diagram."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-2",
+        "purpose": "Show why identical timeouts require different effects when retrying.",
+        "whyNow": "Builds on the lost-response trace, adds the never-arrived case, and establishes what the key mechanism must accomplish.",
+        "keyPoints": [
+          "Keep the committed trace and compare a second possible history.",
+          "A request lost before arrival leaves no charge but the same client timeout.",
+          "A retry should create a charge in only the uncommitted history."
+        ],
+        "visualDescription": "2D (because comparing message histories directly exposes identical observations): Retain the beat-1 trace as history A and add history B using the same client, server, and purchase identities in separately labeled alternative histories, not simultaneous executions. History A retains C17 and a lost response. In B, the BLUE request stops before reaching the server; the ledger stays empty. Put identical timeout labels at the client ends with matching WHITE observation outlines. Emphasize the differing ledgers only after identifying the equal client observations. Illustrate an ordinary retry in A by adding a second GOLD ledger entry labeled possible duplicate C18, while B gets its first charge. These are explicitly hypothetical outcomes without a deduplication rule. Remove these hypothetical retry outcomes and the B comparison before handoff; restore A with C17 and timeout.",
+        "endsWith": "Only the original history A remains: one purchase, one committed charge C17, and a client timeout, ready to add retry identity.",
+        "carry": [
+          "client",
+          "server",
+          "purchase",
+          "committed-charge",
+          "result",
+          "trace"
+        ],
+        "cleanup": [
+          "alternate-history",
+          "hypothetical-retries"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Include a first request that never arrived and why timeout alone cannot distinguish the two cases."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-3",
+        "purpose": "Explain how an atomic key, payload, and result record prevents repeating the effect.",
+        "whyNow": "Answers the ambiguous-retry problem with a stable operation identity and an indivisible commit boundary; prepares the rules for choosing and retaining that identity.",
+        "keyPoints": [
+          "Choose K7 before the first attempt and reuse it for this purchase.",
+          "Commit the payment and its stored key, payload, and result association as one atomic unit.",
+          "A matching retry returns C17 without adding a charge.",
+          "A never-arrived first request allows the retry to perform the first operation; concurrent attempts also require coordination."
+        ],
+        "visualDescription": "2D (because the decisive structure is an atomic association and a lookup): Explicitly reconstruct the same history with protection from its start; remove the old unprotected trace before introducing the protected one, so no record appears retroactively. Preserve purchase identity P and illustrative charge identifier C17 in the reconstructed example. Attach PURPLE K7 to the first BLUE request. Show a WHITE atomic commit boundary containing the GOLD charge C17 and a PURPLE record K7 with payload P and GREEN result C17. Explain all-or-nothing visibility through a single commit event: never depict a settled state with a committed charge but absent record. Lose the first GREEN response, then send a retry bearing the same K7 and P. Compare both key and payload with the saved record, then route the stored result C17 back to the client. Keep the ledger at one entry. Briefly contrast an absent K7 before any operation, where the retry enters the same atomic commit unit as its first successful attempt. Use an exclusion mark at the commit entrance to show concurrent same-key attempts cannot both execute independently; no specific storage API is implied. End on the completed matching-retry trace.",
+        "endsWith": "The client has received result C17, the server has one charge, and K7 remains associated with the matching payload and stored result inside the illustrated atomic guarantee.",
+        "carry": [
+          "client",
+          "server",
+          "purchase",
+          "committed-charge",
+          "result",
+          "trace",
+          "key-record"
+        ],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "An atomic stored key/result association makes retries return the prior result instead of repeating the operation."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-4",
+        "purpose": "Make the guarantee usable by defining purchase identity, payload checking, and retention boundaries.",
+        "whyNow": "Applies the protected retry trace to real key choices and concludes with the conditions under which a timeout can be retried safely.",
+        "keyPoints": [
+          "Another attempt at P keeps K7; a new intended purchase uses a new key even for identical goods.",
+          "A changed payload under K7 is rejected.",
+          "The record's service-defined scope and retention period bound deduplication."
+        ],
+        "visualDescription": "2D (because request identity and record lifetime are categorical comparisons): Start from beat-3's stored K7 association and completed purchase. Show three sequential request comparisons against that record: same intended P with K7 and unchanged payload returns GREEN C17; a deliberately new purchase P2 of the same one book for $20 uses PURPLE K8 and is eligible for a separate GOLD charge; K7 with a changed $25 payload gets a RED rejection with no new ledger entry. BLUE consistently means purchase intent/payload, PURPLE means idempotency identity, GOLD means payment effect, and GREEN means successful result. Label P and P2 distinctly even though item and amount match. Clear comparison helpers, then put the saved record within a labeled scope boundary such as account plus endpoint, explicitly marked as an illustrative service policy. Show its retention interval without inventing a duration; outside the interval replace the K7 lookup record with an absent-record outline and label the deduplication guarantee unavailable. Do not animate record expiry as a payment reversal. Finish with the still-committed C17 and a valid matching-retry association shown within its scope and retention window, as the conditional guarantee being summarized.",
+        "endsWith": "One intended purchase maps to one retained key/payload/result association within the service's defined scope; the committed payment remains distinct from the lifetime of that record.",
+        "carry": [],
+        "cleanup": [
+          "comparison-requests"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Distinguish retries from new purchases, reject changed payloads under reused keys, and state retention-scope limits."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

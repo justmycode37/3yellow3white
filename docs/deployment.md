@@ -18,6 +18,14 @@ only the backend, built assets, production dependencies, and the lockfile's Bun
 runtime in a Debian image. Base images are pinned by digest. Runtime secrets and
 local databases are excluded from the Docker build context.
 
+Newly generated scenes pass a mandatory image review before publication. The
+runtime also ships Node, native `webgpu`, and Mesa Vulkan drivers for headless
+rendering. The image build runs `node shared/animlib/tools/smoke-frames.mjs` as the
+application user: both 16:9 and 4:3 must contain real rendered pixels. A missing
+adapter or incompatible native dependency fails the build rather than deploying
+a server that cannot review scenes. Local development needs Node and a compatible
+WebGPU adapter; the same smoke command checks it without model calls.
+
 The lifecycle test uses a unique Compose project, temporary data directories, and
 an automatically allocated **loopback-only** port. It checks compilation, routes,
 built assets, identity headers, owner isolation, stored video/WAV audio, literal

@@ -5,6 +5,7 @@ import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
 import { createSurfaceBuilders } from "./surfaces.js";
 import { createSolidBuilders } from "./solids.js";
+import { createMoleculeBuilders } from './molecules.js';
 import { validateLighting } from "./lighting.js";
 import { validatePath } from "./path.js";
 import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
@@ -139,6 +140,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
     const [x,y,w,h] = view.rect;
     check(x >= 0 && y >= 0 && w > 0 && h > 0 && x+w <= 1+1e-9 && y+h <= 1+1e-9, "View rectangle must fit within the canvas");
     check(typeof view.orbit === "boolean", "Invalid view orbit flag");
+    check(view.orbitHitTest === undefined || view.orbitHitTest === 'geometry', 'Invalid view orbit hit test');
     camera(view.camera);
   }
   const checkView = (e: ElementState) => check(e.view === undefined || typeof e.view === "string" && viewIds.has(e.view), "Element references unknown view");
@@ -333,7 +335,7 @@ export async function createSceneProgram(source: string, input: CompileInput = {
       const Color = __tokens(${JSON.stringify(Color)});
       const palette = Object.freeze({ ...__input.palette, colors: __tokens(Object.fromEntries(Object.keys(__input.palette.colors).map(name => [name, name]))) });
       const __buildScene = ${buildScene.toString()};
-      const __meshBuilders = Object.freeze({ ...(${createSurfaceBuilders.toString()})(), ...(${createSolidBuilders.toString()})() });
+      const __meshBuilders = Object.freeze({ ...(${createSurfaceBuilders.toString()})(), ...(${createSolidBuilders.toString()})(), ...(${createMoleculeBuilders.toString()})() });
       const scene = (options, builder) => __buildScene(options, builder, __input, update => { globalThis.__animlibUpdate = update; }, __meshBuilders);
       let __seed = ${JSON.stringify(input.seed ?? 1)} >>> 0;
       Math.random = () => { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };

@@ -4,13 +4,15 @@ import { AgentError } from './agents/config.js';
 export interface LogFields {
   videoId?: string;
   narrationId?: string;
-  stage?: 'sources' | 'script' | 'draft' | 'review' | 'narration' | 'scene' | 'thumbnail';
+  stage?: 'sources' | 'script' | 'draft' | 'review' | 'repair' | 'narration' | 'scene' | 'thumbnail';
   sceneIndex?: number;
   sceneCount?: number;
   attempt?: number;
   completedChunks?: number;
   totalChunks?: number;
   elapsedMs?: number;
+  warnings?: number;
+  frames?: number;
   cached?: boolean;
   resumed?: boolean;
   code?: string;

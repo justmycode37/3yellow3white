@@ -1,0 +1,143 @@
+[00:00–00:11] In the last video, you and I looked at this demo here, where we shine linearly polarized light through a tube full of sugar water, and we saw how it rather mysteriously results in these colored diagonal stripes.
+[00:12–00:18] There, I walked through the general outline for an explanation, keeping track of what questions still need to be answered.
+[00:18–00:22] Namely, why does sugar water twist the polarization direction of light?
+[00:23–00:25] Why does that twisting rate depend on the color of the light?
+[00:25–00:34] And why, even if you understand that this twist is happening, would you see any evidence of it when viewing the tube from the side, with no additional polarizing filters?
+[00:35–00:43] Here, I'd like to begin with the very fundamental idea of what light is, and show how the answer to these questions can emerge from an extremely minimal set of assumptions.
+[00:47–00:57] In some sense, the fundamental question of electricity and magnetism is how the position and motion of one charged particle influences that of another.
+[00:57–01:04] For example, one of the first things you learn, say in a high school physics class, is that charges with the same sign tend to repel each other.
+[01:04–01:08] And the strength of this force depends a lot on the distance between them.
+[01:08–01:16] If your charges are close, that repulsive force is very strong, but it decays very rapidly as these particles go away from each other.
+[01:16–01:21] Specifically, here's how you might see this written down as an equation, known as Coulomb's law.
+[01:21–01:26] The force is proportional to the charge of both of the particles, where it's common to use the letter q.
+[01:26–01:31] There are some constants in there, which for our purposes we can just think of as one big proportionality constant.
+[01:31–01:38] And the important fact is that you've got this 1 divided by r squared term, where r is the distance between them.
+[01:38–01:46] So for example, if the distance between them increases by a factor of 3, the force that they're applying to each other goes down by a factor of 9.
+[01:47–02:01] Another way you might see a law like this written down is to focus on just one charged particle, and then say for every point in space, if there was a second charge there, what force would this first charge be applying to that second one?
+[02:02–02:12] And instead of describing a force per se, you might see this written describing what's known as the electric field, which is just a way of saying what force would be applied to a unit charge.
+[02:13–02:18] And in this context, the word field means there's a value associated with every single point in space.
+[02:18–02:30] So the way I have it written here, it depends on a little vector r, which would be the vector from our charge to a given point in space, and the direction of this field at all points is in the same direction as r.
+[02:31–02:35] I bring up Coulomb's law to emphasize that it's not the full story.
+[02:36–02:38] There are other ways that charges influence each other.
+[02:38–02:42] For example, here's a phenomenon that this law alone could not explain.
+[02:42–02:51] If you wiggle one charge up and down, then after a little bit of a delay, a second charge some distance to its right will be induced to wiggle up and down as well.
+[02:52–02:59] We can write down a second law, which you might think of as a correction term to be added to Coulomb's law, that describes what's going on here.
+[02:59–03:03] Suppose at some point in time t0, that first charge is accelerating.
+[03:04–03:13] Then I'll let time play forward, but leave on the screen a kind of ghost of that particle indicating where it was and how it was accelerating at this time t0.
+[03:13–03:21] After a certain delay, this causes a force on the second charge, and the equation describing this force looks something like this.
+[03:22–03:31] So again, it's proportional to the charge of both of the particles, and once more a common way to write it involves this pile of constants that you don't really need to worry about.
+[03:31–03:41] The important factor I want you to notice is how the force also depends on the distance between the particles, but instead of decaying in proportion to r squared, it only decays in proportion to r.
+[03:42–03:47] So over long distances, this is the force that dominates, and Coulomb's law is negligible.
+[03:48–03:59] And then finally, it depends on the acceleration of that first particle, but it's not the acceleration of that particle at the current time, it's whatever that acceleration was at some time in the past.
+[04:00–04:05] How far in the past depends on the distance between the particles and the speed of light, denoted with c.
+[04:06–04:11] The way to think about it is that any form of influence can't propagate any faster than this speed, c.
+[04:11–04:16] In fact, a more accurate description of Coulomb's law would also involve a delay term like this.
+[04:16–04:25] Again, the intuitive way to read this equation is that wiggling a charge in one location after some delay causes a wiggle to a second charge in another location.
+[04:26–04:29] And actually, the way I have it written right now is a little bit wrong.
+[04:29–04:41] Instead of the acceleration vector here, I should really be writing something like a perp, indicating the component of that acceleration vector which is perpendicular to the line drawn between the two charges.
+[04:42–04:55] In other words, when you wiggle that first charge, the direction that the second charge wiggles is always perpendicular to the line between them, and the amount that it wiggles gets weaker and weaker when that line between them is more lined up with the initial acceleration.
+[04:57–05:04] As before, this is something you might see written down in a way that describes a component of the electric field caused by just one charge.
+[05:04–05:11] Again, that means what force would be applied to a second charge at all possible different points in space.
+[05:12–05:19] This component of the field is only ever non-zero when our first charge is moving somehow, when it has an acceleration vector on it.
+[05:19–05:24] And because of this delay term, the effects on this field tend to radiate away from the charge.
+[05:25–05:27] This is why I'm writing it down with the subscript rad.
+[05:27–05:32] This is the component of the electric field that will radiate away from a given charge.
+[05:33–05:37] For instance, when the charge is oscillating up and down, you get these propagating waves.
+[05:37–05:43] And for many of the vector fields I'll be showing, the intensity of the field is illustrated with the opacity of each little vector.
+[05:44–05:53] This radiating influence is light, or more generally, electromagnetic radiation, including things like radio waves and x-rays and all that good stuff.
+[05:54–06:02] As a side note, you sometimes see this propagation described a very different way that puts the fields front and center, using what are known as Maxwell's equations.
+[06:02–06:09] For our purposes, I want to focus just on this one law and show just how far it can take us when it comes to intuitions for light.
+[06:11–06:25] For the animations I'm about to show, all I've really done is encoded in this one law, which tells us what should this component of the electric field be at every point in space, as determined by the history of accelerations of a particular charge.
+[06:26–06:38] For example, if I set that charge oscillating up and down in the z direction, and illustrate this component of the electric field everywhere on the xy plane, you see these circular propagations of equal strength in all directions.
+[06:40–06:44] It's a little easier to think about if we focus on just one axis, like the x-axis.
+[06:45–06:52] And at first when I made this animation, I assumed that there was some kind of bug, because near the charge it just looks crooked and wrong.
+[06:52–07:05] But when you think about it, this is actually what you should expect, because remember, each one of these vectors is supposed to be perpendicular to the line drawn between that point and where the charge was at some point in the past.
+[07:06–07:22] At points that are far enough away from the charge, which is where this component of the field is what dominates anyway, the wiggling in the field is essentially parallel to the wiggling in the charge, which is why when we think about light waves, we're safe to think about the wiggling direction as being perpendicular to the propagation direction.
+[07:22–07:34] Like I said, this propagation for just one charge is equally strong in all of the directions perpendicular to its wiggling, and really I should emphasize that the propagation does happen in all directions of three-dimensional space.
+[07:37–07:45] It's maybe a little busy to try to illustrate the full three-dimensional vector field on screen like this, so it's clarifying if we just focus on, say, the xz plane.
+[07:46–07:57] Notice how the waves here are strongest in the x direction, but it still does propagate in all other directions, it's just that that propagation gets weaker in directions that are more aligned with the original wiggling.
+[07:58–08:01] At the extreme, the only place where there's no propagation is in the z axis.
+[08:04–08:13] Because our law has this 1 divided by r in it, the strength of the wave caused by just one particle does decay as you go farther away, in proportion to 1 over r.
+[08:14–08:28] But notice what happens if I take a whole row of charges, say oriented along the y axis, and I have them all start wiggling up and down in the z direction, and I illustrate the combined effects that all of them have on this component of the electric field.
+[08:29–08:38] The effects of all these charges interfere deconstructively along the y direction, but they interfere constructively along the x direction.
+[08:39–08:43] This is what it looks like for a beam of light to be concentrated along just one dimension.
+[08:44–08:53] So if you were to focus on the field just along the x axis, instead of decaying in proportion to 1 over r, this combined effect decays much more gently.
+[08:55–09:06] In the extreme, you can get something arbitrarily close to those pure sine wave propagations we were illustrating earlier, if at some distance away you have a large number of charges oscillating in sync with each other like this.
+[09:07–09:21] One thing that's worth emphasizing when you see light illustrated with a sine wave like this, is that even though that wave is being drawn in two or three dimensions, it's only describing the electric field along a one-dimensional line, namely the base of all those vectors.
+[09:22–09:25] It's just that to draw the vectors you have to venture off of that line.
+[09:27–09:32] Great, so one of the last important things to highlight before we get back to the sugar water is polarization.
+[09:33–09:41] In everything I've been showing, the driving charge is just oscillating along a single direction, like the z axis, and this causes linearly polarized light.
+[09:41–09:43] But it doesn't have to happen like that.
+[09:43–09:54] For example, if I set the charge rotating in a little circle along the yz plane, meaning its acceleration vector is also rotating in a little circle, notice what the field looks like.
+[09:54–09:58] This is known, aptly enough, as circularly polarized light.
+[09:58–10:02] Honestly, it's easiest to think about for just one point of the electric field.
+[10:03–10:10] What it means for light to be circularly polarized is that at that point, the electric field vector is just rotating in a circle.
+[10:10–10:22] People often find circular polarization a little confusing, and I suspect part of the reason for that is that it's hard to illustrate with a static diagram, but also it's a little confusing when you try to think about the full electric field.
+[10:23–10:28] For example, here's what the field looks like on the xy plane when I set that little charge rotating in a circle.
+[10:30–10:36] It's certainly very beautiful, I could look at this all day, but you can understand why it might feel a little confusing.
+[10:37–10:44] The very last thing I'll mention is that while everything here is a classical description of light, the important points still hold up in quantum mechanics.
+[10:45–10:49] You still have propagating waves, there's still polarization that can be either linear or circular.
+[10:50–10:58] The main difference with quantum mechanics is that the energy in this wave doesn't scale up and down continuously, like you might expect, it comes in discrete little steps.
+[10:59–11:04] I have another video that goes into more detail, but for our purposes, thinking about it classically is fine.
+[11:05–11:11] Part of the reason I wanted to go through that is because, frankly, it's just very fun to animate and I like an excuse for a fundamental lesson.
+[11:12–11:23] But now let's turn back to our demo and see how we can build up an intuition for some of our key questions, starting from this very basic premise that shaking a charge in one location causes a shake to another charge a little bit later.
+[11:24–11:28] And let's start by actually skipping ahead to question number three, why do we see the diagonal stripes?
+[11:33–11:50] To think about this, you need to imagine an observer to the side of the tube, and then for a particular pure color, say red, if the observer looks in the tube and sees that color, it's because light of that color has bounced off something at that point in the tube, and then propagated towards the eye of the observer.
+[11:51–12:01] Sometimes when people talk about light bouncing off of things, the implied mental image is a projectile ricocheting off of some object, heading off in some random direction.
+[12:02–12:13] But the better mental image to hold in your mind is that when the propagating light waves caused by some wiggling charge reach some second charge causing it to wiggle, that secondary wiggle results in its own propagation.
+[12:14–12:20] And for the animation on screen, that propagation goes back to the first charge, which itself causes a propagation towards the second.
+[12:20–12:26] And this is what it looks like in a very simplified situation for light to bounce back and forth between two charges.
+[12:27–12:41] If you have some concentrated beam of polarized light interacting with some charge, causing it to wiggle up and down, then these resulting second-order propagations are most strong in the directions perpendicular to the direction of polarization.
+[12:41–12:47] In some sense, you could think of light as bouncing off of that charge, but the important point is that it doesn't bounce in all directions equally.
+[12:48–12:53] It's strongest perpendicular to the wiggle direction, but gets weaker in all of the other directions.
+[12:54–13:03] So think about our setup, and for a particular frequency of light, how likely it is that an observer looking at a particular point in the tube will see that light.
+[13:04–13:12] Again, the key phenomenon with sugar water, which we have yet to explain, is that the polarization direction is slowly getting twisted as it goes down the tube.
+[13:13–13:19] So suppose the observer was looking at a point like this one, where the polarization direction happens to be straight up and down.
+[13:19–13:30] Then the second-order propagations resulting from wiggling charges at that point are most strong along the plane where the observer is, so the amount of red that they see at that point would look stronger.
+[13:31–13:45] By contrast, if they were looking at a different point in the tube like this one, where the wiggling direction is closer to being parallel to the line of sight, then the direction where the scattering is strongest is not at all aligned with the observer, and the amount of red they see is only going to be very weak.
+[13:46–13:54] And looking at our actual physical setup, if we first pass the light through a filter showing only the red, we see exactly this effect in action.
+[13:55–14:04] As you scan your eyes along the tube, the intensity of red that you see goes from being high to being low, where it's almost black, back to being high again.
+[14:06–14:25] As an analogy, imagine there was a ribbon going down the tube, always aligned with the polarization direction for this color, then putting yourself in the shoes of the observer, when you look at points where the ribbon appears very thin, you're going to see very little red light, whereas if you scan your eyes over to points where the ribbon appears thicker, you're going to see more red light.
+[14:25–14:33] One thing that's nice about this is that if we try it for various different colors, you can actually see how the twisting rates are different for each one of the colors.
+[14:34–14:47] Notice with red light, the distance between where it appears brightest and where it appears darkest is relatively long, whereas if you look down the colors of the rainbow, distance between the brightest point and the darkest point gets lower and lower.
+[14:48–14:57] So what you're seeing in effect is how red light twists slowly, whereas light waves with higher frequencies get twisted more aggressively.
+[15:01–15:05] But still, you might wonder why the boundaries between light and dark points appear diagonal.
+[15:06–15:15] Why is it that in addition to having variation as you scan your eyes from left to right, there's also variation as you scan your eyes from the top of the tube to the bottom?
+[15:15–15:20] This has less to do with what's going on in the tube, and more to do with a matter of perspective.
+[15:21–15:26] Take a moment to think about many different parallel beams of light ranging from the top of the tube to the bottom.
+[15:27–15:39] At the beginning, all of these light waves are wiggling up and down, and as you pass through the tube, and the effects of the sugar water somehow twists these directions, because they're all passing through the same amount of sugar, they're getting twisted by the same amounts.
+[15:39–15:44] So at all points, the polarization of these waves are parallel to each other.
+[15:44–15:55] If you're the observer and you look at the topmost point here, its wiggling direction is essentially parallel to the line of sight, so the light scattering from that point is basically not going to reach your eyes at all.
+[15:55–15:56] It should appear black.
+[15:56–16:06] But if you scan your eyes down the tube, the angle between the line of sight and the wiggling direction changes, and so there will be at least some component of red light scattering towards the eye.
+[16:06–16:13] So as you scan your eyes from top to bottom, the amount of a particular color you see might vary, say from dark to light.
+[16:14–16:29] The full demo that has white light is basically a combination of all these pure color patterns that go from light to dark to light with diagonal boundaries between the intense points and the weak points, hence why you see diagonal boundaries between the colors inside the tube.
+[16:31–16:39] And now at last let's turn to the heart of the matter and try to explain why interactions with sugar would make light twist like this in the first place.
+[16:39–16:44] It's related to the idea that light seems to slow down as it passes through a given medium.
+[16:44–16:55] For example, if you look at the crests of a light wave as it goes into water, the crests through the water are traveling about 1.33 times slower than the crests of that wave would travel in a vacuum.
+[16:56–16:58] This number is what's called the index of refraction for water.
+[16:59–17:13] In a bit, what I'd like to show is how this index of refraction can be explained by analyzing how the initial light wave shakes all the charges in the material and how the resulting second order propagations superimpose with that original light wave.
+[17:14–17:28] For right now, I'll just say that the interactions with each layer of the material ends up having the effect of slightly shifting back the phase of the wave, and on the whole, this gives the overall appearance that that wave moves slower as it passes through the material.
+[17:30–17:40] Skipping ahead to what's going on with sugar, the relevant property of sucrose here is that it's what's called a chiral molecule, meaning it's fundamentally different from its mirror image.
+[17:41–17:44] You could never reorient it in space to become identical to its mirror image.
+[17:44–17:46] It's like a left hand or a right hand.
+[17:47–17:50] Or another much simpler example of a chiral shape is a spiral.
+[17:51–18:01] If I take this right-handed spiral, then its mirror image is a left-handed spiral, and no matter how you try to rotate and reorient that first one, it'll never become identical to the second.
+[18:03–18:14] What's going on then is that the presence of a chiral molecule in the water like this introduces an asymmetry when it comes to interactions with light, specifically circularly polarized light.
+[18:15–18:25] It turns out that the amount this chiral molecule slows down, say, left-handed circularly polarized light is different from the amount that it slows down right-handed circularly polarized light.
+[18:26–18:29] Effectively, there's not one index of refraction, but two.
+[18:30–18:38] Now you might say that seems irrelevant to our setup, since we are very deliberately shining in linearly polarized light, there is no circularly polarized light.
+[18:39–18:46] But actually there's a sense in which linearly polarized light is equal parts left-handed and right-handed circularly polarized light.
+[18:47–18:54] Here, focus your attention on just one vector in this wave, wiggling straight up and down, which is to say polarized in the z direction.
+[18:55–19:06] Notice how it's possible to express this vector as a sum of two rotating vectors, one of them rotating at a constant rate counterclockwise, and the other one rotating clockwise.
+[19:07–19:11] Adding them together tip to tail results in a vector oscillating on a line.
+[19:13–19:19] In this case, it's a vertical line, but that direction can change based on the phase of the two vectors we're adding together.
+[19:20–19:32] Here, let me throw up a couple labels to keep track of how much each one of those two vectors has rotated in total, and then every now and then I'm going to slow down that first vector a little bit, and I want you to notice what happens to their sum.
+[19:36–19:45] Well, every time I slow it down, effectively knocking back its phase a little bit, it causes the linearly wiggling sum to wiggle in a slightly different direction.
+[19:46–20:03] So if the circularly polarized light wave represented by that left vector gets slowed down a little bit every time it runs across a sugar molecule, or at least slowed down more than its oppositely rotating counterpart would, the effect on the sum is to slowly rotate the direction of linear polarization.
+[20:04–20:19] And hence, as you look at slices further and further down the tube, the polarization direction does indeed get twisted the way we were describing earlier, representing how the composite effects with many many many different sugar molecules are slightly different for left-handed light than they are for right-handed light.
+[20:20–20:33] As a nice way to test whether you understood everything up to this point, see if just by looking at the direction of the diagonal slices on our tube, you can deduce which kind of light the sugar is slowing down more, left-handed light or right-handed light.
+[20:35–20:48] I'll call this a partial answer to our question number one, because it still leaves us wondering why there's an index of refraction in the first place, and how exactly it might depend on the polarization of the light, not just the material it's passing through.
+[20:49–20:57] Also, like I said at the start, a robust enough intuition here should also answer for us why the strength of this effect would depend on the frequency of the light.
+[20:58–21:06] At this point I think we've covered quite enough for one video, so I'll pull out a discussion covering the origins of the index of refraction to a separate video.
+[21:19–21:30] Thank you.

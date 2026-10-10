@@ -1,0 +1,554 @@
+[00:00–00:02] Welcome back to Lockdown Math!
+[00:02–00:04] Today we are going to be talking about Euler's formula.
+[00:05–00:12] And just to give you a little sense of where we're going to be ending up with this lesson, I'm going to go ahead and show you what we're aiming for at the end, which is a certain visualization.
+[00:13–00:19] So, I don't expect you to necessarily understand this immediately, but the point is that this is something we're going to walk towards.
+[00:20–00:27] What we're going to analyze is an extension of the idea of exponentials in a way that works in the complex plane.
+[00:27–00:33] And the illustration that you're looking at is showing very literally what the claim of Euler's formula is.
+[00:33–00:41] Because what I want you to appreciate is what the actual statement says, rather than letting it be shrouded in a certain mystery or a certain question of what the conventions are.
+[00:42–00:44] Now, needless to say, this is kind of a confusing thing.
+[00:45–00:49] We've got this spiral of vectors, and if it's not entirely clear, don't worry about it.
+[00:49–00:52] I just want to give you a little sense of where we're going to be going with this.
+[00:52–00:57] But before any of that, let's take a step back and remember where were we.
+[00:57–01:07] Back in the end of the last lesson, when we were talking about complex numbers, one of the key types of complex numbers that we were looking at were those that existed on the unit circle.
+[01:07–01:09] So here I have a little complex plane drawn.
+[01:09–01:13] We've got the real number line with the points 1 and negative 1 indicated.
+[01:13–01:17] We've got the imaginary number line, i being the square root of negative 1.
+[01:17–01:32] And if you remember, one of the main points that we emphasized last time is that when you have a number who's sitting one unit away from the origin at some angle theta, multiplying by this number has the effect of rotating things by that angle.
+[01:32–01:36] This is incredibly important throughout physics, throughout electrical engineering, all throughout math.
+[01:36–01:38] You see these numbers everywhere.
+[01:38–01:41] They describe wave mechanics, they're very important for polynomials.
+[01:41–01:46] It's really hard to overstate how important numbers that sit on this unit circle are.
+[01:46–01:50] Now one way that you could write them is with the real and imaginary parts.
+[01:50–02:01] And based on lecture 2, if we know our trigonometry, the x coordinate is going to be the cosine of that angle, and the y coordinate, which is the imaginary part, is going to be i times the sine of that angle.
+[02:02–02:09] So you might think, all throughout physics, all throughout electrical engineering, you see the expression cosine of theta plus i sine of theta.
+[02:10–02:13] In fact, what you often see is another form of this.
+[02:14–02:19] Almost always, you see this written down as e to the power i times theta.
+[02:20–02:23] And this relationship is what's known as Euler's formula.
+[02:24–02:30] Now e is a special constant of nature, and I always remember in high school, it was never crystal clear to me exactly what it was.
+[02:30–02:36] It was something that was just kind of handed down, okay, it's 2.71828, on and on.
+[02:37–02:42] And we were just taking, you know, we were to take this as an analog of pi.
+[02:42–02:45] It's an irrational number that evidently the universe finds significant.
+[02:46–02:52] I had one calculus teacher who would tell us it was the Andrew Jackson number, because the president, Andrew Jackson, served two terms.
+[02:52–02:55] He was the seventh president, and he was elected in 1828.
+[02:56–02:57] So, there you go.
+[02:57–03:03] I don't know if Andrew Jackson appreciated this relationship that he had to Euler, but it always helped me remember the number.
+[03:04–03:12] Now, just to gauge sentiment, because I'm not entirely sure where the audience is, I want to know what your current relationship with this particular formula is.
+[03:12–03:16] So we're going to do a poll to start, and this poll is mostly going to be helpful to me.
+[03:17–03:28] So, polling up some of the warm-up questions that we had, where evidently most of you, if you were to choose one of Euler's formulas, would have gone with the one that we're talking about today, which is great, you know, appropriate given where we want to head.
+[03:28–03:42] As a poll that's actually going to be helpful to me, let me ask you, which of the following best describes your relationship with the formula e to the power i theta equals cosine of theta plus i times the sine of theta?
+[03:42–03:42] Okay?
+[03:43–03:55] And the options here are that you've never seen it before, totally understandable, that you've seen it but you're confused by it, that you still don't understand it but you've grown used to it, or that you understand it well.
+[03:55–03:57] So, as you can see, answers are rolling in.
+[03:57–03:58] Please participate!
+[03:58–04:00] This is going to be way fun if more of you participate.
+[04:01–04:08] You can go to 3b1b.co slash live, link is also in the description, that forwards you to the place where you can answer this poll.
+[04:09–04:19] And while answers are rolling in, I just want to remind us of a more famous variant of this expression that you often see, which is basically what happens when you plug in pi.
+[04:20–04:38] So, if we say e to the i times pi, now we're thinking of pi as an angle, it's a number of radians, a distance around the unit circle, you would plug in cosine of pi plus i times the sine of pi.
+[04:39–04:39] Okay?
+[04:40–04:47] And the way to think about that is to look at the unit circle and ask, what if you walked around until you'd walked a total distance of pi?
+[04:48–04:57] You know, if it's a lake with a radius 1 and you walk around the boundary until you've gone a distance of pi, kind of by the definition of what pi is, that takes you halfway around the circle.
+[04:57–05:06] So the x component, cosine, is going to be negative 1, and then the y component, sine, is actually 0, so there's no imaginary part, it's just negative 1.
+[05:06–05:15] And this gets us, you know, what might be the most celebrity equation in all of math, e to the i times pi is equal to negative 1.
+[05:15–05:15] Okay?
+[05:16–05:25] But it's baffling, genuinely baffling, because you've got this idea of raising a constant, which is a little wishy-washy to start with, what is e, but you're raising it to an imaginary power.
+[05:25–05:31] And if you don't understand what that means, you're in good company, I think very few people in the world actually do.
+[05:31–05:41] Now turning back to our poll, where we've got a good number of responses, and a pretty good spread too, I'm genuinely curious to know, who am I talking to right now?
+[05:41–05:41] Okay?
+[05:41–05:44] Because it looks like we have a pretty even distribution among all camps.
+[05:45–05:51] Alright, so the number one most common answer is c, which is those who still don't understand it but they've grown used to it.
+[05:51–06:02] This, I'm going to guess, includes people like math majors or engineering majors or people who have gone into a technical field, where it comes up a lot, so you have to grow used to it.
+[06:03–06:16] This is also revealing the fact that even though these lectures are targeted at high school students, that this channel has a certain base demographic to start with, so sometimes those sitting in the audience, it's more like adults who have walked in and are sitting in the back of the class.
+[06:17–06:24] Very happy to see that d, I understand it well, is the second most common answer.
+[06:24–06:32] I'm curious among those who answer d, if by the end of the lecture they would say that what they understood about this is the same as what I'm going to teach.
+[06:32–06:38] Because for example, I would make the claim that this formula actually has nothing to do with the number e, okay?
+[06:39–06:43] That the number e doesn't actually play a role in what this formula is computationally saying.
+[06:43–06:47] And I'd be curious if those who claim that they understand it well would agree with that statement.
+[06:48–06:55] After that we have those who've seen it but are confused by it, and at the very end is the actual target demographic of those who've never seen it before.
+[06:55–07:04] Oh, I don't know if it's fair to call that the target demographic because I think sometimes you see it in an odd circumstance here or there, but definitely those who answered a or b, you're my people.
+[07:04–07:06] You're the ones that I want to talk to about this, okay?
+[07:06–07:08] But let's say you see this, okay?
+[07:08–07:13] You see this weird formula e to the pi i, or the generalization e to the i times some angle.
+[07:14–07:24] I think the healthy reaction to have to this, okay, if you're just seeing this for the first time, the healthy question to ask is w t f, okay?
+[07:26–07:32] What is the function at play and how is it defined, okay?
+[07:32–07:33] What's the function?
+[07:34–07:39] Because in this case the function is e to the x, and we're plugging in certain imaginary inputs.
+[07:40–07:51] And I think a lot of people think that that refers to taking a number e and multiplying by itself some number of times, and that x describes how often you're multiplying by itself.
+[07:52–08:01] And that yeah, there's some notion of extending that to things like one half or negative one, or any kind of real number, but that it's based in this idea of repeated multiplication.
+[08:02–08:06] Now the thing that makes this equation misleading is that that's not the function.
+[08:07–08:09] That is not what e to the x is referring to.
+[08:09–08:11] Let's emphasize that very heavily.
+[08:11–08:13] This is not what e to the x means.
+[08:13–08:14] This is not its convention.
+[08:15–08:23] Instead, what has emerged in math is that we use e to the x to be a shorthand for another function.
+[08:24–08:26] A function which I'm going to give the name exp.
+[08:26–08:28] This is how you often see it in literature.
+[08:29–08:31] And it's defined to be a certain polynomial.
+[08:32–08:45] It's one plus x plus x squared divided by two plus x cubed divided by six plus x to the power four divided by twenty four.
+[08:45–08:48] And in fact it's not a polynomial, it's an infinite polynomial.
+[08:49–08:54] We add infinitely many terms, each of which look like x to the n divided by n factorial.
+[08:55–08:57] The proper term for this is a series.
+[08:57–09:07] In practice, if you're actually computing this, because that denominator grows so quickly, you can chop off the series pretty early to get an approximate value for what this actually is.
+[09:07–09:13] Now right away, we can see that this is going to work for lots of kinds of x that we could plug in.
+[09:13–09:25] Anything where we know how to raise x to a power, just a whole number power, multiply it by itself, and where we know how to divide by a factorial and add those together, we can come up with a nice meaning for what this exp function means.
+[09:26–09:36] But before we jump into things like complex numbers and throwing that in, I think it would be very unsatisfying to do that if we didn't first draw the connection to the number e.
+[09:36–09:38] And the idea of repeated multiplication.
+[09:38–09:47] Because on the surface, this infinite polynomial seems very different from the idea of some special constant of nature e and raising it to a power.
+[09:48–09:49] So let's build up a little familiarity.
+[09:49–09:51] We're going to take, you know, a couple minutes to do this.
+[09:52–09:58] And it's a very healthy exercise I think to become friends with this function by starting to plug in a couple different values.
+[09:59–10:01] One of the first you might plug in is the number 1.
+[10:02–10:06] So that way we get 1 and then x is 1, so that's 1.
+[10:06–10:09] x squared is still 1, so that's 1 half.
+[10:11–10:13] And then 1 sixth.
+[10:14–10:15] And then 1 twenty fourth.
+[10:17–10:20] And in general, we're adding 1 divided by n factorial.
+[10:22–10:31] In math we say that this is a series that converges in the sense that as we add more and more terms, it approaches a certain value and it gets closer and closer to some specific value.
+[10:31–10:39] And that value ends up being around 2.71828, the Andrew Jackson number.
+[10:40–10:43] But at this point, just think of it as it was going to be something.
+[10:43–10:45] x of 1 was going to be something.
+[10:45–10:47] This is what x of 1 happens to be.
+[10:47–10:50] At the moment, there isn't necessarily anything special about that.
+[10:51–10:53] But let's say you wanted to plug in other values.
+[10:54–11:06] Just to get a little practice with what that would look like, if I wanted x of 2, it would look like 1 plus 2 plus 2 squared over 2 plus 2 cubed over 6.
+[11:07–11:15] And in principle, if you were on a desert island and you just needed to compute x of 2, you could work this all out by hand if you were comfortable with long division.
+[11:15–11:17] But of course, we live in the modern world.
+[11:18–11:19] We have computers, we have programming.
+[11:20–11:28] So I think to make this especially concrete, let's go ahead and actually implement this function so that we can calculate a couple values and so that it's not a black box.
+[11:28–11:30] It's not just a calculator that's been handed to us.
+[11:31–11:33] We implement it so we know exactly what it's doing.
+[11:34–11:37] So for that, let's go ahead and pull up a little Python.
+[11:37–11:38] This is Desmos.
+[11:38–11:39] We might look at that a little bit later.
+[11:39–11:42] Right now, let's be a little bit more programmatic.
+[11:42–11:43] Let's pull up some Python.
+[11:44–11:48] Let's import some math because that's a sign you're always going to have some fun.
+[11:48–11:52] Then I'm going to define the exp function that's going to take in some number x.
+[11:53–12:05] And what I want is to return something that looks like 1 plus x plus x squared over 2, where in Python this double, what do you call it, an asterisk, this double asterisk sign is how we do exponentiation.
+[12:06–12:08] And then x cubed over 6.
+[12:08–12:10] And we kind of want to add that up a whole bunch.
+[12:10–12:21] Of course, instead of typing all that out, we can use a little special syntax where I'm going to say, I want you to return a sum of a bunch of terms.
+[12:22–12:27] Each term is going to look like raising x to some power, and it knows what x is because that's what was handed to it.
+[12:28–12:30] x to some power divided by the factorial.
+[12:31–12:32] Factorial of n.
+[12:32–12:35] And that's built into this math package that we imported.
+[12:36–12:39] And I'm just going to do this for values of n that start at 0.
+[12:40–12:43] 0 factorial is defined to be 1, if you're curious.
+[12:43–12:49] We could talk all about factorials of weird values at a later date, but that's all you need to know here.
+[12:49–12:54] And I'm just going to have it range up to 100 because 100 factorial is going to be huge.
+[12:54–13:00] So that's going to be plenty big enough for a denominator to be small enough that those later terms don't contribute a lot.
+[13:00–13:11] So even if you don't know Python, I hope that this is a reasonably clear way to turn the math into something that our computer can chew on, and crunch through the numbers so that we don't have to.
+[13:12–13:16] So for example, if we type x of 1, we get the Andrew Jackson number.
+[13:17–13:19] 2.71828, on and on.
+[13:19–13:24] And I could type in x of 2, and it looks like that's around 7.389.
+[13:25–13:27] So maybe we even write that in our notes.
+[13:27–13:33] We go over here and say, interesting, x of 2 was about 7.389.
+[13:35–13:36] Okay.
+[13:37–14:09] And if you spend a long time just kind of playing around with this, okay, I think it's not obvious that you might find this, but if you were just plugging in a couple values, x of 3, x of 4, one important fact you might stumble across is that if I add two numbers in the input, okay, so in this case I get 1096 when I plug in 7, which is 3 plus 4, that actually ends up being the same as if I plug in x of 3 times x of 4.
+[14:10–14:10] Okay.
+[14:11–14:15] So adding the input corresponds to multiplying in the output.
+[14:15–14:24] And 3 and 4 weren't special here, I could have done, you know, 5.5 and 3.2, and that would have gotten me some value.
+[14:24–14:29] And if instead I had added those together, okay, it gets the same value.
+[14:29–14:32] That is not at all obvious, okay?
+[14:32–14:39] So I think that would be a genuine discovery to have with respect to this function, with this polynomial, if that was something that you found.
+[14:39–14:42] And it's important enough that I want to write it down.
+[14:45–14:56] Exp of a plus b is actually the same thing as exp of a times exp of b.
+[14:57–15:01] Now if you just look at the polynomial, this is not clear.
+[15:01–15:06] This is not something that, like, you look at it and say, oh yes, of course, it couldn't have been any other way.
+[15:06–15:11] At the end of today's lesson though, I'm going to give you guys some homework, and yes, homework will make you learn better.
+[15:11–15:17] And what we're going to do is go through a couple problems that are going to have you show that this fact is true.
+[15:17–15:26] That simply from the polynomial, and the fact that it includes these factorial terms, excuse me, that's going to be enough to show this very special property.
+[15:27–15:28] Now why am I calling it a very special property?
+[15:30–15:34] Well, I want to ask you a certain question that will hopefully make this clear.
+[15:34–15:37] And it really is important that you think this through yourself.
+[15:37–15:45] Because I think if we, uh, if I just kind of tell you the implications here, it's not going to sink in to the same extent as if you really noodle with it yourself.
+[15:46–15:51] So I'm going to pull up another question, and I'm going to give you some time to think on this one.
+[15:53–15:59] What the question asks us is to suppose that we have some function f of x that has this special property.
+[15:59–16:07] We're adding two numbers in the input, f of a plus b, gives the same result as multiplying in the output, f of a times f of b.
+[16:07–16:10] And that this is true for any real number, a and b.
+[16:10–16:10] Okay?
+[16:11–16:14] Suppose you have some function that satisfies this property, who cares how it's defined?
+[16:14–16:16] Whether it's through this polynomial, through other means.
+[16:17–16:18] Which of the following is true?
+[16:19–16:23] One of the options is that f of five is equal to f of one raised to the power five.
+[16:24–16:28] Another is that f of one half is equal to the square root of f of one.
+[16:29–16:32] And the other is f of negative one equals one divided by f of one.
+[16:33–16:38] Now very important, I'm not asking does there exist some function f where these three things will be true.
+[16:38–16:42] I'm asking which of these necessarily has to be true only from that property.
+[16:42–16:48] So you shouldn't be able to contrive some sort of adversarial function that doesn't satisfy it.
+[16:49–16:55] And then you have various options for which collection of these three things is true.
+[16:55–16:58] I'm going to give you some time to think about this because I really do think it's important.
+[16:59–17:02] So I'm going to turn up our pause and ponder music to get us in the mood.
+[17:05–17:07] And take a desperately needed drink of water.
+[17:25–17:28] While you're noodling on that, I'm going to go ahead and take a question from the audience.
+[17:28–17:35] Where it looks like Serft asks, what do you think is more interesting to someone who is a newcomer to higher level math?
+[17:36–17:41] Special case theorems like e to the i pi or more general cases like e to the i x.
+[17:41–17:42] Oh that is such a great question.
+[17:43–17:46] By the way, anyone who wants to ask questions go to Twitter and just use the hashtag lockdown math.
+[17:46–17:48] Those will be forwarded to me.
+[17:48–17:58] I think the best way to learn is to have specific examples and really let yourself understand the patterns represented by those specific examples and then generalize them.
+[17:58–18:08] For the specific one that you have here, I think if you just see e to the i pi, that doesn't really count as a good specific example that explains the generality.
+[18:08–18:12] It's more that you're plugging in one particular number into a formula.
+[18:12–18:22] So in this case e to the i x, as you'll see, it has everything to do with circular motion and between this lecture and the next one, we're going to talk about why that relation might be there.
+[18:23–18:30] So the form of having specific examples that aids your understanding wouldn't be, you know, a number like e to the i pi.
+[18:30–18:40] It would be building a relationship with circular motions and other circumstances like studying physics where you have a tetherball with some kind of centripetal force and it's orbiting or like orbital mechanics.
+[18:40–18:48] Anything where you're really understanding the nature of circular motion, that actually prepares you for understanding e to the i x as a generality a little bit better.
+[18:50–18:55] So with all of that, answers are still rolling in and I don't want you to feel rushed.
+[18:56–18:59] So I'm going to give a little bit more time here actually.
+[19:00–19:13] Because remember, you need to really be sure that if you're saying that something like 2 or 3 or 1 is included in your answer that any function with this special property necessarily follows that.
+[19:15–19:23] Oh, let's see if we can grade it when the top answer is the year.
+[19:23–19:26] So 2017, that's a little bit in the past.
+[19:26–19:27] 2013, we're losing the top answer.
+[19:28–19:29] Interesting, people are changing their mind.
+[19:30–19:31] It's like we're going back in time.
+[19:32–19:36] So it looks like a couple people are, oh now we're in the future, 2023.
+[19:37–19:44] Yeah, so we're actually seeing people think about it and thinking, hang on, you know, is it the case that option 3 here is necessarily true?
+[19:44–19:46] And they're really being critical about that.
+[19:46–19:47] So that's a good sign.
+[19:52–19:55] If you want to keep thinking about it, please do.
+[19:55–20:02] But for the sake of continuing with the lesson, I'm going to go ahead and lock things in here and see how people ended up answering.
+[20:02–20:09] So it looks like 2030 of you, the decade in the future, believe that all three of these are necessarily true.
+[20:09–20:14] So, second most common answer was B, they only believe that the first one is true.
+[20:15–20:19] And then after that, people who either included number 2 or number 3.
+[20:19–20:21] And the correct answer is that all of them are.
+[20:22–20:25] And it's very interesting to walk through why.
+[20:25–20:26] I do think it's very elucidating.
+[20:26–20:27] So let's go ahead and do this.
+[20:27–20:41] The first one, which it seems like a majority of you believe, is that if we plug in something like 5 to a function with this special property, that it'll be the same as taking f of 1 raised to the fifth.
+[20:42–20:50] Now the reason is that we could also write 5 as 1 plus 1 plus 1 plus 1 plus 1.
+[20:51–21:01] And this property of addition in the input becoming multiplication in the output means that's the same thing as writing x of 1 multiplied by itself 5 times.
+[21:02–21:03] Okay?
+[21:04–21:09] It lets you rewrite the whole thing in terms of x of 1, which I'm going to say 5 times.
+[21:12–21:17] This is the same as taking x of 1 raised to the power 5.
+[21:17–21:24] And here when I'm writing exponentials, anytime you see a natural number or a whole number, it can literally mean multiplying by itself that number of times.
+[21:24–21:28] That's not the same as the fact that e to the x is a shorthand for this crazy polynomial.
+[21:29–21:32] So that can sometimes get a little confusing, the exponent is playing two different roles.
+[21:32–21:36] And we might give x of 1 a special name, a shorthand.
+[21:36–21:38] Let's just call it e for short.
+[21:38–21:41] That's not why we call this number e, by the way.
+[21:41–21:44] It's also not because this is what Euler's name starts with.
+[21:44–21:52] It's just because whenever Euler was using this, the first time in a particular book, he was partial to vowels and the vowel a had already been used.
+[21:52–21:53] So e was just his arbitrary letter.
+[21:55–22:01] Okay, so simply by virtue of this property, we can see that x of 5 has to be written in terms of x of 1.
+[22:01–22:05] Now a little bit trickier was the question about plugging in 1 half.
+[22:06–22:06] Okay?
+[22:06–22:13] And the key to solving this, it's a little bit tricky, is to think about what happens when we multiply that by itself.
+[22:13–22:24] Exp of one half times exp of one half, because of this property, has to satisfy, or I should say has to equal exp of one half plus exp of one half.
+[22:25–22:31] Which is of course x of 1, which let's say we're using the shorthand and we call it e.
+[22:31–22:32] So what does that mean?
+[22:33–22:37] x of 1 half has to be a number such that multiplying it by itself equals e.
+[22:37–22:40] Well that's what we mean when we write square roots.
+[22:41–22:41] Okay?
+[22:43–22:46] And the last one was talking about negative inputs.
+[22:47–22:50] So just as an example, if we inputted something like negative 1.
+[22:51–22:57] So the key here is to ask about multiplying it by the value when you plug in 1.
+[22:58–23:07] By this rule, that addition in the input turns into multiplication in the output, that has to be the same as exp of 0.
+[23:07–23:09] Now what is exp of 0?
+[23:10–23:12] Ooh, you know what I'm realizing.
+[23:14–23:14] Hmm.
+[23:15–23:18] I think I might have actually made the, entered a wrong answer there.
+[23:18–23:24] Because in our case, in our case exp of 0 actually does come out to be the number 1.
+[23:25–23:31] Okay, so if we plug in 0 for x, then all of these, you add them together, the only term that matters is 1.
+[23:31–23:37] So exp of negative 1 times exp of 1 is equal to exp of 0, which is 1.
+[23:37–23:39] So this is true in the case of exp.
+[23:40–23:46] I, I can't actually think to myself right now if that's necessarily true.
+[23:46–23:53] You know, if we look at our question, where it's saying all we know about f is that f of a plus b is f of a times f of b.
+[23:54–23:58] If that necessarily implies that f of 0 is going to be 1.
+[23:59–24:01] And I, I don't think it does.
+[24:01–24:02] I think we could construct a function.
+[24:02–24:05] Yeah, because we could just scale e to the x by some other amount.
+[24:06–24:09] Okay, yeah, so actually what's graded here is not entirely correct.
+[24:09–24:11] The correct answer would be only 1 and 2.
+[24:12–24:13] I think.
+[24:13–24:17] Someone correct me on Twitter if I'm wrong about that.
+[24:17–24:19] But, very interesting.
+[24:20–24:23] So if we go back to our paper, let's see.
+[24:23–24:27] In the case of exp, this, this value at 0 would be 1.
+[24:27–24:28] What does that imply?
+[24:28–24:35] Well, if we call exp of 1 e, that means we're asking what is the number which when you multiply by e equals 1.
+[24:35–24:37] And it would be 1 divided by e.
+[24:38–24:43] But yeah, for the general case, we need the added condition that when you plug in 0 you do get 1.
+[24:44–24:51] Now the point of all of this, right, the reason that I'm saying this, is to emphasize why it's reasonable that we use the shorthand.
+[24:52–24:59] That when we say exp of x, for real numbers x, why it would be very reasonable to write this as e to the power x.
+[24:59–25:10] Because basically this special property means that because you can use the number 1 to access pretty much all the real numbers by adding it to itself or dividing as needed or negating.
+[25:11–25:16] And then if you have certain continuity restrictions that will let you extend from rational numbers to all the reals.
+[25:16–25:22] But that's a technical point, you don't need to fuss over for what we're doing right now.
+[25:23–25:29] It lets you basically express everything that this polynomial can output in terms of what it outputs at the number 1.
+[25:29–25:37] So you might read e to the x as just, whatever this polynomial is at the input 1, we can start exponentiating in terms of that.
+[25:38–25:45] So that's the connection, right, we could, we could if we wanted define the number e to simply be where is this polynomial at the number 1.
+[25:45–25:47] And then all of this would follow.
+[25:47–25:50] But I really want to emphasize that only makes sense for real numbers.
+[25:51–25:57] Because as soon as we start introducing things like complex numbers, you can't just add 1 to itself or subtract and divide and get the number i.
+[25:58–26:03] And in math you often do even crazier things where you plug in things like matrices into this polynomial.
+[26:03–26:10] Which seems weird, but you know, you can take a matrix and square it, you can divide it by 2, you can add all of those together.
+[26:10–26:12] And that's actually a very useful thing.
+[26:12–26:17] It's very useful for a field called differential equations, which in turn is useful for physics.
+[26:18–26:25] In quantum mechanics you often plug in these things called operators, which are kind of like the mature older brother of matrices.
+[26:25–26:30] And all of that looks totally nonsensical if we're talking about a constant raised to some kind of power.
+[26:30–26:34] But what you have to understand is that it's being plugged into this polynomial.
+[26:35–26:39] So I understand why we have the convention of writing this as e to the x.
+[26:39–26:41] It makes sense for real numbers.
+[26:41–26:45] But I think that's actually a bad convention as soon as we start extending it.
+[26:45–26:47] And I think that causes a lot of undue confusion.
+[26:48–26:53] So with all of that said, let's finally have some fun and plug in some complex values.
+[26:54–26:58] And before we do that, just as kind of a warm up, I want to make sure that we're comfortable with powers of i.
+[26:58–27:00] Because that's what's going to be important here.
+[27:00–27:06] So let's pull up our quiz and let's go ahead and ask one more question.
+[27:06–27:09] And then I'll take a question from the audience too while you guys think about this.
+[27:11–27:16] Remember that i is defined to be a value that satisfies i squared equals negative one.
+[27:17–27:18] So that's defined.
+[27:18–27:24] For which values of n does i to the power n equal negative i?
+[27:24–27:29] So the spirit of this question is to have people thinking deeply about powers of i.
+[27:30–27:34] And I wanted it to be a question that's not totally obvious.
+[27:34–27:37] So one that you do have to put a little mental energy into.
+[27:39–27:45] So let's go ahead and take a question from the audience while I take a drink of water.
+[27:48–27:54] F of x equals zero doesn't work with f of negative one equals one over f of one.
+[27:57–27:59] Yeah, f of x equals zero.
+[27:59–28:00] Oh, interesting.
+[28:00–28:01] Yeah, okay.
+[28:01–28:05] So they're saying that if f of x ever outputs zero.
+[28:06–28:08] Actually, I'm not entirely sure what Sam is saying.
+[28:08–28:13] F of x equals zero doesn't work with f of negative one equals one over f of one.
+[28:17–28:24] So I guess that fact that f of negative one is one over f of one doesn't imply that the output will ever be zero.
+[28:25–28:32] So I could ask for some clarification, but I think that might be getting at the general point of the mistake of the question.
+[28:32–28:37] Which was to assume, to extend the idea of exp a little bit too much.
+[28:37–28:40] Where the fact that exp of zero equals one gives us this other property.
+[28:42–28:47] And then Crispin Simmons says three is included because f of x plus zero.
+[28:47–28:48] Oh, okay.
+[28:48–28:48] Yeah, okay.
+[28:48–28:48] Great.
+[28:49–28:49] Great.
+[28:49–28:55] Yeah, someone thought this through a little bit more deeply than I can while live and on camera and under some pressure.
+[28:55–29:00] F of x plus zero is the same as f of x times f of zero, which implies f of x equals one.
+[29:01–29:01] Awesome.
+[29:01–29:02] Crispin, you saved me.
+[29:02–29:03] You saved me on this one.
+[29:04–29:06] That's a beautiful way of thinking about it.
+[29:06–29:10] Yeah, all of these questions where you have like a property of a function and you're supposed to deduce facts.
+[29:10–29:11] They can be very subtle.
+[29:12–29:15] And so in this case, okay, the question was graded correctly.
+[29:17–29:27] The property simply that addition in the input becomes multiplication in the output is enough to imply f of zero equals one, which in turn locks in the value for f of negative one.
+[29:27–29:28] Oh, it's so pleasing.
+[29:28–29:35] One little property can just lock in basic, not the whole real number line because it didn't assume continuity, but it locks in pretty much any value you want.
+[29:36–29:36] Awesome.
+[29:36–29:37] Excellent questions.
+[29:37–29:38] I love live stuff.
+[29:39–29:43] Even if I make errors, it does feel a little more interactive than the usual videos.
+[29:43–29:45] So let's see how we're doing on the quiz.
+[29:45–29:47] Looks like we've still got some answers rolling in.
+[29:47–29:54] We're trying to understand which powers of i are equal to negative i.
+[29:55–30:06] And the options include multiples of three or multiples of three as long as they're positive, or integers one below a multiple of four or those where you're restricted to them just being positive.
+[30:08–30:10] And I'm going to go ahead and grade this question.
+[30:11–30:18] And as always, if you feel like you weren't done by the time I'm locking it in, know that that's just for the sake of letting the lesson progress forward.
+[30:18–30:26] If you wanted to pause and think about it further yourself, especially if you're watching this later, that would be totally in the spirit of these lessons.
+[30:27–30:27] Okay.
+[30:28–30:36] So the majority, or the plurality, I guess, of you answered that it's all integers one below a multiple of four, which is correct.
+[30:36–30:42] And the second most common answer was basically the same but restricted to positives.
+[30:43–30:43] Great.
+[30:43–30:52] So let's think through what powers of i actually look like, because this is going to be the only thing we really need to plug in complex values into this exp function.
+[30:52–31:03] And the way this can work, if I pull out my infinite supply of unit circles, is to remember that multiplication in the complex plane includes a rotation component.
+[31:03–31:06] And because i has a magnitude of one, there's only rotation.
+[31:07–31:10] So multiplying by i has the effect of rotating 90 degrees.
+[31:10–31:17] If you multiply by i twice, okay, i squared, you end up 180 degrees around.
+[31:18–31:22] Reassuring, it's supposed to have a square of negative one, and this geometry lines up with that fact.
+[31:23–31:30] If we multiply by itself three times to get i cubed, it ends up being a vector pointing straight down.
+[31:31–31:37] Multiplying by itself a fourth time, 90 degrees, takes us back to one.
+[31:37–31:41] So i to the fourth is one, and then after that they all start repeating.
+[31:41–31:46] So basically all you need to know is where is that exponent with respect to powers of four.
+[31:46–31:48] If it's a power of four, you're at one.
+[31:48–31:51] If it's one above a power of four, you're at i.
+[31:52–31:58] Now the trickiness of the question was to also include the nuance of whether this is only for positive powers or negative powers.
+[31:58–32:08] But what a negative power means, if we write something like i to the negative one, that's defined to be one over i, the number such that when you multiply by it, you get one.
+[32:10–32:13] And you can see that that's actually the same as i cubed.
+[32:13–32:19] This is the same as i cubed because that's a number where when we multiply it by i, we get one.
+[32:20–32:22] Negative one, that's also one below a multiple of four.
+[32:22–32:28] And in general, anything that's one below all the negative multiples of four will also satisfy this property.
+[32:29–32:38] So it's a little tricky question, but it's just because I wanted you to think deeply about this idea that powers of i, of whole numbers, just have us ticking forward by 90 degrees.
+[32:38–32:40] And finally, we can have our fun.
+[32:40–32:49] We can take our crazy exp function, and we could plug it into Python if we wanted to and see how things play there.
+[32:49–32:52] But first, let me go ahead and visualize it for you.
+[32:53–32:59] So I'm going to, uh, let's see, that circle is already suggestively drawn, but I don't want that to be there.
+[32:59–33:07] I just want you to think about this polynomial where I'm going to plug in i scaled by some kind of constant, which very suggestively I'm going to give the name theta.
+[33:07–33:13] And then what that means is taking one plus i times theta plus i theta squared over two, on and on.
+[33:13–33:18] And just as an example, let's crank theta on up until it equals one.
+[33:18–33:21] And let's try to think pretty deeply about what this actually means computationally.
+[33:22–33:27] The first term is one, which we might draw with this green vector on the bottom, pointed one unit to the right.
+[33:28–33:31] The next term is going to be i times one, so just i.
+[33:32–33:34] It's pointed straight up with magnitude one.
+[33:35–33:37] Now think about what the next term is.
+[33:39–33:46] It's going to be i squared, or i theta squared, but theta is one, so it's i squared, which is negative one over two.
+[33:46–33:51] So that's why this next vector is pointed to the left, and it has length one half.
+[33:51–33:52] Okay?
+[33:52–33:56] Then after that, i cubed is pointed straight down, and we divide it by six.
+[33:56–34:02] So now we just have an itty bitty vector that is of magnitude one sixth, and then they just get smaller from there.
+[34:02–34:07] The next one is pointed to the right, but it has magnitude one over twenty four, and they just shrink a whole bunch.
+[34:08–34:09] And so we get something.
+[34:10–34:12] It's clear that this is a computation that makes sense to do.
+[34:12–34:15] It's not clear how we would know where it ends up.
+[34:15–34:19] That feels like it's going to require real math to have some kind of theory behind it.
+[34:20–34:26] We could be computational, and pull up Python, and remember that it actually has built-in support for complex numbers.
+[34:26–34:35] If I write something like complex of two three, it gives me a complex number with real part two and imaginary part three, and what's cool is that it already knows the rules for multiplication.
+[34:35–34:40] So I could multiply this by other things, it knows how to take their product, very cool.
+[34:40–34:59] Now given that our definition of this exponential function, if you'll remember, was only ever in terms of raising something to a power and scaling it by a factorial, and then adding all those terms up, well it should make sense to plug in something like complex zero one, which is how we write i in Python, and see what it pops out.
+[35:00–35:06] And indeed, it crunches through the numbers, and it gets for us something whose real part is evidently around point five four, who knew?
+[35:06–35:13] And whose imaginary part is around point eight four, and in terms of our visual, you know, that checks out.
+[35:13–35:18] It looks like the real part is a little above point five, so point five four, I believe that.
+[35:18–35:22] And the imaginary part is, it claimed what, point eight four?
+[35:22–35:23] Yeah, that seems about right.
+[35:24–35:29] So at this point, we can actually think, what is the claim of Euler's formula?
+[35:29–35:32] What is it telling us about the behavior here?
+[35:32–35:38] And my hope is that Euler's formula might have started off mysterious, but mysterious in a bad way, okay?
+[35:39–35:55] Because when you initially see this expression, e to the i theta is equal to cosine theta plus i sine theta, telling you that, oh, I guess imaginary exponents get us on the unit circle, it doesn't leave you wondering about a real pattern, it leaves you wondering what the convention is, right?
+[35:56–35:57] It leaves you wondering, WTF.
+[35:58–36:07] However, right now what we can see is what this is saying is if I plug in i times theta, evidently that's the same as walking around a unit circle.
+[36:07–36:25] Now that feels very substantive, there's a lot of content to be had in that expression, because if we go to our visual, what it's telling us is that if I, if I crank up this value of theta, the place that the sum of vectors converges always sits on a circle that's one of radius one.
+[36:26–36:27] That's not obvious.
+[36:27–36:33] If you just look at this expression and you think through what it's saying very literally, that is definitely not something that just pops right out of it.
+[36:33–36:42] But it becomes a lot more beautiful, in my opinion, because you're no longer asking questions of convention, you're asking questions of the universe, of actual patterns.
+[36:42–36:50] So just to take the most famous input that there is, plugging in pi around 3.14, let's think about what this is actually saying.
+[36:50–36:55] It's saying, okay, the first term is one, so we've got our vector pointed one unit to the right.
+[36:55–36:58] The next term is i times pi.
+[36:58–37:06] Okay, so that's going to be a vector that's pointed up because of the i with a length of pi around 3.14, which it looks like it is.
+[37:06–37:10] The next one is going to be i squared times pi squared over two.
+[37:11–37:14] So that i squared means that it's negative, okay, it's pointing to the left.
+[37:15–37:17] And I guess the magnitude is pi squared over two.
+[37:18–37:22] We could do a quick gut check if we wanted and just ask ourselves, you know, what is pi squared?
+[37:23–37:29] It's around 9.8, same as the gravity on Earth in terms of meters per second squared, which is always fun.
+[37:30–37:33] And dividing that by two, it looks like it's 4.93.
+[37:33–37:34] Okay, does that check out?
+[37:35–37:41] Yeah, I buy it that the length of this vector is just less than five, so 4.93.
+[37:41–37:47] And then the next one, because of the i cubed, is pointed down and the magnitude is pi cubed over six.
+[37:47–37:50] Evidently that's around the magnitude of pi cubed over six.
+[37:50–38:01] And so far the vectors have been getting bigger, but it's at this point they start turning around because basically each time on the, for each new term, the numerator gets an extra pi thrown in.
+[38:01–38:04] But the denominator now gets an extra four thrown in.
+[38:04–38:07] Like going from six to 24, you're multiplying by a four.
+[38:07–38:10] And then it's going to get an extra five and then a six.
+[38:10–38:17] So the denominator is going to start growing much more than the numerator, which is why the vectors shrink and shrink and start to converge to a point.
+[38:18–38:24] So the i in there is what's letting these vectors all turn 90 degrees each time and give us this very pretty spiral sum.
+[38:24–38:42] And the claim of Euler's formula is this very fascinating fact, that evidently when the vectors are rotating according to powers of i, and when their lengths are changing according to powers of pi divided by n factorial, they all conspire in just the right way, that they land at the point negative one.
+[38:43–38:44] That's interesting.
+[38:44–38:47] Still mysterious, but mysterious in a good way.
+[38:47–38:56] And it's making an even stronger claim, which is that any other angle that we might put in, it puts us on a unit circle at that angle.
+[38:57–39:07] Now this is especially mysterious when we consider the fact that as we let this value just continue increasing, it's not even clear that the function would be periodic, right?
+[39:08–39:20] Because as theta increases, more and more of the vectors become relevant, because it takes longer and longer for the denominator of our terms to win out, and yet they stay very nicely constrained onto the unit circle.
+[39:21–39:22] I think that's interesting.
+[39:23–39:33] So just to do a last little concept check here, I'm going to ask you one final question to basically see if you've been paying attention, see if the claims made stand to reason.
+[39:33–39:41] So getting rid of our powers of i, the last question is a wind-down question of sorts for the evening.
+[39:43–39:48] Which of the following values is closest to e to the 3i?
+[39:50–39:53] So as usual, this is the link you can go to.
+[39:53–39:56] Which of the following values is closest to e to the 3i?
+[40:20–40:32] Now as you're answering, let me just remind you that the main takeaway I want you to have from this lesson is that the way that you read this is not to think about a constant e raised to an imaginary power.
+[40:32–40:37] Because that doesn't really make sense when we're thinking of powers as repeated multiplication.
+[40:39–40:43] However, what does...
+[40:45–40:46] Let's see...
+[40:46–40:48] Seems like we have some controversy over the last question.
+[40:48–40:49] We'll address that in a moment.
+[40:51–40:56] But what you should think about here is the fact that e to the x is shorthand for this general polynomial, okay?
+[40:57–41:02] And this general polynomial, it turns out to be very relevant in things like calculus in a future lecture.
+[41:02–41:08] I'd like to start talking about why this idea of x to the n over n factorial and adding them up.
+[41:08–41:09] Why is that useful?
+[41:09–41:10] Why would anyone care?
+[41:10–41:12] Why would it give rotation?
+[41:13–41:17] But if you know that that's how to read it, hopefully this isn't a nonsense question.
+[41:17–41:20] And it's not one that just asks you to blindly believe convention.
+[41:21–41:26] It kind of asks you to blindly believe a claim about the fact that this follows a circle, but we'll address that in the next lecture.
+[41:27–41:30] And I think that's enough time to go ahead and grade this.
+[41:31–41:36] And the correct answer is b, which around 3800 of you nicely got.
+[41:36–41:38] Well done, well done indeed.
+[41:38–41:42] And it's around negative 0.99 plus 0.14i.
+[41:43–41:46] So the expectation isn't that you're a machine who can calculate that in your head.
+[41:46–42:01] It's instead the idea that if we go over to our visual, where we're plugging in values of theta, and you ask what happens when you plug in 3, that the claim of Euler's formula is that we walk three units around a unit circle.
+[42:01–42:11] Knowing that pi units takes us all the way around, three units should take us so that the real part is really quite close to negative 1, and the imaginary part is something positive.
+[42:11–42:14] And of the options you were given, those were the only ones in there.
+[42:14–42:23] Now the very last thing that I would like to emphasize here is that nothing about this actual expression has to do with the number E.
+[42:23–42:26] Has to do with the number 2.71828, on and on.
+[42:26–42:52] If we were to go to the computation taking place, if I plug in something like exp of a complex number whose real part is 0 and whose imaginary part is pi, which at first it might look like it's outputting something other than negative 1, but it's saying the real part is negative 1, and then some numerical error because, partly because of how we defined it, you know, only doing so many terms, and partly because computers can't do infinite precision.
+[42:52–43:00] The imaginary part, it might look like it's saying 3.45, but really it's saying times 10 to the negative 16th, that's what that means.
+[43:00–43:01] So it's basically 0.
+[43:02–43:09] If you wanted to see this we could maybe import numpy and do something like round it.
+[43:09–43:16] So I can round this thing to, I don't know, 8 decimal places, and we see that, okay, it's basically negative 1.
+[43:16–43:21] So this is the function that we wrote, showing us that e to the pi i is negative 1.
+[43:21–43:27] But what I'd like to emphasize is that nowhere in that function did we include the value 2.718.
+[43:27–43:34] In fact, nowhere in the computer's memory during the execution of this computation would it encounter the value 2.718.
+[43:35–43:43] I would submit to you that that value is not relevant to the equation e to the pi i equals negative 1, which is kind of funny, right?
+[43:44–44:04] Let's at least write out what the relationship is, because, you know, I'm not going to say there's no connection between e and pi, there is one, but I think when you write the very famous celebrity equation e to the pi i equals negative 1, it heavily overstates the connection that there is between this e and that pi.
+[44:04–44:26] What's really going on is that we have this function exp that we've defined, and that when you plug in real values, okay, when you plug in real numbers, for the reasons we talked about earlier, it makes sense to write exp of x in terms of whatever its value at 1 happens to be, exp of 1 raised to the x.
+[44:27–44:31] And that we often call that value exp of 1 e, okay?
+[44:32–44:33] This is a property of the function.
+[44:34–44:48] Another fact about this is that when we plug in imaginary numbers, the claim of Euler's formula, which I haven't shown why it's true, but the claim that it's making is that it's periodic, basically.
+[44:49–44:58] That it walks around a circle, and it's periodic with a period of 2 pi i.
+[44:59–45:06] Basically when you increase that input by 2 pi i, you get back to where you started, and even more specifically that you do so by walking along a circle.
+[45:06–45:12] So it's saying that each of these constants is a child of the function exp of x, right?
+[45:12–45:16] But the way that they're related kind of happens along different dimensions.
+[45:16–45:18] That I think is the healthy way to understand this formula.
+[45:18–45:25] Now in the next lecture, we are going to be talking about why this thing walks around in circles.
+[45:26–45:35] And that necessarily involves a little bit of calculus, so we're going to get a little bit of calculus into the mix here, but as minimal as I can.
+[45:35–45:38] And before then, I want to leave you with some homework.
+[45:38–45:49] Because if you remember, the core property that related this strange polynomial with factorials to the number e was that addition in the input is the same as multiplication in the output.
+[45:50–45:59] So before next time, I won't grade this, this is just, you know, to do on your own time in your own way.
+[45:59–46:11] Question number 1, I want you to show that when you fully expand exp of x times exp of y, and you know, you might have written down for yourself what this function is, it's all those factorial things.
+[46:12–46:23] Show that when you expand that out, each term has the form x to the k times y to the m divided by k factorial m factorial for certain whole numbers k and m.
+[46:24–46:26] And remember, 0 factorial is defined to be 1.
+[46:28–46:44] Question number 2, show that when you expand exp of x plus y, so addition in the input, each term is going to look like 1 over n factorial times n choose k times x to the k times y to the n minus k.
+[46:45–46:54] If you're not familiar with this term n choose k, take a look at the binomial formula, I'm sure there's plenty of excellent videos on YouTube about it, I'll leave links in the description as I find them.
+[46:54–46:56] But show that that's true.
+[46:57–47:02] Question 3, compare the two results that you just found to explain this key property.
+[47:03–47:08] The thing that relates this function to some special constant and the idea of raising it to powers.
+[47:09–47:20] And then if you're up for the bonus question, this is kind of the, this is for all of the extra credit in the world, justify, see if you can say, will this result still be true if x and y are complex numbers?
+[47:20–47:23] And will it still be true if they're matrices?
+[47:24–47:30] That actually I think is a very important exercise to go through to understand when this is true for what kinds of inputs.
+[47:30–47:39] Because like I said, as you get deeper and deeper into math, this exp function remains very relevant and you start plugging in things that seem wilder and wilder.
+[47:39–47:44] It's useful, it is genuinely useful, and it's important to know what properties carry over and which ones don't.
+[47:45–47:53] Now, I was talking a little about this lecture with a friend beforehand, and I mentioned the spirit of the lockdown math series being like high school classes.
+[47:53–47:58] And you know, he looks at me quizzically and he's like, is this, is that a high school topic?
+[47:58–48:00] And the honest answer is I don't know.
+[48:01–48:07] What I can say is that it is the case that in high school, we came across the formula e to the i theta.
+[48:07–48:11] I think the first time that I ever saw it, it was in, you know, learning about complex numbers.
+[48:11–48:21] It was just taught as the polar representation of complex numbers to emphasize this idea that when you multiply two things, you multiply their magnitudes and you add their angles.
+[48:22–48:25] But it was just this strange thing handed from on high.
+[48:25–48:32] The usual way that we teach a relationship between e to the x in this polynomial comes from a piece of calculus called Taylor series.
+[48:32–48:39] And you start with the function e to the x, always defined in a little bit of a wishy-washy way, depending on the course that you're taking.
+[48:39–48:42] And then you show that it's connected to this polynomial.
+[48:42–48:44] But I think there's no reason we can't go the other way around.
+[48:45–48:46] And I actually wish that I had seen this.
+[48:47–48:55] I wish that I had known from the beginning that through math, especially through deeper math, that this is what the expression e to the x actually means.
+[48:57–49:03] So with that, I'm going to call an end to the proper lecture and just take a couple more questions from the audience to finish things off.
+[49:03–49:07] Maintain the interactivity that is the spirit of our lectures.
+[49:07–49:08] All right.
+[49:08–49:09] Great, great.
+[49:09–49:10] We have more discussion.
+[49:10–49:11] I love this.
+[49:11–49:12] Crispin's proof is wrong.
+[49:13–49:15] The constant function f of x equals zero.
+[49:15–49:16] Ah, wonderful.
+[49:16–49:17] Excellent counter example.
+[49:17–49:20] I think this was maybe niggling in the back of my mind.
+[49:20–49:22] It's like, I don't think this is unique.
+[49:22–49:23] Great.
+[49:23–49:28] So you have the case of a function that is constantly equal to zero.
+[49:29–49:34] And I think whoever was asking a question earlier that I didn't quite understand, I think this must be what you were getting at.
+[49:34–49:34] And I didn't.
+[49:34–49:36] I just wasn't reading it properly.
+[49:37–49:41] But yeah, that would be a function where f of zero is not necessarily one.
+[49:41–49:42] Beautiful.
+[49:42–49:42] All right.
+[49:42–49:46] So that question that I said was wrong and then I said it wasn't wrong, it actually was wrong.
+[49:46–49:48] So thank you very much, Eric Moss.
+[49:48–49:52] And to everyone who can think more clearly about things than I can while live on camera.
+[49:53–49:56] And then another person points out exactly the same thing.
+[49:56–49:57] I love this.
+[49:57–49:59] This is just like a real class.
+[49:59–50:00] I'm up here.
+[50:00–50:01] I get to make mistakes.
+[50:01–50:02] You're down there.
+[50:02–50:03] You get to correct them.
+[50:03–50:05] And I think it makes it better for everyone watching.
+[50:05–50:07] There's a legitimate discussion to be had.
+[50:07–50:12] What's relevant in the case of the exp function is just that it's not constantly zero.
+[50:12–50:16] That it does, in fact, equal one at the input x equals zero.
+[50:17–50:19] But I love this discussion.
+[50:19–50:22] And I think I can imagine no better place to end things than right there.
+[50:22–50:24] So as always, thank you for joining.
+[50:24–50:33] I hope this helped provide a little bit of a different perspective than what you usually see in other classes on what's a very popular topic on the Internet, at least as math goes.
+[50:34–50:37] And next time we're going to talk about why it's true, where the circle would come from.
+[50:38–50:39] I hope to see you then.
+[50:54–50:39] .

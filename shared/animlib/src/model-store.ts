@@ -15,7 +15,10 @@ export class ModelStore {
   private disposed = false;
   private decodedPixels = 0;
   private decodedVertices = 0;
-  constructor(assets:Record<string,Asset>={}) { this.register(assets); }
+  constructor(assets:Record<string,Asset>={}, private io?: {
+    read?: (asset:ModelAsset,signal:AbortSignal)=>Promise<Uint8Array<ArrayBuffer>>;
+    decode?: (image:ModelImage)=>Promise<DecodedModelImage>;
+  }) { this.register(assets); }
   register(assets:Record<string,Asset>):void {
     if(this.disposed)throw new Error('Model store is disposed');
     const candidates=Object.entries(assets).filter((e):e is [string,ModelAsset]=>e[1].kind==='model');
@@ -37,6 +40,7 @@ export class ModelStore {
     let pending=this.pending.get(key);
     if(!pending) {
       pending=(async()=>{
+        const bytes=this.io?.read ? await this.io.read(a,this.abort.signal) : await (async()=>{
         const response=await fetch(a.url,{signal:this.abort.signal});
         if(!response.ok)throw new Error(`Model ${id} failed to load (${response.status})`);
         if(Number(response.headers.get('content-length'))>MODEL_LIMITS.bytes)throw new Error('Model download exceeds 32 MB');
@@ -45,7 +49,10 @@ export class ModelStore {
         try { while(true) { const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>MODEL_LIMITS.bytes)throw new Error('Model download exceeds 32 MB');chunks.push(value); } }
         catch(error) { await reader.cancel().catch(()=>{});throw error; }
         finally { reader.releaseLock(); }
-        const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length;}
+        const result=new Uint8Array(size);let offset=0;for(const c of chunks){result.set(c,offset);offset+=c.length;}
+        return result;
+        })();
+        if(bytes.length>MODEL_LIMITS.bytes)throw new Error('Model exceeds 32 MB');
         if(a.sha256) { const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(v=>v.toString(16).padStart(2,'0')).join('');if(hash!==a.sha256)throw new Error('Model hash mismatch'); }
         const data=await parseModelGLB(bytes);
         if(JSON.stringify(data.metadata)!==JSON.stringify(a.metadata))throw new Error(`Model metadata mismatch: ${id}`);
@@ -57,6 +64,11 @@ export class ModelStore {
         const decoded: [ModelImage,DecodedModelImage][]=[];
         try {
         for(const image of data.images) {
+          if(this.io?.decode) {
+            const pixels=await this.io.decode(image);
+            if(pixels.width!==image.width||pixels.height!==image.height||pixels.pixels.length!==image.width*image.height*4)throw new Error('Model image dimensions mismatch');
+            decoded.push([image,pixels]);continue;
+          }
           const bitmap=await createImageBitmap(new Blob([image.bytes],{type:image.mime}),{colorSpaceConversion:'none',premultiplyAlpha:'none'});
           try {
             if(bitmap.width!==image.width||bitmap.height!==image.height)throw new Error('Model image dimensions mismatch');

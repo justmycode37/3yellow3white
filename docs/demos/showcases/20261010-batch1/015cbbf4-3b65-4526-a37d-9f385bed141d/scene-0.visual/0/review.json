@@ -1,0 +1,84 @@
+{
+  "sourceSha256": "30b0d26fe4a5ed20bdc0572bc9cbca5c5980daa0390534f1937874b48af505dd",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3.3333333333333335,
+        5,
+        7.800000000000001,
+        9.8
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        12.2,
+        13.799999999999999,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3.3333333333333335,
+        5,
+        7.800000000000001,
+        9.8
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        12.2,
+        13.799999999999999,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 5,
+      "objectIds": [
+        "cell-label",
+        "crystal-view"
+      ],
+      "problem": "The upper spheres obscure the middle of 'Conventional cubic unit cell' in both aspect ratios. This collision recurs after the zoom and persists through the final hold.",
+      "fix": "Separate the caption from the model's projected bounds, adjusting view framing or caption placement to maintain clearance before and after the zoom."
+    },
+    {
+      "timeSec": 15,
+      "objectIds": [
+        "coordination-label",
+        "crystal-view",
+        "neighbor-guide-0",
+        "octahedron-edge-0-2"
+      ],
+      "problem": "The final coordination construction remains buried among the other unit-cell ions. Only short fragments of the gold octahedron and white radial guides are visible, so the six selected neighbors are difficult to distinguish despite the octahedral label. Both aspect ratios show this throughout the final hold.",
+      "fix": "During the coordination reveal, dim or hide the 20 non-coordination ions within the cell while retaining the cell scaffold, central sodium and six chloride neighbors at their existing positions. Make the selected octahedral relationship clearly inspectable without requiring viewer orbit."
+    }
+  ]
+}

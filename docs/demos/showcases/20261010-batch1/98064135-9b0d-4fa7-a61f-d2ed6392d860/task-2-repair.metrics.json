@@ -1,0 +1,157 @@
+{
+  "elapsedMs": 307413.8348,
+  "providerCalls": 8,
+  "turns": [
+    {
+      "index": 1,
+      "elapsedMs": 79564.0123,
+      "providerMs": 79324.29389999999,
+      "stopReason": "toolUse",
+      "inputTokens": 41883,
+      "outputTokens": 3347,
+      "reasoningTokens": 2297,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 3238
+    },
+    {
+      "index": 2,
+      "elapsedMs": 42210.291,
+      "providerMs": 42209.01580000002,
+      "stopReason": "toolUse",
+      "inputTokens": 3798,
+      "outputTokens": 2132,
+      "reasoningTokens": 894,
+      "cacheReadTokens": 41472,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 3776
+    },
+    {
+      "index": 3,
+      "elapsedMs": 25907.166200000036,
+      "providerMs": 25637.307299999986,
+      "stopReason": "toolUse",
+      "inputTokens": 2383,
+      "outputTokens": 1337,
+      "reasoningTokens": 246,
+      "cacheReadTokens": 45056,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 3218
+    },
+    {
+      "index": 4,
+      "elapsedMs": 20936.703500000003,
+      "providerMs": 20690.344699999958,
+      "stopReason": "toolUse",
+      "inputTokens": 1584,
+      "outputTokens": 1270,
+      "reasoningTokens": 179,
+      "cacheReadTokens": 47232,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 3218
+    },
+    {
+      "index": 5,
+      "elapsedMs": 21089.256700000027,
+      "providerMs": 20869.080200000026,
+      "stopReason": "toolUse",
+      "inputTokens": 1486,
+      "outputTokens": 1313,
+      "reasoningTokens": 234,
+      "cacheReadTokens": 48640,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 3190
+    },
+    {
+      "index": 6,
+      "elapsedMs": 42008.986399999994,
+      "providerMs": 41785.3481,
+      "stopReason": "toolUse",
+      "inputTokens": 1559,
+      "outputTokens": 1995,
+      "reasoningTokens": 1034,
+      "cacheReadTokens": 49920,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 2894
+    },
+    {
+      "index": 7,
+      "elapsedMs": 23964.09050000005,
+      "providerMs": 23720.910700000008,
+      "stopReason": "toolUse",
+      "inputTokens": 2186,
+      "outputTokens": 1531,
+      "reasoningTokens": 279,
+      "cacheReadTokens": 51328,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 3568
+    },
+    {
+      "index": 8,
+      "elapsedMs": 51510.74199999997,
+      "providerMs": 49158.96750000003,
+      "stopReason": "toolUse",
+      "inputTokens": 1709,
+      "outputTokens": 2229,
+      "reasoningTokens": 1034,
+      "cacheReadTokens": 53376,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 3282
+    }
+  ],
+  "validations": [
+    {
+      "kind": "tool",
+      "elapsedMs": 236.53599999999278,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 0.16279999999096617,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 268.8864000000176,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 245.46950000000652,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 219.11160000000382,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 222.48360000003595,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 241.87489999999525,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 2350.636200000008,
+      "valid": true
+    },
+    {
+      "kind": "final",
+      "elapsedMs": 0.0055000000284053385,
+      "valid": true
+    }
+  ]
+}

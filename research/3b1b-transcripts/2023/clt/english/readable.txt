@@ -1,0 +1,221 @@
+[00:00–00:01] This is a Galton board.
+[00:02–00:18] Maybe you've seen one before, it's a popular demonstration of how, even when a single event is chaotic and random, with an effectively unknowable outcome, it's still possible to make precise statements about a large number of events, namely how the relative proportions for many different outcomes are distributed.
+[00:20–00:31] More specifically, the Galton board illustrates one of the most prominent distributions in all probability, known as the normal distribution, more colloquially known as a bell curve, and also called a Gaussian distribution.
+[00:32–00:45] There's a very specific function to describe this distribution, it's very pretty, we'll get into it later, but right now I just want to emphasize how the normal distribution is, as the name suggests, very common, it shows up in a lot of seemingly unrelated contexts.
+[00:46–00:53] If you were to take a large number of people who sit in a similar demographic and plot their heights, those heights tend to follow a normal distribution.
+[00:53–01:04] If you look at a large swath of very big natural numbers, and you ask how many distinct prime factors does each one of those numbers have, the answers will very closely track with a certain normal distribution.
+[01:05–01:16] Now our topic for today is one of the crown jewels in all of probability theory, it's one of the key facts that explains why this distribution is as common as it is, known as the central limit theorem.
+[01:16–01:25] This lesson is meant to go back to the basics, giving you the fundamentals on what the central limit theorem is saying, what normal distributions are, and I want to assume minimal background.
+[01:25–01:45] We're going to go decently deep into it, but after this I'd still like to go deeper and explain why the theorem is true, why the function underlying the normal distribution has the very specific form that it does, why that formula has a pi in it, and, most fun, why those last two facts are actually more related than a lot of traditional explanations would suggest.
+[01:46–01:53] That second lesson is also meant to be the follow-on to the convolutions video that I promised, so there's a lot of interrelated topics here.
+[01:53–01:59] But right now, back to the fundamentals, I'd like to kick things off with an overly simplified model of the Galton board.
+[02:00–02:14] In this model we will assume that each ball falls directly onto a certain central peg, and that it has a 50-50 probability of bouncing to the left or to the right, and we'll think of each of those outcomes as either adding one or subtracting one from its position.
+[02:14–02:27] Once one of those is chosen, we make the highly unrealistic assumption that it happens to land dead on in the middle of the peg adjacent below it, where again it'll be faced with the same 50-50 choice of bouncing to the left or to the right.
+[02:27–02:51] For the one I'm showing on screen, there are five different rows of pegs, so our little hopping ball makes five different random choices between plus one and minus one, and we can think of its final position as basically being the sum of all of those different numbers, which in this case happens to be one, and we might label all of the different buckets with the sum that they represent, as we repeat this we're looking at different possible sums for those five random numbers.
+[02:53–03:10] And for those of you who are inclined to complain that this is a highly unrealistic model for the true Galton board, let me emphasize the goal right now is not to accurately model physics, the goal is to give a simple example to illustrate the central limit theorem, and for that, idealized though this might be, it actually gives us a really good example.
+[03:10–03:23] If we let many different balls fall, making yet another unrealistic assumption that they don't influence each other, as if they're all ghosts, then the number of balls that fall into each different bucket gives us some loose sense for how likely each one of those buckets is.
+[03:23–03:30] In this example, the numbers are simple enough that it's not too hard to explicitly calculate what the probability is for falling into each bucket.
+[03:30–03:38] If you do want to think that through, you'll find it very reminiscent of Pascal's triangle, but the neat thing about our theorem is how far it goes beyond the simple examples.
+[03:38–03:49] So to start off at least, rather than making explicit calculations, let's just simulate things by running a large number of samples and letting the total number of results in each different outcome give us some sense for what that distribution looks like.
+[03:50–03:56] As I said, the one on screen has five rows, so each sum that we're considering includes only five numbers.
+[03:56–04:13] The basic idea of the central limit theorem is that if you increase the size of that sum, for example here would mean increasing the number of rows of pegs for each ball to bounce off, then the distribution that describes where that sum is going to fall looks more and more like a bell curve.
+[04:15–04:18] Here, it's actually worth taking a moment to write down that general idea.
+[04:19–04:28] The setup is that we have a random variable, and that's basically shorthand for a random process where each outcome of that process is associated with some number.
+[04:28–04:29] We'll call that random number x.
+[04:29–04:34] For example, each bounce off the peg is a random process modeled with two outcomes.
+[04:34–04:37] Those outcomes are associated with the numbers negative one and positive one.
+[04:38–04:44] Another example of a random variable would be rolling a die, where you have six different outcomes, each one associated with a number.
+[04:45–04:50] What we're doing is taking multiple different samples of that variable and adding them all together.
+[04:50–05:00] On our Galton board, that looks like letting the ball bounce off multiple different pegs on its way down to the bottom, and in the case of a die, you might imagine rolling many different dice and adding up the results.
+[05:01–05:14] The claim of the central limit theorem is that as you let the size of that sum get bigger and bigger, then the distribution of that sum, how likely it is to fall into different possible values, will look more and more like a bell curve.
+[05:15–05:17] That's it, that is the general idea.
+[05:17–05:21] Over the course of this lesson, our job is to make that statement more quantitative.
+[05:22–05:26] We're going to put some numbers to it, put some formulas to it, show how you can use it to make predictions.
+[05:27–05:31] For example, here's the kind of question I want you to be able to answer by the end of this video.
+[05:32–05:35] Suppose you rolled a die 100 times and you added together the results.
+[05:36–05:42] Could you find a range of values such that you're 95% sure that the sum will fall within that range?
+[05:42–05:46] Or maybe I should say find the smallest possible range of values such that this is true.
+[05:47–05:52] The neat thing is you'll be able to answer this question whether it's a fair die or if it's a weighted die.
+[05:53–06:00] Now let me say at the top that this theorem has three different assumptions that go into it, three things that have to be true before the theorem follows.
+[06:00–06:03] And I'm actually not going to tell you what they are until the very end of the video.
+[06:04–06:09] Instead I want you to keep your eye out and see if you can notice and maybe predict what those three assumptions are going to be.
+[06:10–06:17] As a next step, to better illustrate just how general this theorem is, I want to run a couple more simulations for you focused on the dice example.
+[06:20–06:27] Usually if you think of rolling a die you think of the six outcomes as being equally probable, but the theorem actually doesn't care about that.
+[06:27–06:34] We could start with a weighted die, something with a non-trivial distribution across the outcomes, and the core idea still holds.
+[06:35–06:39] For the simulation what I'll do is take some distribution like this one that is skewed towards lower values.
+[06:40–06:47] I'm going to take 10 distinct samples from that distribution and then I'll record the sum of that sample on the plot on the bottom.
+[06:48–06:56] Then I'm going to do this many many different times, always with a sum of size 10, but keep track of where those sums ended up to give us a sense of the distribution.
+[06:59–07:04] And in fact let me rescale the y direction to give us room to run an even larger number of samples.
+[07:05–07:12] And I'll let it go all the way up to a couple thousand, and as it does you'll notice that the shape that starts to emerge looks like a bell curve.
+[07:12–07:21] Maybe if you squint your eyes you can see it skews a tiny bit to the left, but it's neat that something so symmetric emerged from a starting point that was so asymmetric.
+[07:21–07:41] To better illustrate what the central limit theorem is all about, let me run four of these simulations in parallel, where on the upper left I'm doing it where we're only adding two dice at a time, on the upper right we're doing it where we're adding five dice at a time, the lower left is the one that we just saw adding 10 dice at a time, and then we'll do another one with a bigger sum, 15 at a time.
+[07:42–07:52] Notice how on the upper left when we're just adding two dice, the resulting distribution doesn't really look like a bell curve, it looks a lot more reminiscent of the one we started with, skewed towards the left.
+[07:52–07:59] But as we allow for more and more dice in each sum, the resulting shape that comes up in these distributions looks more and more symmetric.
+[07:59–08:03] It has the lump in the middle and fade towards the tail's shape of a bell curve.
+[08:07–08:10] And let me emphasize again, you can start with any different distribution.
+[08:10–08:17] Here I'll run it again, but where most of the probability is tied up in the numbers 1 and 6, with very low probability for the mid values.
+[08:18–08:26] Despite completely changing the distribution for an individual roll of the die, it's still the case that a bell curve shape will emerge as we consider the different sums.
+[08:27–08:35] Illustrating things with a simulation like this is very fun, and it's kind of neat to see order emerge from chaos, but it also feels a little imprecise.
+[08:35–08:48] Like in this case, when I cut off the simulation at 3000 samples, even though it kind of looks like a bell curve, the different buckets seem pretty spiky, and you might wonder, is it supposed to look that way, or is that just an artifact of the randomness in the simulation?
+[08:49–08:55] And if it is, how many samples do we need before we can be sure that what we're looking at is representative of the true distribution?
+[08:59–09:05] Instead moving forward, let's get a little more theoretical and show the precise shape these distributions will take on in the long run.
+[09:06–09:13] The easiest case to make this calculation is if we have a uniform distribution, where each possible face of the die has an equal probability, 1 6th.
+[09:13–09:28] For example, if you then want to know how likely different sums are for a pair of dice, it's essentially a counting game, where you count up how many distinct pairs take on the same sum, which in the diagram I've drawn, you can conveniently think about by going through all the different diagonals.
+[09:31–09:37] Since each such pair has an equal chance of showing up, 1 in 36, all you have to do is count the sizes of these buckets.
+[09:38–09:48] That gives us a definitive shape for the distribution describing a sum of two dice, and if we were to play the same game with all possible triplets, the resulting distribution would look like this.
+[09:48–09:54] Now what's more challenging, but a lot more interesting, is to ask what happens if we have a non-uniform distribution for that single die.
+[09:55–09:57] We actually talked all about this in the last video.
+[09:58–10:03] You do essentially the same thing, you go through all the distinct pairs of dice which add up to the same value.
+[10:03–10:12] It's just that instead of counting those pairs, for each pair you multiply the two probabilities of each particular face coming up, and then you add all those together.
+[10:13–10:24] The computation that does this for all possible sums has a fancy name, it's called a convolution, but it's essentially just the weighted version of the counting game that anyone who's played with a pair of dice already finds familiar.
+[10:25–10:35] For our purposes in this lesson, I'll have the computer calculate all that, simply display the results for you, and invite you to observe certain patterns, but under the hood, this is what's going on.
+[10:36–10:52] So just to be crystal clear on what's being represented here, if you imagine sampling two different values from that top distribution, the one describing a single die, and adding them together, then the second distribution I'm drawing represents how likely you are to see various different sums.
+[10:52–11:02] Likewise, if you imagine sampling three distinct values from that top distribution, and adding them together, the next plot represents the probabilities for various different sums in that case.
+[11:03–11:12] So if I compute what the distributions for these sums look like for larger and larger sums, well you know what I'm going to say, it looks more and more like a bell curve.
+[11:13–11:16] But before we get to that, I want you to make a couple more simple observations.
+[11:17–11:24] For example, these distributions seem to be wandering to the right, and also they seem to be getting more spread out, and a little bit more flat.
+[11:25–11:33] You cannot describe the central limit theorem quantitatively without taking into account both of those effects, which in turn requires describing the mean and the standard deviation.
+[11:33–11:40] Maybe you're already familiar with those, but I want to make minimal assumptions here, and it never hurts to review, so let's quickly go over both of those.
+[11:43–11:50] The mean of a distribution, often denoted with the Greek letter mu, is a way of capturing the center of mass for that distribution.
+[11:51–12:02] It's calculated as the expected value of our random variable, which is a way of saying you go through all of the different possible outcomes, and you multiply the probability of that outcome times the value of the variable.
+[12:03–12:06] If higher values are more probable, that weighted sum is going to be bigger.
+[12:06–12:09] If lower values are more probable, that weighted sum is going to be smaller.
+[12:10–12:17] A little more interesting is if you want to measure how spread out this distribution is, because there's multiple different ways you might do it.
+[12:18–12:20] One of them is called the variance.
+[12:20–12:28] The idea there is to look at the difference between each possible value and the mean, square that difference, and ask for its expected value.
+[12:28–12:36] The idea is that whether your value is below or above the mean, when you square that difference, you get a positive number, and the larger the difference, the bigger that number.
+[12:37–12:53] Squaring it like this turns out to make the math much much nicer than if we did something like an absolute value, but the downside is that it's hard to think about this as a distance in our diagram because the units are off, kind of like the units here are square units, whereas a distance in our diagram would be a kind of linear unit.
+[12:53–12:59] So another way to measure spread is what's called the standard deviation, which is the square root of this value.
+[12:59–13:09] That can be interpreted much more reasonably as a distance on our diagram, and it's commonly denoted with the Greek letter sigma, so you know m for mean as for standard deviation, but both in Greek.
+[13:11–13:16] Looking back at our sequence of distributions, let's talk about the mean and standard deviation.
+[13:16–13:26] If we call the mean of the initial distribution mu, which for the one illustrated happens to be 2.24, hopefully it won't be too surprising if I tell you that the mean of the next one is 2 times mu.
+[13:27–13:32] That is, you roll a pair of dice, you want to know the expected value of the sum, it's two times the expected value for a single die.
+[13:33–13:39] Similarly, the expected value for our sum of size 3 is 3 times mu, and so on and so forth.
+[13:39–13:44] The mean just marches steadily on to the right, which is why our distributions seem to be drifting off in that direction.
+[13:45–13:49] A little more challenging, but very important, is to describe how the standard deviation changes.
+[13:50–13:59] The key fact here is that if you have two different random variables, then the variance for the sum of those variables is the same as just adding together the original two variances.
+[13:59–14:03] This is one of those facts that you can just compute when you unpack all the definitions.
+[14:03–14:06] There are a couple nice intuitions for why it's true.
+[14:06–14:13] My tentative plan is to just actually make a series about probability and talk about things like intuitions underlying variance and its cousins there.
+[14:14–14:20] But right now, the main thing I want you to highlight is how it's the variance that adds, it's not the standard deviation that adds.
+[14:20–14:38] So, critically, if you were to take n different realizations of the same random variable and ask what the sum looks like, the variance of sum is n times the variance of your original variable, meaning the standard deviation, the square root of all this, is the square root of n times the original standard deviation.
+[14:39–14:55] For example, back in our sequence of distributions, if we label the standard deviation of our initial one with sigma, then the next standard deviation is going to be the square root of 2 times sigma, and after that it looks like the square root of 3 times sigma, and so on and so forth. This, like I said, is very important.
+[14:56–15:04] It means that even though our distributions are getting spread out, they're not spreading out all that quickly, they only do so in proportion to the square root of the size of the sum.
+[15:04–15:20] As we prepare to make a more quantitative description of the central limit theorem, the core intuition I want you to keep in your head is that we'll basically realign all of these distributions so that their means line up together, and then rescale them so that all of the standard deviations are just going to be equal to one.
+[15:21–15:29] And when we do that, the shape that results gets closer and closer to a certain universal shape, described with an elegant little function that we'll unpack in just a moment.
+[15:30–15:52] And let me say one more time, the real magic here is how we could have started with any distribution, describing a single roll of the die, and if we play the same game, considering what the distributions for the many different sums look like, and we realign them so that the means line up, and we rescale them so that the standard deviations are all one, we still approach that same universal shape, which is kind of mind-boggling.
+[15:54–16:00] And now, my friends, is probably as good a time as any to finally get into the formula for a normal distribution.
+[16:01–16:05] And the way I'd like to do this is to basically peel back all the layers and build it up one piece at a time.
+[16:06–16:17] The function e to the x, or anything to the x, describes exponential growth, and if you make that exponent negative, which flips around the graph horizontally, you might think of it as describing exponential decay.
+[16:18–16:25] To make this decay in both directions, you could do something to make sure the exponent is always negative and growing, like taking the negative absolute value.
+[16:25–16:35] That would give us this kind of awkward sharp point in the middle, but if instead you make that exponent the negative square of x, you get a smoother version of the same thing, which decays in both directions.
+[16:36–16:38] This gives us the basic bell curve shape.
+[16:38–16:48] Now if you throw a constant in front of that x, and you scale that constant up and down, it lets you stretch and squish the graph horizontally, allowing you to describe narrow and wider bell curves.
+[16:49–16:59] And a quick thing I'd like to point out here is that based on the rules of exponentiation, as we tweak around that constant c, you could also think about it as simply changing the base of the exponentiation.
+[17:00–17:03] And in that sense, the number e is not really all that special for our formula.
+[17:04–17:10] We could replace it with any other positive constant, and you'll get the same family of curves as we tweak that constant.
+[17:11–17:13] Make it a 2, same family of curves.
+[17:13–17:15] Make it a 3, same family of curves.
+[17:15–17:19] The reason we use e is that it gives that constant a very readable meaning.
+[17:20–17:37] Or rather, if we reconfigure things a little bit so that the exponent looks like negative 1 half times x divided by a certain constant, which we'll suggestively call sigma squared, then once we turn this into a probability distribution, that constant sigma will be the standard deviation of that distribution.
+[17:37–17:38] And that's very nice.
+[17:38–17:44] But before we can interpret this as a probability distribution, we need the area under the curve to be 1.
+[17:44–17:46] And the reason for that is how the curve is interpreted.
+[17:47–17:53] Unlike discrete distributions, when it comes to something continuous, you don't ask about the probability of a particular point.
+[17:53–17:58] Instead, you ask for the probability that a value falls between two different values.
+[17:58–18:05] And what the curve is telling you is that that probability equals the area under the curve between those two values.
+[18:06–18:09] There's a whole other video about this, they're called probability density functions.
+[18:09–18:17] The main point right now is that the area under the entire curve represents the probability that something happens, that some number comes up.
+[18:17–18:20] That should be 1, which is why we want the area under this to be 1.
+[18:21–18:27] As it stands with the basic bell curve shape of e to the negative x squared, the area is not 1, it's actually the square root of pi.
+[18:28–18:29] I know, right?
+[18:29–18:30] What is pi doing here?
+[18:30–18:31] What does this have to do with circles?
+[18:32–18:35] Like I said at the start, I'd love to talk all about that in the next video.
+[18:35–18:43] But if you can spare your excitement, for our purposes right now, all it means is that we should divide this function by the square root of pi, and it gives us the area we want.
+[18:43–18:51] Throwing back in the constants we had earlier, the one half and the sigma, the effect there is to stretch out the graph by a factor of sigma times the square root of 2.
+[18:52–19:02] So we also need to divide out by that in order to make sure it has an area of 1, and combining those fractions, the factor out front looks like 1 divided by sigma times the square root of 2 pi.
+[19:02–19:05] This, finally, is a valid probability distribution.
+[19:06–19:14] As we tweak that value sigma, resulting in narrower and wider curves, that constant in the front always guarantees that the area equals 1.
+[19:15–19:24] The special case where sigma equals 1 has a specific name, we call it the standard normal distribution, which plays an especially important role for you and me in this lesson.
+[19:25–19:40] And all possible normal distributions are not only parameterized with this value sigma, but we also subtract off another constant mu from the variable x, and this essentially just lets you slide the graph left and right so that you can prescribe the mean of this distribution.
+[19:40–19:49] So in short, we have two parameters, one describing the mean, one describing the standard deviation, and they're all tied together in this big formula involving an e and a pi.
+[19:49–19:59] Now that all of that is on the table, let's look back again at the idea of starting with some random variable and asking what the distributions for sums of that variable look like.
+[20:00–20:09] As we've already gone over, when you increase the size of that sum, the resulting distribution will shift according to a growing mean, and it slowly spreads out according to a growing standard deviation.
+[20:10–20:27] And putting some actual formulas to it, if we know the mean of our underlying random variable, we call it mu, and we also know its standard deviation, and we call it sigma, then the mean for the sum on the bottom will be mu times the size of the sum, and the standard deviation will be sigma times the square root of that size.
+[20:28–20:37] So now, if we want to claim that this looks more and more like a bell curve, and a bell curve is only described by two different parameters, the mean and the standard deviation, you know what to do.
+[20:37–20:46] You could plug those two values into the formula, and it gives you a highly explicit, albeit kind of complicated, formula for a curve that should closely fit our distribution.
+[20:48–20:54] But there's another way we can describe it that's a little more elegant and lends itself to a very fun visual that we can build up to.
+[20:55–21:18] Instead of focusing on the sum of all of these random variables, let's modify this expression a little bit, where what we'll do is we'll look at the mean that we expect that sum to take, and we subtract it off so that our new expression has a mean of zero, and then we're going to look at the standard deviation we expect of our sum, and divide out by that, which basically just rescales the units so that the standard deviation of our expression will equal one.
+[21:19–21:24] This might seem like a more complicated expression, but it actually has a highly readable meaning.
+[21:24–21:29] It's essentially saying how many standard deviations away from the mean is this sum?
+[21:30–21:43] For example, this bar here corresponds to a certain value that you might find when you roll 10 dice and you add them all up, and its position a little above negative one is telling you that that value is a little bit less than one standard deviation lower than the mean.
+[21:45–21:56] Also, by the way, in anticipation for the animation I'm trying to build to here, the way I'm representing things on that lower plot is that the area of each one of these bars is telling us the probability of the corresponding value rather than the height.
+[21:57–22:01] You might think of the y-axis as representing not probability but a kind of probability density.
+[22:02–22:13] The reason for this is to set the stage so that it aligns with the way we interpret continuous distributions, where the probability of falling between a range of values is equal to an area under a curve between those values.
+[22:13–22:16] In particular, the area of all the bars together is going to be one.
+[22:18–22:20] Now, with all of that in place, let's have a little fun.
+[22:21–22:29] Let me start by rolling things back so that the distribution on the bottom represents a relatively small sum, like adding together only three such random variables.
+[22:29–22:32] Notice what happens as I change the distribution we start with.
+[22:32–22:36] As it changes, the distribution on the bottom completely changes its shape.
+[22:36–22:38] It's very dependent on what we started with.
+[22:40–22:51] If we let the size of our sum get a little bit bigger, say going up to 10, and as I change the distribution for x, it largely stays looking like a bell curve, but I can find some distributions that get it to change shape.
+[22:52–22:59] For example, the really lopsided one where almost all the probability is in the numbers 1 or 6 results in this kind of spiky bell curve.
+[22:59–23:03] And if you'll recall, earlier on I actually showed this in the form of a simulation.
+[23:04–23:11] Though if you were wondering whether that spikiness was an artifact of the randomness or reflected the true distribution, turns out it reflects the true distribution.
+[23:12–23:16] In this case, 10 is not a large enough sum for the central limit theorem to kick in.
+[23:16–23:30] But if instead I let that sum grow and I consider adding 50 different values, which is actually not that big, then no matter how I change the distribution for our underlying random variable, it has essentially no effect on the shape of the plot on the bottom.
+[23:31–23:47] No matter where we start, all of the information and nuance for the distribution of x gets washed away, and we tend towards this single universal shape described by a very elegant function for the standard normal distribution, 1 over square root of 2 pi times e to the negative x squared over 2.
+[23:47–23:50] This, this right here is what the central limit theorem is all about.
+[23:51–23:55] Almost nothing you can do to this initial distribution changes the shape we tend towards.
+[23:59–24:08] Now, the more theoretically minded among you might still be wondering what is the actual theorem, like what's the mathematical statement that could be proved or disproved that we're claiming here.
+[24:09–24:11] If you want a nice formal statement, here's how it might go.
+[24:12–24:25] Consider this value where we're summing up n different instantiations of our variable, but tweaked and tuned so that its mean and standard deviation are 1, again meaning you can read it as asking how many standard deviations away from the mean is the sum.
+[24:25–24:49] Then the actual rigorous no-jokes-this-time statement of the central limit theorem is that if you consider the probability that this value falls between two given real numbers, a and b, and you consider the limit of that probability as the size of your sum goes to infinity, then that limit is equal to a certain integral, which basically describes the area under a standard normal distribution between those two values.
+[24:51–25:00] Again, there are three underlying assumptions that I have yet to tell you, but other than those, in all of its gory detail, this right here is the central limit theorem.
+[25:04–25:18] All of that is a bit theoretical, so it might be helpful to bring things back down to earth and turn back to the concrete example that I mentioned at the start, where you imagine rolling a die 100 times, and let's assume it's a fair die for this example, and you add together the results.
+[25:18–25:25] The challenge for you is to find a range of values such that you're 95% sure that the sum will fall within this range.
+[25:27–25:46] For questions like this, there's a handy rule of thumb about normal distributions, which is that about 68% of your values are going to fall within one standard deviation of the mean, 95% of your values, the thing we care about, fall within two standard deviations of the mean, and a whopping 99.7% of your values will fall within three standard deviations of the mean.
+[25:47–25:51] It's a rule of thumb that's commonly memorized by people who do a lot of probability and stats.
+[25:52–26:07] Naturally, this gives us what we need for our example, and let me go ahead and draw out what this would look like, where I'll show the distribution for a fair die up at the top, and the distribution for a sum of 100 such dice on the bottom, which by now as you know looks like a certain normal distribution.
+[26:07–26:18] Step 1 with a problem like this is to find the mean of your initial distribution, which in this case will look like 1 6th times 1 plus 1 6th times 2 on and on and on, and works out to be 3.5.
+[26:19–26:32] We also need the standard deviation, which requires calculating the variance, which as you know involves adding all the squares of the differences between the values and the means, and it works out to be 2.92, square root of that comes out to be 1.71.
+[26:32–26:41] Those are the only two numbers we need, and I will invite you again to reflect on how magical it is that those are the only two numbers you need to completely understand the bottom distribution.
+[26:42–26:52] Its mean will be 100 times mu, which is 350, and its standard deviation will be the square root of 100 times sigma, so 10 times sigma, 17.1.
+[26:53–27:06] Remembering our handy rule of thumb, we're looking for values two standard deviations away from the mean, and when you subtract 2 sigma from mean, you end up with about 316, and when you add 2 sigma you end up with 384.
+[27:07–27:08] There you go, that gives us the answer.
+[27:11–27:17] Okay, I promised to wrap things up shortly, but while we're on this example, there's one more question that's worth your time to ponder.
+[27:18–27:28] Instead of just asking about the sum of 100 die rolls, let's say I had you divide that number by 100, which basically means all the numbers in our diagram in the bottom get divided by 100.
+[27:28–27:31] Take a moment to interpret what this all would be saying then.
+[27:32–27:43] The expression essentially tells you the empirical average for 100 different die rolls, and that interval we found is now telling you what range you are expecting to see for that empirical average.
+[27:44–27:56] In other words, you might expect it to be around 3.5, that's the expected value for a die roll, but what's much less obvious and what the central limit theorem lets you compute is how close to that expected value you'll reasonably find yourself.
+[27:57–28:07] In particular, it's worth your time to take a moment mulling over what the standard deviation for this empirical average is, and what happens to it as you look at a bigger and bigger sample of die rolls.
+[28:12–28:17] Lastly, but probably most importantly, let's talk about the assumptions that go into this theorem.
+[28:18–28:22] The first one is that all of these variables that we're adding up are independent from each other.
+[28:22–28:26] The outcome of one process doesn't influence the outcome of any other process.
+[28:27–28:30] The second is that all of these variables are drawn from the same distribution.
+[28:31–28:34] Both of these have been implicitly assumed with our dice example.
+[28:34–28:42] We've been treating the outcome of each die roll as independent from the outcome of all the others, and we're assuming that each die follows the same distribution.
+[28:42–28:49] Sometimes in the literature you'll see these two assumptions lumped together under the initials IID for independent and identically distributed.
+[28:50–28:55] One situation where these assumptions are decidedly not true would be the Galton board.
+[28:55–28:56] I mean, think about it.
+[28:56–29:03] Is it the case that the way a ball bounces off of one of the pegs is independent from how it's going to bounce off the next peg?
+[29:03–29:04] Absolutely not.
+[29:04–29:07] Depending on the last bounce, it's coming in with a completely different trajectory.
+[29:08–29:14] And is it the case that the distribution of possible outcomes off of each peg are the same for each peg that it hits?
+[29:15–29:16] Again, almost certainly not.
+[29:16–29:23] Maybe it hits one peg glancing to the left, meaning the outcomes are hugely skewed in that direction, and then hits the next one glancing to the right.
+[29:25–29:31] When I made all those simplifying assumptions in the opening example, it wasn't just to make this easier to think about.
+[29:31–29:37] It's also that those assumptions were necessary for this to actually be an example of the central limit theorem.
+[29:38–29:45] Nevertheless, it seems to be true that for the real Galton board, despite violating both of these, a normal distribution does kind of come about?
+[29:46–29:53] Part of the reason might be that there are generalizations of the theorem beyond the scope of this video that relax these assumptions, especially the second one.
+[29:54–30:03] But I do want to caution you against the fact that many times people seem to assume that a variable is normally distributed, even when there's no actual justification to do so.
+[30:04–30:06] The third assumption is actually fairly subtle.
+[30:06–30:10] It's that the variance we've been computing for these variables is finite.
+[30:10–30:14] This was never an issue for the dice example because there were only six possible outcomes.
+[30:15–30:22] But in certain situations where you have an infinite set of outcomes, when you go to compute the variance, the sum ends up diverging off to infinity.
+[30:23–30:27] These can be perfectly valid probability distributions, and they do come up in practice.
+[30:27–30:41] But in those situations, as you consider adding many different instantiations of that variable and letting that sum approach infinity, even if the first two assumptions hold, it is very much a possibility that the thing you tend towards is not actually a normal distribution.
+[30:42–30:47] If you've understood everything up to this point, you now have a very strong foundation in what the central limit theorem is all about.
+[30:48–30:55] And next up, I'd like to explain why it is that this particular function is the thing that we tend towards, and why it has a pi in it, what it has to do with circles.
+[31:11–31:14] Thank you.

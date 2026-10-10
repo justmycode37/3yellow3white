@@ -1,0 +1,119 @@
+[00:00–00:07] Today I'd like to share with you three fake proofs in increasing order of subtlety, and then discuss what each one of them has to tell us about math.
+[00:11–00:22] The first proof is for a formula for the surface area of a sphere, and the way that it starts is to subdivide that sphere into vertical slices, the way you might chop up an orange or paint a beach ball.
+[00:22–00:36] We then unravel all of those wedge slices from the northern hemisphere, so that they poke up like this, and then symmetrically unravel all of those from the southern hemisphere below, and now interlace those pieces to get a shape whose area we want to figure out.
+[00:36–00:55] The base of this shape came from the circumference of the sphere, it's an unraveled equator, so its length is 2 pi times the radius of the sphere, and then the other side of this shape came from the height of one of these wedges, which is a quarter of a walk around the sphere, and so it has a length of pi halves times r.
+[00:55–01:14] The idea is that this is only an approximation, the edges might not be perfectly straight, but if we think of the limit as we do finer and finer slices of the sphere, this shape whose area we want to know gets closer to being a perfect rectangle, one whose area will be pi halves r times 2 pi r, or in other words pi squared times r squared.
+[01:15–01:29] The proof is elegant, it translates a hard problem into a situation that's easier to understand, it has that element of surprise while still being intuitive, its only fault, really, is that it's completely wrong, the true surface area of a sphere is 4 pi r squared.
+[01:30–01:39] I originally saw this example thanks to Henry Reich, and to be fair, it's not necessarily inconsistent with the 4 pi r squared formula, just so long as pi is equal to 4.
+[01:40–01:44] For the next proof I'd like to show you a simple argument for the fact that pi is equal to 4.
+[01:45–01:55] We start off with a circle, say with radius 1, and we ask how can we figure out its circumference, after all, pi is by definition the ratio of this circumference to the diameter of the circle.
+[01:56–01:59] We start off by drawing the square whose side lengths are all tangent to that circle.
+[02:00–02:03] It's not too hard to see that the perimeter of this square is 8.
+[02:04–02:15] Then, and some of you may have seen this before, it's a kind of classic argument, the argument proceeds by producing a sequence of curves, all of whom also have this perimeter of 8, but which more and more closely approximate the circle.
+[02:15–02:19] But the full nuance of this example is not always emphasized.
+[02:19–02:33] First of all, just to make things crystal clear, the way each of these iterations works is to fold in each of the corners of the previous shape so that they just barely kiss the circle, and you can take a moment to convince yourself that in each region where a fold happened, the perimeter doesn't change.
+[02:33–02:38] For example, in the upper right here, instead of walking up and then left, the new curve goes left and then up.
+[02:39–02:42] And something similar is true at all of the folds of all of the different iterations.
+[02:42–02:50] Wherever the previous iteration went direction A then direction B, the new iteration goes direction B then direction A, but no length is lost or gained.
+[02:51–03:03] Some of you might say, well obviously this isn't going to give the true perimeter of the circle, because no matter how many iterations you do, when you zoom in, it remains jagged, it's not a smooth curve, you're taking these very inefficient steps along the circle.
+[03:03–03:17] While that is true, and ultimately the reason things are wrong, if you want to appreciate the lesson this example is teaching us, the claim of the example is not that any one of these approximations equals the curve, it's that the limit of all of the approximations equals our circle.
+[03:17–03:26] And to appreciate the lesson that this example teaches us, it's worth taking a moment to be a little more mathematically precise about what I mean by the limit of a sequence of curves.
+[03:27–03:39] Let's say we describe the very first shape, this square, as a parametric function, something that has an input t and it outputs a point in 2d space, so that as t ranges from 0 to 1, it traces that square.
+[03:39–03:51] I'll call that function c0, and likewise we can parameterize the next iteration with a function I'll call c1, as the parameter t ranges from 0 up to 1, the output of this function traces along that curve.
+[03:52–03:55] This is just so that we can think of these shapes as instead being functions.
+[03:56–04:07] Now I want you to consider a particular value of t, maybe 0.2, and then consider the sequence of points that you get by evaluating the sequence of functions we have at this particular point.
+[04:07–04:14] Now I want you to consider the limit as n approaches infinity of c sub n of 0.2.
+[04:14–04:20] This limit is a well-defined point in 2d space, in fact that point sits on the circle.
+[04:20–04:34] And there's nothing specific about 0.2, we could do this limiting process for any input t, and so I can define a new function that I'll call c infinity, which by definition at any input t is whatever this limiting value for all the curves is.
+[04:34–04:48] So here's the point, that limiting function c infinity is the circle, it's not an approximation of the circle, it's not some jagged version of the circle, it is the genuine smooth circular curve whose perimeter we want to know.
+[04:49–04:58] And what's also true is that the limit of the lengths of all of our curves really is 8, because each individual curve really does have a perimeter of 8.
+[04:59–05:08] And there are all sorts of examples throughout calculus when we talk about approximating one thing we want to know as a limit of a bunch of other things that are easier to understand.
+[05:08–05:14] So the question at the heart here is why exactly is it not okay to do that in this example?
+[05:16–05:31] And maybe at this point you step back and say, you know, it's just not enough for things to look the same, this is why we need rigor, it's why we need proofs, it's why since the days of Euclid mathematicians have followed in his footsteps and deduced truths step by step from axioms forward.
+[05:31–05:42] But for this last example I would like to do something that doesn't lean as hard on visual intuition and instead give a Euclid style proof for the claim that all triangles are isosceles.
+[05:42–05:56] The way this will work is we'll take any particular triangle and make no assumptions about it, I'll label its vertices a, b, and c, and what I would like to prove for you is that the side length a, b is necessarily equal to the side length a, c.
+[05:57–06:04] Now, to be clear, the result is obviously false, just in the diagram I've drawn you can visually see that these lengths are not equal to each other.
+[06:05–06:10] But I challenge you to see if you can identify what's wrong about the proof I'm about to show you.
+[06:10–06:14] Honestly, it's very subtle and three gold stars for anyone who can identify it.
+[06:15–06:27] The first thing I'll do is draw the perpendicular bisector, the line bc, so that means this angle here is 90 degrees and this length is by definition the same as this length, and we'll label that intersection point d.
+[06:28–06:40] And then next I will draw the angle bisector at a, which means by definition this little angle here is the same as this little angle here, I'll label both of them alpha, and we'll say that the point where these two intersect is p.
+[06:41–06:48] And now, like a lot of Euclid style proofs, we're just going to draw some new lines, figure out what things must be equal, and get some conclusions.
+[06:48–06:56] For instance, let's draw the line from p which is perpendicular to the side length ac, and we'll label that intersection point e.
+[06:57–07:05] And likewise, we'll draw the line from p down to the other side length ac, again it's perpendicular, and we'll label that intersection point f.
+[07:06–07:15] My first claim is that this triangle here, which is afp, is the same, or at least congruent, to this triangle over here, aep.
+[07:16–07:19] Essentially this follows from symmetry across that angle bisector.
+[07:20–07:25] More specifically we can say they share a side length, and then they both have an angle alpha, and both have an angle 90 degrees.
+[07:26–07:28] So it follows by the side angle angle congruence relation.
+[07:29–07:33] Maybe my drawing is a little bit sloppy, but the logic helps us see that they do have to be the same.
+[07:34–07:46] Next I'll draw a line from p down to b, and then from p down to c, and I claim that this triangle here is congruent to its reflection across that perpendicular bisector.
+[07:46–07:57] Again the symmetry maybe helps make this clear, but more rigorously they both have the same base, they both have a 90 degree angle, and they both have the same height, so it follows by the side angle side relation.
+[07:57–08:04] So based on that first pair of triangles I'm going to mark this side length here as being the same as this side length here, marking them with double tick marks.
+[08:04–08:13] And based on the second triangle relation I'll mark this side length here as the same as this line over here, marking them with triple tick marks.
+[08:13–08:21] And so from that we have two more triangles that need to be the same, namely this one over here, and the one with corresponding two side lengths over here.
+[08:21–08:27] And the reasoning here is they both have that triple ticked side, a double ticked side, and they're both 90 degree triangles.
+[08:28–08:31] So this follows by the side side angle congruence relation.
+[08:32–08:41] And all of those are valid congruence relations, I'm not pulling the wool over your eyes with one of those, and all of this will basically be enough to show us why AB has to be the same as BC.
+[08:42–08:58] That first pair of triangles implies that the length AF is the same as the length AE, those are corresponding sides to each other, I'll just color them in red here, and then that last triangle relation guarantees for us that the side FB is going to be the same as the side EC.
+[08:59–09:00] I'll kind of color both of those in blue.
+[09:01–09:05] And finally the result we want basically comes from adding up these two equations.
+[09:06–09:16] The length AF plus FB is clearly the same as the total length AB, and likewise the length AE plus EC is the same as the total length AC.
+[09:17–09:26] So all in all the side length AB has to be the same as the side length AC, and because we made no assumptions about the triangle this implies that any triangle is isosceles.
+[09:27–09:34] Actually for that matter since we made no assumptions about the specific two sides we chose, it implies that any triangle is equilateral.
+[09:35–09:38] So this leaves us somewhat disturbingly with three different possibilities.
+[09:39–09:49] All triangles really are equilateral, that's just the truth of the universe, or you can use Euclid style reasoning to derive false results, or there's something wrong in the proof.
+[09:49–09:51] But if there is, where exactly is it?
+[09:54–09:57] So what exactly is going on with these three examples?
+[09:58–10:07] Now the thing that's a little bit troubling about that first example with the sphere is that it is very similar in spirit to a lot of other famous and supposedly true visual proofs from geometry.
+[10:08–10:24] For example there's a very famous proof about the area of a circle that starts off by dividing it into a bunch of little pizza wedges, and you take all those wedges and you straighten them out, essentially lining up the crust of that pizza, and then we take half the wedges and inter-slice them with the other half.
+[10:24–10:47] And the idea is that this might not be a perfect rectangle, it's got some bumps and curves, but as you take thinner and thinner slices you get something that's closer and closer to a true rectangle, and the width of that rectangle comes from half the circumference of the circle, which is by definition pi times r, and then the height of that rectangle comes from the radius of the circle, r, meaning that the whole area is pi r squared.
+[10:48–10:56] This time the result is valid, but why is it not okay to do what we did with the spheres, but somehow it is okay to do this with the pizza slices?
+[10:57–11:08] The main problem with the sphere argument is that when we flatten out all of those orange wedges, if we were to do it accurately in a way that preserves their area, they don't look like triangles, they should bulge outward.
+[11:09–11:22] And if you want to see this, let's think really critically about just one particular one of those wedges on the sphere, and ask yourself how does the width across that wedge, this little portion of a line of latitude, vary as you go up and down the wedge?
+[11:22–11:32] In particular, if you consider the angle phi from the z-axis down to a point on this wedge as we walk down it, what's the length of that width as a function of phi?
+[11:32–11:44] For those of you curious about the details of these sorts of things, you'd start off by drawing this line up here from the z-axis to a point on the wedge, its length will be the radius of the sphere r times the sine of this angle.
+[11:44–12:00] That lets us deduce how long the total line of latitude is where we're sitting, it'll basically be 2 pi times that radial line, 2 pi r sine of phi, and then the width of the wedge that we care about is just some constant proportion of that full line of latitude.
+[12:00–12:06] Now the details don't matter too much, the one thing I want you to notice is that this is not a linear relationship.
+[12:06–12:17] As you walk from the top of that wedge down to the bottom, letting phi range from 0 up to pi halves, the width of the wedge doesn't grow linearly, instead it grows according to a sine curve.
+[12:18–12:27] And so when we're unwrapping all of these wedges, if we want those widths to be preserved, they should end up a little bit chubbier around the base, their side lengths are not linear.
+[12:28–12:43] What this means is when we tried to interlace all of the wedges from the northern hemisphere with those from the southern, there's a meaningful amount of overlap between those non-linear edges, and we can't wave our hands about a limiting argument, this is an overlap that persists as you take finer and finer subdivisions.
+[12:43–12:50] And ultimately it's that overlap that accounts for the difference between our false answer with a pi squared from the true answer that has 4 pi.
+[12:51–12:59] It reminds me of one of those rearrangement puzzles where you have a number of pieces and just by moving them around you can seemingly create area out of nowhere.
+[12:59–13:05] For example, right now I've arranged all these pieces to form a triangle, except it's missing two units of area in the middle.
+[13:05–13:26] Now I want you to focus on the vertices of that triangle, these white dots, those don't move, I'm not pulling any trickery with that, but I can rearrange all of the pieces back to how they originally were so that those two units of area in the middle seem to disappear, while the constituent parts remain the same, the triangle that they form remains the same, and yet two units of area seem to appear out of nowhere.
+[13:27–13:32] If you've never seen this one before, by the way, I highly encourage you to pause and try to think it through, it's a very fun little puzzle.
+[13:33–13:49] The answer starts to reveal itself if we carefully draw the edges of this triangle and zoom in close enough to see that our pieces don't actually fit inside the triangle, they bulge out ever so slightly, or at least arranged like this they bulge out ever so slightly.
+[13:49–14:01] When we rearrange them and we zoom back in we can see that they dent inward ever so slightly, and that very subtle difference between the bulge out and the dent inward accounts for all of the difference in area.
+[14:01–14:10] The slope of the edge of this blue triangle works out to be 5 divided by 2, whereas the slope of the edge of this red triangle works out to be 7 divided by 3.
+[14:10–14:16] Those numbers are close enough to look similar as slope, but they allow for this denting inward and the bulging outward.
+[14:16–14:22] You have to be wary of lines that are made to look straight when you haven't had explicit confirmation that they actually are straight.
+[14:24–14:33] One quick added comment on the sphere, the fundamental issue here is that the geometry of a curved surface is fundamentally different from the geometry of flat space.
+[14:33–14:36] The relevant search term here would be Gaussian curvature.
+[14:36–14:40] You can't flatten things out from a sphere without losing geometric information.
+[14:41–14:53] When you see limiting arguments that relate to little pieces on a sphere that somehow get flattened out and are reasoned through there, those only can work if the limiting pieces that you're talking about get smaller in both directions.
+[14:54–14:58] It's only when you zoom in close to curved surface that it appears locally flat.
+[14:59–15:06] The issue with our orange wedge argument is that our pieces never got exposed to that local flatness because they only got thin in one direction.
+[15:06–15:08] They maintain the curvature in that other direction.
+[15:09–15:16] Now on the topic of the subtlety of limiting arguments, let's turn back to our limit of jagged curves that approaches the smooth circular curve.
+[15:17–15:24] As I said, the limiting curve really is a circle and the limiting value for the length of your approximations really is 8.
+[15:25–15:37] Here, the basic issue is that there is no reason to expect that the limit of the lengths of the curves is the same as the length of the limits of the curves, and in fact this is a nice counter example to show why that's not the case.
+[15:38–15:50] The real point of this example is not the fear that anyone is ever going to believe that it shows that pi is equal to 4, instead it shows why care is required in other cases where people apply limiting arguments.
+[15:50–15:52] For example, this happens all throughout calculus.
+[15:53–15:57] It is the heart of calculus, where say you want to know the area under a given curve.
+[15:58–16:05] The way we typically think about it is to approximate that with a set of rectangles, because those are the things we know how to compute the areas of.
+[16:05–16:07] You just take the base times height in each case.
+[16:08–16:20] Now this is a very jagged approximation, but the thought, or I guess the hope, is that as you take a finer and finer subdivision into thinner and thinner rectangles, the sums of those areas approaches the thing we actually care about.
+[16:20–16:28] If you want to make it rigorous, you have to be explicit about the error between these approximations and the true thing we care about, the area under this curve.
+[16:29–16:36] For example, you might start your argument by saying that that error has to be strictly less than the area of these red rectangles.
+[16:36–16:42] Essentially, the deviation between the curve and our approximating rectangles sits strictly inside that red region.
+[16:43–16:51] And then what you would want to argue is that in this limiting process, the cumulative area of all of those red rectangles has to approach zero.
+[16:57–17:07] Now as to the final example, our proof that all triangles are isosceles, let me show you what it looks like if I'm a little bit more careful about actually constructing the angle bisector rather than just eyeballing it.
+[17:08–17:12] When I do that, the relevant intersection point actually sits outside of the triangle.
+[17:13–17:22] And then from there, if I go through everything that we did in the original argument, drawing the relevant perpendicular lines, all of that, every triangle that I claimed was congruent really is congruent.
+[17:22–17:28] All of those were genuinely true, and the corresponding lengths of those triangles that I claimed were the same really are the same.
+[17:28–17:37] The one place where the proof breaks down is at the very end, when I said that the full side length AC was equal to AE plus EC.
+[17:37–17:43] That was only true under the hidden assumption that that point E sat in between them.
+[17:43–17:48] But in reality, for many triangles, that point would sit outside of those two.
+[17:48–17:49] It's pretty subtle, isn't it?
+[17:51–18:06] The point in all of this is that while visual intuition is great, and visual proofs often give you a nice way of elucidating what's going on with otherwise opaque rigor, visual arguments and snazzy diagrams will never obviate the need for critical thinking.
+[18:06–18:10] In math, you cannot escape the need to look out for hidden assumptions and edge cases.
+[18:32–18:37] Thank you.

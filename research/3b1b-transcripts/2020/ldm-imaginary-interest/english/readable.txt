@@ -1,0 +1,579 @@
+[00:00–00:09] Welcome back to Lockdown Math, where we try to answer some of the important questions in life, some of the deeper things that are relevant, push your life forward.
+[00:10–00:15] Like for example, what if you have a bank that offers you an interest rate of the square root of negative one?
+[00:15–00:21] A negative, not even a negative interest rate, we thought that was weird enough, an imaginary interest rate.
+[00:21–00:22] Should you take it?
+[00:23–00:28] Now I almost guarantee, however interesting you think this question is, it's going to be more interesting than that.
+[00:29–00:34] I think there's going to be some people who find it totally nonsensical, right, which is reasonable.
+[00:34–00:37] What on earth would it mean for your money to grow by the square root of negative one?
+[00:38–00:46] And I think there's also some people who think they know where this lesson is going, but wherever you sit, I almost guarantee this is going to be more interesting than you think.
+[00:47–00:58] And to start things off, let me bring back our poll that we were doing, you know, during the warm-up animations, and I just want to get a sense for what your instinct is on this apparently nonsensical question.
+[00:58–01:07] Okay, so obviously there's no right or wrong answer here, it's something that we're going to answer by the end, but I'm genuinely curious what you viewing right now think.
+[01:07–01:12] If a bank offers you an annual interest rate of the square root of negative one, do you take it?
+[01:13–01:22] So if you want to participate either in this poll or any of the live quizzing that we do throughout, obviously 3b1b.co slash live is where you can go, link in the description as well.
+[01:22–01:39] And while you're answering this, I just want to mention that even if this is kind of a nonsensical question for money, one of the things I'd like to show by the end is that thinking through the details of this question is shockingly relevant to physics, okay, and to understanding simple harmonic motion.
+[01:39–01:47] So even if it feels like nonsense, if you're willing to engage with the weird storyline for a bit, there is a satisfying real-world endpoint for that.
+[01:47–01:52] The other thing I want to mention is a brief plug for a video by Mathologer.
+[01:52–01:55] If you guys don't know Mathologer, you're certainly in for a treat.
+[01:56–02:02] But he did this one called E to the Pi I for Dummies, and in general the channel is just full of gems.
+[02:03–02:09] But this video in particular contains a lot of the things that I want to talk about today, and it's just so beautifully done.
+[02:09–02:12] It's extremely well presented, extremely approachable.
+[02:13–02:18] Burkhard who presents it is extremely lovable, so could not recommend that and other things highly enough.
+[02:18–02:24] Good thing to watch maybe right after this, or even if you're watching this in the future, you know, to watch right before this.
+[02:24–02:27] So looking back at our poll, fascinating!
+[02:27–02:30] We've got a very even split between the yeses and the nos.
+[02:31–02:40] I wouldn't have guessed that, actually, and I'm curious if by the end of this, once we see what the implications would be, how many of you would stand by your answers.
+[02:41–02:46] So let me just, let me just see what this distribution is, because I am curious to know.
+[02:46–02:54] Alright, so it looks like 1,600 and 1,700 of you said yes, you would take the imaginary interest rate.
+[02:55–02:58] And then 1,645 of you said no.
+[02:58–03:04] Alright, we'll see if you stand by that by the end, and we'll really understand the implications of imaginary interest.
+[03:04–03:17] Now before that, let's ask a question that is a little bit more real world, because I think we should spend the first, I don't know, half hour of the lesson or so on actual normal compound interest, right?
+[03:17–03:19] The kind of interest that we would all usually think of.
+[03:19–03:27] Make sure we can build up some of the math of that, and then once we have the math of that, see how we can tweak it to answer our, well, frankly silly question.
+[03:27–03:33] Okay, so as our first, I don't even want to call it a real question, it's still meant as an opinion poll.
+[03:33–03:35] Don't necessarily think you have to do the computation.
+[03:35–03:39] What I want to gauge is what your gut reaction to this question is, okay?
+[03:39–03:43] so there is a correct answer, but just answer what you, what you think it might be.
+[03:43–03:48] So the question asks, two banks offer different interest rates on your savings.
+[03:48–03:53] Bank A will increase your savings by 12% every year, okay?
+[03:53–03:54] Pretty good bank.
+[03:54–03:57] Bank B will increase your savings by 1% every month.
+[03:58–04:00] Again, I wish my bank worked like this.
+[04:00–04:06] With each of these banks, you set up an account with $100, and after one year, which of the following is true?
+[04:07–04:14] So you have more money with bank A by more than $1, so the difference between what you have in A and B is greater than $1.
+[04:15–04:17] You have more money in bank A but by less than $1.
+[04:18–04:25] You have the same amount in each, more in bank B but by less than $1, or more in bank B by more than $1.
+[04:26–04:30] Okay, so it seems like we have pretty strong consensus.
+[04:31–04:33] I don't know if I would call that strong consensus actually.
+[04:33–04:39] There's a clear winner, but there's definitely a lot of contention behind it.
+[04:39–04:47] And in general, by the way, while these answers are rolling in, I'll sometimes be pulling up questions from the audience, which you can ask via Twitter.
+[04:48–04:53] So the link is in the description for, you know, where you can go to ask these sorts of questions.
+[04:53–05:21] And it looks like someone with the profile of Yoda asks, What a poetically written tweet, which seems pretty fitting for someone with a profile of Yoda in there.
+[05:21–05:23] I mean, it's a subjective question.
+[05:23–05:27] Personally, I do think the most beautiful things are the ones that have unexpected connections.
+[05:28–05:33] And I don't know if that's like a natural thing that humans just love to see things that seemed unrelated come together.
+[05:34–05:41] Humor seems to have this root, like a really good joke kind of takes you by surprise. But when it's when there's some kind of logical connection, it's not just surprise for its own sake.
+[05:42–05:48] And as the lesson goes on, if you have questions relevant to what we're talking about, ask them there and we'll pull them up on screen.
+[05:49–05:54] So, like I said, there's technically a right answer to this question, but I don't really want it to be treated as right or wrong.
+[05:55–05:59] The reason I'm asking this one is to get kind of an opinion poll to know where people are starting.
+[06:00–06:03] So I'm going to go ahead and lock in the answers and see where people are.
+[06:04–06:04] Interesting!
+[06:04–06:11] This might be the first time in lockdown math history that the plurality has not gotten what turns out to be the correct answer.
+[06:12–06:17] So most of you said you would have more money with bank B and it would be by more than a dollar.
+[06:17–06:25] The second most common answer was to say you'd have more money with bank B by less than a dollar, which turns out to be correct.
+[06:25–06:26] We're going to walk through that in a moment.
+[06:27–06:29] After that, more with bank A.
+[06:30–06:40] And I think the ones that I most empathize with, if I look back at what maybe an initial response to questions like this would be, if you haven't thought about interest, is everyone who said C.
+[06:41–06:46] You know, it's not obvious that 12% over a year is going to be any different than 1% per month.
+[06:46–06:48] r month. Like one percent per month,
+[06:48–06:50] That should add up to 12% over the year.
+[06:51–06:54] And I think it's worth just thinking through exactly why that's not the case.
+[06:54–06:57] So, how do we think about this kind of problem?
+[06:57–07:01] I've gone ahead and pulled up a Desmos graph for us to play around with.
+[07:01–07:05] So we'll get rid of Burckardt's beautiful face and we'll head on over to Desmos.
+[07:06–07:12] And the way I have things configured, it's going to be showing us the graph of what happens to your money, in this case in bank A.
+[07:12–07:20] So over the first year, at any point that you check in, it's just got that $100 and it's not until the end of the year that it jumps up to $112.
+[07:21–07:28] And the way you might think about that is by saying, okay, let's take our $100, at the end of the year we add 12% of that $100.
+[07:29–07:31] And sensibly enough, you get 112.
+[07:33–07:41] And a nice way to think about this, which seems simple and it seems kind of innocuous, but this turns out to be a powerful idea.
+[07:41–07:47] We'll talk about more why I might want to emphasize that this is more of a significant move than you might think.
+[07:47–07:53] The fact that the rate of change is proportional to the thing that's changing means we can factor out this $100.
+[07:53–07:57] And we can just say, oh, that step that we take, we're multiplying it by a constant.
+[07:57–08:00] In this case, that constant would be 1.12.
+[08:01–08:11] So as you go from this step to the second year, at the end of that second year, your account balance doesn't jump by just $12, because it's also earning interest on the 12 extra dollars that you got that last year.
+[08:11–08:13] So it jumps up to $125.
+[08:13–08:15] It's a multiplicative amount.
+[08:16–08:25] And this becomes particularly noticeable as we zoom out and see what would happen over the course of many years with such a fantastic interest rate in your bank.
+[08:26–08:30] It's not just growing like a straight line, it grows with this exponential curve.
+[08:30–08:35] And in fact, if you look at 10 years in, it looks like the Y coordinate of that is around 310.
+[08:35–08:43] So you let your money sit in that savings account with 12% interest for 10 years, and you'd end up with three times as much money.
+[08:43–08:44] Pretty interesting.
+[08:45–08:55] So now when we start thinking about having the interest accrue, not just at the end of the year, but at various chunks on the way in, let me just ask you another question.
+[08:55–09:02] I think this is a fun way to start things off, is rather than having me go through the logic, have you guys think through the details.
+[09:03–09:10] So before we jump to the case of doing a step every month, let's just say there was two steps halfway through the year.
+[09:10–09:12] So what does the question ask us?
+[09:12–09:17] It says a bank offers to increase the money in your savings account by 6% at the end of every six months.
+[09:18–09:25] Which of the following represents how much money will be in your account if you put in $100 and then you wait for one year?
+[09:25–09:29] So there's two different six month periods that have passed.
+[09:29–09:33] Which of the following expressions shows how much you're going to have?
+[09:34–09:37] All right, so I'm going to give you a moment to think through the details of this.
+[09:37–09:39] Give you a little pause and ponder music maybe.
+[10:13–10:21] Okay, as always, I'm probably going to grade this faster than is a reasonable amount of time for someone who really wants to think through the details of things.
+[10:21–10:22] So never feel like you're being rushed.
+[10:23–10:25] Sometimes it's just that I want to move forward with the lesson.
+[10:26–10:29] And it seems like answers are rolling in a little bit more slowly now.
+[10:29–10:34] So I'm going to go ahead and lock this in, but as always, feel free to pause and just think things through more yourself if you want.
+[10:34–10:35] We're going to explain it in a moment.
+[10:36–10:45] So the correct expression, which looks like 3,000 of you got, is that it should be $100 times 1 plus 0.6 squared.
+[10:45–10:46] Alright?
+[10:46–10:48] Now let's think through why that might be the case.
+[10:48–11:02] So if we head back over to our Desmos expression that we were working with, if instead of increasing by 12 percent, we're saying increase by 6 percent, when you factor it out, it looks like multiplying by 1.06.
+[11:03–11:05] And then there's two ways you can think about this.
+[11:05–11:11] If you're already comfortable with the idea that increasing by 6% is multiplying by this constant, you say, oh, we just square that.
+[11:12–11:18] And if you want to think through the details for why that's true, if that's not something you're entirely comfortable with, you can say, let's repeat the process.
+[11:18–11:21] So this gets us 106 after that first six month period.
+[11:22–11:30] Okay, we've got 106, then we're going to add 6%, 0.06 times that 106, and that's going to get us the final amount.
+[11:31–11:34] But this we can factor, because the 106 shows up in two places.
+[11:34–11:42] Because the rate of growth is proportional to itself, it lets us factor this out as 106 times 1.06.
+[11:43–11:47] And then you might realize, oh wait, I'm just multiplying by the same constant that I did before.
+[11:47–11:50] So I might as well have just gone and put that constant up there.
+[11:50–11:55] And because it's the same constant, I might as well have simply written that as a square.
+[11:57–12:06] So what that means is if you take these steps of percent increases many, many different times, what it looks like is taking a number that's a little above 1 and then raising it to some kind of power.
+[12:06–12:11] So to our original question, asking about bank B, which, what did it say?
+[12:11–12:14] It was going to be a 1% increase to your savings every month.
+[12:14–12:25] The way you might think about that is by saying we multiply by 1.01, okay, by 1 plus that 1%, and then we do it after 12 months.
+[12:26–12:34] Okay, so instead of the, instead of the $112 that you would have had from bank A, woo hoo!
+[12:34–12:39] It looks like compounding more frequently got us an extra 68 cents in our account.
+[12:39–12:41] So, wonderful, right?
+[12:41–12:57] In our graph, if we wanted to see what that would look like, again, there's some machinery under here that I'll show in a moment, but if I just crank up this number n to 12, that's basically asking how many times per year do I compound this interest?
+[12:57–13:01] Do I make a little step increase based on what the annual interest rate is?
+[13:01–13:10] So if the annual interest rate was 12 percent and you're making steps each one twelfth of a month, of a munch, of a month, that means you increase by 1 percent each one of them.
+[13:10–13:15] So what it looks like is a step function that's a lot more fine, okay?
+[13:15–13:23] And we can see how at the end of the one year, the y coordinate of our graph is that $112 with the extra 68 cents.
+[13:23–13:25] Not quite a dollar more, but it is more.
+[13:26–13:32] And again, as we zoom out, you can see that it fits this nice exponential curve, the power of compound growth.
+[13:32–13:46] And if you're curious, you know, previously after 10 years, we would have had 310 dollars, I think it was, which we can verify for ourselves if I take that 100 dollars times 1 plus 0.12 to the tenth.
+[13:46–13:47] Alright, this says $310.
+[13:48–13:55] When we compound every month instead, and we wait for 120 months, it looks like we've squeezed out an extra 20 bucks.
+[13:56–13:57] So, not bad.
+[13:57–14:04] The important part here though, is the idea that the frequency with which you compound actually changes the amount, which is interesting.
+[14:05–14:14] And this is the original circle of thoughts that Bernoulli was thinking about that leads to the origins of the constant e that we all now know and love.
+[14:14–14:17] Maybe the second most famous constant only next to pi.
+[14:18–14:24] So let's write out some of what we're doing here, but with some formulas, and then see what we can start learning with respect to those formulas.
+[14:24–14:34] And this is going to help us understand the bizarre question of an interest rate of negative, not even negative, I keep saying interest rate of negative 1, interest rate of square root of negative 1.
+[14:35–14:41] Nobody should let the Fed watch this video, I think it might introduce some shaky ideas.
+[14:43–14:53] Alright, so the way we might think about this is let's say you start off with some amount of money, okay, and then we're going to let it accrue some interest over some long amount of time, that I'm going to call t.
+[14:53–15:03] And the idea is that we're chopping this amount of time into a bunch of little pieces, okay, and with each one of these steps we're going to increase our money.
+[15:03–15:06] There's going to be some kind of change to m, a delta m.
+[15:07–15:10] And each of these steps, let's say it's got a length of delta t.
+[15:11–15:18] So maybe delta t is a 12th of a year, or maybe it's 1 365th of a year, it depends on how finely we cut it.
+[15:18–15:26] And just as another variable to throw down here, let's keep track of how many steps there are along the way, if we were to count them all up.
+[15:26–15:33] And the total number would be the total amount of time divided by the size of the time steps that we're taking, okay?
+[15:34–15:47] So what interest rates do is they say that the amount your money changes is going to equal that interest rate, r, and you might think of r as being something like the 0.12 from our example.
+[15:47–15:50] And then later on we're going to play around with making it imaginary.
+[15:51–16:00] But you're going to multiply it by the size of your time step, okay, which you might think of as being something like 1.12 if we were compounding monthly.
+[16:01–16:09] Because simply by compounding monthly it doesn't mean you get to grow by 12% every month, it means you grow by 1.12 of what the annual rate was every month.
+[16:10–16:15] And then what makes compound growth so powerful, it's also proportional to the amount of money you had.
+[16:15–16:21] You know, if you had $100 it grows by a certain amount, if you had $1000 in there it grows by 10 times as much.
+[16:21–16:23] The more you have, the more it grows.
+[16:23–16:27] Okay, so that in our example you might think of as being something like $100.
+[16:28–16:30] Alright, so what's the magic of this?
+[16:30–16:40] It looks innocuous at first, but it means that our money changes by going to m plus r delta t times m.
+[16:40–16:50] And because m shows up in both of these terms, it lets us factor things out, so that m factors out and we have 1 plus r delta t.
+[16:51–16:59] And because this is the same constant that we're going to multiply for each one of these little time steps, all you're doing is multiplying by this constant.
+[16:59–17:04] We can write an expression for how much money you're going to have after time t.
+[17:04–17:14] What it's going to look like is the amount of money you had to start off with at time t equals 0 multiplied by this expression, 1 plus r delta t.
+[17:15–17:18] And I'll change this in a moment, but I'll keep writing it as r delta t.
+[17:19–17:24] But we multiply it by itself n times, where n is the number of steps that we have in here.
+[17:25–17:29] Okay, but there's a lot of different variables at play here, so I want to start consolidating them.
+[17:29–17:37] And instead of writing delta t, I'm going to go ahead and express delta t as the total time divided by n.
+[17:37–17:44] We look at the number of chunks we've cut our period into, and we take the total amount of time and divide by that.
+[17:45–17:56] So what our expression will look like is the amount of money we started with times 1 plus r times the total time divided by n.
+[17:56–17:59] So this t divided by n is playing the role of delta t.
+[17:59–18:02] And we raise that to the nth power.
+[18:02–18:11] Now this is actually a very interesting expression, no pun intended, because we want to know how does the size of n influence things.
+[18:11–18:18] If I crank up n a lot, meaning we're chopping our interval into very fine increments and compounding very frequently, what does that mean for our interest?
+[18:19–18:34] And you might, if you were a pure mathematician, try to abstract away all the ideas of the money here, the specific interest rate, and just say what we're interested in is this function of x that looks like 1 plus 1 over n.
+[18:34–18:37] Or maybe I'll say 1 plus x over n.
+[18:37–18:40] So we want to be able to plug in some value for r t.
+[18:41–18:42] And we'll raise that to the power n.
+[18:43–18:47] But you're not just curious about this for any particular n.
+[18:47–18:51] What you want to know is what happens as you crank up the value of n.
+[18:51–19:03] And the expression that mathematicians write for this, we write lim for limit, and then we write n with an arrow to infinity, saying I want to crank up that n and see what happens to this particular value.
+[19:03–19:16] Now it's not obvious, I think, what happens to it, and playing with my toy again, I just want to do another half-opinion poll, half-real question about this one to see what your instinct is.
+[19:16–19:32] So let's say, pull up the question here, what happens to the value 100 times 1 plus 0.12 over n to the power n as the value of n approaches infinity?
+[19:34–19:41] And in the back of your mind, you can think this isn't just a purely mathematical expression, it has a very real meaning in the context of compound interest.
+[19:42–20:00] What we're basically saying is if you have that 12% interest rate, and you want to wait one year, but you chop up that year into n different pieces, maybe n is 12 if you compound every month, maybe n is 365 if you compound every day, or maybe you want to compound every microsecond or every picosecond.
+[20:00–20:04] The question is, how much money can you get at the end of the year simply by compounding more frequently?
+[20:05–20:09] If you'll remember, when we went from yearly to monthly, that gave us an extra 68 cents.
+[20:11–20:14] So the question asks, basically, how high can this go?
+[20:14–20:17] And now we have a very wide split, which is wonderful.
+[20:19–20:23] I'm going to give you guys a couple more moments to think about this.
+[20:24–20:32] And I don't want you to calculate it necessarily, the spirit of this question is to see what your initial thought is, kind of intuitively based on the numbers.
+[20:32–20:37] So even though technically there's a right answer to this one, so I'll highlight it green, there's no right or wrong here.
+[20:38–20:40] The spirit of it is for me to know where people are.
+[20:41–20:43] I'll give you just a little bit of time on this.
+[20:54–20:57] And while I do, let's take a question from the audience.
+[20:58–21:07] Considering that imaginary unit is defined in terms of operations on the real numbers, is there an analogous definition of quaternions in terms of operations on complex numbers?
+[21:08–21:10] Okay, so a bit of an advanced question.
+[21:10–21:15] I don't expect most people watching the series to necessarily know what quaternions are.
+[21:16–21:21] But it's a number system that instead of including two dimensions, like the complex numbers, involves four dimensions.
+[21:21–21:27] The short answer to the question, I think this is okay to say, the short answer is no.
+[21:28–21:32] When we get the complex numbers it's because we have an expression that we don't have a solution to.
+[21:33–21:34] You want to know the square root of negative one.
+[21:34–21:37] A solution to x squared equals negative one.
+[21:37–21:40] And by introducing a solution, you extend your number system.
+[21:41–21:42] Quaternions don't come about like that.
+[21:43–21:48] For any polynomial, once you have the complex numbers, you get all the solutions that you could ever want from that.
+[21:48–21:54] So it's not going to be there's a problem that you wanted solved in the sense of a solution to a polynomial and you extend it.
+[21:54–22:00] But where it does come from is the idea, at least historically, is the idea of wanting to describe motion in three dimensions.
+[22:01–22:10] And complex numbers can describe things like rotation in two dimensions, but they don't have enough degrees of freedom to describe rotations in three dimensions.
+[22:10–22:13] So in that sense it was a concrete problem they couldn't solve.
+[22:14–22:19] But the construct that you do to add on top of it doesn't look like a solution to a polynomial.
+[22:20–22:27] Kind of a more advanced question than the spirit of the lessons necessarily, but obviously I love to just engage with wherever you are, whoever is watching this.
+[22:28–22:29] So back to our question.
+[22:30–22:31] I'll go ahead and grade it.
+[22:31–22:34] And again, technically there's a right answer, but don't view this as right or wrong.
+[22:34–22:44] It looks like 1670 of you correctly noted that this value would rise above 112, but never above 113.
+[22:44–22:52] So maybe taking the instincts from the fact that when we went from yearly to monthly we only got 68 cents and saying you can't get much better than that.
+[22:53–23:01] The next biggest answer, interesting, was people who said it would rise above 114, but stay below some finite bound.
+[23:01–23:06] Okay, so having that instinct that it would stay finite, but that it was going to get bigger than anything listed here.
+[23:06–23:13] And I think the most thought-provoking answer here is E.
+[23:13–23:15] The thought that maybe it should blow up to infinity.
+[23:15–23:18] I mean, we're letting n get as big as we want.
+[23:18–23:23] It doesn't just have to be down to the picosecond, it could be down to a plank length.
+[23:23–23:28] It could be down to the tiniest, the biggest number that you could think of, so that our time steps are as tiny as you can think.
+[23:29–23:31] It's not at all obvious that this thing would remain bounded.
+[23:31–23:34] So we can play around with this a little bit if we want to.
+[23:35–23:40] This won't be a proof that it remains bounded, but maybe it can give us a little bit of an instinct in that direction.
+[23:40–23:49] If I take 1 plus 0.12 over n, and I raise this to the power n, and I say what happens as we increase n?
+[23:49–23:50] And 100, that's not big enough.
+[23:51–23:55] I want to let myself increase it to some huge number, you know, 100 million.
+[23:55–23:59] So the value I want you to watch is sitting right here, okay?
+[24:00–24:06] And remember that represents how much money you'll have if you compound your 12% interest much more frequently.
+[24:07–24:13] Even as I'm cranking it up around 100 million, this value really stays stable around 1.12.
+[24:14–24:17] Here, let's multiply it by the $100 to make it more intuitive.
+[24:17–24:25] Around the $112.74, about 75 cents, it stays really stable around that even as I'm increasing by a lot.
+[24:26–24:27] That's not a proof.
+[24:27–24:39] For all we know, as you venture into the realm of huge, huge numbers, 10 to the 300th, or grams constant, or whatever big number you want, maybe this thing would slowly crawl up and eventually get unbounded.
+[24:40–24:42] But it's an interesting fact that it doesn't.
+[24:42–24:47] Now, in terms of the math behind this, we can do an interesting manipulation.
+[24:48–24:51] Because we have this expression that is a little funky to think about, right?
+[24:51–24:57] We've got 1 plus x over n that you might think of as a partial interest rate, and we're raising it to the n.
+[24:58–25:06] I can do a little substitution and say, what if I define the value m to be n divided by x?
+[25:06–25:12] And the reason for doing that would be so that I can write that inside without an x in it.
+[25:13–25:15] So x divided by n will be the same as 1 divided by m.
+[25:17–25:23] And now I'll be raising that to the power, well not n, well no, the power n, but I want to write it in terms of m.
+[25:24–25:26] So it'll look like m times x.
+[25:27–25:35] And based on how exponents work, I can think of that just as the quantity 1 plus 1 over m to the power n all raised to the x.
+[25:35–25:40] And I'm curious about what happens here as I crank the value of m towards infinity.
+[25:42–25:46] And Bernoulli was also interested in what happens as we crank this value of m up towards infinity.
+[25:47–26:08] And empirically, what you'll find is if you just play around with this, and if we go over and take out the evidence that we were dealing with a real world problem, with things like that $100 starting value, or that 12% interest rate, and we just have clean constants like 1 for each of them, it looks like this value ends up to being around 2.71828.
+[26:09–26:14] And no matter how big you make n, it seems to never really get much different than that.
+[26:14–26:19] Again, not a proof, but very suggestive that this is maybe a fundamental constant of nature.
+[26:20–26:26] And so this is the original definition of e, this is the original way that people were thinking about it.
+[26:26–26:36] As we pop over here, and we say instead of writing this whole limit expression, I'll use a different color, say in principle, this is going to approach some kind of constant.
+[26:37–26:44] Let's call this constant e that empirically has a value around 2.71828.
+[26:45–26:49] And then we can write our whole thing as e to the x.
+[26:50–27:11] So for example, if we wanted to know what happens in our interest example, when we started out with $0, not $0, started out with m of 0, which might be something like $100, what we do is we just focus on that rt term, we say we know that as we crank up n, this is going to approach some special constant raised to the power of rt.
+[27:12–27:19] And maybe this we would aptly describe as continuously compounded growth, if we take that time step and we let it approach 0.
+[27:19–27:23] And this was actually before Newton and Leibniz, this was before calculus existed.
+[27:23–27:31] There was this idea of trying to take these discrete steps of increasing and make it approach 0 to get something a little bit more continuous.
+[27:31–27:33] So I think that's quite cool.
+[27:35–27:47] And one thing that you might notice here is we've got this large expression for basically a function of x that we now tend to write as e to the x.
+[27:47–27:58] If you watched the last lecture, you would have remembered that I said the way things have come about in math now, whenever we see e to the x, we actually think of it as a shorthand for a certain polynomial.
+[27:59–28:14] And the polynomial, I was calling it exp, which follows convention, looks like 1 plus x plus x squared over 2 plus x cubed over 6, and all of the terms look like x to the k divided by k factorial for some whole number k.
+[28:14–28:22] And I said this is what e to the x is a shorthand for, this is how you think about it, especially when there's weird inputs, things like an imaginary interest rate.
+[28:23–28:28] And you might wonder, what on earth does this polynomial have to do with this limiting expression?
+[28:29–28:56] And as a super extra credit challenge question for those of you who are really into algebra and who are very comfortable with binomial expansion, if you know what those terms mean, if you take this expression for some large value of n and you expand it, you just expand it and you kind of simplify your terms and then you make approximations based on what's true when n is very large, what you would find is that the polynomial this expands to looks a lot like this polynomial here.
+[28:57–29:06] And in fact, as this value of n gets bigger and bigger and approaches infinity, this polynomial will get closer and closer to this one.
+[29:06–29:14] It's a challenging question, so I wouldn't expect everyone to necessarily be able to just bang it out, but if you want to it's a very elucidating exercise.
+[29:14–29:28] And there's also a lot of delicacy in rigorously proving the fact that what this approaches will also approach this, or that both of them even stay finite, and they don't blow up when you, you know, add more and more terms to the sum, or when you crank up n higher and higher.
+[29:28–29:33] There's a lot of delicacy there, but you can probably get to a point where there's an intuitive connection.
+[29:33–29:41] And the reason that in math we tend to work with this polynomial instead of that limit, it's basically easier for computations and easier for theory.
+[29:41–29:52] But the value of this other expression is that it ties us back to the idea of compound interest and the idea of taking a quantity that changes a little bit based on its own size.
+[29:52–29:59] You can kind of readily read this as saying we're going to multiply by a certain constant that's a little above one many, many times.
+[29:59–30:12] And if you'll remember, the reason we're doing that is when the way that you change is proportional to yourself, that lets you factor things such that you're just multiplying by something a little bigger than one.
+[30:13–30:23] And when you do this approaching continuity, when you do it in a way where that time step is getting smaller and smaller, this is when we start writing e to the power of something.
+[30:23–30:29] What it's suggesting is that you have this compound interest expression, but we're letting that n tend towards infinity.
+[30:29–30:31] We're letting the time step go as small as we want.
+[30:32–30:36] So, with all of that said, we can start having fun.
+[30:36–30:40] We can start thinking about our original question of an imaginary interest rate.
+[30:42–30:43] So how on earth is this going to work?
+[30:44–30:53] First of all, let's just say from the get-go that if we try plugging in r to this expression where we're raising a constant e to a power, it makes no sense.
+[30:54–30:57] If r is equal to the square root of negative one.
+[30:58–31:02] You cannot multiply a constant by itself the square root of negative one times.
+[31:02–31:03] So that doesn't make sense.
+[31:03–31:12] But what does is if we go to this original expression, the origins of e, and try to imagine plugging in something like i to that.
+[31:12–31:15] We know how to divide i by n, that's fine.
+[31:15–31:17] We know how to add it to one, that's fine.
+[31:18–31:20] We know how to take a complex number and multiply it by itself.
+[31:20–31:22] All of the operations there are quite fine.
+[31:23–31:25] Now let's draw it out to think about what it would look like.
+[31:26–31:30] And the other thing I want to emphasize is I know this seems like utter nonsense.
+[31:30–31:34] We're talking about imaginary numbers in the context of interest rates.
+[31:34–31:44] But in a couple minutes, I really do hope to make this relevant to physics and hope to make you see that this is not a totally nonsensical circle of thoughts.
+[31:45–31:54] So, I've got my axes here. This is going to be my real, this is my real money. And this will be all of my imaginary money.
+[31:55–32:10] What it means if your interest rate is i, is that the change to the money looks like i times whatever the time step is, delta t, times whatever the money is to begin with.
+[32:11–32:21] Now, in, I believe it was lecture 3, we talked all about complex numbers, and one of the fundamental facts was that when you multiply i by something, it has the effect of a 90 degree rotation.
+[32:22–32:27] And we talked about this in terms of looking at the coordinates and realizing that you just swap the coordinates and make 1 negative 1.
+[32:28–32:34] So this connection between the square root of 1 property and the very mechanistic idea of taking a vector and rotating it 90 degrees.
+[32:35–32:49] Now what this means for us is that the change to your money is going to be a little arrow that, you know, it's not increasing the money, you're not growing, you're not decreasing the money, it's not a negative interest rate, it's moving somehow perpendicular to where the money already is.
+[32:50–32:55] So after a little step in time, you end up with a little bit of imaginary money.
+[32:55–32:58] So you have what you had originally and you can play Monopoly.
+[32:59–33:03] And now from that point, when you do another time step, it does the same thing.
+[33:03–33:11] It takes the vector that you've newly landed on and it rotates it 90 degrees, okay, and then you take a little step based on that.
+[33:12–33:15] And then again, you take a little step based on that.
+[33:15–33:25] Where at each point you're looking at what is your money number that has some real part and some imaginary part, you rotate it 90 degrees and you add a little step on that.
+[33:25–33:27] And now the question is what happens to this?
+[33:28–33:29] This is the original question.
+[33:29–33:33] The bank offers you this interest rate, what's it going to do?
+[33:35–33:42] The correct answer, I think, is that you need to ask the bank for more information because how frequently you compound it is going to make a difference.
+[33:43–33:52] So to illustrate this, let's say you compounded it annually, meaning at the end of every year you take a big step that's based on this interest rate multiple.
+[33:52–34:05] So for every dollar that you have, if you started out just putting your real money into the bank, at the end of the year you would add i times that amount, which is a 90 degree rotation of your money.
+[34:05–34:08] Again, I know this is utter nonsense, but follow along with me.
+[34:09–34:11] One, it's fun, and two, it leads to real physics.
+[34:12–34:13] So where does that get you?
+[34:14–34:16] Well, it gets you $1 plus i dollars.
+[34:17–34:22] So if you had a hundred dollars in the bank, you end up with a hundred real dollars and a hundred imaginary dollars.
+[34:22–34:30] But then, after the next year, you take another step, where it takes that new money vector, rotates it 90 degrees, and adds that to where you are.
+[34:30–34:34] So after two years, you come back to your bank and you say, how's my money doing?
+[34:34–34:36] And they say, good news, sir, there's twice as much of it.
+[34:37–34:38] You say, that's fantastic, it's only been two years.
+[34:39–34:41] And they say, bad news, it's all imaginary.
+[34:41–34:46] So, very good for your Monopoly game, not great for life logistics.
+[34:46–34:47] But it gets worse.
+[34:47–34:55] As you wait more time, and you add another 90 degree rotation of where you currently are, you're going to step into the negative real territory.
+[34:56–35:04] So at this point, now you have negative 200 real dollars, but you still have that 200 imaginary dollars.
+[35:04–35:09] So, good for your Monopoly game, devastating now for your actual life.
+[35:09–35:10] But it gets worse.
+[35:11–35:19] As we take another step, four years later, after you've invested your hard-earned money, you've not even invested, you weren't even putting it at risk, it was just a savings account.
+[35:19–35:20] And where do you end up?
+[35:21–35:24] For every dollar you put in, you would now have negative four dollars.
+[35:24–35:31] So you come to the bank and they say, well, you owe us $400 for the $100 that you put in four years ago.
+[35:31–35:35] And just as you're about to get outraged at them, they say, sir, we encourage you to wait.
+[35:35–35:37] We really do think this is going to work out for you.
+[35:37–35:42] If you just let your money sit, do its work, and in the long run this will work out for you.
+[35:42–35:55] And they're not entirely wrong, because if you keep playing this game of rotating 90 degrees and then adding that vector, after a total of eight years, where you're going to end up is at 16 times your original amount.
+[35:55–35:56] Not too bad.
+[35:56–36:09] So if you're willing to put up with a lot of stress going in, changing your monopoly game, changing your real life, and you were willing to just hold for eight total years, you would have 16 times as much.
+[36:09–36:11] So that's pretty good, I would say.
+[36:13–36:23] We might call this the venture capitalist approach, where you put in your money, you can't see it for a long time, and most of the time it's completely imaginary.
+[36:23–36:26] But every now and then you get a giant multiple at the end.
+[36:27–36:32] Now before you excitedly do this, though, let's say that your bank doesn't compound it annually, right?
+[36:32–36:35] And they say, ah, actually we compound your interest continuously.
+[36:36–36:41] Meaning that our time steps are not delta t of one year, but it's delta t getting smaller and smaller.
+[36:42–36:48] Well what that means is that each one of your steps that's perpendicular to where you are is really just a tiny little step.
+[36:48–36:51] And I'm showing with the arrows here what happens if you wait eight total years.
+[36:51–36:58] So you take a tiny step that's perpendicular to where you are, another tiny step that's perpendicular to where you are, and you keep going.
+[36:59–37:09] But as that time step gets smaller and smaller, smaller and smaller and smaller, to the point where it's genuinely continuously compounding interest, what it means is that you're simply walking around a circle.
+[37:10–37:22] So if you were writing this out as an expression, you know, it might seem halfway reasonable to look at the fact that we were using e to the x as a shorthand for this limiting value here.
+[37:22–37:25] And in the case of real numbers that makes total sense when we plug in a value for x.
+[37:26–37:35] But what it means here is with our imaginary money, we're writing it as e to the i, that was our interest rate, times the amount of time.
+[37:36–37:52] Nonsense if we think about repeated multiplication, but in the context of compounding interest, all it really means is that after taking a bunch of steps that are perpendicular to your current position, and we do that continuously, so those time steps are just infinitesimal, it has you walking around a circle.
+[37:53–37:56] So, the bank offers you this, do you take it?
+[37:57–37:58] Well let's think it through.
+[37:58–38:01] What happens when you put in $100 to your savings account?
+[38:01–38:12] Well if you wait a total of pi halves years, which is the distance along a quarter of a circle, a little over a year and a half, you come back into your account and what do you see?
+[38:13–38:18] Well, for each dollar you put in, you have an imaginary dollar.
+[38:18–38:19] Not great.
+[38:20–38:24] But you push through, you know, the banker told you that this will work out in the end, so you say, okay, I'm gonna wait.
+[38:24–38:33] I didn't need it for that year and a half, life wasn't going too terribly, so I'm just gonna let my money still sit in that savings account for another year and a half or so.
+[38:33–38:36] And you wait a total of pi years, around 3.14 years.
+[38:36–38:39] You come back, and now it really doesn't look good.
+[38:39–38:44] Now, you've got negative one dollar for each dollar that you originally put in.
+[38:44–38:52] And just like before, you're infuriated at the bank, not as much as you were, because it hasn't gone out to be negative four, but it's still negative, and that's not fun.
+[38:52–38:56] And the bank says, hold on, hold on, sir, we think this is actually gonna work out for you in the end.
+[38:57–39:02] You say, okay, I've seen this work out for my friends who got 16 times their money, so I'll just hold.
+[39:02–39:07] And you do, you just don't touch the money in your savings account, you wait another year and a half and you check.
+[39:07–39:11] And now, not only is it entirely imaginary, it's negative.
+[39:11–39:14] So you can't live your real life, and you also can't even play Monopoly well.
+[39:14–39:18] So, 4.7 years is a real low during this whole experience.
+[39:19–39:28] But if you're willing to stick it out, and wait a total of 6.28 years, 2 pi years, you come back, and for all of your stress, you're back to where you started.
+[39:28–39:31] You just have one dollar for every dollar that you put in originally.
+[39:32–39:34] So, should you accept this interest rate from your bank?
+[39:35–39:41] Depends on how much emotional turmoil you want, but if it's continuously compounding, certainly not, I think is the appropriate answer.
+[39:43–39:45] Now, is this at all useful?
+[39:45–39:55] This is kind of fun, I think, to take an idea that started off only relevant to real numbers, you know, a 12% interest rate, or if you have negative interest rates, you can think of how that decays.
+[39:56–39:58] And say, well, what if we did something else to it?
+[39:58–40:02] What if each time step wasn't in the direction, but it was perpendicular to the direction?
+[40:03–40:10] And the answer is that this is actually incredibly relevant to anything that involves what's called simple harmonic motion in physics.
+[40:11–40:13] And so a great example of this is a spring.
+[40:14–40:17] Let's say we wanted to understand the motion of a spring.
+[40:18–40:19] So let me pull this up here.
+[40:22–40:26] I think I have an actual spring sitting somewhere here, if it didn't roll off my table.
+[40:27–40:33] I had trouble finding any reasonable ones, so I tried to just extract one from my pen.
+[40:33–40:37] Maybe not the greatest physics demo in the world, but I've got one.
+[40:37–40:43] So the idea here is that if I pull the spring, it's pushing me back in the other direction against how I pull it.
+[40:43–40:47] And similarly, if I push on it, then it's pushing me in the other direction.
+[40:47–40:50] It's trying to get back to that equilibrium point.
+[40:50–40:57] And the way that it does this obeys, at least to a loose approximation for a lot of springs, something called Hooke's law.
+[40:58–41:05] So if I draw out a spring, and let's imagine that there's some mass sitting at the end of it.
+[41:05–41:07] Let's say that this is where it wants to be.
+[41:08–41:17] This is the equilibrium position, kind of like how my spring is sitting here before it just rolls away with no forces acting on the mass.
+[41:17–41:33] But if you stretch it out, if I pull it, that same mass at the end, this distance, what we might call the displacement of our mass, ends up influencing how much force the spring is pulling back on.
+[41:33–41:37] Because intuitively we know that the spring is pulling back with some kind of force.
+[41:38–41:43] And what Hooke's law suggests is that it's a force proportional to that size of x.
+[41:43–41:48] And we use k as a proportionality constant and negative to emphasize that it's pointed in the opposite direction.
+[41:49–41:56] So in this context, what we're saying is if we double the amount that we're pulling it, it's going to pull us back with twice the force.
+[41:56–41:58] If we triple it, it pulls us back with three times the force.
+[41:59–42:04] As with any kind of physical models, this is only true to an approximation.
+[42:04–42:08] You know, if we pull the spring such that we just distort it entirely, this certainly won't apply.
+[42:09–42:16] And often with anything that involves the simple harmonic motion we're about to describe, it tends to only be true for small variations.
+[42:16–42:19] And as you get larger variations, the model would have to change.
+[42:19–42:22] But this is a pretty good one, and it's very general.
+[42:22–42:24] It comes up in a lot of different circumstances.
+[42:25–42:28] Now force is mass times acceleration.
+[42:29–42:30] This is what force is.
+[42:30–42:33] This is what Newton's second law tells us.
+[42:33–42:34] It says, what is your mass?
+[42:34–42:36] I'm telling you how much you're going to accelerate.
+[42:36–42:41] Acceleration is how much your velocity changes, velocity being how much the value of x changes.
+[42:42–42:55] Now this is quite interesting, because what it means is that acceleration, which is influencing the displacement, kind of in a second order way via how it influences velocity, is itself influenced by the value of x.
+[42:56–42:58] So I'm going to go ahead and ask you a quiz question here.
+[42:58–43:05] It's basically to have us think about what velocity and acceleration really mean in a context like this.
+[43:05–43:07] So we'll pull up our quiz again.
+[43:07–43:12] We are going to go to the final live question for this lesson.
+[43:14–43:16] Which is a big one, but it's largely just stating what I just did.
+[43:17–43:22] A mass on a spring is pulled a distance x away from an equilibrium point.
+[43:22–43:31] If the spring obeys Hooke's law, the mass will experience a force of f equals negative kx, x being that displacement, for some constant k.
+[43:31–43:37] Keep in mind, by Newton's second law, f equals ma, where m is the mass and a is the acceleration.
+[43:38–43:53] Okay, if the mass starts out with a displacement of x naught and a velocity of v naught, which of the following most clearly describes the value, the changes of these values after a small change in time, delta t?
+[43:53–44:08] Okay, so we're going to let time play out for a tiny step in time, and it wants us to know which of these four options best describes what that change to the x value is going to look like, delta x, and what the change to the velocity value will look like, delta v.
+[44:09–44:10] So I'll give you a little bit of time for this one.
+[44:42–44:51] While you're thinking about that, we've got another question in about quaternions, not entirely relevant to the lesson, but certainly a very interesting idea and question.
+[44:51–44:59] So if you're enjoying this kind of side plot to the full lecture, rotation in 2D requires one extra number, i.
+[44:59–45:05] So why is it that it requires three extra numbers, i, j, k, and not just two, i and j, for 3D rotation?
+[45:05–45:11] Is there an equivalent way for rotation in four dimensions, and how many extra numbers are required there?
+[45:11–45:12] Okay, awesome question.
+[45:12–45:23] So a way to think about this, in complex numbers or in two dimensions, you only need one degree of freedom to describe rotation, okay, you just need to describe the angle that you're rotating.
+[45:24–45:29] And so you might say, oh, why do we need a 2D number system in order to describe something that only has one degree of freedom?
+[45:30–45:39] And the idea is that it's nice to live in a slightly bigger space so that we can have a circle, something where you come back on itself, and then we just constrain all of the rotating actions to that circle.
+[45:39–45:44] So the way that complex numbers describe rotation is entirely based on the numbers that sit on a circle.
+[45:44–45:47] It's only one dimension's worth of numbers in some sense.
+[45:47–45:48] Awesome.
+[45:49–45:56] So for three-dimensional rotation, it's not just two extra degrees of freedom you have, you actually have three degrees of freedom to describe any 3D rotation.
+[45:56–46:05] You might think of it as saying, choose an axis for your rotation, a latitude and longitude that you're going to poke a hole through the entire Earth.
+[46:05–46:11] And then after you choose that latitude and longitude, two degrees of freedom for your axis, you have another degree of freedom for how much you rotate.
+[46:12–46:16] So it's a total of three degrees of freedom to describe rotation in three dimensions.
+[46:17–46:36] Now again, you could say, in principle, we should be able to do this with a three-dimensional space, where somehow you associate the three degrees of freedom of 3D space with the three degrees of freedom of your rotation, which you kind of can with a thing called stereographic projection, which is entirely what the video I did about quaternions was about.
+[46:36–46:41] But, in the same way that to describe rotations, it's nice to have a circle, something that lives one dimension higher.
+[46:42–46:50] To describe 3D rotations, it's nice to have a hypersphere, basically something that loops back on itself, but it has three degrees of freedom on it.
+[46:50–46:54] Very weird for us to think about, but that's sort of the degrees of freedom argument.
+[46:54–46:58] And then four dimensions, rotations would actually have ten degrees of freedom.
+[46:58–47:06] There's not a number system for it, but if you're trying to constrain your matrices and understand things like that, which again, this is, if none of this makes sense to you, don't worry.
+[47:07–47:11] It's not in the spirit of this particular lecture or the target audience for it.
+[47:11–47:12] But it's an interesting topic.
+[47:12–47:17] And if it's what you're chatting about on Twitter, I'm happy to chime in on that.
+[47:17–47:26] So, yeah, thinking about degrees of freedom and the fact that it's nice to live one dimension higher to have, basically have a more interesting surface than flat Euclidean space.
+[47:27–47:39] Okay, with that as our changing scenes abruptly from the side plot of quaternions, we return back to our regular programming of physics and how it's relevant to imaginary interest rates.
+[47:39–47:45] Locking in our answers here, it looks like most of you correctly answered A.
+[47:46–47:47] And what is A saying here?
+[47:47–47:56] It's saying that the change to x is whatever your velocity was times the small step in time, which that's what velocity is, right?
+[47:56–47:58] It's saying how many meters per second.
+[47:58–48:00] What is the change in distance per unit time?
+[48:00–48:02] So you multiply it by the change in time.
+[48:02–48:08] And then the only tricky part is knowing that the velocity changes based on acceleration times delta t.
+[48:09–48:13] And acceleration in this case, we can work out based on the various equations.
+[48:14–48:16] Not sure if you can hear, but there's some sirens in the background.
+[48:16–48:20] In general, whenever I'm recording, it's so annoying when there's background noise.
+[48:21–48:25] So one of the nice things about live is that I just have no option.
+[48:26–48:27] So background noise needs to be tolerated.
+[48:28–48:37] Anyway, if we want to write a pure expression for the acceleration, what it looks like is, just rearranging, negative k over m times x.
+[48:38–48:42] Now for where we're going with this, it's going to be a little bit simpler.
+[48:43–48:45] This is a classic mathematician thing to do.
+[48:45–48:46] Ignore the like real numbers.
+[48:47–48:52] And just assume that we're working with whatever units we need to, such that k over m is equal to 1.
+[48:53–48:57] And then what we can say is that the acceleration is negative x.
+[48:58–49:02] And the reason I want to do that will hopefully become apparent in a moment.
+[49:02–49:07] Now the way I want you to think about this spring setup is going to look a little weird at first.
+[49:08–49:15] I'm going to have you follow two different numbers, which is basically the displacement of our mass sitting up here, what is x.
+[49:15–49:17] But then you also want to know the velocity.
+[49:17–49:24] So let's say it's not just up there holding still, it was actually moving a little bit with some kind of velocity to the right.
+[49:25–49:27] You need to understand those two numbers to follow the system as a whole.
+[49:28–49:34] And I'm going to package those two numbers together as a single point in two dimensional space.
+[49:35–49:43] So let's say I had some position, or some state I should say, that has a small displacement but then a large velocity.
+[49:43–49:56] I'm going to think of that as simply being a point, or maybe I draw an arrow to it, thinking of it as a point in two dimensional space, with coordinates x and v.
+[49:57–50:01] All I'm doing is packaging them together as a single point.
+[50:01–50:16] And then what we might write is that the change to our two coordinates, the change to x, v, looks like, well, the way x changes is based on your velocity times a little change in time.
+[50:16–50:17] That's what velocity is.
+[50:18–50:21] And the way velocity changes, same deal but with acceleration.
+[50:21–50:24] But acceleration is negative x for this system.
+[50:25–50:27] So it's going to be negative x times delta t.
+[50:29–50:38] So we have a value that changes, and in fact the way that it changes is going to be based on a little vector perpendicular to itself.
+[50:39–50:42] Which is what happens when you swap the variables and you make one negative.
+[50:43–50:50] And let me just talk through this, not in the context of writing them down as two separate coordinates, but in the context of imaginary numbers.
+[50:50–50:58] Which feels like a very weird thing to do, but just walk through with me this process because it feels so elegant once you let it play out.
+[50:59–51:08] I'm going to package this pair of numbers as a single complex number where the real part is the position of the spring and the imaginary part is the velocity.
+[51:09–51:10] Again, totally crazy thing to do.
+[51:10–51:15] If that feels weird or you don't understand it, that's fine, it's not a natural thing.
+[51:15–51:20] But if we play this out and we start walking through the math, hopefully it starts to justify itself.
+[51:21–51:34] Because what I can write is that the change to this state, this complex number, is actually equal to negative i times itself.
+[51:35–51:39] Times x plus i times v times delta t.
+[51:40–51:41] Why?
+[51:41–51:43] Well, let me expand this out.
+[51:44–51:51] When I take that negative i, negative i times x is going to be negative x times i.
+[51:51–51:55] Negative i times iv is going to be negative i squared times v.
+[51:56–51:59] i squared is negative 1, so that's just going to end up being v.
+[52:00–52:03] So it's that whole number times our delta t.
+[52:03–52:04] What is this saying?
+[52:05–52:11] It says the change to the real part corresponds to v, the velocity, which is what we saw up here.
+[52:11–52:14] The change to the first coordinate is based on v.
+[52:14–52:20] And the change to the imaginary part is based on the negative of the real part.
+[52:20–52:25] The change to your velocity, the acceleration, what corresponds to force, is based on negative x.
+[52:25–52:43] So this weird idea of Hooke's Law, where the force that the spring is pulling on turns out to be in the same, against the direction of displacement and proportional to displacement, lends itself to a very strange but natural description of our system with a complex number.
+[52:43–52:50] And I could write this even more compactly by saying, let's describe our whole state with a number z.
+[52:51–52:59] The way that z changes is equal to negative i times itself times a small step in time.
+[53:00–53:11] Geometrically, what that looks like is taking wherever you started, multiplying it by negative i, which rotates at 90 degrees, so this is a 90 degree angle, and then taking a little step.
+[53:11–53:21] And then now you're at a new state, and you rotate that new state by 90 degrees, scale it down by delta t, whatever your time step is, and you take another step.
+[53:21–53:22] And you take another step.
+[53:22–53:31] And you keep doing this, and just like what we saw earlier for compound interest that was imaginary, what you end up doing is walking around a circle.
+[53:32–53:35] Now this is maybe the worst attempt at a circle I've ever drawn.
+[53:35–53:38] This should go out a little bit further, something like that.
+[53:38–53:40] Ignore my dotted lines there.
+[53:41–53:44] Now let's gut check to see if this intuitively makes sense that that's what our spring would do.
+[53:45–53:47] Because this vertical axis is the velocity.
+[53:49–54:02] So what we're saying is if you start off with a high velocity and a low displacement, so your spring, your mass is moving fast, but it's not that far away from the equilibrium point, well yeah, x is going to increase, because that's what it means to be moving fast.
+[54:02–54:06] So the x component, the real component here, is getting bigger and bigger.
+[54:06–54:11] And in the meantime, the y component, the velocity is slowing down, because the spring is pulling it back.
+[54:11–54:20] So our y component is getting smaller and smaller, until we reach a point where there's no velocity, and it's as far out in the x component as it can go.
+[54:20–54:24] So we've kind of swung out, and then it's as far out as it can go, and then it's going to start turning around.
+[54:25–54:28] The x component is going to start decreasing, and the velocity is negative.
+[54:29–54:37] And in general, this is just going to walk around a circle in our complex plane, where the use of a complex plane feels kind of bizarre here.
+[54:38–54:40] But maybe intuitively, that's not that crazy a thought.
+[54:41–54:54] Whatever piece of math is describing the physics of a spring that goes back and forth, and critically I should specify this is a spring where we're not taking into account friction, so it'll just oscillate back and forth forever, that oscillation corresponds with circular motion.
+[54:55–55:00] And we can see this maybe even more concretely if we write out the math of it.
+[55:00–55:17] So what we just saw is that imaginary compound interest invites us to write the solution, the place that we're going to be after an amount of time t, as wherever we were in the beginning, times e to the power of that interest rate, where in this case the interest rate is negative i.
+[55:17–55:24] The thing influencing how you change, it's not in the direction of where you are, it's 90 degrees to where you are, times the time.
+[55:24–55:32] This is actually a reasonable way to write things, and it mirrors how you might see things written in certain parts of actual physics.
+[55:32–55:41] This e to the i t term shows up any time you have this kind of oscillation, and the oscillation often corresponds to forces that are proportional to the displacement itself.
+[55:41–55:43] It all loops together, it's all connected.
+[55:43–56:09] Now if you wanted to make this, I don't know, connect with the kind of graphs and functions that we see elsewhere, you could write this using Euler's formula, writing the expansion of the fact that e to an imaginary constant walks around a circle, as your initial state times the cosine of t, and minus i times the sine of t.
+[56:10–56:20] And what this is basically saying is if we were to independently graph the displacements and the velocities, they would look like sine waves.
+[56:21–56:34] Okay, so I'm just going to draw out a couple different plots here, where on each one I'm going to let the x-axis represent time that we're moving forward, and in one of them we're going to plot the displacement.
+[56:35–56:38] Well let's say the displacement started off entirely at one and the velocity was zero.
+[56:38–56:50] What it would look like would just be this cosine of t, excuse me, cosine of t real component of our weird complex number description of things.
+[56:51–57:06] But if that all feels weird, hopefully it feels more concrete when you realize all that saying is that the position of the spring oscillates back and forth in a nice little cosine wave, which matches physical intuition, it kind of oscillates back and forth in this gentle smooth wave.
+[57:07–57:20] And then similarly the velocity, let's say it started off at zero, what our Euler's formula is telling us is that this will end up being a negative sine wave.
+[57:22–57:32] So it's going to start off at zero, but then it's going to go down, basically because it started off, you know, as far as it could be, and then it's going to point in the opposite direction, bringing the mass back towards equilibrium.
+[57:33–57:38] And then the velocity will reach some minimum and then it'll come back up until the velocity is zero.
+[57:38–57:40] This is when the spring goes all the way to the other end.
+[57:41–57:46] And then the velocity will be positive for a while and it'll keep oscillating back and forth like that.
+[57:46–57:57] And I'm sure I haven't quite lined up the waves appropriately, but the idea that each one of them is a sort of sinusoidal pattern, and that they're out of sync with each other, hopefully lines up with some physical reasoning.
+[57:57–58:12] And I just think it's beautiful that what you can see is happening is it is two different shadows of circular motion in an abstract mathematical idea, of packaging the two components as a real and imaginary part of some number.
+[58:13–58:16] Because this Hooke's law let us describe things at a 90 degree angle.
+[58:16–58:19] And all of that is actually deeper than you might think it is.
+[58:19–58:28] There's certain formalizations of classical Newtonian mechanics that introduce complex numbers for pretty similar reasons to what's going on here.
+[58:28–58:31] It's all a bit advanced, I won't necessarily go into it.
+[58:31–58:46] But what I want to emphasize is that this original question we asked of what happens if your bank offers you an imaginary interest rate isn't totally insane, and in fact, at least it's insane for money, but it's not insane as an abstract idea to pursue, and it corresponds to some very real things.
+[58:47–58:52] So with that, I'm going to go ahead and take one final question from the audience, and then say my goodbyes.
+[58:53–58:55] So the last question we have for today.
+[58:56–59:02] Can we get some hints or thoughts on the last challenge from the previous lecture, particularly exp of x for matrices?
+[59:02–59:03] Excellent.
+[59:03–59:08] That was a hard question, by the way, the homework that I left at the end of last lecture.
+[59:08–59:25] So remember, last lecture we were talking all about thinking of the exponential function as this infinite polynomial, and hopefully today the fact that it came from our limiting expression, I didn't show why, but we could call that homework number two for today.
+[59:25–59:39] If you're really ambitious, it's showing that this expression that comes from compound interest ends up expanding to be this polynomial, which is what we mean anytime we refer to e to the x in math, at least in modern math.
+[59:40–59:55] So I asked some questions on the homework that involved expanding this out all around trying to understand the crucial equation that when you add two numbers in the input, this is the same as multiplying two outputs.
+[59:55–59:56] Okay.
+[59:56–60:02] And then what we have on screen is asking about for matrices, what goes on here.
+[60:03–60:12] So the thing that again, this is kind of advanced and maybe I feel a little bit bad about that if I didn't properly emphasize it in giving the homework.
+[60:13–60:33] The thing I want you to notice is when you go through parts one and two of the homework where you're expanding it out, and especially in the case of part two where you're expanding things out, to think critically about whether the commutative property, x times y equals y times x, is needed or relevant.
+[60:34–60:39] Because often when we expand out binomial terms, it assumes that this is true.
+[60:39–60:49] And the reason that the math for expanding binomial terms looks like what it does, the reason it works has everything to do with the fact that order of multiplication doesn't matter.
+[60:50–60:57] This is particularly relevant in part two where we're expanding this exp of x plus y.
+[60:57–61:02] And when you do that, you're going to run into these terms that look like x plus y to the power n.
+[61:03–61:12] And then the parts of that are going to end up looking like n choose k where this is the binomial constant.
+[61:12–61:14] So that's a bit of prerequisite knowledge.
+[61:14–61:19] If you don't have the prerequisite knowledge, don't feel intimidated by these problems.
+[61:19–61:22] It just means that there's a little bit more to learn.
+[61:22–61:26] The only reason that this expansion would work is if you have the commutative property.
+[61:27–61:29] So it's very subtle.
+[61:29–61:40] But what this means is that the whole line of argumentation to show this property doesn't work if the things that you're plugging in don't commute with each other, where x times y is not necessarily y times x.
+[61:40–61:45] For complex numbers this is true, for real numbers this is true, but for matrices that's actually not true.
+[61:46–61:52] And this is one of the reasons, by the way, I actually think writing e to the x for this is a bad convention.
+[61:52–62:11] Because you have this bizarre situation where when you have matrices, and this does come up, there's real math that's done where you are exponentiating matrices, the notation inspires you to think, oh, I should be able to write this as, you know, exponentiating a times exponentiating b should be exponentiating a plus b.
+[62:12–62:13] But this is actually not true.
+[62:14–62:16] This is not true in the case of matrices.
+[62:16–62:21] We talked a little about quaternions today in the side plot, it's not true in the case of quaternions.
+[62:21–62:33] So this convention of writing it as e to the x is incredibly confusing as soon as you start extending into the realms where it's most useful, where you have this particularly powerful polynomial.
+[62:34–63:01] And I'm just, I don't know, I think that is a fact worth emphasizing, which is maybe why I wanted to sneak it into the homework, only later realizing that, you know, if honestly my intention is to introduce people to the idea just at a high level that this e to the x function is more than you think it is, maybe jumping straight to the crazy idea of matrices and expecting them to notice the nuance of commutativity being relevant to the n choose k formula for binomial expansion.
+[63:02–63:05] Like, actually there's kind of a lot of advanced things that go in there if we're really dissecting it.

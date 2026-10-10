@@ -1,0 +1,9 @@
+[
+  "EXECUTION_LIMIT at line 34:49: interrupted\nHint: Use a synchronous scene builder, bounded loops, and the provided scene API.",
+  "EXECUTION_LIMIT at line 35:49: interrupted\nHint: Use a synchronous scene builder, bounded loops, and the provided scene API.",
+  "EXECUTION_LIMIT at line 6:47: interrupted\nHint: Use a synchronous scene builder, bounded loops, and the provided scene API.",
+  "EXECUTION_LIMIT at line 6:47: interrupted\nHint: Use a synchronous scene builder, bounded loops, and the provided scene API.",
+  "EXECUTION_LIMIT at line 6:47: interrupted\nHint: Use a synchronous scene builder, bounded loops, and the provided scene API.",
+  "EXECUTION_LIMIT at line 28:29: interrupted\nHint: Use a synchronous scene builder, bounded loops, and the provided scene API.",
+  "EXECUTION_LIMIT at line 6:47: interrupted\nHint: Use a synchronous scene builder, bounded loops, and the provided scene API."
+]

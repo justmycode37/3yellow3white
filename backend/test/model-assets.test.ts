@@ -15,6 +15,10 @@ test('publishes immutable GLBs, metadata, provenance and serves cacheable bytes'
  expect((await handler(new Request(`http://localhost${a.asset.url}`,{headers:{'If-None-Match':response.headers.get('etag')!}}))).status).toBe(304);
  expect(JSON.parse(await readFile(join(dir,`${a.asset.sha256}.json`),'utf8')).asset).toEqual(a.asset);
  expect(JSON.parse(await readFile(join(dir,`${a.asset.sha256}.json`),'utf8')).provenance).toEqual({license:'CC0',source:'generated'});
+ const render=await store.forRendering({wing:a.asset});
+ expect(render.assets.wing).toEqual(a.asset);
+ expect(new Uint8Array(Buffer.from(render.files[a.asset.url],'base64'))).toEqual(bytes);
+ await expect(store.forRendering({wing:{...a.asset,url:'https://other.test/model.glb'}})).rejects.toThrow('identity');
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 test('uploads generated models through HTTP and rejects malformed, oversized and cross-origin uploads',async()=>{

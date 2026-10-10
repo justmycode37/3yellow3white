@@ -26,6 +26,14 @@ Keep these instructions in nonspoken planning; they are not narration.
   retain GPU geometry during navigation; repeated spheres and matching round bonds
   and arrows share indexed geometry. Orbit and pan input render once per animation
   frame. Transparency and morphs still require more per-frame geometry work.
+- **Molecular coordinates:** `s.molecule` batches coordinate-centered display
+  beads into meshes for efficient protein/RNA structures. An offline legacy-PDB
+  importer selects deposited heavy atoms or CA/P residue anchors and preserves
+  provenance. Choose chains and detail to fit scene budgets. Radii, subsampling
+  and envelopes remain schematic. A host-only Gaussian envelope generator can
+  produce smooth native meshes from supplied positions, with explicit density
+  scale, threshold, grid resolution and smoothing. No automatic atomic surfaces, bond inference,
+  folding physics, biological assembly reconstruction or mmCIF parsing.
 - **Surface appearance:** spheres and meshes support checker, stripe, noise,
   marble, and wood patterns using two palette colors. Patterns stay attached under
   object transforms. Adjustable procedural bump perturbs lighting normals for

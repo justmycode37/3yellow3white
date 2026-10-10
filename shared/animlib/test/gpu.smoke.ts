@@ -31,7 +31,7 @@ import {transparencyCases} from './transparency-cases.js';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
 // This is a development test adapter, never a browser renderer fallback.
-describe('native Vulkan WebGPU rendering',()=> {
+describe('native WebGPU rendering',()=> {
   const width=640,height=480;
   let gpu:GPU|undefined,device:GPUDevice|undefined,texture:GPUTexture|undefined;
   let renderer:CanvasRenderer,sequence:SceneSequence,canvas:HTMLCanvasElement;
@@ -41,9 +41,10 @@ describe('native Vulkan WebGPU rendering',()=> {
     for(const [name,value] of Object.entries(globals))vi.stubGlobal(name,value);
     vi.stubGlobal('ResizeObserver',class {observe(){}disconnect(){}});
     vi.stubGlobal('devicePixelRatio',1);
-    gpu=create(['backend=vulkan']);
+    // Match production frame rendering: let Dawn select the native platform backend.
+    gpu=create([]);
     const adapter=await gpu.requestAdapter();
-    if(!adapter)throw new Error('Native WebGPU smoke test requires a Vulkan adapter; this is not a rendering fallback.');
+    if(!adapter)throw new Error('Native WebGPU smoke test requires a native adapter; this is not a rendering fallback.');
     device=await adapter.requestDevice();
     device.addEventListener('uncapturederror',event=>errors.push(event.error.message));
     format=gpu.getPreferredCanvasFormat();

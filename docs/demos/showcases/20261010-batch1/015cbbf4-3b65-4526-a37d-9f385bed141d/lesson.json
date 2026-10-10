@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Rock-salt crystal lattice\n\n## Beat 1: Rock-salt crystal lattice\n\nContent needed: 3D: Create exactly one 20-second silent single-scene visualization showcase: Rock-salt crystal lattice. Show a small NaCl rock-salt lattice with alternating ion sublattices, a selected unit cell and octahedral sixfold nearest-neighbor coordination around an interior ion. Use atoms as spheres, explain display radius scaling locally, and avoid pretending this is a molecular NaCl dimer or measured dynamics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Rock-salt crystal lattice",
+    "centralQuestion": "Rock-salt crystal lattice",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Rock-salt crystal lattice. Show a small NaCl rock-salt lattice with alternating ion sublattices, a selected unit cell and octahedral sixfold nearest-neighbor coordination around an interior ion. Use atoms as spheres, explain display radius scaling locally, and avoid pretending this is a molecular NaCl dimer or measured dynamics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Rock-salt crystal lattice",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Rock-salt crystal lattice",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Show a small NaCl rock-salt lattice with alternating ion sublattices, a selected unit cell and octahedral sixfold nearest-neighbor coordination around an interior ion. Use atoms as spheres, explain display radius scaling locally, and avoid pretending this is a molecular NaCl dimer or measured dynamics."
+        ],
+        "visualDescription": "3D: Create exactly one 20-second silent single-scene visualization showcase: Rock-salt crystal lattice. Show a small NaCl rock-salt lattice with alternating ion sublattices, a selected unit cell and octahedral sixfold nearest-neighbor coordination around an interior ion. Use atoms as spheres, explain display radius scaling locally, and avoid pretending this is a molecular NaCl dimer or measured dynamics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Rock-salt crystal lattice. Show a small NaCl rock-salt lattice with alternating ion sublattices, a selected unit cell and octahedral sixfold nearest-neighbor coordination around an interior ion. Use atoms as spheres, explain display radius scaling locally, and avoid pretending this is a molecular NaCl dimer or measured dynamics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

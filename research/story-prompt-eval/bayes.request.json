@@ -1,0 +1,6 @@
+{
+  "title": "Why a positive screen is not a diagnosis",
+  "topic": "Write a roughly 3-minute lesson in exactly 3 scenes for adults who know percentages but not conditional probability. Explain why a positive test need not mean the condition is likely. Use a hypothetical population of 1,000: 10 have the condition; the test is positive for 9 of them and for 99 of the 990 without it. Derive the positive-test probability of actually having the condition, then explain how changing prevalence while keeping sensitivity and false-positive rate fixed changes the result. Include one brief thinking pause. This is a toy probability example, not medical guidance.",
+  "videoMode": "classic",
+  "documents": []
+}

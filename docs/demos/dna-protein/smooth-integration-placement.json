@@ -1,0 +1,110 @@
+{
+  "transforms": {
+    "ribosome": {
+      "scale": 0.03534436208335379,
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "position": [
+        0,
+        1.65,
+        -5.19138333906043
+      ]
+    },
+    "protein": {
+      "scale": 0.06202042346968211,
+      "rotation": [
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "position": [
+        -0.45,
+        6.75,
+        0.65
+      ]
+    }
+  },
+  "rotatedInputBounds": {
+    "ribosome": {
+      "min": [
+        -123.19,
+        -100.107,
+        -124.805
+      ],
+      "max": [
+        125.095,
+        103.603,
+        122.831
+      ]
+    },
+    "protein": {
+      "min": [
+        -14.566,
+        -17.197,
+        -17.494
+      ],
+      "max": [
+        14.647,
+        17.469,
+        18.138
+      ]
+    }
+  },
+  "sourceCharacters": {
+    "translation": 197962,
+    "export": 177399
+  },
+  "assetParameters": {
+    "1jj2": {
+      "sigma": 9,
+      "isoLevel": 2,
+      "resolution": 14,
+      "smoothingIterations": 6,
+      "smoothing": "Taubin lambda=0.5, mu=-0.53; area-weighted final normals",
+      "kernel": "max(0, exp(-r²/(2 sigma²)) - exp(-8))",
+      "supportSigma": 4,
+      "coordinateDecimals": 3,
+      "normalDecimals": 3
+    },
+    "1crn": {
+      "sigma": 2.5,
+      "isoLevel": 1,
+      "resolution": 14,
+      "smoothingIterations": 6,
+      "smoothing": "Taubin lambda=0.5, mu=-0.53; area-weighted final normals",
+      "kernel": "max(0, exp(-r²/(2 sigma²)) - exp(-8))",
+      "supportSigma": 4,
+      "coordinateDecimals": 3,
+      "normalDecimals": 3
+    }
+  },
+  "provenance": {
+    "1jj2": {
+      "source": "https://files.rcsb.org/download/1JJ2.pdb",
+      "pdbId": "1JJ2",
+      "title": "FULLY REFINED CRYSTAL STRUCTURE OF THE HALOARCULA MARISMORTUI LARGE RIBOSOMAL SUBUNIT AT 2.4 ANGSTROM RESOLUTION",
+      "model": "1",
+      "alternateLocations": "One conformer per residue: highest mean occupancy, lexicographic tie-break; blank/shared atoms retained.",
+      "sha256": "f3eeb133fedd51dfb3d98b50c338c76bb1e7c5474416744eccd8862a7b7308bb",
+      "preparedDataSha256": "aa7b7d409cf605e5cace591641c318f8299134c3cd8d67d1f7ade3a09ebf2b3a",
+      "inputSelection": "residues",
+      "inputSites": 6567,
+      "approximation": "Schematic Gaussian density envelope around deposited positions; not a solvent-accessible or atomic surface. No site subsampling."
+    },
+    "1crn": {
+      "source": "https://files.rcsb.org/download/1CRN.pdb",
+      "pdbId": "1CRN",
+      "title": "WATER STRUCTURE OF A HYDROPHOBIC PROTEIN AT ATOMIC RESOLUTION. PENTAGON RINGS OF WATER MOLECULES IN CRYSTALS OF CRAMBIN",
+      "model": "1",
+      "alternateLocations": "One conformer per residue: highest mean occupancy, lexicographic tie-break; blank/shared atoms retained.",
+      "sha256": "42199a30a0701864a2a5cc76cd7f35cc544cd0e65fbcf63e03c166543249b811",
+      "preparedDataSha256": "942a7cd23f9cd22fbf0b13354b8be5a9a7bde239f0f67f88b5d7b0468c36658f",
+      "inputSelection": "heavy-atoms",
+      "inputSites": 327,
+      "approximation": "Schematic Gaussian density envelope around deposited positions; not a solvent-accessible or atomic surface. No site subsampling."
+    }
+  }
+}

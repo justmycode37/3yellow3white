@@ -1,0 +1,6 @@
+{
+  "title": "Pointwise is not uniform",
+  "topic": "Write a roughly 4-minute lesson in exactly 4 scenes for second-year mathematics students who know limits and epsilon notation. Begin with the definitions of pointwise and uniform convergence, then make the quantifier difference meaningful using f_n(x)=x^n on [0,1] and on [0,a] for fixed 0<a<1. Explain why taking n large for each fixed x does not give one n for every x, and why the restricted interval fixes this. A plot may support the argument but must not stand in for it. Include one reachable prediction and one brief pause. Preserve the endpoint x=1 and the distinction between pointwise limit and uniform error.",
+  "videoMode": "classic",
+  "documents": []
+}

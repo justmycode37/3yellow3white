@@ -1,0 +1,138 @@
+{
+  "method": "All 10 supplemental nonempty timed English transcripts read fully, using complete generated readable.txt and recovering truncated portions directly from sentence_timings.json. No video frames/audio inspected. Inventory timestamps below are minutes:seconds from rounded readable transcripts.",
+  "coverage": {
+    "full_read_keys": [
+      "2017/bitcoin",
+      "2017/eulers-formula-via-group-theory",
+      "2017/fractal-dimension",
+      "2017/hardest-problem",
+      "2017/higher-dimensions",
+      "2017/hilbert-curve",
+      "2017/leibniz-formula",
+      "2017/light-quantum-mechanics",
+      "2017/pythagorean-triples",
+      "2017/three-utilities"
+    ],
+    "nonempty_videos_fully_read": 10,
+    "videos_sampled": 0
+  },
+  "source_commit": "0bce59666e3b16b449d414da253beb11257b5da6",
+  "video_inventory": [
+    {
+      "key": "2017/bitcoin",
+      "evidence": "00:24–00:52 frames explanation as inventing a currency by progressively removing trust. 02:36–03:43 establishes communal ledger and first fraud; 06:37–07:15 discovers replay loophole and adds unique IDs; 10:13–11:37 distributed copies create consensus problem. 12:48–13:34 varies one input character to show hash sensitivity; 16:50–17:21 follows a changed block propagating through linked hashes. 19:43–21:40 tests security by narrating an adversary's attempted fork.",
+      "standouts": [
+        "Requirements arise from failures of the current design; each cryptographic mechanism repairs a newly exposed loophole.",
+        "Narration operationalizes actors, messages, and dependencies rather than relying on geometry. A deliberate adversarial simulation earns the trust claim."
+      ],
+      "exception": "A systems-design walkthrough rather than geometric derivation; signature internals are explicitly black-boxed at 05:38–05:49. Historical 2017 parameters and informal security statements must not be treated as current or rigorous guidance.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/bitcoin/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/eulers-formula-via-group-theory",
+      "evidence": "01:14–01:29 explicitly says this is intuition, not a complete proof. 02:02–02:12 adds an asymmetric image to a symmetric square so actions can be tracked. 03:18–03:56 identifies circle actions by a marked point; 06:24–07:50 tracks zero under sliding, 10:11–11:50 tracks one under scaling. 13:57–14:32 plants additive horizontal/vertical versus multiplicative stretch/rotation comparison; 18:23–20:55 repays it with exponentiation. 23:51–24:08 describes rolling the plane into a cylinder then mapping it into concentric circles.",
+      "standouts": [
+        "A visual aid is introduced specifically to make an otherwise invisible operation observable: asymmetric marker on symmetric object.",
+        "Changing which anchor is followed (zero vs one) makes addition and multiplication different action systems; remembered structural analogy prepares the later inference."
+      ],
+      "exception": "The narration deliberately supplies a rich interpretation rather than full proof, with optional terse calculus explanation on screen. One transcript example reports a questionable 30-degree angle for 2+i: verify math independently.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/eulers-formula-via-group-theory/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/fractal-dimension",
+      "evidence": "00:29–01:49 challenges perfect self-similarity as the whole concept. 03:08–07:44 lines/squares/cubes/Sierpinski copies establish how mass scales before fractional dimension is named. 09:14–11:30 exposes limits of that toy model, introduces box counting, and admits the rendered numerical ratio converged surprisingly slowly. 13:27–14:53 asks viewer-as-programmer how to estimate exponent, then derives a log-log slope. 15:38–18:18 distinguishes zoom-dependent effective dimension and pure limiting/applied scale-range meanings.",
+      "standouts": [
+        "A beautiful idealized example is explicitly treated as scaffolding, then replaced because it cannot cover the intended real phenomenon.",
+        "Measurement procedure bridges qualitative roughness to a numeric exponent; the plot transformation is justified by the question of how to estimate that exponent."
+      ],
+      "exception": "Empirical and applied explanation with candid animation feedback, not only clean mathematical proof. Fractal definition is qualified, and roughness estimates are contextual historical claims.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/fractal-dimension/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/hardest-problem",
+      "evidence": "01:01–01:19 prioritizes how a solution could be discovered over its short final form. 01:51–04:21 reduces sphere/tetrahedron to circle/triangle, fixes two points, varies third, and averages a highlighted arc. 04:26–05:52 shows that route becomes difficult in 3D, then returns to the 2D result's suspiciously clean 1/4. 06:08–07:32 reframes random points as random lines plus coin flips; 07:45–08:32 transfers the resulting finite counting argument to 3D. 08:40–09:11 distinguishes visual understanding from formal write-up.",
+      "standouts": [
+        "Shows a useful method reaching its limit instead of presenting an effortless uninterrupted solution.",
+        "Explicit general heuristic: when an added construction helps, try reframing the whole question in terms of it. Lines through the center become the sampled objects, replacing a hard area-average calculation by finite equiprobable choices."
+      ],
+      "exception": "The key change is the generative model for randomness, not a continuously morphed shape; visual proof is explicitly separated from a formal linear-algebra version.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/hardest-problem/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/higher-dimensions",
+      "evidence": "03:20–04:23 rejects confusing projected 4D slices in favor of four literal coordinate sliders; 04:38–06:48 calls coordinate squares real estate and uses nonlinear tick spacing to encode cost. 07:05–08:43 fixes one slider and maps remaining motion to familiar slices. 08:44–09:09 says slider play risks being aimless without a problem. 11:48–12:17 rejects shock as the aim, replays familiar dimensions in the new representation. 16:33–22:27 slider budgets explain why an inner hypersphere grows outside a box. 23:25–24:47 honestly states local/coordinate-dependent limits.",
+      "standouts": [
+        "Visual thinking need not mean making a picture that resembles the object; interface-like sliders faithfully externalize analytic constraints.",
+        "Repeated reference-frame changes measure the same slider configuration relative to the corner and the origin, making a counterintuitive high-dimensional fact feel causally reasonable."
+      ],
+      "exception": "Strong counterexample to a universal continuous-plane or directly geometric visual template. Representation is intentionally coordinate-bound and local, with stated limitations.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/higher-dimensions/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/hilbert-curve",
+      "evidence": "00:11–00:40 poses finite usefulness of infinite math but postpones philosophy until a concrete case. 00:44–03:17 motivates a pixel-to-frequency map, then attaches pixels to a woven line and unravels it. 03:58–05:14 recursively builds pseudo-Hilbert curves; 06:06–07:16 follows one frequency as resolution changes to distinguish stable Hilbert from unstable snake mapping. 09:10–14:11 distinguishes every finite approximant from the limit; 14:13–14:51 explicitly lists three unproved obligations. 15:43–17:36 returns to the same stability property underlying practical and infinite contexts.",
+      "standouts": [
+        "A practical design requirement (preserve learned spatial meaning through resolution upgrades) supplies the exact property needed to define the limiting object.",
+        "A fixed input is followed through a sequence of functions; this makes convergence a property of outputs rather than an impression of increasingly intricate pictures."
+      ],
+      "exception": "Proof obligations are deliberately enumerated rather than executed. Narration proposes a hypothetical assistive application, not demonstrated product success.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/hilbert-curve/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/leibniz-formula",
+      "evidence": "01:11–02:34 contrasts a short calculus derivation with the longer goal of locating the hidden circle and previews the whole dependency chain. 02:35–05:45 counts lattice points via rings and reveals apparent irregularity; 05:48–08:25 reinterprets sum of squares as complex conjugate product. 12:54–17:49 physically organizes conjugate factors into two columns and varies placements, linking counted choices back to points on circles. 18:39–18:54 names this as the hardest step and invites paper. 26:07–27:54 parks factor four in a corner, reorganizes rows into columns, then brings it back for the final sum.",
+      "standouts": [
+        "Visual algebra is literal bookkeeping: column placements are possible factorizations, output products are lattice points, and a parked factor remains a remembered obligation.",
+        "Long-form narrative repeatedly re-states the original counting purpose during abstract detours so the audience knows why each tool is being introduced."
+      ],
+      "exception": "Almost half-hour, technically dense layered exposition; key Gaussian-prime theorem is taken as given at 11:39–11:58. Not evidence that every explanation should be short or derive all prerequisites.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/leibniz-formula/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/light-quantum-mechanics",
+      "evidence": "00:19–01:38 explicitly chooses foundational wave mathematics over isolated quantum surprise. 01:46–02:30 defines physical meaning of field arrows; 04:26–06:22 changes view toward screen, suppresses magnetic field, follows one electric vector and introduces cosine parameters/kets. 06:23–08:09 adds oscillations tip-to-tail and varies phase to explain elliptical/circular polarization. 08:18–09:46 picks a basis to match the filter. 13:26–15:17 lets classical energy-splitting fail for indivisible photons, then an experiment motivates probability reinterpretation; 18:25–20:25 compares retained mathematics with changed interpretation.",
+      "standouts": [
+        "Layered selective attention—whole field to one vector to components—reduces visual load without losing what the arrows mean.",
+        "Reuses one mathematical representation while explicitly changing its interpretation at the classical/quantum boundary; the old intuition is stressed by a concrete experimental prediction."
+      ],
+      "exception": "A science model-building collaboration with historical/physical assertions and omitted derivations. Transcript alone is not validation of the quantum explanation or a complete physics account.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/light-quantum-mechanics/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/pythagorean-triples",
+      "evidence": "02:06–03:22 reframes integer triangles as lattice points at integer distances, then proposes complex squaring. 03:23–05:30 combines algebraic preservation of integer coordinates with geometric squaring of length in several examples. 06:55–08:15 animates all z to z² using colored grid lines to preserve identity and exposes organized arcs. 08:24–10:18 openly identifies missed triples and adds radial-line multiples. 10:22–14:20 moves to rational unit-circle points and an angle correspondence to establish completeness; 11:33–11:46 discloses finite displayed sample.",
+      "standouts": [
+        "Separate guarantees are made visible: integer output coordinates follow algebra, integer length follows geometry. Neither alone proves the target property.",
+        "The elegant generating picture is not allowed to stand as an all-solutions proof; explicit missing examples trigger a second representation and completeness argument."
+      ],
+      "exception": "Two different proof jobs—construction and exhaustion—require different pictures. Transcript has duplicated text and reversed interval around 14:00–13:59; exact pacing there unreliable.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/pythagorean-triples/english/sentence_timings.json"
+    },
+    {
+      "key": "2017/three-utilities",
+      "evidence": "00:03–04:30 foregrounds other educators' actual attempts/failure on mugs before theory. 06:08–06:21 promises to rediscover the formula from the puzzle, not introduce it unexplained. 06:22–08:27 reframes focus to regions, lights a starting vertex, and lets each added edge either light a vertex or close a region. 09:25–11:06 counts edge/region incidences to prove planar impossibility; 11:10–12:09 generalizes to Euler's formula only afterward. 12:21–15:57 returns to handle-based successes; 16:38–17:08 withholds answer to exactly where the plane proof fails on a mug.",
+      "standouts": [
+        "Illuminated/unilluminated state is a counting invariant: the animation's visible state changes directly encode the algebraic conservation law.",
+        "Real failed attempts precede an impossibility proof, and the end challenge asks viewers to debug the proof's precise assumption rather than repeat a topological slogan."
+      ],
+      "exception": "Social montage and physical puzzle participation, with unusually long delayed entry into narrated theory. Caption corruption around 09:13–09:18 means local timing/content needs care.",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/three-utilities/english/sentence_timings.json"
+    }
+  ],
+  "additional_generalizations": [
+    "Useful additions to a picture often become the new objects of the problem: point-pairs, lines through center, enclosed regions, factor columns. Hardest-problem and three-utilities state this as a transferable problem-solving heuristic.",
+    "Working through a method's failure is part of explanation: 3D arc averaging becomes hard; complex squaring misses triples; self-similarity fails to define ordinary disks; ledger signatures leave replay attacks. New machinery arrives as a repair with an explicit job.",
+    "Visual fidelity means fidelity to mathematical constraints, not necessarily resemblance to physical geometry: higher-dimensional sliders, actor/message diagrams, and factor-column bookkeeping all satisfy the deeper style pattern.",
+    "Exceptional formats matter: narrated derivation, pedagogical manifesto, numerical exploration, interview, participant montage, and systems design all occur. Do not reduce the style to one narrative template or solely dark-background geometry."
+  ]
+}

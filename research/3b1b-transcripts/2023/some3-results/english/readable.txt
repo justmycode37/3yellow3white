@@ -1,0 +1,159 @@
+[00:00–00:09] This year we ran the third Summer of Math Exposition, which is a contest aimed at encouraging more people to put up math explainers online, in whatever way they dream of doing that.
+[00:09–00:11] A lot of them are videos, not all of them are videos.
+[00:11–00:20] Every year we select some winners, but I say at every time the contest is not actually about the winners, success looks like getting more good explanations online.
+[00:20–00:25] Now last year in the winner announcement video I talked all about the specific criteria I try to think about.
+[00:26–00:29] I won't necessarily repeat that here, you can watch that one for all that.
+[00:29–00:36] Instead, I thought I'd just go down 25 different entries and say a couple of words on what I like about each one.
+[00:37–00:46] Before I dive in, I gotta be honest, I found it especially hard this year to actually make the decisions for what constitutes an honorable mention, what constitutes a winner.
+[00:46–00:53] And to be clear, I'm not the only one making decisions here, we have a whole bunch of guest judges who helped, I'm really just assembling my own feedback on everyone else's.
+[00:53–00:59] But nevertheless, at some point you have to make a call that says this one is a winner, or this one is an honorable mention.
+[01:00–01:09] And I think I realized one of the reasons it was so hard is I don't think there's such a thing as a generally good math explainer for a general audience.
+[01:10–01:17] I think there's such a thing as a pretty good video for a general audience, and I think there's such a thing as great videos for very specific audiences.
+[01:18–01:31] And in some ways it's that second category that is where the internet really shines, where you have something that maybe isn't perfectly tailored for everyone because it can't be, but for that particular audience that it's great for, it's kind of the best thing you could have asked for.
+[01:32–01:33] And I'll actually give one example.
+[01:34–01:38] So one of the entries that I want to showcase for you is called Pixel Art Anti-Aliasing.
+[01:38–01:47] It's all about the task of taking a piece of two-dimensional, really low resolution pixel art, but displaying it in a three-dimensional, potentially high resolution environment.
+[01:47–01:55] I found it fascinating, and I think anyone who's really into computer graphics, and especially anyone who enjoys shader programming, would find this completely fascinating.
+[01:55–02:01] For that specific audience, I am very confident in saying, watch it, you'll enjoy it, you're going to get something out of it.
+[02:01–02:07] Now, this one does a good job of motivating the mathematical ideas that go into it, even if you aren't necessarily into shader programming.
+[02:07–02:19] But if I'm expanding the scope of who I might be recommending this to, to any generally math-curious internet goer, well, you know, it makes a couple assumptions for things you might know about that maybe not everyone does.
+[02:19–02:25] And, to be fair, omitting certain fundamentals is the correct choice for the target audience.
+[02:26–02:34] Now the next entry, and by the way, I randomly sorted this list of content that I want to go through ahead of time, I'll talk about which ones were chosen as winners at the very end.
+[02:34–02:37] This next one is called The Math of Saving the Enola Gay.
+[02:37–02:58] So this is talking about the plane which dropped the nuclear bombs in World War II, and the author acknowledges that there's some obvious moral questions associated with the mission itself, but the focus is on the surprisingly interesting physics question of the best route that the plane should take after dropping the weapon to avoid paying potentially calamitous consequences of the aftershock of the weapon itself.
+[02:58–03:02] And what I appreciate is that he really does go into the full detail of the problem itself.
+[03:02–03:10] And this is the kind of video lecture I could imagine as being a really, really excellent case study that you could use in a high school physics class or something like that.
+[03:10–03:16] It's a worked example that covers a lot of very fundamental ideas that you would need for a class like that.
+[03:16–03:34] And whereas often on YouTube it can make sense to kind of skip over some of the heavier details and mention that this is best left as an exercise to the viewer or something like that, I really respect those who actually do step through all of the detail because that most authentically reflects what the feeling of doing math is and the amount of time that it can take.
+[03:35–03:39] So it's definitely something to watch when you're in the mood for details, but when you are, it's excellent.
+[03:39–03:41] Next up is Making a Pitch Shifter.
+[03:41–03:45] And so this is the technology that allows you to auto-tune and things like that.
+[03:46–03:52] And also it's an equivalent problem to how you speed up or slow down audio without changing the pitch of it.
+[03:52–04:00] For example, I imagine a lot of you are watching this video at 1.5x or 2x, and if you step back and think about what's required to make that work, it's actually a very interesting question.
+[04:01–04:07] And this video goes through a lot of the different ways that you might think about it, some of the initial approaches, quirks associated with those.
+[04:07–04:09] It shows the code that he's using along the way.
+[04:09–04:13] It's a great practical problem, and who doesn't love a little more forte in their lives?
+[04:14–04:16] Next up we have a non-video entry.
+[04:16–04:18] This one is Cayley Graphs and Pretty Things.
+[04:19–04:23] And this is another example where, for the right audience, this is an excellent piece of content.
+[04:24–04:27] And in this case, I think that audience would be students in group theory.
+[04:28–04:33] And in particular, I think what it does an excellent job describing is the semi-direct product.
+[04:33–04:43] So it describes a lot of other things, but it builds up to this, which is a very specific and kind of niche thing that a group theory student might come across, might be a little bit confusing in the book.
+[04:43–04:50] And the way that everything is explained here gives a really satisfying mental image that you can hold in your head for that, which is great.
+[04:51–04:54] Ah, okay, the next one is the longest increasing subsequence.
+[04:54–04:59] And you know, I talk about one of the things I'm looking for as being memorable pieces of content.
+[04:59–05:05] And this channel definitely satisfies that, because for the last three years, I remember the entries that they put in.
+[05:05–05:13] They have a very particular style, a very distinctively clear way of talking about what would usually be rather technical topics.
+[05:14–05:23] And here, I'm envisioning the target audience as probably being the same kind of people who would attend like a seminar in a math department, curious undergrads or some of the grad students in the department.
+[05:24–05:31] Because it describes a problem which, to be perfectly fair, you might not care about if you're not already super into math.
+[05:31–05:37] It's talking about if you have a random permutation, what might you expect the longest increasing subsequence in that permutation to be?
+[05:38–05:40] So a very natural but very pure question.
+[05:40–05:48] And the tactics brought to studying this are surprising, but really well motivated in the context of the video, and I think just really beautiful to think about.
+[05:49–05:52] Next up, we've got another non-video entry, the Matrix Arcade.
+[05:53–05:57] And this one, I think I remember in the peer review, might have gotten marked down a little bit more than some of the others.
+[05:58–06:03] And I'm guessing it's because one of the things we mentioned looking for in any given content piece is novelty.
+[06:03–06:09] And in terms of topic matter, this one covers a lot of the same things as the Essence of Linear Algebra series that I made way back when.
+[06:10–06:26] But I do actually think this one is worth highlighting because even if there's overlap in the subject matter, I think presenting it in this mode in an interactive way where at the end you offer a playground that someone can go through, and along the way each idea is really well illustrated on the main screen and really well described in the text on the right.
+[06:26–06:34] That adds something that I wanted to see added to the space for a long time, and I could absolutely see recommending this to teachers of linear algebra.
+[06:34–06:36] It's a great link that you can send to someone.
+[06:37–06:42] Next in my randomly sorted list of featured content is a video called Watching Neural Networks Learn.
+[06:43–06:44] And on the one hand, it's very beautiful.
+[06:44–06:52] A lot of the imagery comes from a certain way to visualize the gradient descent process or what the neural network can do during that process.
+[06:53–07:03] But the thing that really sold this for me was not so much the nice visuals, but there's a really thought-provoking discussion in here on the choices that you can make as you set up the network and what different features you can use.
+[07:04–07:12] And in the context of learning a function that describes a two-dimensional image, why Fourier series in particular end up giving dramatically better results.
+[07:12–07:17] And I had never thought about this particular combination of ideas before, and I thought it was just really fascinating.
+[07:18–07:21] Next up we've got an article, Functions are Vectors.
+[07:21–07:23] This is one of those topics that's just very important.
+[07:23–07:30] There's a time in your life before you think about functions as vectors, and there's a time in your life after you think about functions as vectors.
+[07:30–07:37] And this article was just very thorough and well explained, and I think it's one of the best resources out there to transition someone between those two states.
+[07:38–07:39] Next up we've got The Art of Linear Programming.
+[07:40–07:47] And this addresses a class of problems that come up in computer science and the algorithmic way of thinking about a good way to solve them.
+[07:47–08:05] And the approach that the author takes, which I always think is a very good one in any kind of education, is to just start with one of the most simple, non-trivial examples that you can have, and really just working through what everything looks like in that context, as he then goes on to describe the more general, or sometimes more constrained situations where those similar ideas can apply.
+[08:06–08:12] It's well illustrated, the ideas along the way are well motivated, so just a bang up job all around.
+[08:12–08:14] This next one is actually a little different.
+[08:14–08:18] It's called The Mosaic Problem, How and Why to Do Math for Fun.
+[08:18–08:22] So the author is describing a very specific question that they were once contemplating.
+[08:22–08:31] You know, I think a criticism that you could lay is that there's not a lot of motivation for why you might care about the problem, but that's not actually what the video is about.
+[08:31–08:40] He's really just using this as an example of what he calls a backburner problem, and this is an idea that I think is very much worth getting into the minds of more math students out there.
+[08:40–09:02] Essentially it's that if you have some sort of problem that you care about and you think about, even if no one else does, as long as it sprouts out your own curiosity, and when you go into new math classes, you have that as a problem that you can kind of turn to every now and then, it offers a fertile ground for adding context to a lot of math out there which is sometimes so desperately lacking a good context that motivates the students.
+[09:03–09:11] So for his particular question, this mosaic problem, he talks about how it made relevant certain ideas like generating functions and principles of inclusion and exclusion.
+[09:12–09:21] And his broader point is not that this particular problem is the most important in the world, but that having a backburner problem of some kind is actually one of the best ways to stay engaged with math.
+[09:21–09:23] And that I would definitely agree with.
+[09:24–09:52] And I guess on the topic of problems which probably don't really matter, but are fun to think about and end up being a path to some actually interesting math, the next one, affording a planet with geometry, is I think the only claymation entry that I saw this year used to good effect in describing a certain optimization problem framed in the context of deciding what shape you want to turn your planet into if you want to experience a certain amount of gravity but not use too much mass to do it.
+[09:52–09:53] It's well explained.
+[09:53–09:56] If you're into that kind of problem, definitely check it out.
+[09:56–10:01] Next up we've got when can't math be generalized, the limits of analytic continuation.
+[10:01–10:07] And thinking in terms of target audiences, anyone who's taking a complex analysis class, this is outstanding, perfect for them.
+[10:07–10:14] Anyone who might have a complex analysis class in their future, I think this does a good job setting up some of the ideas that you run across in that.
+[10:15–10:26] It's not talking about generalizing math in the sense of applying it to a general set of circumstances, but in a setting where sometimes you can take a function defined on one domain and extend that definition beyond it.
+[10:26–10:30] There are circumstances where you actually can't do that.
+[10:30–10:46] And he offers a really clear description of what exactly we mean by extending in this context and then an example where you can't do that that seems like it's sort of dropped in from out of the blue, but it gives a really satisfying reason for why this example would have the properties that it does with some suggestion for how you might have come up with that.
+[10:47–10:51] And the next up is just a very cute example of an argument in geometry.
+[10:51–11:03] Some of you might have thought about this before, but if you translate something and then rotate it, or maybe you rotate and then translate, it's always possible to express the composite motion there as some kind of rotation about some point.
+[11:04–11:09] And of course there's a slight caveat there where if you just translate it but rotate it at zero degrees, that's not the same as a rotation.
+[11:10–11:13] And this video offers just a really well-illustrated proof of why that's the case.
+[11:14–11:30] And I think what stuck out to me is the way that the second half of the proof was framed in terms of this kind of game that you're playing with a certain demon, which takes what otherwise is maybe a little bit of a confusing set of logical steps that leads to a contradiction, and instead just makes it a little easier to hold onto while you're following all of the reasoning.
+[11:30–11:32] So I appreciated that.
+[11:33–11:35] Ah, so the next one, rethinking the real line.
+[11:35–11:47] I really liked this one, and it stood out from many others, for one thing just because it felt very natural, like the presentation didn't feel like it was scripted or over-edited in any way, but what really shone is the subject matter.
+[11:48–11:52] And again, I think the sense in which it's great is for a particular target audience.
+[11:53–12:15] So in this case, if you've ever thought about visualizing rational numbers or rational approximations of irrational numbers, it offers just a really dense set of very nice ideas for how to think about these topics, and they're all connected with each other very nicely, and I for one felt like I came out of it armed with a few more mental constructs for how to think about a few of these ideas, which is of course just such a nice feeling.
+[12:16–12:20] Alright, next we've got, how did the ancient Egyptians find this volume without algebra?
+[12:21–12:27] So this is a question which is interesting in terms of the history of math, or what you can do without certain ideas that we take for granted.
+[12:28–12:34] So the problem at hand is how you find the volume of essentially a pyramid where you cut off the top of it.
+[12:34–13:02] The author talks about how the Egyptians had this formula for it, which is of course not written algebraically, people didn't think algebraically back then, but he addresses how it's actually very surprising to get to that formula if you don't think algebraically, and so tries to address the problem of how might you find this idea as an algorithm for finding the volume not expressed as a formula without being able to manipulate the formulas that you or I would naturally manipulate to land on that idea.
+[13:04–13:09] This next one I think has one of the best hooks of any of the ones that I've seen before.
+[13:10–13:28] So he essentially asks if you're swinging a ball on a rope above your head, and then at some point you release the rope, you let go of the rope, what happens to the ball with the three possibilities that it continues on the circular path, that it continues on the straight line path tangent to the circle, or it goes on the straight path away from the circle.
+[13:29–13:39] And I guess I'll just say it's not the answer that most people say it is, and he does I think a really good job laying out the intuition for why that's not the case, and then demonstrating it experimentally.
+[13:39–13:47] Also on the more physics-oriented side of things, we have the math of bubbles, minimal surfaces and the calculus of variations.
+[13:47–14:06] So again, there's a great hook here, where the problem at hand is to understand the shape of the surface that you get if you take two cylindrical boundaries and then form a bubble in between them, where the relevant physics at play is that bubbles try to have the minimal surface area that they can, subject to some kind of boundary conditions.
+[14:07–14:11] The way to solve this problem is to bring in something known as the calculus of variations.
+[14:11–14:24] It's very important in other contexts, for example if any of you have ever heard of Lagrangian mechanics, and the author here describes the general framework used for not just this problem but a wide category of problems, and works through it for this particular case.
+[14:24–14:45] Again, it's one of those where to get the most out of it, you've got to be in the mood for some details, and in this one he does leave a lot of room to kind of pause and think through things where if certain steps are something you might have thought about before, you don't have to linger on it too much, but definitely if it's the first time you're going through any calculus of variation example, it is something you kind of need to stop and digest for a bit, and he leaves the room for that, which is nice.
+[14:46–14:58] Next up is another non-video entry, which I think is a really just perfect example for any Calculus 2 class out there, so any teachers looking to pull in something, I think this is a really great resource.
+[14:58–15:01] The question is very simply, how do computers calculate logarithms?
+[15:01–15:03] What happens when you're clicking that button?
+[15:04–15:13] He goes into things like Taylor series, but then perhaps more importantly, why the simple naive Taylor series approach here doesn't necessarily get you something as good as you might want.
+[15:13–15:18] That last step is really well-motivated, really well-described, so if you're curious, go take a look.
+[15:18–15:22] Next on the docket we have, what happens if you add fractions incorrectly?
+[15:23–15:29] So if you ask elementary schoolers to add fractions together, there's kind of this instinct to just add the numerators and add the denominators.
+[15:29–15:38] If that's happening, it's probably a sign that the student doesn't appreciate what's actually being represented, or that the rules of math actually have a reason for them, and you need to think through those reasons.
+[15:39–15:47] But the funny thing is, that operation, which is not adding fractions, is actually the start of a surprisingly far-ranging set of ideas in other parts of math.
+[15:47–15:58] It has a special name, it's known as the mediant, and the author essentially walks through this pretty wide space of different things that this seemingly arbitrary operation can lead you to.
+[15:59–16:06] It's actually pretty connected with the one we were talking about a couple minutes ago on re-imagining the reals, things like rational approximations.
+[16:06–16:07] It also talks about Dirichlet's theorem.
+[16:08–16:11] Forward circles are in there, who doesn't love a good forward circle?
+[16:11–16:16] So if you're curious about the meandering set of ideas that you can be led to here, definitely do take a look.
+[16:16–16:19] Next we've got, can you guess a shape from its shadows?
+[16:20–16:29] So maybe you've thought about this kind of problem before, if you take a 3D shape and you look at its shadow from one direction, shadow from another, and then shadow from a third, can you reconstruct what that shape is?
+[16:29–16:41] And he mentions a seemingly obvious example, where all three of those shadows are squares, so you think the answer is a cube, but it's actually dramatically more interesting than a cube, and he talks about the set of shapes that you can get from this.
+[16:42–16:53] Ah, okay, so the next one, stylistically, is one of the most distinct of all of them, which I always appreciate, especially if I'm going through hundreds of different explainers and trying to make a decision.
+[16:54–16:57] At first when I was watching this, I was like, wait, what's going on here?
+[16:57–16:59] Why is he just kind of like walking around in a bunch of different places?
+[17:00–17:10] But he has this really kind of calming way of incorporating a bunch of different environments and nature into these otherwise sometimes pretty technical descriptions of what he's talking about.
+[17:10–17:14] And the topic matter, broadly speaking, is fixed point theorems.
+[17:14–17:20] So this is one where I can imagine the target audience being like a math major or someone who has reason to care about fixed point theorems.
+[17:20–17:23] And as it goes on, he does get into some real depth of it.
+[17:23–17:27] We're closing in now towards the end of my randomly sorted list of featured videos.
+[17:28–17:29] I guess the next one is not actually a video.
+[17:29–17:32] I keep saying video is a generic stand-in for content.
+[17:32–17:38] But the next one is an article describing how computers represent numbers, in particular floating point numbers.
+[17:38–17:44] And I've seen other explainers for floating point representations out there before, but I think this is the best one that I've seen.
+[17:45–17:58] And I really appreciate the approach that he takes, which is to have you imagine that you want to represent them and go through a refined set of ideas where each one is not quite what the final answer ends up being, but motivates the next step in a nice way.
+[17:58–18:06] This genre of discovery fiction, I think, works especially well when you have topics that seem like they have a lot of arbitrary or unexpected choices along the way.
+[18:07–18:08] It's just really well explained.
+[18:08–18:09] I liked it a lot.
+[18:10–18:13] All right, next on the list, we've got mathematical magic mirror ball.
+[18:13–18:14] Say that five times fast.
+[18:15–18:25] Essentially describing how if you take a picture of a spherical mirror, you can use that image to reconstruct a 360 degree view of the room all around it.
+[18:25–18:32] And he described how that works, what it's used for, what the trade-offs are, all around just a great application of a pretty surprising phenomenon.
+[18:33–18:37] This penultimate one on my list is just actually kind of amazing.
+[18:38–18:53] The person built this machine, which will weave a string along a whole bunch of pegs around a circle, such that as those strings intersect very densely at some points to make it dark and very sparsely at others to make it light, you can reconstruct an image.
+[18:53–18:55] That's just amazing that such a thing is possible.
+[18:56–19:02] And the author describes the process for how this was made and the various ideas that he tried, the reasons that they didn't work.
+[19:02–19:21] It both motivates a lot of mathematical ideas while also acknowledging that sometimes the thing that seems like very clever, pure math that you're bringing in to address a problem just isn't actually very effective and that what's more important when you're applying math to the world is to find the right framing of the problem in the first place.
+[19:21–19:34] And this is just a lesson I think is worth emphasizing a little bit more in math, that rather than trying to find a better solution to a particular problem, you want to instead ask whether the problem that you're solving is actually the right problem to be solving.
+[19:35–19:47] And then last but not least on my list here is another one that I just recognize the author immediately because it's such a distinctive style that I've seen in the last two years where the topic matter broadly speaking is infinity.
+[19:47–19:49] What exactly does one mean by that?
+[19:49–20:03] Like everything on this channel, it is unreasonably beautifully illustrated and in just 20 minutes, he hits on a lot of the really big important ideas around what exactly infinity means and how those ideas all relate to each other.
+[20:03–21:50] So that's a wrap for the ones that I wanted to mention right now and highlight to you.
