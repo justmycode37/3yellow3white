@@ -4,9 +4,20 @@ import { readFile } from 'node:fs/promises';
 import { SceneSequence } from '../../shared/animlib/dist/core.js';
 
 const scenes = JSON.parse(await readFile(process.argv[2], 'utf8'));
-const sequence = new SceneSequence({ executionLimitMs: 2000 });
+// The app's player builds each scene within animlib's default 200 ms budget, so the
+// check uses the same budget. A busy machine can exceed it by chance: retry once
+// before reporting the scene as too heavy.
+const sequence = new SceneSequence();
 try {
-  const result = await sequence.submit({ type: 'load', scenes });
+  let result = await sequence.submit({ type: 'load', scenes });
+  const interrupted = r => !r.ok && r.diagnostics.some(d => /interrupted/i.test(d.message));
+  if (interrupted(result)) result = await sequence.submit({ type: 'load', scenes });
+  if (interrupted(result)) {
+    for (const d of result.diagnostics) {
+      d.message = 'Building this scene took longer than the 200 ms the player allows.';
+      d.hint = 'Make the builder cheaper: fewer elements, fewer loop iterations and sample points, no heavy maths per element.';
+    }
+  }
   const out = { ok: result.ok, diagnostics: result.diagnostics, scenes: [] };
   if (result.ok) {
     out.scenes = sequence.compiled.map((c, i) => {

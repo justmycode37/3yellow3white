@@ -66,8 +66,26 @@ On-screen text (strict):
 - If a word seems necessary, show the idea visually instead (highlight, colour,
   motion, side-by-side comparison).
 
+Spatial subjects (chemistry, biology and anything with a real 3D shape):
+- Prioritise real 3D: show molecules, orbitals, crystals, proteins, cells and organs
+  with their true spatial shape, proportions and angles, and let the viewer rotate
+  them, so the student grasps what the thing actually looks like and what is
+  physically happening (which parts approach, bond, bend, fold or move).
+- Switch to a simpler shape or a flat 2D diagram when that explains better (e.g. a
+  Lewis structure, a reaction scheme, an energy diagram, a cross-section), and make
+  the switch a visible transformation of the same object: the 3D model flattens or
+  simplifies into the diagram, or the diagram lifts back into 3D, so the student
+  sees they are the same thing.
+- Never leave the student with only the abstraction when a real shape exists: return
+  to the 3D picture when the abstract step is done.
+
+Interactivity:
+- Keep interactive elements wherever they help: a planned slider, toggle or select
+  must be built and must drive the real geometry; 3D objects should be rotatable.
+  Do not drop a planned interaction to simplify the scene.
+
 Layout (keep it identical in every scene):
-- Geometry on the left two thirds of the frame; the right third is a fixed text
+- Geometry (2D or 3D) on the left two thirds of the frame; the right third is a fixed text
   area for formulas and matrices. It is just empty space: NO box, border, frame,
   backing rectangle or panel shape around text anywhere. Geometry never enters the
   text area; text never sits on the grid except short object labels.

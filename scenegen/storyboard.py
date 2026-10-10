@@ -62,8 +62,10 @@ Rules:
   next scene; ends_with is a clean picture.
 - Do not plan captions or explanatory sentences on screen: only labels, formulas,
   matrices and numbers. "shows" must explain through motion and pictures.
-- Spatial subjects (molecules, 3D shapes) may be shown in 3D; the viewer can then
-  rotate the view with the mouse, which counts as interaction but needs no control.
+- Chemistry, biology and other spatial subjects: plan real 3D views first, so the
+  student sees the true shape and what physically happens; the viewer can rotate
+  them with the mouse (that needs no control). Plan a transformation into a simpler
+  shape or a flat 2D diagram where it explains better, and back to 3D afterwards.
 - Interactivity: the player lets viewers change inputs live (sliders for numbers,
   toggles for show/hide or on/off, selects for a few named choices), even while the
   animation runs or is paused. Give a scene an interactive element when playing with
@@ -71,7 +73,8 @@ Rules:
   entry, a toggle to compare with/without, a select for the order of two maps).
   The default value must show exactly the storyboarded example, and the control must
   drive the real geometry, not a decoration. Most films should have interactive
-  elements in at least half of their scenes; use an empty list where interaction
+  elements in at least half of their scenes, and keep one wherever it is relevant to
+  the scene's idea; use an empty list only where interaction
   would distract (e.g. a scene that only assembles a formula). At most 2 per scene.
 - 4 to 8 scenes.
 """
