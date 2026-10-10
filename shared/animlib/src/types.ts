@@ -95,6 +95,8 @@ export interface ElementStyle {
   /** Round world-space tubes instead of flat stroke ribbons. Not animated. */
   strokeProfile?: "flat" | "round";
   space?: "world" | "screen";
+  /** false excludes this element (or group descendants) from planar shadows. Not animated. */
+  castShadow?: boolean;
   billboard?: boolean;
   billboardOffset?: Position;
   /** Camera-independent translation in fractions of the viewport width/height. */
@@ -114,6 +116,8 @@ export interface ElementState {
   strokeWidth: number;
   strokeProfile?: "flat" | "round";
   space: "world" | "screen";
+  /** false excludes this element (or group descendants) from planar shadows. Not animated. */
+  castShadow?: boolean;
   billboard?: boolean;
   billboardOffset?: Vec3;
   viewportOffset?: Vec2;
@@ -154,12 +158,48 @@ export interface CameraState {
   perspective: number;
 }
 
+/** White scene lights. Intensities multiply the legacy studio contributions. */
+export interface SceneLighting {
+  /** 0–4, default 1. */
+  ambient?: number;
+  directional?: {
+    /** Direction TOWARD the light; normalized. Default [-0.4, 0.65, 1]. */
+    direction?: Vec3;
+    /** Default camera: +X right, +Y up, +Z toward viewer. */
+    space?: "world" | "camera";
+    /** 0–4, default 1. */
+    intensity?: number;
+    /** Projects opaque caster silhouettes onto receiver, without self-shadowing. */
+    shadow?: {
+      /** Angular disk radius in radians, 0–0.25; default 0.04. */
+      softness?: number;
+      /** 1, 7, or 13 deterministic directions; default medium (7). */
+      quality?: "low" | "medium" | "high";
+      /** Receiver offset in world units, 0–0.05; default 0.002. */
+      bias?: number;
+      /** 0–1, default 0.35. Occlusion of direct light at full coverage. */
+      opacity?: number;
+    };
+  };
+  /** Finite horizontal XZ plane shared by scene views; receives shadows only. */
+  receiver?: {
+    /** Center in world units, default [0,-1,0]. */
+    position?: Vec3;
+    /** Width (X), depth (Z), both positive world units. */
+    size: Vec2;
+    /** Opaque palette token, default GREY_D. */
+    fill?: PaletteColor;
+  };
+}
+
 export interface SceneOptions {
   mode?: Mode;
   end?: "hold" | "advance";
   audio?: string;
   orbit?: boolean;
   background?: PaletteColor;
+  /** Omitted inherits across handoffs; "studio" resets to the original lighting. */
+  lighting?: SceneLighting | "studio";
 }
 
 export interface AnimationAction {
@@ -218,7 +258,7 @@ export interface Lifecycle {
 }
 
 export interface CompiledScene {
-  options: Required<Omit<SceneOptions, "audio">> & { audio?: string; palette?: ColorPalette };
+  options: Required<Omit<SceneOptions, "audio" | "lighting">> & { audio?: string; lighting?: SceneLighting | "studio"; palette?: ColorPalette };
   duration: number;
   controls: ControlDefinition[];
   initial: ElementState[];
@@ -274,6 +314,7 @@ export interface Behavior {
 export type BehaviorFactory = (options: JsonValue | undefined) => Behavior;
 
 export interface Frame {
+  lighting?: SceneLighting | "studio";
   elements: ElementState[];
   camera: CameraState;
   cameraAnimated: boolean;
@@ -320,7 +361,7 @@ export interface SceneOverlapSample {
 
 export interface ElementHandle {
   readonly id: string;
-  animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset" | "strokeProfile">): AnimationAction;
+  animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset" | "strokeProfile" | "castShadow">): AnimationAction;
   moveTo(position: Position): AnimationAction;
   rotateTo(rotation: Position | number): AnimationAction;
   scaleTo(scale: number): AnimationAction;
@@ -351,7 +392,7 @@ export interface SceneContext {
   cone(id: string, props?: ConeProps): ElementHandle;
   torus(id: string, props?: TorusProps): ElementHandle;
   tube(id: string, props: TubeProps): ElementHandle;
-  group(id: string, children: ElementHandle[], options?: { isolated?: boolean }): ElementHandle;
+  group(id: string, children: ElementHandle[], options?: { isolated?: boolean; castShadow?: boolean }): ElementHandle;
   behavior(target: ElementHandle, behavior: BehaviorSpec): void;
   attach(target: ElementHandle, source: ElementHandle, options?: { offset?: Position }): void;
   connect(target: ElementHandle, from: ElementHandle, to: ElementHandle, options?: { endpoints?: "center" | "surface"; offset?: number }): void;

@@ -4,6 +4,7 @@ import { SceneSequence } from '../src/sequence.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
 import { reactiveCases } from './reactive-cases.js';
+import { lightingCases } from './lighting-cases.js';
 import { materialCases, materialSource, bumpSource } from './material-cases.js';
 import { textureCases, texturePixelIssues } from './texture-cases.js';
 import { transparencyCases } from './transparency-cases.js';
@@ -80,6 +81,15 @@ export async function runWebGLTests() {
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');
       assert(at(draw(), canvas, 320, 240).join() === '255,0,0', 'Center must be pure red');
       assert(foreground(draw()) > 15000, 'Expected a filled rectangle');
+    });
+    for(const entry of lightingCases) await test('lighting: '+entry.name,async()=>{
+      await entry.run(async(source,yaw=0,time=0)=>{
+        await load(source);renderer.setOrbit({yaw,pitch:0});
+        const image=draw(time),flipped=new Uint8Array(image.length);
+        for(let y=0;y<480;y++)flipped.set(image.subarray(y*640*4,(y+1)*640*4),(479-y)*640*4);
+        return flipped;
+      });
+      artifact(canvas,'lighting: '+entry.name);
     });
     for(const metal of [false,true]) await test(`bump normals with constant albedo, metal=${metal}`,async()=>{
       const images:Uint8Array[]=[];

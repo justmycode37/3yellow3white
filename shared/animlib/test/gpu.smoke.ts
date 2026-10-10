@@ -16,6 +16,7 @@ import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
 import {reactiveCases} from './reactive-cases.js';
+import {lightingCases} from './lighting-cases.js';
 import {materialCases,materialSource,bumpSource} from './material-cases.js';
 import {textureCases,texturePixelIssues} from './texture-cases.js';
 import {transparencyCases} from './transparency-cases.js';
@@ -79,6 +80,19 @@ describe('native Vulkan WebGPU rendering',()=> {
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
   function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  it.each(lightingCases)('lighting: $name',async test=>{
+    let imageIndex=0;
+    await test.run(async(source,yaw=0,time=0)=>{
+      renderer.resetInteraction();
+      const result=await sequence.submit({type:'load',scenes:[{id:'lighting',source}]});
+      expect(result.ok,JSON.stringify(result)).toBe(true);
+      renderer.setOrbit({yaw,pitch:0});
+      renderer.render(sequence.frame(0,time),sequence.compiled[0].options);
+      const image=await pixels();await artifact('lighting-'+test.name.replace(/[^a-z]+/gi,'-')+'-'+imageIndex++,image);return image;
+    });
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
   it.each([false,true])('bump changes normals with constant albedo, metal=%s',async metal=>{
     const images:Uint8Array[]=[];
     for(const strength of [undefined,0,0.15,-0.15]) {

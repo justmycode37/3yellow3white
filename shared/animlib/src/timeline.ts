@@ -81,6 +81,6 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number, optio
   for (const e of elements.values()) {
     palette.validate(e.fill); palette.validate(e.stroke);
   }
-  const frame = { elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
+  const frame = { ...(scene.options.lighting !== undefined ? { lighting: structuredClone(scene.options.lighting) } : {}), elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
   return options.bindings === false ? frame : applyBindings(frame, scene.bindings);
 }

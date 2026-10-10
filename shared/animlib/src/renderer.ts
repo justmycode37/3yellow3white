@@ -1,4 +1,6 @@
 /// <reference types="@webgpu/types" />
+import { lightingUniform } from './lighting.js';
+import { addPlanarShadows } from './planar-shadows.js';
 import { materialWGSL } from './material-shader.js';
 import { VERTEX_FLOATS, textureWGSL } from './texture-shader.js';
 import { WebGLBackend } from './webgl.js';
@@ -15,7 +17,7 @@ export { triangulateContours } from './render-geometry.js';
 import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
 
 const shader=`
-struct Camera { focus: vec4f, angles: vec4f, viewport: vec4f };
+struct Camera { focus: vec4f, angles: vec4f, viewport: vec4f, light: vec4f, ambient: vec4f };
 @group(0) @binding(0) var<uniform> camera: Camera;
 struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @location(1) normal: vec3f, @location(2) lit: f32, @location(3) texPosition: vec3f, @location(4) texKind: f32, @location(5) texColor: vec4f, @location(6) texSeed: f32, @location(7) viewDirection: vec3f, @location(8) material: vec3f, @location(9) emission: vec3f, @location(10) viewPosition: vec3f, @location(11) bumpStrength: f32 };
 @vertex fn vertex(@location(0) world: vec3f, @location(1) color: vec4f, @location(2) screen: f32, @location(3) normal: vec3f, @location(4) lit: f32, @location(5) layer: f32, @location(6) viewportOffset: vec2f, @location(7) texPosition: vec3f, @location(8) texKind: f32, @location(9) texColor: vec4f, @location(10) texSeed: f32, @location(11) material: vec3f, @location(12) emission: vec3f, @location(13) bumpStrength: f32) -> Output {
@@ -57,8 +59,8 @@ ${materialWGSL}
     var normal=n/max(length(n),0.000001);
     if(input.bumpStrength!=0.){normal=bumpNormal(normal,dx,dy,dh,input.bumpStrength);}
     if(input.lit>1.5&&!frontFacing){normal=-normal;}
-    if(input.material.y>0.){color=vec4f(materialColor(color.rgb,normal,normalize(input.viewDirection),input.material),color.a);}
-    else {let amount=0.32+0.68*max(0.,dot(normal,normalize(vec3f(-0.4,0.65,1.))));color=vec4f(color.rgb*amount,color.a);}
+    if(input.material.y>0.){color=vec4f(materialColor(color.rgb,normal,normalize(input.viewDirection),input.material,camera.light,camera.ambient.x),color.a);}
+    else {let amount=0.32*camera.ambient.x+0.68*camera.light.w*max(0.,dot(normal,normalize(camera.light.xyz)));color=vec4f(color.rgb*amount,color.a);}
   }
   return vec4f(color.rgb+input.emission,color.a); }
 `;
@@ -300,7 +302,7 @@ export class CanvasRenderer {
     const transparentPipeline=await device.createRenderPipelineAsync({...descriptor,depthStencil:{...descriptor.depthStencil!,depthWriteEnabled:false}});
     if(this.disposed)throw new Error('Renderer is disposed.');
     this.transparentPipeline=transparentPipeline;
-    this.uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+    this.uniform=device.createBuffer({size:80,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
     this.bindGroup=device.createBindGroup({layout:this.pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});
     this.transparentBindGroup=device.createBindGroup({layout:this.transparentPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});
     if(lost)throw new Error(lost);
@@ -318,6 +320,7 @@ export class CanvasRenderer {
       const palette=paletteResolver(this.hostPalette??scene.options.palette);
       const prepareElement=(e:ElementState):void=>{prepareGeometry(e.geometry);palette.resolve(e.fill);palette.resolve(e.stroke);};
       palette.resolve(scene.options.background);
+      if (scene.options.lighting && scene.options.lighting !== "studio" && scene.options.lighting.receiver) palette.resolve(scene.options.lighting.receiver.fill ?? "GREY_D");
       for(const element of [...scene.initial,...scene.lifecycle.flatMap(event=>event.elements??[])])prepareElement(element);
       for(const track of scene.tracks) {
         if(track.action.geometry)prepareGeometry(track.action.geometry);
@@ -339,7 +342,8 @@ export class CanvasRenderer {
     const {width,height}=this.size;
     const camera=this.effectiveCamera(frame.camera,options.orbit);
     const palette=paletteResolver(this.hostPalette??options.palette);
-    const mainItems=buildDrawItems(frame,camera,width,height,palette);
+    const lighting=frame.lighting??options.lighting;
+    const mainItems=addPlanarShadows(buildDrawItems(frame,camera,width,height,palette),lighting,camera,palette);
     const batches=[{camera,width,height,rect:undefined as number[]|undefined,items:mainItems.filter(i=>!i.screen),id:''}];
     for(const region of this.regions) {
       const [left,top,w,h]=region.rect;
@@ -349,7 +353,7 @@ export class CanvasRenderer {
       if(pixelWidth<1||pixelHeight<1)continue;
       const viewWidth=width*pixelWidth/this.canvas.width,viewHeight=height*pixelHeight/this.canvas.height;
       const viewCamera=this.effectiveCamera(region.camera,region.orbit,region.id);
-      batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:buildDrawItems(frame,viewCamera,viewWidth,viewHeight,palette,region.id),id:region.id});
+      batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:addPlanarShadows(buildDrawItems(frame,viewCamera,viewWidth,viewHeight,palette,region.id),lighting,viewCamera,palette),id:region.id});
     }
     // Scene-wide screen labels stay above every regional 3D view.
     if(mainItems.some(i=>i.screen))batches.push({camera,width,height,rect:undefined,items:mainItems.filter(i=>i.screen),id:''});
@@ -357,7 +361,7 @@ export class CanvasRenderer {
     const ordered=batches.map(batch=>{
       const composition=composeItems(batch.items,vertexOffset);
       const floatCount=batch.items.reduce((n,i)=>n+i.vertices.length,0);vertexOffset+=floatCount/VERTEX_FLOATS;
-      return {...batch,...composition,floatCount,opaqueVertices:composition.commands.filter(c=>'first' in c&&c.opaque).reduce((n,c)=>n+('count' in c?c.count:0),0)};
+      return {...batch,...composition,lighting,floatCount,opaqueVertices:composition.commands.filter(c=>'first' in c&&c.opaque).reduce((n,c)=>n+('count' in c?c.count:0),0)};
     });
     const data=new Float32Array(ordered.reduce((n,batch)=>n+batch.floatCount,0));
     let offset=0;
@@ -376,12 +380,12 @@ export class CanvasRenderer {
     for(const [index,batch] of ordered.entries()) {
       let resources=batch.id?this.viewResources.get(batch.id):{uniform:this.uniform!,bindGroup:this.bindGroup!,transparentBindGroup:this.transparentBindGroup!};
       if(!resources){
-        const uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+        const uniform=device.createBuffer({size:80,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
         resources={uniform,bindGroup:device.createBindGroup({layout:this.pipeline!.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]}),transparentBindGroup:device.createBindGroup({layout:this.transparentPipeline!.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]})};
         this.viewResources.set(batch.id,resources);
       }
       const c=batch.camera;
-      device.queue.writeBuffer(resources.uniform,0,new Float32Array([...c.target,0,c.yaw,c.pitch,c.distance,c.perspective,batch.width,batch.height,c.height,0]));
+      device.queue.writeBuffer(resources.uniform,0,new Float32Array([...c.target,0,c.yaw,c.pitch,c.distance,c.perspective,batch.width,batch.height,c.height,0,...lightingUniform(lighting,c)]));
       const descriptor:GPURenderPassDescriptor={colorAttachments:[{view:colorView,resolveTarget:target,clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:index===0?'clear':'load',storeOp:'store'}],depthStencilAttachment:{view:depthView,depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}};
       if(batch.commands.some(command=>'children' in command)) {
         this.compositor??=new GPUCompositor(device,this.format!);

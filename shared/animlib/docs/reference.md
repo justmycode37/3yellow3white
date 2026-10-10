@@ -430,8 +430,9 @@ s.mesh('facet', {
 
 Flat and smooth meshes use the same simple directional lighting as spheres and
 round 3D strokes on both WebGPU and WebGL2. They support element/group transforms,
-independent views, depth testing, opacity, and palette colors. This is not a
-light-source API. Optional textures and materials are described below.
+independent views, depth testing, opacity, and palette colors. The fixed studio
+light remains the default; scene lighting below can override it. Optional textures
+and materials are described below.
 Prefer opaque bodies when surfaces intersect;
 triangle transparency sorting does not solve every intersection. Ordinary 2D
 fills and raw meshes without a shading option retain their existing appearance.
@@ -448,6 +449,86 @@ intermediate geometry. If either endpoint supplies normals, normalized endpoint
 normals interpolate instead; the missing endpoint is derived from its geometry.
 Exactly opposite normals use a finite fallback at their ambiguous midpoint.
 Nonuniform changes of shape require new mesh geometry.
+
+### Scene lighting and planar shadows
+
+```js
+export default scene({
+  mode: '3d',
+  lighting: {
+    ambient: 1,
+    directional: {
+      direction: [-0.7, 1, 0.5], space: 'world', intensity: 1,
+      shadow: { softness: 0.08, quality: 'medium', bias: 0.002, opacity: 0.75 },
+    },
+    receiver: { position: [0, -1, 0], size: [9, 7], fill: 'GREY_C' },
+  },
+}, s => {
+  s.play(s.camera.to3D({yaw: 0.5, pitch: -0.55}), {duration: 0});
+  s.sphere('ball', {radius: 1, fill: 'GOLD', material: {metalness: 0.6}});
+  s.box('noncaster', {position: [2, 0, 0], castShadow: false, fill: 'BLUE'});
+  s.wait(1);
+});
+```
+
+Omitting lighting in an initial scene preserves the original studio appearance,
+including material reflections and unlit surfaces. `lighting: {}` uses the same
+defaults. Across a handoff, omitted lighting inherits the previous frame's settings;
+`lighting: 'studio'` explicitly resets lights and removes the receiver. A supplied
+object replaces the complete lighting configuration. Options are ordinary bounded,
+serializable data; no functions, device resources or accumulated sampling state.
+They are constant within a compiled scene. Ordinary controls can rebuild them
+(see [the lighting study](../demo/lighting.ts)); light properties are not timeline
+animation or reactive binding targets.
+
+- `ambient` and `directional.intensity`: white-light multipliers from `0` to `4`,
+  each defaulting to `1`. Simple shading is `0.32 * ambient + 0.68 * intensity *
+  max(dot(normal, light), 0)`. Materials scale diffuse/specular and studio reflection
+  contributions coherently; emission remains independent. Unlit geometry is unchanged.
+- `directional.direction`: nonzero XYZ vector **toward the light**, normalized by
+  the renderer; default `[-0.4, 0.65, 1]`. `space: 'camera'` (default) uses screen-right,
+  screen-up, and toward-viewer axes. `space: 'world'` fixes XYZ in world coordinates.
+  Effective authored cameras and interactive orbit are applied separately per view.
+- `receiver`: finite, opaque, lit, horizontal XZ plane. `position` is its center in
+  world units (default `[0,-1,0]`), `size` is `[widthX, depthZ]`, each in `(0,10000]`.
+  `fill` is an opaque palette token (default `GREY_D`) resolved through the host palette.
+  The plane appears in the main view and each clipped regional view. It is decorative,
+  not a pickable element; it cannot be transformed or kept independently of lighting.
+- `directional.shadow`: opt-in and requires a receiver. `softness` is an angular
+  disk radius in radians, `0`–`0.25`, default `0.04`. Penumbra grows with caster height.
+  `quality` is `'low'`, `'medium'` (default), or `'high'`: 1, 7, or 13 fixed directions.
+  Zero softness always uses 1 direction. This is a bounded stylized soft shadow;
+  discrete bands can be visible at wide softness, especially at low quality.
+- `bias`: `0`–`0.05` world units, default `0.002`; lifts the projected mask above
+  the receiver to avoid coplanar depth fighting. Keep it small relative to objects;
+  excessive bias detaches contacts. Casters are clipped against the original plane,
+  and projected silhouettes are clipped to its finite bounds.
+- `opacity`: `0`–`1`, default `0.35`, controls occlusion of the receiver's directional
+  contribution. Ambient remains. Every sample forms an opaque silhouette union before
+  opacity is applied, so overlapping triangles/casters do not multiply darkness.
+  Samples blend multiplicatively with normalized full-coverage opacity.
+
+Only opaque world-space **mesh and sphere fills** cast, including generated solids
+and surfaces, final morphed/deformed triangles, and group transforms. Unlit meshes
+can still cast. Strokes, labels, billboards, screen objects, viewport-offset geometry,
+translucent fills/textures and members of translucent isolated groups do not cast.
+`castShadow: false` on an element or `s.group(id, children, {castShadow: false})`
+disables casting for its descendants; it is a static
+style flag. Fading geometry stops casting as soon as effective alpha is below 1.
+The system does not approximate colored transmission or partial transparent shadows.
+
+These are **planar projected shadows**, not a shadow-map system: no self-shadowing,
+object-to-object shadows, arbitrary mesh receivers, point/spot lights, or environment
+maps. Geometry below the receiver does not cast onto its top. Directions at/below
+its horizon (`worldLight.y <= 0.001`) produce no shadow; soft samples below that
+threshold contribute no occlusion. Shadow calculation consumes the actual final
+packed geometry separately for each view, without changing scene state. Play/pause,
+seek and handoff repeat the same projection. WebGPU and WebGL2 share geometry and
+sample settings; edge antialiasing can differ slightly.
+
+The optional pass costs up to 13 projections of eligible triangles and isolated
+compositing passes per view. It is bypassed entirely without a receiver/shadow.
+Use medium quality and modest caster counts for interactive scenes.
 
 ### Procedural textures and materials
 
@@ -552,7 +633,7 @@ settings for a continuous finish, or crossfade separate objects deliberately.
 
 The material model uses the renderer's camera-relative directional light and a
 procedural studio reflection approximation. It does not reflect other scene
-objects. No configurable lights, environment maps, shadows, image/video textures,
+objects. Scene lighting can override its ambient and directional contributions. No environment maps, image/video textures,
 image normal/bump maps, displacement, physically based material guarantees, or bloom
 are provided. Try the **Textures** study in `/spatial.html` for pattern, palette,
 frequency, seed, bump strength, metalness, roughness, highlight, and emission controls.
@@ -1775,8 +1856,7 @@ comprehensive physically based material system. Shape matching cannot infer sema
 part correspondence or arbitrary mesh topology.
 
 Not yet included: custom fonts and general text shaping, images/video textures,
-environment maps, image bump/normal maps, displacement, bloom, configurable lights,
-shadows, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
+environment maps, image bump/normal maps, displacement, bloom, arbitrary mesh receivers or self-shadowing, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
 infinite scenes, branching navigation, playback-rate controls,
 video export, or mobile-browser support guarantees. The initial control surface
 is sliders, toggles, selects, and requested orbit rotation.

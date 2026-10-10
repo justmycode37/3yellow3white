@@ -60,6 +60,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       e.position = rotateVector(e.position.map(v => v*parent!.scale) as Vec3,parent.rotation).map((v,i)=>v+parent!.position[i]) as Vec3;
       e.rotation = combineRotation(parent.rotation,e.rotation);
       e.scale *= parent.scale; e.opacity *= parent.opacity;
+      if (parent.castShadow === false) e.castShadow = false;
       if(parent.viewportOffset)e.viewportOffset=[(e.viewportOffset?.[0]??0)+parent.viewportOffset[0],(e.viewportOffset?.[1]??0)+parent.viewportOffset[1]];
       parent = originalParents.get(parent.id);
     }
@@ -113,13 +114,14 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     if (used.has(id)) throw new Error(`Duplicate element ID: ${id}`);
     if (used.size >= 2000) throw new Error("Scene element limit exceeded (2000)");
     used.add(id);
-    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, strokeProfile, space, billboard, billboardOffset, viewportOffset, ...geometry } = props;
+    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, strokeProfile, space, castShadow, billboard, billboardOffset, viewportOffset, ...geometry } = props;
     numericFormat(geometry.numberFormat);
     const element: ElementState = {
       id, geometry: { kind, ...clone(geometry) }, position: vector(position), rotation: rotation(r),
       scale: scale ?? 1, opacity: opacity ?? 1, fill: fill === undefined ? (kind === "line" || kind === "arrow" ? "none" : (input.palette?.foreground ?? "WHITE")) : fill,
       stroke: stroke === undefined ? (kind === "line" || kind === "arrow" ? (input.palette?.foreground ?? "WHITE") : "none") : stroke, strokeWidth: strokeWidth ?? (space === "screen" ? 1 : 0.04),
       ...(strokeProfile !== undefined ? { strokeProfile } : {}),
+      ...(castShadow !== undefined ? { castShadow } : {}),
       space: space ?? "world", ...(billboard !== undefined ? { billboard } : {}), ...(billboardOffset !== undefined ? { billboardOffset:vector(billboardOffset) } : {}), viewportOffset: viewportOffset !== undefined ? viewport(viewportOffset) : [0,0], ...(currentView ? { view: currentView } : {}), persistent: false,
     };
     states.set(id, element);
@@ -131,7 +133,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   // ordinary mesh data and supported style properties cross the VM boundary.
   const generatedMesh = (id: string, geometry: Geometry, props: ElementStyle & Pick<Geometry, "texture" | "material">): ElementHandle => {
     const style: ElementStyle = {};
-    for (const key of ["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth", "strokeProfile", "space", "billboard", "billboardOffset", "viewportOffset"] as const) {
+    for (const key of ["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth", "strokeProfile", "space", "castShadow", "billboard", "billboardOffset", "viewportOffset"] as const) {
       if (props[key] !== undefined) Object.assign(style, { [key]: props[key] });
     }
     const { kind: _kind, ...mesh } = geometry;
@@ -376,5 +378,6 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const initialUpdates = update(Object.fromEntries(controls.map(c => [c.id, c.value])), controls.map(c => c.id));
   const reactiveBindings = callbacks.map((binding, i) => ({ target: binding.target, controls: binding.controls, properties: initialUpdates[i].properties }));
   if (callbacks.length) installReactive?.(update);
-  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks, behaviors, bindings, ...(reactiveBindings.length ? { reactiveBindings } : {}) };
+  const lighting = options.lighting === undefined ? input.previous?.lighting : options.lighting;
+  return { options: { ...(lighting !== undefined ? { lighting: clone(lighting) } : {}), mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks, behaviors, bindings, ...(reactiveBindings.length ? { reactiveBindings } : {}) };
 }

@@ -182,6 +182,7 @@ export function enforceScenePalette(scene: CompiledScene, resolver: PaletteResol
   };
   scene.options.palette = resolver.palette;
   validate(scene.options.background, "Scene background");
+  if (scene.options.lighting && scene.options.lighting !== "studio" && scene.options.lighting.receiver) validate(scene.options.lighting.receiver.fill ?? "GREY_D", "Shadow receiver fill");
   if (typeof scene.options.background !== "string" || (scene.options.background as string) === "none") throw new Error("Scene background requires an opaque Color token");
   scene.initial.forEach(element);
   for (const binding of scene.reactiveBindings ?? []) if (binding.properties.fill !== undefined) validate(binding.properties.fill, `${binding.target} reactive fill`);

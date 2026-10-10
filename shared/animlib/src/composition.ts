@@ -5,6 +5,8 @@ export type RenderCommand =
   | { children: RenderCommand[]; opacity: number; opaque: boolean };
 export interface DrawItem {
   depth: number; vertices: Float32Array; transparent: boolean; screen: boolean;
+  /** Requires world-space packing after the effective camera is known. */
+  cameraDependentGeometry?: boolean;
   groups?: { id: string; opacity: number }[];
 }
 
