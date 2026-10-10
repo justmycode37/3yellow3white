@@ -377,7 +377,10 @@ Layout (keep it identical in every scene):
   formula 8 f wide needs f <= 0.5) or break a long formula into two lines. Size a
   diagram to fit: scale the whole thing down before letting any part reach the edge.
 - Lines and arrows never run through text (strict, checked). An arrow starts and
-  ends about 0.15 clear of the label or number it points from or to, and no line,
+  ends about 0.15 clear of the label or number it points from or to: the arrowhead
+  is drawn at the arrow's end point, so that end point itself must stop before the
+  label's edge with a visible gap, never on or inside the label. An arrow also
+  starts inside the frame, not beyond its edge. No line,
   arrow or stem passes through any label, number or formula. Put a label BESIDE its
   line, offset perpendicular to it, never on it; when several arrows meet near a
   label, move the label outward. Leave empty space around a diagram for its labels

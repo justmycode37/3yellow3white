@@ -150,13 +150,14 @@ test("an arrow through a label, or a label cut off at the edge, is rejected", as
   });`;
   const results: string[] = [];
   const runner = new CheckedRunner({ run: async task => {
-    for (const output of [scene("[0, 0]"), scene("[7, 1]"), scene("[0, 0.6]")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    for (const output of [scene("[0, 0]"), scene("[7, 1]"), scene("[0, 0.6]"), scene("[2.5, 0]")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
     return "";
   } });
   await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({})}`, validate: async () => {} });
   expect(results[0]).toContain("flow through value");
   expect(results[1]).toContain("Cut off at the edge");
   expect(results[2]).toBe("ok");
+  expect(results[3]).toContain("flow into value"); // the arrowhead would sit on the label
 });
 
 test("a focus frame that does not hug its formula is rejected with the measured size", async () => {

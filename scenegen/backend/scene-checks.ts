@@ -95,6 +95,7 @@ export const CONTROLS_HINT = "Controls must sit in the top right corner in every
 // The app fits the scene into a 16:9 stage, whatever the window's shape.
 const SAFE_ASPECT = 16 / 9;
 const MAX_FORMULAS = 12; // formulas, their definition lines and object labels together
+const ARROW_GAP = 0.1;     // an arrow starts and ends at least this far from any label
 
 interface Box { id: string; left: number; right: number; bottom: number; top: number }
 interface LayoutElement extends FrameElement {
@@ -169,15 +170,19 @@ export function layoutProblems(frames: LayoutFrame[]): string[] {
         // Shrink the label a little so a line that merely touches its edge is not counted.
         const mx = (box.right - box.left) * 0.12, my = (box.top - box.bottom) * 0.12;
         const inner = { ...box, left: box.left + mx, right: box.right - mx, bottom: box.bottom + my, top: box.top - my };
-        if (!points.slice(1).some((point, i) => crosses(points[i], point, inner))) continue;
-        const key = `${element.id} through ${box.id}`;
+        // An arrow must also stop short of a label: its head is drawn at its end point, so an end
+        // point touching the label puts the arrowhead on top of the text.
+        const ends = kind === "arrow" && points.length ? [points[0], points[points.length - 1]] : [];
+        const touching = ends.some(([x, y]) => Math.hypot(Math.max(box.left - x, 0, x - box.right), Math.max(box.bottom - y, 0, y - box.top)) < ARROW_GAP);
+        if (!touching && !points.slice(1).some((point, i) => crosses(points[i], point, inner))) continue;
+        const key = touching ? `${element.id} into ${box.id}` : `${element.id} through ${box.id}`;
         struck.set(key, (struck.get(key) ?? 0) + (last ? 2 : 1)); // sweeping past a label once mid-motion is fine
       }
     }
   });
   const problems: string[] = [];
   const through = [...struck].filter(([, count]) => count >= 2).map(([pair]) => pair);
-  if (through.length) problems.push(`Lines or arrows run through labels: ${through.slice(0, 8).join("; ")}.`);
+  if (through.length) problems.push(`Lines or arrows run through or into labels: ${through.slice(0, 8).join("; ")}.`);
   if (outside.size) problems.push(`Cut off at the edge of the 16:9 frame: ${[...outside].slice(0, 8).join(", ")}.`);
   if (most > MAX_FORMULAS) problems.push(`Too much text: ${most} formulas and labels are visible at once (at most ${MAX_FORMULAS}).`);
   return problems;
