@@ -1,4 +1,4 @@
-# Animation task: scene 2 of 8: Reading off the matrix
+# Animation task: scene 5 of 8: Not entry by entry
 
 Write **one animlib scene** (JavaScript) for an explanatory animation about
 **Matrix multiplication is composition**, for Beginning linear algebra students working in the plane R^2. They have seen linear maps as motions of the grid and know that a matrix records where the two basis vectors land; they have not yet multiplied two matrices..
@@ -18,22 +18,22 @@ Write **one animlib scene** (JavaScript) for an explanatory animation about
 - Key insight the film builds to: A matrix product is not a new arithmetic rule but a recording of two motions played one after the other: BA is the one matrix whose columns show where e1 and e2 end up after first A, then B. Because motions done in a different order end in a different place, AB and BA are usually different matrices.
 - Running example: The quarter-turn R = [[0,-1],[1,0]] and the shear S = [[1,1],[0,1]] acting on the grid of R^2, with e1 and e2 as two coloured arrows. First rotate, then shear: e1 goes (1,0) → (0,1) → (1,1) and e2 goes (0,1) → (-1,0) → (-1,0), so SR = [[1,-1],[1,0]]. Then the opposite order, first shear, then rotate: e1 goes (1,0) → (1,0) → (0,1) and e2 goes (0,1) → (1,1) → (-1,1), so RS = [[0,-1],[1,1]]. The two final grids are visibly different.
 - Misconceptions to prevent: BA means 'first B, then A' because we read left to right (in fact the matrix next to the vector acts first: B(A v)); Matrices are multiplied entry by entry, like adding them; Order does not matter, as with ordinary numbers: AB = BA; The product is just a memorised row-times-column recipe with no geometric meaning; In the column rule, mixing up which matrix acts on which columns (taking A times the columns of B to get BA); Overcorrection: matrices never commute (some pairs do, for example two rotations)
-- **This scene serves step 2 of 6:** The matrix of the combined motion is read off like any other: follow e1 and e2 to their final positions. Here e1 lands at (1,1) and e2 at (-1,0), giving [[1,-1],[1,0]].
-  (why here: It uses only the prerequisite 'columns are where the basis vectors land', now applied to the composite. The student gets the answer concretely before any notation or rule appears.; visual idea: Replay the two-stage motion with only the green e1 and red e2 highlighted, each leaving a faint trail with its intermediate stop marked: e1 (1,0) → (0,1) → (1,1), e2 (0,1) → (-1,0) → (-1,0). The final coordinates drop into the columns of an empty matrix. Check: this matrix applied to (2,1) gives (1,2), the same point the vector reached in step 1.)
+- **This scene serves step 4 of 6:** Column rule: each intermediate stop in step 2 was a column of R, and S was then applied to it. So column i of SR = S times column i of R, and in general column i of BA = B times column i of A.
+  (why here: This turns the watched trails into a general computation. It needs the trails from step 2 and the name and order from step 3.; visual idea: Freeze after the rotation: the two arrows sit exactly on the columns of R, which glow in the matrix R. Then S grabs each column separately: S·(0,1) = (1,1) and S·(-1,0) = (-1,0), each result sliding into its column of SR. Generalise by relabelling to B·[a1 | a2] = [B a1 | B a2]. Briefly flash the entrywise 'product' of S and R, [[0,-1],[0,0]], and show its grid collapsing onto a line. That is plainly not the motion we watched, so it is discarded.)
 
-**All scenes of this film** (you are writing scene 2):
+**All scenes of this film** (you are writing scene 5):
 
    1. Two motions in a row: Doing a rotation and then a shear produces one overall motion of the grid, and that overall motion is again linear, so it must have a matrix of its own.
-**→ 2. Reading off the matrix: The matrix of the combined motion is read off like any other matrix: its columns are the final landing spots of e1 and e2.**
+   2. Reading off the matrix: The matrix of the combined motion is read off like any other matrix: its columns are the final landing spots of e1 and e2.
    3. The product SR, read right to left: The combined matrix is called the product SR, defined by (SR) v = S(R v); the matrix written next to v acts first, so the order reads right to left.
    4. Column by column: Each column of SR is S applied to the matching column of R; in general, column i of BA is B times column i of A.
-   5. Not entry by entry: Multiplying matching entries does not give the product: that matrix describes a completely different motion from the one we watched.
+**→ 5. Not entry by entry: Multiplying matching entries does not give the product: that matrix describes a completely different motion from the one we watched.**
    6. The other order: Doing the same two motions in the opposite order, shear first and then rotation, ends in a different grid and gives a different matrix RS.
    7. Why the order matters: The order matters because the second map acts on whatever the first one produced: the shear moves a vector that has height but leaves a vector on the horizontal axis alone.
    8. In general, not always: AB ≠ BA in general, but some pairs do commute, for example two rotations; the rule to keep is that BA means first A, then B.
 
-**Previous scene:** Two motions in a row: Doing a rotation and then a shear produces one overall motion of the grid, and that overall motion is again linear, so it must have a matrix of its own.
-**Next scene:** The product SR, read right to left: The combined matrix is called the product SR, defined by (SR) v = S(R v); the matrix written next to v acts first, so the order reads right to left.
+**Previous scene:** Column by column: Each column of SR is S applied to the matching column of R; in general, column i of BA is B times column i of A.
+**Next scene:** The other order: Doing the same two motions in the opposite order, shear first and then rotation, ends in a different grid and gives a different matrix RS.
 Your scene must hand over cleanly: it continues the previous scene's idea and sets up the next one, without repeating or skipping ahead.
 
 The scene is defined by its START and its END. Your animation is the motion that turns
@@ -45,30 +45,27 @@ The film opens here: A dark frame with the untransformed grid of the plane in th
 
 ## END scene (last frame)
 
-The transformed grid with e1, e2 and v at their final positions; trails, stop markers and the check computation are gone. The text area shows R, S and below them the still unnamed combined matrix with a green and a red column.
+Exactly the picture from the end of the previous scene: the grid after rotation then shear with e1 and e2, and in the text area the product equation S · R = SR and the column rule. The muted entrywise matrix is gone.
 
 On screen at the end, with the same names and roles used across the film:
-- grid: the plane in the state after rotation then shear
+- grid: the plane back in the state after rotation then shear
 - e1: green first basis vector at its final position
 - e2: red second basis vector at its final position
-- v: yellow sample vector at its final position
-- matrix R: blue rotation matrix in the text area
-- matrix S: gold shear matrix in the text area
-- combined matrix: unnamed matrix with a green first column and a red second column, below R and S
+- product equation: S · R = SR with coloured columns
+- column rule: B [a1 | a2] = [B a1 | B a2]
 
-The next scene ("The product SR, read right to left") continues from your final frame: call `s.keep(x)` on every object that must still be there, with stable, descriptive ids.
+The next scene ("The other order") continues from your final frame: call `s.keep(x)` on every object that must still be there, with stable, descriptive ids.
 
 ## The animation: from START to END
 
-**Purpose:** The matrix of the combined motion is read off like any other matrix: its columns are the final landing spots of e1 and e2.
+**Purpose:** Multiplying matching entries does not give the product: that matrix describes a completely different motion from the one we watched.
 
-**What it shows:** The plane is undone smoothly to the starting grid and v dims. The two-stage motion plays again, and this time e1 and e2 each leave a faint muted trail with a small dot at the intermediate stop. e1 turns upright and is then pushed sideways by the shear. e2 turns to lie along the horizontal axis, and the shear then leaves it exactly where it is. An empty pair of brackets appears in the text area below R and S. The coordinates of e1's tip travel from the arrow into the first column in green, then those of e2 into the second column in red. As a check, v brightens again and the new matrix is applied to v's original coordinates as a short column computation in the text area. The result is the point where v already sits, and that point pulses once. The computation and the trails then fade out.
+**What it shows:** Below the product equation, a muted matrix is assembled by pairing each entry of S with the entry of R in the same position; the four pairs light up one at a time and their products drop into place. The plane is then moved slowly from the SR state to the state this muted matrix describes, by blending the matrix entries. The grid squeezes flat until every grid line and both basis arrows lie on a single line through the origin, with e1 shrunk to the origin itself. The picture is held: this collapsed plane is clearly not the rotated and sheared grid. The plane is then moved back just as slowly to the SR state, the muted matrix fades out, and the purple SR briefly brightens as the grid returns to it.
 
 **Ideas the visuals must make visible, in order:**
-- Only e1 and e2 need to be followed; each makes two moves with a visible stop in between
-- The shear moves the rotated e1 but leaves the rotated e2 in place
-- The final coordinates of e1 and e2 become the first and second column of one matrix
-- That one matrix sends v straight to the place the two motions took it
+- An entry-by-entry 'product' is easy to write down
+- Its grid collapses onto a line, so it is not the motion 'rotate, then shear'
+- The true product is the one whose columns follow the basis vectors through both motions
 
 You choose the concrete example (numbers, vectors, positions) and how to animate it.
 Pick values that make the idea easy to see and keep them consistent with the START scene.
@@ -76,9 +73,9 @@ Pick values that make the idea easy to see and keep them consistent with the STA
 ## Interactive elements
 
 The viewer can change these while the scene plays or is paused. Build each one:
-- **progress** (slider, id `motion_progress`)
-  - Drives: Scrubs the plane and the trails of e1 and e2 from the starting grid, through the stop after the rotation, to the final grid; default is the final grid
-  - The student should discover: The columns of the combined matrix are exactly where the two arrows are at the far end of the slider, and each arrow passes through a clear halfway stop
+- **matrix** (select, id `which_matrix`)
+  - Drives: Chooses which matrix the plane shows: 'SR' (default, the true product) or 'entrywise' (the muted matrix); the plane blends smoothly between the two states
+  - The student should discover: Only the column-rule product reproduces the motion; the entrywise matrix flattens the whole plane onto a line
 
 The default value shows exactly the example described above. The control drives the real geometry and every number or formula that depends on it, at every moment of the scene, and never changes the scene's duration.
 
@@ -195,7 +192,7 @@ Hard rules:
   (reference section 6; the chemistry scene in `demo/scenes.ts` is a worked example).
 - Colours are palette tokens only (`Color.BLUE` or `"BLUE"`); raw CSS colours are rejected.
 - Timing is sequential: `s.play(action or [actions], { duration, ease: "smooth" })` and
-  `s.wait(seconds)`. The durations must add up to **55 s** (±0.5 s).
+  `s.wait(seconds)`. The durations must add up to **40 s** (±0.5 s).
 - Every element needs a stable, descriptive id (`"grid"`, `"i-hat"`, `"matrix-A"`).
   Reuse the ids of kept objects from earlier scenes; never invent a second object
   for the same thing.
