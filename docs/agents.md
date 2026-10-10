@@ -17,6 +17,21 @@ Each completed narration scene becomes available immediately; scene code generat
 overlaps later speech. Code agents run sequentially with the previous scene’s evaluated
 end-state. Scenes are published progressively with audio, word timings, and captions.
 
+## Scene generation speed
+
+Set `AGENT_SCENE_OUTPUT_MODE=validated-reference` to let a scene agent finish
+with the ID returned by a successful `validate_output` call. The host retrieves
+that exact source and validates it again. The model can still inspect validation
+results and revise its candidate before finishing; the planning and editorial
+review calls are unchanged. This avoids generating the same scene code again
+in the final response. The default is `text`; set it explicitly to roll back.
+
+The three-topic benchmark measured about 26% less scene-generation time across
+two rounds with Astra/high and unchanged narration, scene plans, and full API
+reference. This is a small empirical comparison, not a guarantee of identical
+generations or universal quality preservation. See [benchmark results](scene-speed-results.md)
+for variants, rejected outputs, saved animations, and limitations.
+
 ## Planning and scene quality
 
 `backend/prompts/guidance.md` contains compact explanation guidance adapted from

@@ -10,7 +10,7 @@ if (generation !== 'pi' && generation !== 'simulated') throw new Error('VIDEO_GE
 const narration = new NarrationService();
 const config = generation === 'pi' ? agentConfig() : undefined;
 const videos = new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite',
-  config ? createPiGenerator(new PiAgentRunner(config), narration, config.dataDir) : undefined, generation);
+  config ? createPiGenerator(new PiAgentRunner(config), narration, config.dataDir, { outputMode: config.sceneOutputMode }) : undefined, generation);
 
 const localNarration = process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1";
 const hostname = process.env.HOST ?? (localNarration ? "127.0.0.1" : "0.0.0.0");

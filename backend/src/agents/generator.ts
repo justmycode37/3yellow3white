@@ -7,7 +7,7 @@ import { buildSceneAgentInput, validateSceneAgainstNarration } from "../narratio
 import { atomicWrite } from "../narration/service.js";
 import type { NarrationService } from "../narration/service.js";
 import { AgentError } from "./config.js";
-import type { AgentRunner } from "./runtime.js";
+import type { AgentRunner, AgentTask } from "./runtime.js";
 import { parsePlannedLesson, scenePlanningContext, validateStory } from './planning.js';
 import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
@@ -26,7 +26,7 @@ async function saved(path: string): Promise<string | undefined> {
 }
 
 /** Host-owned stages. Script and narration identity survive restarts; model tools cannot access disk. */
-export function createPiGenerator(runner: AgentRunner, narration: NarrationService, root: string): Generator {
+export function createPiGenerator(runner: AgentRunner, narration: NarrationService, root: string, options: { outputMode?: AgentTask['outputMode'] } = {}): Generator {
   return async (request, index, context?: GenerationContext) => {
     if (!context) throw new AgentError("CONTEXT", "Pi generation requires a video job context.");
     const { videoId, owner, previousFrame, signal } = context;
@@ -101,6 +101,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       const reference = await readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
       const craft = await readFile(new URL('../../prompts/scene-craft.md', import.meta.url), 'utf8');
       const task = {
+        outputMode: options.outputMode ?? 'text',
         systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${reference}`,
         prompt: `Generate this scene using the authoritative narration packet and lesson plan:\n${JSON.stringify({ ...input, planning })}`, validate, signal,
       };
