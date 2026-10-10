@@ -220,6 +220,8 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 /* The scene owns the entire viewport; host UI floats above it. */
 .player-stage { position: absolute; inset: 0; isolation: isolate; }
 .lesson-canvas-host { position: absolute; inset: 0; }
+.has-captions .lesson-canvas-host { bottom: 160px; }
+.lesson-subtitles { position: absolute; bottom: 94px; left: 10%; right: 10%; min-height: 2.8em; display: flex; align-items: center; justify-content: center; text-align: center; color: #fff; font-size: clamp(17px, 1.8vw, 24px); line-height: 1.4; pointer-events: none; white-space: normal; text-wrap: balance; }
 .lesson-canvas-host > .lesson-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
 .player-notice { position: absolute; z-index: 10; bottom: 104px; left: 24px; right: 24px; margin: 0; text-align: center; font-size: 12px; color: var(--player-ink); }
 .player-page .paused-indicator { z-index: 3; }

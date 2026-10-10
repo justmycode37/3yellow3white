@@ -85,7 +85,7 @@ export class VideoService {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
       return publicManifest(JSON.parse(prior.manifest))
     }
-    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [], ...(this.provider !== 'simulated' ? { tokenUsage: emptyTokenUsage() } : {}) }
+    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, ...(request.narrationMode ? { narrationMode: request.narrationMode } : {}), createdAt: new Date().toISOString(), scenes: [], ...(this.provider !== 'simulated' ? { tokenUsage: emptyTokenUsage() } : {}) }
     this.db.transaction(() => {
       this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
       uploads.forEach((upload, index) => this.db.query('INSERT INTO video_uploads VALUES (?, ?, ?, ?, ?, NULL)').run(manifest.id, index, upload.name, upload.mimeType, upload.bytes))
@@ -264,7 +264,9 @@ export class VideoService {
       } catch { return json({ detail: 'Invalid request body' }, 400) }
       if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
       if (body.videoMode !== undefined && body.videoMode !== 'classic' && body.videoMode !== 'interactive') return json({ detail: 'Choose classic or interactive video mode' }, 400)
+      if (body.narrationMode !== undefined && !['speech', 'subtitles'].includes(body.narrationMode)) return json({ detail: 'Choose speech or subtitles' }, 400)
       const normalized: VideoRequest = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })),
+        ...(body.narrationMode !== undefined ? { narrationMode: body.narrationMode } : {}),
         ...(body.videoMode !== undefined ? { videoMode: body.videoMode } : {}),
         ...(uploads.length ? { uploads: uploads.map(uploadMetadata) } : {}) }
       try { return json(this.create(owner, key, normalized, uploads), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }

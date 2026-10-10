@@ -11,6 +11,7 @@ import type { Player } from 'animlib'
 import CanvasQuestion, { useCanvasQuestion } from './CanvasQuestion'
 import type { VideoManifest } from '../../../shared/video/contract'
 import GenerationProgress from './GenerationProgress'
+import { captionAt } from './captions'
 
 const loadingState: LessonPlaybackState = { time: 0, duration: 0, playing: false, ended: false, ready: false, error: '' }
 const getLoadingState = () => loadingState
@@ -32,6 +33,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   const [attempt, setAttempt] = useState(0)
   const [isFullscreen, setFullscreen] = useState(false)
   const [captionsEnabled, setCaptionsEnabled] = useState(false)
+  useEffect(() => { setCaptionsEnabled(manifest?.narrationMode === 'subtitles') }, [manifest?.id, manifest?.narrationMode])
   const [cursorHidden, setCursorHidden] = useState(false)
   const cursorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const state = useSyncExternalStore(playback?.subscribe ?? subscribeLoading, playback?.getState ?? getLoadingState)
@@ -152,11 +154,13 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     void action?.catch(() => {})
   }
 
-  return <div className={`player-page ${state.playing ? 'is-playing' : ''} ${cursorHidden && autoHideControls ? 'is-player-idle' : ''}`} ref={screen} tabIndex={-1} onContextMenu={openQuestion} onPointerMove={revealCursor} onPointerDown={revealCursor} onKeyDown={revealCursor} onFocusCapture={revealCursor}>
+  const caption = captionsEnabled ? captionAt(manifest?.scenes ?? [], state.time) : ''
+  return <div className={`player-page ${captionsEnabled ? 'has-captions' : ''} ${state.playing ? 'is-playing' : ''} ${cursorHidden && autoHideControls ? 'is-player-idle' : ''}`} ref={screen} tabIndex={-1} onContextMenu={openQuestion} onPointerMove={revealCursor} onPointerDown={revealCursor} onKeyDown={revealCursor} onFocusCapture={revealCursor}>
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
     {(connection || (state.ready && state.generationError)) && <p className="player-notice" role="status">{state.generationError || connection}</p>}
     <div className="player-stage">
       <div ref={canvasHost} className="lesson-canvas-host"/>
+      {captionsEnabled && <div className="lesson-subtitles" aria-label="Subtitles">{caption}</div>}
       {generating && !state.ready && !error && <GenerationProgress usage={manifest.tokenUsage} queued={manifest.status === 'queued'}/>}
       {!generating && !state.ready && !error && <p className="player-status" role="status">{manifest?.error || state.generationError || 'Loading your lesson…'}</p>}
       {!generating && state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}

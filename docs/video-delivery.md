@@ -168,3 +168,23 @@ is a visual comparison, not measured water consumption for the generation's mode
 datacenter. The tooltip and accessible label make that limitation explicit. The glasses
 hide together with the count once the first scene is playable, and reduced motion
 disables the sketch/wave/fill animations.
+
+## Subtitle-only videos
+
+Set `narrationMode: "subtitles"` in a video request to bypass speech synthesis.
+The saved script supplies short caption cues with deterministic reading-time
+estimates (2.5 words/second or 15 characters/second, whichever is slower, with
+explicit script pauses retained). These are not provider speech alignments.
+A silent PCM/WAV track retains the existing player clock; no ElevenLabs calls
+are made. Scene validation and visual verification/repair remain enabled.
+
+Subtitle-mode manifests enable captions by default. Captions also work for
+existing narrated videos when the user enables CC. Cues track scene-local times
+through global seeking and streaming scene appends; the canvas reserves a lower
+band so captions do not cover visual content. Existing speech mode is unchanged.
+
+The resumed RNA job keeps its already-published first scene and original cue
+schedule; only that scene's audio bytes were replaced with silence. New scenes
+use the subtitle reading schedule. Original job metadata/audio were backed up
+locally before conversion. Mode changes require explicit job migration; they
+are not an automatic fallback on provider errors.

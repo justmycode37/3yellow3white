@@ -7,6 +7,8 @@ export interface VideoRequest {
   documents: { name: string; text: string }[]
   /** Viewing preference supplied to the storyline planner; omitted means classic. */
   videoMode?: VideoMode
+  /** Explicit subtitle-only delivery bypasses speech synthesis. */
+  narrationMode?: 'speech' | 'subtitles'
   uploads?: { name: string; mimeType: string; size: number; sha256: string }[]
 }
 
@@ -37,6 +39,7 @@ export interface VideoManifest {
   revision: number
   status: 'queued' | 'generating' | 'complete' | 'failed'
   provider: 'simulated' | 'pi'
+  narrationMode?: 'speech' | 'subtitles'
   createdAt: string
   scenes: VideoScene[]
   tokenUsage?: VideoTokenUsage

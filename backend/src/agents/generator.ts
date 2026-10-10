@@ -19,6 +19,9 @@ import { animationQualityPolicy } from './quality-policy.js';
 import { scenegenPrompt } from './scenegen-prompts.js';
 import { validationMessage } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
+import { buildSubtitlePackage } from '../narration/subtitles.js';
+import { silence, wav, hash } from '../narration/audio.js';
+import type { NarrationScenePackage } from '../narration/types.js';
 import { reviewGeneratedScene } from './visual-gate.js';
 
 export function sceneSource(output: string): string {
@@ -38,7 +41,8 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const { videoId, owner, previousFrame, signal } = context;
     if (!/^[a-f0-9-]{36}$/.test(videoId)) throw new AgentError("CONTEXT", "Invalid video job ID.");
     signal.throwIfAborted();
-    if (!narration.available) throw new AgentError("NARRATION", "Configure ElevenLabs before generating a narrated video.");
+    const subtitles = request.narrationMode === 'subtitles';
+    if (!subtitles && !narration.available) throw new AgentError("NARRATION", "Configure ElevenLabs before generating a narrated video.");
     const directory = join(root, videoId);
     await mkdir(directory, { recursive: true, mode: 0o700 });
     const fingerprint = createHash("sha256").update(JSON.stringify({ owner, request })).digest("hex");
@@ -65,25 +69,34 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     } else logEvent('script.reused', { videoId, cached: true });
     const story = parseStoryline(markdown); validateStory(story);
     if (index >= story.beats.length) return null;
-    const narrationId = await saved(join(directory, "narration-id"));
-    const job = narrationId ? await narration.get(owner, narrationId) : await narration.submit(owner, markdown);
-    if (!narrationId) await atomicWrite(join(directory, "narration-id"), job.id);
-    if (job.status === 'interrupted') await narration.retry(owner, job.id);
-    const pkg = await logStage({ videoId, narrationId: job.id, stage: 'narration', sceneIndex: index }, async () => {
-      // Poll only local durable state; the speech service owns its work and retry policy.
-      while (true) {
-        signal.throwIfAborted();
-        const ready = await narration.scenePackage(owner, job.id, index);
-        if (ready) return ready;
-        const status = await narration.get(owner, job.id);
-        if (status.status === "failed" || status.status === "interrupted") throw new AgentError("NARRATION", status.error?.message ?? "Narration failed.");
-        await new Promise<void>((resolve, reject) => {
-          const abort = () => { clearTimeout(timer); reject(signal.reason); };
-          const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, 200);
-          signal.addEventListener("abort", abort, { once: true });
-        });
-      }
-    });
+    const pkg: NarrationScenePackage = subtitles ? await (async () => {
+      const path = join(directory, 'subtitles.json');
+      const cached = await saved(path);
+      const packet: NarrationScenePackage = cached ? JSON.parse(cached) : buildSubtitlePackage(story);
+      if (packet.scriptHash !== hash(markdown) || packet.timingBasis !== 'subtitle-reading') throw new AgentError('CONTEXT', 'Subtitle timing belongs to a different script.');
+      if (!cached) await atomicWrite(path, JSON.stringify(packet));
+      return packet;
+    })() : await (async () => {
+      const narrationId = await saved(join(directory, "narration-id"));
+      const job = narrationId ? await narration.get(owner, narrationId) : await narration.submit(owner, markdown);
+      if (!narrationId) await atomicWrite(join(directory, "narration-id"), job.id);
+      if (job.status === 'interrupted') await narration.retry(owner, job.id);
+      return await logStage({ videoId, narrationId: job.id, stage: 'narration', sceneIndex: index }, async () => {
+        // Poll only local durable state; the speech service owns its work and retry policy.
+        while (true) {
+          signal.throwIfAborted();
+          const ready = await narration.scenePackage(owner, job.id, index);
+          if (ready) return ready;
+          const status = await narration.get(owner, job.id);
+          if (status.status === "failed" || status.status === "interrupted") throw new AgentError("NARRATION", status.error?.message ?? "Narration failed.");
+          await new Promise<void>((resolve, reject) => {
+            const abort = () => { clearTimeout(timer); reject(signal.reason); };
+            const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, 200);
+            signal.addEventListener("abort", abort, { once: true });
+          });
+        }
+      });
+    })();
     const scene = pkg.scenes[index];
     if (!scene) return null;
     const { instructions, ...input } = buildSceneAgentInput(pkg, scene.id, previousFrame);
@@ -118,7 +131,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       }
     };
     const validate = async (output: string) => { await validateSource(assemble(output)); };
-    const path = join(directory, `scene-${index}.js`);
+    const path = join(directory, subtitles ? `scene-${index}.subtitles.js` : `scene-${index}.js`);
     let source = await saved(path);
     if (!source) {
       const reference = await readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
@@ -128,7 +141,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       const task = {
         outputMode: options.outputMode ?? 'text',
         systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${quality}\n\n${reference}`,
-        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify(sceneInput)}`, validate, signal,
+        prompt: `Generate this scene using the authoritative timing packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify(sceneInput)}`, validate, signal,
         logContext: { videoId, sceneIndex: index, stage: 'scene' as const },
       };
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
@@ -146,7 +159,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       await atomicWrite(join(directory, `scene-${index}.final-frame.json`), JSON.stringify(finalFrame));
       logEvent('scene.reused', { videoId, sceneIndex: index, cached: true });
     }
-    const audio = new Uint8Array(await readFile(await narration.audio(owner, job.id, scene.audio.id)));
+    const audio = subtitles ? wav(silence(scene.durationSec)) : new Uint8Array(await readFile(await narration.audio(owner, pkg.id, scene.audio.id)));
     return { audio, scene: { id: scene.id, index, source, duration: scene.durationSec,
       audio: { id: scene.audio.id },
       narration: scene.utterances.map(utterance => utterance.text).join(' '), visualDescription: scene.context,
