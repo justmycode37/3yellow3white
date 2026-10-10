@@ -52,6 +52,24 @@ Smooth motion (strict; jarring motion ruins the explanation):
 - One major motion at a time; pause about 1 s between big motions. No camera
   shakes, no fast zooms, no flashes.
 
+Focus (strict; the viewer must always know where to look):
+- Whenever the narration turns to a specific object (a vector, an atom, a formula,
+  a matrix entry), mark that object with the FOCUS PULSE as its word is spoken. This
+  is the one and only highlight style, used the same way in every scene and lesson.
+- The focus pulse: the object smoothly grows to 1.15 times its size and returns,
+  about 1.2 s in total (`obj.scaleTo(1.15)` for 0.6 s, then `obj.scaleTo(1)` for
+  0.6 s). For a line or arrow that scaling would shift, thicken it instead: stroke
+  width to 1.6 times and back, same timing. Nothing else moves during a pulse.
+- One focus at a time. Pulse what is being talked about now, not everything that is
+  on screen; at most one pulse per sentence, and never two objects at once unless the
+  sentence is about that pair (then pulse both together).
+- The pulse never changes an object's colour (colours belong to concepts) and never
+  adds anything: no boxes, frames, underlines, glows, arrows pointing at things or
+  extra shapes. Do not dim the rest of the picture to create focus.
+- When a formula states what the geometry just showed, pulse the geometry first and
+  then the matching formula (or its `\animpart`), so the eye is led from one to the
+  other.
+
 On-screen text (strict):
 - Only necessary text: short object labels (e.g. v, î, A), formulas, matrices and
   numbers that are part of the mathematics. Nothing else.

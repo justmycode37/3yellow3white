@@ -25,6 +25,10 @@ When writing the plan:
   a scene introduces a new formula, say in its description which earlier one leaves
   or turns into it. Carry at most three formulas into the next scene, and list the
   others under cleanup. Fewer, larger, well-spaced things beat a full screen.
+- **Focus:** for every scene, say in its visualDescription which object the student
+  should be looking at for each sentence of the narration, in order. The scene marks
+  each one with the same brief "focus pulse" (it grows slightly and returns) as it is
+  mentioned, so plan one clear focus per sentence, not several at once.
 - **Interactions:** plan an interactive element in every scene where playing with a
   value deepens that scene's idea (a slider for a quantity, a toggle to compare with
   and without, a select between a few named cases). Most lessons should have
