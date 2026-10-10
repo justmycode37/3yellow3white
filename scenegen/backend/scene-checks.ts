@@ -93,7 +93,7 @@ export const CONTROLS_HINT = "Controls must sit in the top right corner in every
 
 // The narrowest window the layout must survive: width = 1.2 x height (the app in a laptop pane).
 const SAFE_ASPECT = 1.2;
-const MAX_FORMULAS = 7;
+const MAX_FORMULAS = 12; // formulas, their definition lines and object labels together
 
 interface Box { id: string; left: number; right: number; bottom: number; top: number }
 interface LayoutElement extends FrameElement {

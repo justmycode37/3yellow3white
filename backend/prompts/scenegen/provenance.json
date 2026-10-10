@@ -5,7 +5,7 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
-      "sha256": "058a774cad4e78566ff45973fad7f941c4aedc5c868d061fa955ebcd2806f1c4",
+      "sha256": "d95446b6887ae14f8969920bbb28695f6f4168acdf1f9114c02379efa4149df6",
       "revisions": [
         {
           "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
@@ -29,7 +29,7 @@
       "source": "scenegen/prompts/planning.md (maintained here since PR 59)",
       "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
       "pullRequest": 59,
-      "sha256": "e97b262c56fd91f67e13d03e023d9c5fc1aa524ef0b252a853d50afee60a03f5"
+      "sha256": "30f4ac4de003d42b5f85b871987386103ee4580d512f595c93c6821c61451ad9"
     },
     {
       "file": "topics-system.md",

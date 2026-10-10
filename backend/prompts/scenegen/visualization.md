@@ -21,8 +21,9 @@ Visual style: 3Blue1Brown-like explanatory animation.
   GOLD for an object or text: yellow is reserved for the focus frame.
 - Intuition first. The opening scene, and the start of every new idea, shows the
   thing itself behaving (an object moving, a shape changing, a comparison) with no
-  formula and no numbers on screen. Symbols and details come only after the viewer
-  has seen what they describe.
+  formula and no numbers on screen. Symbols and details come after the viewer has
+  seen what they describe, and then they DO come: the scenes after the opening
+  state their ideas in equations as well as pictures.
 - Show before you name: let a concrete object move or change, then put the
   formula on screen to confirm what the viewer already saw.
 - Every "therefore" needs a visible reason: a moving vector, a sliding value, a
@@ -107,16 +108,28 @@ Focus (strict; the viewer must always know where to look):
   then frame the matching formula, so the eye is led from one to the other.
 
 Equations (strict; a formula nobody is explaining is clutter):
-- A formula is on screen only while the narration is explaining THAT formula, and it
-  appears at the sentence that starts explaining it, never earlier as a preview and
-  never as a title or a summary of what is coming.
-- Show a formula only if the narration explains every part of it. If the narration
-  only mentions a result in passing, show the picture, not the formula.
-- When the narration moves on, the formula leaves (fade it out) unless the very next
-  sentence builds on it. A scene normally ends with at most one formula on screen:
-  the one result the next scene needs. No formula is kept "for reference".
-- One formula at a time is the norm; two only while they are being compared. Prefer
-  the short form the narration actually says over a longer derivation.
+- Do show the math the idea needs. After the intuition has been built, every scene
+  that explains a quantitative idea puts its key equation on screen: the planned
+  formulas are part of the lesson, not optional decoration, so never drop one to
+  keep a scene empty. What is forbidden is math nobody explains.
+- A formula is on screen while the narration is explaining it, and it appears at the
+  sentence that starts explaining it, never earlier as a preview and never as a
+  title or a summary of what is coming.
+- Explain the variables. As the narration says what a symbol means, show it: put the
+  focus frame on that symbol (write the formula so each symbol the narration defines
+  is its own `s.latex` element or `\animpart`), pulse the object in the picture that
+  the symbol stands for, and add a short definition line under the formula in a
+  smaller size (fontSize about 0.6 of the formula's), such as `N = \text{number of
+  samples}` or `k = \text{frequency being tested}`. One line per symbol, at most
+  three lines, each appearing as its symbol is explained and coloured like the thing
+  it names. Definition lines leave together with their formula.
+- When the narration moves on to a different idea, the formula and its definitions
+  leave (fade them out). Keep a formula while the following sentences still build on
+  it, and carry into the next scene only the result that scene starts from. No
+  formula is kept "for reference".
+- At most three formulas on screen, and more than one only when they belong together
+  (a definition and its result, two sides of a comparison, the steps of one short
+  derivation). Prefer the form the narration actually says.
 - Readouts tied to a control (a value that follows a slider) count as formulas: show
   one only when the narration talks about that value.
 - Let a formula be read. Once a formula is complete it stays fully visible and
@@ -328,7 +341,7 @@ Layout (keep it identical in every scene):
   there are none), formulas and matrices in the middle and lower part, starting
   below the controls. The same in every scene, so nothing jumps between scenes.
 - Formula column budget (strict, checked): at most THREE formulas or matrices in the
-  column at once, and at most 7 formulas and labels on screen in total. Before a new
+  column at once, and at most 12 text items (formulas, definition lines and labels) on screen in total. Before a new
   formula comes in, fade out one the viewer no longer needs, or morph the old one
   into the new one. Do not keep a growing list of every result so far.
 - Formulas never overlap or touch (strict, checked). Place them from their real

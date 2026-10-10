@@ -29,7 +29,7 @@ the message. All in `backend/scene-checks.ts`.
 | Text overlap | animlib's `detectSceneOverlaps` reports overlapping settled text |
 | Cut off at the edge | A formula, label, arrow or marker leaves a frame 1.2 times as wide as it is tall |
 | Lines through labels | A line or arrow runs through a label or formula |
-| Too much text | More than seven formulas and labels are visible at once |
+| Too much text | More than twelve formulas, definition lines and labels are visible at once |
 | Too heavy | More than 300 separate animations, which the browser player cannot build in time |
 
 ## Tools

@@ -43,15 +43,27 @@ When writing the plan:
   narration of those scenes describes what is seen, in plain words. Each later idea
   also starts with what happens before its notation. Details, exact values and
   formulas come after the student already has the picture.
+- **Then show the math.** Intuition first does not mean no math. After the opening,
+  each scene that explains a quantitative idea states it as an equation: plan about
+  one key equation per such scene (the definition, the rule or the result that scene
+  is about), and make sure the lesson shows the formulas a student of this topic is
+  expected to recognise. A lesson on a mathematical or physical topic with only one
+  formula in total is too thin.
+- **Explain every variable.** When a formula appears, the narration says what each
+  symbol in it means, one at a time, in plain words tied to the picture ("N is how
+  many samples we have", "k picks the frequency we are testing"). List those symbols
+  in the visualDescription with the object each one stands for, so the scene can
+  point at the symbol and at that object together and show a short definition line
+  under the formula. Do not use a symbol the narration never explains.
 - **Equations only while they are explained.** Plan a formula in a scene only if
-  that scene's narration explains every part of it, and say at which sentence it
-  appears. It leaves when the narration moves on, unless the next sentence builds on
-  it. Never plan a formula as a title, a preview, a reminder "for reference" or a
-  list of results so far; if the narration only mentions a result, plan the picture
-  instead. Aim for one formula on screen at a time (two only while they are being
-  compared), and carry at most one formula into the next scene: the one it starts
-  from. Every planned formula is an entity with an id, listed under cleanup in the
-  scene where it leaves. No boxed results and no panels around text.
+  that scene's narration explains it, and say at which sentence it appears. It
+  leaves when the narration moves on to another idea. Never plan a formula as a
+  title, a preview, a reminder "for reference" or a list of results so far. At most
+  three formulas on screen at once, and more than one only when they belong together
+  (a definition and its result, a comparison, the steps of one short derivation).
+  Carry into the next scene only the result it starts from. Every planned formula is
+  an entity with an id, listed under cleanup in the scene where it leaves. No boxed
+  results and no panels around text.
 - **Time to take an equation in.** Right after a formula has been fully explained,
   give the student a quiet moment with it: one short spoken invitation ("Take a
   moment to read it." / "Look at how each term matches the picture.") followed by a
