@@ -1,6 +1,7 @@
 import { realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { VideoService } from './videos.js';
 import { narrationRoutes } from "./narration/routes.js";
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
@@ -23,8 +24,9 @@ function inside(root: string, path: string) {
   return suffix !== ".." && !suffix.startsWith(`..${sep}`) && !isAbsolute(suffix);
 }
 
-export function createHandler(frontendDir = defaultFrontendDir) {
+export function createHandler(frontendDir = defaultFrontendDir, videoService?: VideoService) {
   const root = resolve(frontendDir);
+  let videos = videoService;
   const narration = narrationRoutes();
 
   async function serveFile(path: string) {
@@ -46,6 +48,10 @@ export function createHandler(frontendDir = defaultFrontendDir) {
     try { path = decodeURIComponent(new URL(request.url).pathname); }
     catch { return Response.json({ detail: "Invalid URL" }, { status: 400 }); }
     if (path.includes("\0")) return Response.json({ detail: "Invalid URL" }, { status: 400 });
+    if (path === '/api/videos' || path.startsWith('/api/videos/')) {
+      videos ??= new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite');
+      return videos.handle(request);
+    }
     if (path === "/api/narrations" || path.startsWith("/api/narrations/")) return narration(request, path);
 
     const api = path === "/api/hello" || path === "/api/me" || path === "/healthz";

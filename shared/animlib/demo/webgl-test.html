@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>animlib WebGL2 browser tests</title>
+<style>body{font:14px system-ui;background:#17191d;color:#eee;margin:24px}button{padding:12px}#stage{position:relative;width:640px;height:480px;max-width:100%}canvas{width:100%;height:100%;display:block;touch-action:none}pre{white-space:pre-wrap}.gallery{display:flex;flex-wrap:wrap;gap:12px}.gallery img{width:240px}figure{margin:0}</style></head>
+<body><h1>WebGL2 browser tests</h1><p>Real GLSL compilation, pixel readback, scene controls, playback and context recovery. WebGPU is forced unavailable only within this test page.</p><button id="run">Run browser tests</button><pre id="results">Ready</pre><div id="stage"></div><div class="gallery" id="gallery"></div>
+<script type="module">
+import {runWebGLTests} from '../test/webgl.browser.ts';
+document.querySelector('#run').onclick=()=>{
+  document.querySelector('#run').disabled=true;
+  window.webglTests=runWebGLTests().then(result=>{window.webglResult=result;document.querySelector('#results').textContent=JSON.stringify(result,null,2);return result;});
+};
+</script></body></html>

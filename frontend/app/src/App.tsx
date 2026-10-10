@@ -12,6 +12,7 @@ import type { TopicVideoRequest } from './subjectPlans'
 import type { StudyPlan } from './plan'
 import { lessons, formatTime, artworkForTitle } from './data'
 import type { Lesson } from './data'
+import { listVideos, mergeVideoLessons } from './videos'
 
 function readLocal<T,>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback } catch { return fallback }
@@ -51,6 +52,13 @@ export default function App() {
   const [subjectPlans, setSubjectPlans] = useState(() => loadSubjectPlans(localStorage, exampleCurriculum))
   const [planStorageNote, setPlanStorageNote] = useState('')
   const allLessons = useMemo(() => [...customLessons.map(lesson => ({ ...lesson, artwork: artworkForTitle(lesson.title, lesson.artwork) })), ...lessons], [customLessons])
+  useEffect(() => {
+    let active = true
+    void listVideos().then(videos => {
+      if (active) setCustomLessons(old => mergeVideoLessons(videos, old))
+    }).catch(() => { if (active) setToast('Could not refresh your saved videos.') })
+    return () => { active = false }
+  }, [])
   const selected = path.startsWith('/watch/') ? allLessons.find(l => l.id === decodeURIComponent(path.split('/')[2] || '')) : undefined
   const invalidLesson = path.startsWith('/watch/') && !selected
   const settings = path === '/settings'
@@ -88,7 +96,7 @@ export default function App() {
     setSavedOnly(false)
     setQuery('')
     openLesson(lesson)
-    setToast('Sample preview ready. Saved to your library.')
+    setToast('Your video is being prepared. Saved to your library.')
   }
   const menuContent = <NavigationDrawer
     open={menu}

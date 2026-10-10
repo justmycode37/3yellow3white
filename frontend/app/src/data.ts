@@ -11,6 +11,7 @@ export interface Lesson {
   progress?: number
   demo?: boolean
   source?: { text: string; chapter: string; name: string }
+  videoId?: string
 }
 
 export const lessons: Lesson[] = [

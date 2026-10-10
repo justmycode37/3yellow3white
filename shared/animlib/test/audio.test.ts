@@ -34,6 +34,16 @@ function setup() {
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe("scene audio clock", () => {
+  it('registers later assets without disturbing playing audio and rejects changed URLs', async () => {
+    const { clock, sources, fetch } = setup();
+    await clock.prepare([scene('voice')]); await clock.start('voice', 0);
+    clock.register({ next: { kind: 'audio', url: '/next.wav' } });
+    await clock.prepare([scene('next')]);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(sources[0].stop).not.toHaveBeenCalled();
+    expect(() => clock.register({ next: { kind: 'audio', url: '/changed.wav' } })).toThrow('immutable');
+    clock.dispose();
+  });
   it("prepares duration without starting predecessor audio, and caches decoded assets", async () => {
     const { clock, context, fetch } = setup();
     const scenes = [scene("voice"), scene("voice", 8), scene(undefined, 3)];
