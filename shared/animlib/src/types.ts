@@ -308,7 +308,7 @@ export type BehaviorSpec =
 export interface BehaviorDeclaration { target: string; behavior: BehaviorSpec; }
 export type BindingDeclaration =
   | { type: "attach"; target: string; source: string; offset?: Vec3 }
-  | { type: "connect"; target: string; from: string; to: string; endpoints?: "center" | "surface"; offset?: number };
+  | { type: "connect"; target: string; from: string; to: string; endpoints?: "center" | "surface" | "bounds"; offset?: number };
 export interface Ray { origin: Vec3; direction: Vec3; }
 export interface InteractionSnapshot {
   /** Detached copy of the displayed frame and effective view camera. */
@@ -453,7 +453,8 @@ export interface SceneContext {
   group(id: string, children: ElementHandle[], options?: { isolated?: boolean; castShadow?: boolean }): ElementHandle;
   behavior(target: ElementHandle, behavior: BehaviorSpec): void;
   attach(target: ElementHandle, source: ElementHandle, options?: { offset?: Position }): void;
-  connect(target: ElementHandle, from: ElementHandle, to: ElementHandle, options?: { endpoints?: "center" | "surface"; offset?: number }): void;
+  /** Text/LaTeX endpoints default to padded visual bounds; other endpoints use their origins. */
+  connect(target: ElementHandle, from: ElementHandle, to: ElementHandle, options?: { endpoints?: "center" | "surface" | "bounds"; offset?: number }): void;
   play(actions: AnimationAction | AnimationAction[], options: { duration: number; ease?: Ease }): void;
   wait(seconds: number): void;
   keep(element: ElementHandle): void;
