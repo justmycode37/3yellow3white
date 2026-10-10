@@ -214,6 +214,19 @@ Revocation does not erase documents, scripts, audio, or scenes on the VM.
 
 ## Failures and verification
 
+The server writes JSON lines to stdout (progress) and stderr (warnings/errors).
+Filter by `videoId` to follow a video from `video.queued` through source extraction,
+script drafting/review, narration waits, scene generation, and publication to
+`video.completed` or `video.failed`. Narration-stage records link `videoId` with
+`narrationId`; use that ID for speech chunk, cache reuse, and narration failures.
+Slow stages emit `stage.running` every 30 seconds with `elapsedMs`; this means
+the operation is still pending, not that its provider has confirmed progress.
+Scene indexes are zero-based; draft/review attempts are one-based. Resumed job
+elapsed times cover the current run only. Logs omit lesson text, uploaded file
+names, credentials, provider response bodies, and raw exception messages.
+Logging changes take effect when the backend restarts; they cannot add progress
+events to an already-running process.
+
 Authentication failures, limits, timeouts, and invalid output fail the video job
 with a safe message; completed scenes remain playable. Shutdown cancels the
 active agent and leaves unfinished videos resumable. Video restart recovery resumes interrupted narration using cached chunks; the last
