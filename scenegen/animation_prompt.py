@@ -69,6 +69,24 @@ def overarching_context(storyboard, index, outline):
     return "\n".join(lines)
 
 
+def interactive_section(scene):
+    """What the viewer can play with in this scene (engine-neutral description)."""
+    controls = scene.get("interactive") or []
+    if not controls:
+        return ("## Interactive elements\n\nNone in this scene: it should simply play. "
+                "Do not add controls.")
+    lines = ["## Interactive elements", "",
+             "The viewer can change these while the scene plays or is paused. Build each one:"]
+    for c in controls:
+        lines += [f"- **{c['label']}** ({c['control']}, id `{c['id']}`)",
+                  f"  - Drives: {c['changes']}",
+                  f"  - The student should discover: {c['discover']}"]
+    lines += ["", "The default value shows exactly the example described above. The control "
+              "drives the real geometry and every number or formula that depends on it, at "
+              "every moment of the scene, and never changes the scene's duration."]
+    return "\n".join(lines)
+
+
 def build(storyboard, index, plugin_root, previous_code=None):
     scenes = storyboard["scenes"]
     scene = scenes[index]
@@ -139,6 +157,10 @@ On screen at the end, with the same names and roles used across the film:
 
 You choose the concrete example (numbers, vectors, positions) and how to animate it.
 Pick values that make the idea easy to see and keep them consistent with the START scene.
+
+{interactive_section(scene)}
+(Manim renders a fixed video: instead of a live control, animate a short sweep of each
+listed value through its range and back to the default.)
 
 ## Style
 

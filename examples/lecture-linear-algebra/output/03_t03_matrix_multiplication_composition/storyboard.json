@@ -1,14 +1,13 @@
 {
   "topic": "Matrix multiplication is composition",
-  "audience": "Beginning linear algebra students working in the plane R^2. They already see a 2x2 matrix as a motion of the grid, know that its columns are the images of e1 and e2, and can compute A v. This film builds on that picture to explain what the product of two matrices means.",
+  "audience": "Beginning linear algebra students working in the plane R^2. They already picture a 2x2 matrix as a motion of the grid and know that its columns are where e1 and e2 land; they have not yet seen a matrix product.",
   "assumed": [
-    "A linear map of R^2 is fully determined by where it sends e1 and e2",
-    "The columns of a matrix are the images of e1 and e2 (column 1 = A e1, column 2 = A e2)",
-    "Computing a matrix-vector product A v and reading it as moving the vector v",
-    "Seeing a 2x2 matrix as a motion of the whole grid: grid lines stay straight, parallel and evenly spaced, and the origin stays fixed",
-    "Recognising R = [[0,-1],[1,0]] as a 90° counterclockwise rotation and S = [[1,1],[0,1]] as a horizontal shear"
+    "A 2x2 matrix describes a linear map of the plane: grid lines stay straight and evenly spaced, the origin stays fixed",
+    "The columns of a matrix are the landing spots of e1 and e2",
+    "Applying a matrix to a vector: A v = x·(column 1) + y·(column 2)",
+    "A linear map is fully determined by where e1 and e2 go"
   ],
-  "central_question": "If we do one linear map and then another, what single matrix describes the combined motion, and does the order matter?",
+  "central_question": "If we do one linear motion of the plane and then another, which single matrix describes the result, and does the order of the two motions matter?",
   "palette": {
     "background": "#0F1117",
     "text": "#ECEFF4",
@@ -23,233 +22,333 @@
     "accent_purple": "#9A72AC"
   },
   "color_meanings": {
-    "first basis vector e1 and its images": "accent_green",
-    "second basis vector e2 and its images": "accent_red",
-    "rotation R (its symbol, matrix and the moment it acts)": "primary",
-    "shear S (its symbol, matrix and the moment it acts)": "accent_gold",
-    "sample vector v": "secondary",
-    "composite 'rotate then shear', SR": "accent_teal",
-    "composite 'shear then rotate', RS": "accent_purple",
-    "ghost of the original grid, faint trails, wrong or discarded results": "muted",
-    "grid lines": "grid",
-    "labels and matrix entries": "text"
+    "e1 and every first column": "accent_green",
+    "e2 and every second column": "accent_red",
+    "rotation R (letter, matrix frame, highlight while the plane rotates)": "primary",
+    "shear S (letter, matrix frame, highlight while the plane shears)": "accent_gold",
+    "test vector v": "secondary",
+    "order 'first R, then S': the product SR and its grid": "accent_teal",
+    "order 'first S, then R': the product RS and its grid": "accent_purple",
+    "ghost of the untouched starting grid, helper lines, order numerals": "muted",
+    "neutral grid before any order is singled out": "grid",
+    "general letters A, B, the second rotation Q, signs and other formula text": "text"
   },
-  "opening": "An empty dark frame with only the fixed text panel on the right third: a dark backing rectangle with a thin border, still empty.",
+  "opening": "Dark frame in the fixed layout. On the left two thirds, the resting square grid of the plane with the origin at the centre of that area and the two basis arrows drawn thick: e1 in green and e2 in red, each with a short label beside its tip. On the right third, the text panel (dark backing rectangle, thin border) is empty.",
   "scenes": [
     {
       "id": "s01_two_motions_one_map",
-      "title": "Rotate, then shear",
-      "purpose": "Doing one linear map after another is again a motion of the whole plane that keeps grid lines straight, parallel and evenly spaced and leaves the origin fixed. So it is a single linear map, and it should have a single matrix.",
-      "shows": "A coordinate grid fades in on the left with e1 (green) and e2 (red) drawn from the origin and labelled. The panel shows R in blue. The whole plane turns smoothly through a quarter turn, driven by one angle tracker. Hold. S appears in gold in the panel, to the left of R, and the already rotated plane shears horizontally by blending the matrix entries from the identity. Hold. Then the plane smoothly undoes both motions back to the starting grid, and a faint muted ghost copy of the original grid stays underneath. The grid then moves in one continuous motion straight from the original to the final sheared-and-rotated position by blending the identity into the combined matrix. It lands exactly where the two-step motion landed. Its lines are still straight, parallel and evenly spaced over the ghost, and the origin has not moved. A teal matrix bracket with two empty columns appears in the panel next to S R, standing for the single matrix still to be found. The ghost fades out.",
+      "title": "Two motions in a row",
+      "purpose": "Doing a rotation and then a shear leaves a grid that is still straight, evenly spaced and pinned at the origin, so the combined motion is itself one linear map, and it must have a matrix of its own.",
+      "shows": "The whole plane, with e1 and e2 riding along, turns a quarter turn (interpolated by angle, slow); as it turns, the letter R with its small matrix eases into the top of the panel in blue. A pause. Then the plane shears sideways (one parameter, slow) while S with its small matrix eases in next to R in gold. A faint muted ghost of the original grid stays behind the whole time, so the viewer can compare start and end: the lines are still straight, still parallel, still evenly spaced, and the origin has not moved. After a hold, the plane eases calmly back onto the ghost, pauses, and then travels from start to the same end position in one single smooth move (blending the matrix entries from the identity), with no stop in the middle: the same result as one motion. While it holds on the final grid, an empty 2x2 bracket with a question mark inside eases into the middle of the panel with a thin teal frame. The aha moment is seeing the one-move replay land exactly where the two-step version landed.",
       "key_points": [
-        "First the rotation acts, then the shear acts on the rotated plane",
-        "The end result is still a grid with straight, parallel, evenly spaced lines and a fixed origin",
-        "So the two motions together form one linear map, and one direct motion reaches the same final grid",
-        "That raises the question: which matrix is it?"
+        "First a rotation, then a shear: two separate motions of the same plane",
+        "The final grid still has straight, evenly spaced lines and a fixed origin",
+        "The same end result can be reached as one single linear motion",
+        "One linear map means one matrix: which one?"
       ],
       "elements": [
-        "grid: the plane, now in its final rotate-then-shear position",
-        "e1: green basis arrow at its final position, labelled",
-        "e2: red basis arrow at its final position, labelled",
-        "R: blue rotation matrix in the panel",
-        "S: gold shear matrix in the panel, written to the left of R",
-        "SR_bracket: empty teal matrix bracket in the panel, waiting for its columns"
+        "grid: the plane, now in its rotated-then-sheared position",
+        "ghost grid: faint muted copy of the starting grid behind it",
+        "e1: green basis arrow with label, riding on the grid",
+        "e2: red basis arrow with label, riding on the grid",
+        "R matrix: blue letter R with its matrix, top of the panel",
+        "S matrix: gold letter S with its matrix, beside R",
+        "product bracket: empty 2x2 bracket with a question mark, teal frame, middle of the panel"
       ],
-      "ends_with": "The grid sits in its final rotate-then-shear position, with green e1 and red e2 at their final positions. The panel shows S and R side by side, next to an empty teal matrix bracket.",
-      "duration": 45,
-      "arc_step": 1
+      "ends_with": "The grid rests in its rotated-then-sheared position over the faint ghost of the starting grid, with e1 (green) and e2 (red) at their final spots. In the panel: R and S with their matrices at the top, and below them the empty teal-framed 2x2 bracket holding a question mark.",
+      "duration": 50,
+      "arc_step": 1,
+      "interactive": [
+        {
+          "id": "rotation_angle",
+          "control": "slider",
+          "label": "Rotation angle",
+          "changes": "The angle of the first motion, from no turn to a half turn (default: the quarter turn); the grid, e1, e2 and the entries of the R matrix in the panel all follow it",
+          "discover": "Whatever the angle, the grid after both motions still has straight, evenly spaced lines through a fixed origin: the combined motion is always a linear map"
+        }
+      ]
     },
     {
-      "id": "s02_track_the_basis",
+      "id": "s02_follow_the_basis",
       "title": "Follow e1 and e2",
-      "purpose": "Because the composite is linear, its matrix comes from watching where e1 and e2 finally land. Reading off those two arrows gives SR without any product formula.",
-      "shows": "The grid fades to a fainter shade so that only the two basis arrows stand out. Then the plane smoothly undoes the motion back to the identity. Now the two-step motion replays, one arrow in focus at a time, and each arrow leaves a thin muted trail. Under the rotation, e1 swings up to point straight up. Under the shear it slides sideways to the diagonal. e2 swings to point left under the rotation. When the shear plays, e2 stays perfectly still, because it lies on the horizontal axis. A soft pulse on e2 marks that stillness. The coordinates of the two final arrow tips appear briefly beside them. Then they move smoothly into the empty teal bracket in the panel as its first and second columns, in green and red, so the bracket becomes SR. The trails and the tip coordinates fade, and the grid returns to its normal brightness.",
+      "purpose": "The matrix of the combined motion can be read off without any new rule: follow e1 and e2 through both steps, and their final landing spots are its two columns.",
+      "shows": "The plane eases back onto the ghost grid so e1 and e2 are home again. Then the two steps play once more, slowly, with attention on the arrows. During the rotation both arrows turn: e1 ends pointing straight up, e2 ends pointing left along the horizontal axis. Pause. During the shear, the tip of e1 slides sideways along its grid line, while e2, lying on the horizontal axis, does not move at all; the horizontal axis glows softly for a moment to show it is the line the shear leaves in place. Hold. Now the read-off: thin muted drop lines run from the tip of e1 to the two axes of the ghost grid, its two coordinates appear in green in the panel and glide into the first column of the bracket as the question mark fades. The drop lines leave, then the same happens for e2 in red, filling the second column. The bracket is now a complete matrix, its columns coloured like the arrows that produced them.",
       "key_points": [
-        "Only two arrows need to be tracked, not every point",
-        "e1 ends at the diagonal: it is rotated up, then sheared sideways",
-        "e2 ends pointing left: it is rotated, then left alone by the shear because it lies on the x-axis",
-        "Where e1 and e2 land are the columns of the composite matrix SR"
+        "Follow e1 through both motions to its final landing spot",
+        "Follow e2: the rotation lays it on the axis that the shear does not move",
+        "Landing spot of e1 becomes column 1, landing spot of e2 becomes column 2",
+        "The matrix of the combined motion is found from the picture alone"
       ],
       "elements": [
-        "grid: the plane in the rotate-then-shear position",
-        "e1: green arrow at its final position",
-        "e2: red arrow at its final position",
-        "R: blue matrix in the panel",
-        "S: gold matrix in the panel",
-        "SR: teal matrix in the panel, with a green first column and a red second column"
+        "grid: the plane in its rotated-then-sheared position",
+        "ghost grid: faint muted starting grid, used to read coordinates",
+        "e1: green arrow at its final landing spot",
+        "e2: red arrow at its final landing spot",
+        "R matrix: blue, top of the panel",
+        "S matrix: gold, top of the panel",
+        "product bracket: now filled, first column green, second column red, teal frame"
       ],
-      "ends_with": "The grid is in the rotate-then-shear position with e1 and e2 at their final positions. The panel shows S and R, and next to them the filled teal matrix SR with a green first column and a red second column.",
-      "duration": 50,
-      "arc_step": 2
+      "ends_with": "The grid rests in the rotated-then-sheared position over the ghost grid, e1 and e2 at their final spots, no drop lines left. The panel shows R and S at the top and the teal-framed matrix below them, completely filled, with a green first column and a red second column.",
+      "duration": 45,
+      "arc_step": 2,
+      "interactive": []
     },
     {
-      "id": "s03_define_the_product",
-      "title": "One hop equals two hops",
-      "purpose": "The product of two matrices is defined as the matrix of the composite map, so that (BA)v = B(Av) for every v. The single matrix SR does in one step what R and then S do in two.",
-      "shows": "The plane smoothly undoes the motion back to the identity. A yellow sample vector v appears and is labelled. Route one: the plane rotates, and v rides along to Rv. Pause. Then the plane shears, and v ends at S(Rv). A small muted marker stays at that tip. The plane smoothly undoes the motion again. Route two: the plane moves in one direct motion by blending from the identity to SR, and v travels straight to its new place. It lands exactly on the marker, which then fades. In the panel the equation (SR)v = S(Rv) appears under the matrices. While route one is recalled by a brief highlight, the right-hand side glows. While the single hop is recalled, the left-hand side glows. After that only the equation stays. The general statement (BA)v = B(Av) is then written below it, and v fades out.",
+      "id": "s03_column_rule",
+      "title": "S acts on the columns of R",
+      "purpose": "The halfway positions of e1 and e2 are the columns of R, and the final positions are S applied to those columns: column i of the product is S times column i of R.",
+      "shows": "The shear is undone smoothly, so the plane rests in the halfway position, rotated only. In the panel the two columns of the R matrix take on green and red, and each pulses once together with the arrow it describes: the halfway arrows ARE the columns of R. Then the plane shears again, slowly. After it settles, two short lines of working appear one at a time in the lower panel: S applied to the green column of R equals a green column, while the green arrow glows; then S applied to the red column of R equals a red column, while the red arrow glows. Each result column then slides up onto the matching column of the filled bracket, lands exactly on the numbers already there and pulses once in agreement. The working lines fade, leaving the matrices. The aha moment is that the rule on the panel is just a transcript of the motion the viewer has now watched twice.",
       "key_points": [
-        "Two hops, R and then S, take v to S(Rv)",
-        "One hop with the single matrix SR takes v to the same point",
-        "The product is defined by exactly this agreement, for every v: (BA)v = B(Av)"
+        "After the first motion, e1 and e2 sit on the columns of R",
+        "The second motion S moves each of those columns separately",
+        "S times column 1 of R is column 1 of the combined matrix; same for column 2",
+        "The results match the matrix read off from the picture"
       ],
       "elements": [
-        "grid: the plane in the rotate-then-shear position",
-        "e1: green arrow at its final position",
-        "e2: red arrow at its final position",
-        "R: blue matrix in the panel",
-        "S: gold matrix in the panel",
-        "SR: teal composite matrix in the panel",
-        "definition: (SR)v = S(Rv) with (BA)v = B(Av) below it, in the panel"
+        "grid: the plane in its rotated-then-sheared position",
+        "ghost grid: faint muted starting grid",
+        "e1: green arrow at its final landing spot",
+        "e2: red arrow at its final landing spot",
+        "R matrix: blue frame, columns now green and red",
+        "S matrix: gold, top of the panel",
+        "product bracket: filled matrix with green and red columns, teal frame"
       ],
-      "ends_with": "The grid is in the rotate-then-shear position with e1 and e2 at their final positions. The panel shows S, R and the teal SR, and below them the definition (SR)v = S(Rv) and (BA)v = B(Av). The vector v is gone.",
-      "duration": 50,
-      "arc_step": 3
+      "ends_with": "Same geometry as before: the rotated-then-sheared grid over the ghost, e1 and e2 at their final spots. In the panel R (with green and red columns) and S sit at the top, the teal-framed matrix with green and red columns sits below; the working lines are gone.",
+      "duration": 45,
+      "arc_step": 3,
+      "interactive": [
+        {
+          "id": "shear_amount",
+          "control": "slider",
+          "label": "Shear amount",
+          "changes": "How far the shear pushes sideways, from none to a strong shear (default: the storyboarded shear); the final grid, the landing spot of e1, the S matrix and the first column of the product all follow it",
+          "discover": "The columns of the product are always S applied to the columns of R; e2 never moves under the shear because the rotation has laid it on the fixed axis, so the second column never changes"
+        }
+      ]
     },
     {
-      "id": "s04_column_rule",
-      "title": "Columns of A carried by B",
-      "purpose": "Column i of BA is B applied to column i of A. This is what the plane already showed. It also rules out entry-by-entry multiplication.",
-      "shows": "In the panel, R's first column glows green: it is where the rotation sent e1. A copy of that column moves next to S, giving S times the column, and the multiplication resolves to the diagonal vector. That vector moves into the first column of SR, which glows to confirm it. On the grid, e1 pulses at the same moment, to show that it is the same arrow. Then the same thing happens in red for the second column: S leaves it unchanged, it goes into column 2 of SR, and e2 pulses. The helper copies disappear. Next, a muted wrong matrix made by multiplying R and S entry by entry appears in the panel. A muted outline of the grid it would produce fades in over the plane. It clearly does not match the grid we watched, so a cross is drawn over the wrong matrix, and the matrix and its outline fade away. Finally the general rule appears in the panel under the definition: column i of BA = B (column i of A).",
+      "id": "s04_one_matrix_any_vector",
+      "title": "The same answer for every vector",
+      "purpose": "The matrix built from e1 and e2 does the whole two-step job for any vector: (SR) v = S(R v). This equation is what the product means.",
+      "shows": "The plane eases back to rest on the ghost grid, which now simply serves as a still reference so coordinates stay readable; e1 and e2 are home. A yellow test vector v grows from the origin, labelled v. Only v moves in this scene. First the two-step route: v turns under the rotation (R glows blue in the panel) and leaves a thin faint trail; pause; then it slides under the shear (S glows gold), leaving a second trail, and a small muted dot marks where its tip has landed. Hold. Then v eases back home along a calm path, pauses, and takes the direct route: the teal-framed matrix glows and v travels in one single move (matrix entries blended from the identity), drawing a third trail that closes a thin triangle of paths, and its tip arrives exactly on the dot. Hold longer. Only now does the name appear: the label SR writes itself in teal beside the teal-framed matrix, and beneath it the equation (SR) v = S(R v) forms, with v in yellow, R in blue, S in gold. The trails and the dot fade.",
       "key_points": [
-        "Column 1 of R is where e1 went first. S carries it on to column 1 of SR",
-        "Column 2 of R is where e2 went first. S carries it on to column 2 of SR",
-        "Multiplying entry by entry gives a grid that does not match the composite motion",
-        "The rule: column i of BA = B times column i of A"
+        "Send v through R, then through S: the two-step route",
+        "Send the same v through the single combined matrix: the direct route",
+        "Both routes end at exactly the same point, for any v",
+        "This is the definition of the product: (SR) v = S(R v)"
       ],
       "elements": [
-        "grid: the plane in the rotate-then-shear position",
-        "e1: green arrow at its final position",
-        "e2: red arrow at its final position",
-        "R: blue matrix in the panel",
-        "S: gold matrix in the panel",
-        "SR: teal composite matrix in the panel",
-        "rules: the definition (BA)v = B(Av) and the column rule, in the panel"
+        "grid: the plane at rest, coinciding with the ghost grid",
+        "e1: green arrow at home",
+        "e2: red arrow at home",
+        "v: yellow test vector, resting at its final landing spot",
+        "R matrix: blue frame, green and red columns",
+        "S matrix: gold",
+        "SR matrix: the teal-framed matrix, now labelled SR, green and red columns",
+        "definition: the equation (SR) v = S(R v) under the SR matrix"
       ],
-      "ends_with": "The grid is in the rotate-then-shear position with e1 and e2 at their final positions. The panel shows S R = SR with the teal matrix, and below it the definition and the column rule. No helper copies or wrong matrices remain.",
+      "ends_with": "The grid is at rest with e1 and e2 at home and the yellow vector v sitting at the point where both routes ended; no trails or dot remain. The panel shows R and S at the top, the matrix now labelled SR in teal, and beneath it the equation (SR) v = S(R v).",
       "duration": 55,
-      "arc_step": 4
+      "arc_step": 4,
+      "interactive": [
+        {
+          "id": "v_x",
+          "control": "slider",
+          "label": "v across",
+          "changes": "The horizontal coordinate of the starting vector v, across the visible grid (default: the storyboarded v); both routes and the landing dot follow it",
+          "discover": "Wherever v starts, the two-step route and the one-matrix route land on the same point"
+        },
+        {
+          "id": "v_y",
+          "control": "slider",
+          "label": "v up",
+          "changes": "The vertical coordinate of the starting vector v, across the visible grid (default: the storyboarded v); both routes and the landing dot follow it",
+          "discover": "The triangle of paths always closes: one matrix really does the work of both motions for every vector"
+        }
+      ]
     },
     {
       "id": "s05_read_right_to_left",
-      "title": "The matrix next to v acts first",
-      "purpose": "In BA, the matrix written next to the vector acts first. So BA means first A, then B: read it from right to left.",
-      "shows": "To simplify the panel, the rules from the last scene fade out and the expression S R v appears, with v in yellow on the far right. The plane smoothly undoes the motion back to the identity. A small arrow under the expression starts at v and moves right to left. When it reaches R, R glows blue and the plane rotates. Pause. When it reaches S, S glows gold and the plane shears. The arrow fades, and S R v turns into SR v with the teal matrix. On the grid, the order in which the motions played matches the right-to-left order of the symbols. The general statement BA = first A, then B is shown only through symbols: under B A, small arrows point right to left, with an A in the first position and a B in the second.",
+      "title": "Right to left",
+      "purpose": "In S(R v) the matrix next to v acts first, so SR means first R, then S; in general BA means first A, then B.",
+      "shows": "v eases back to its starting position. In the lower panel the equation simplifies in place to the bare expression S R v, large, with v on the right. Then the whole plane moves, with v riding along: as the plane rotates, the letter R, the one touching v, glows blue and a small muted numeral 1 eases in beneath it; pause; as the plane shears, the letter S glows gold and a numeral 2 eases in beneath it. The glow has travelled from right to left, against the reading direction, and a thin muted arrow sweeps leftward under the expression from the 1 to the 2 to confirm it. Hold. Finally the letters S and R in the expression change in place into B and A (text colour), keeping v, the numerals 1 and 2 and the leftward arrow exactly where they are, and the expression completes to (BA) v = B(A v): the same reading order for any two matrices.",
       "key_points": [
-        "v sits on the right, so the matrix next to it, R, touches it first",
-        "S acts second, on the result",
-        "SR means 'rotate, then shear', read from right to left"
+        "The matrix written next to v is the one that touches v first",
+        "So the motions happen in right-to-left order: R is 1, S is 2",
+        "SR means first R, then S",
+        "In general: BA means first A, then B, and (BA) v = B(A v)"
       ],
       "elements": [
-        "grid: the plane in the rotate-then-shear position",
-        "e1: green arrow at its final position",
-        "e2: red arrow at its final position",
-        "S: gold matrix in the panel",
-        "R: blue matrix in the panel",
-        "SR: teal composite matrix in the panel, labelled SR"
+        "grid: the plane in its rotated-then-sheared position",
+        "ghost grid: faint muted starting grid",
+        "e1: green arrow at its final landing spot",
+        "e2: red arrow at its final landing spot",
+        "v: yellow vector at its landing spot",
+        "R matrix and S matrix: blue and gold, top of the panel",
+        "SR matrix: teal label and frame, green and red columns",
+        "order formula: (BA) v = B(A v) with numeral 1 under A, numeral 2 under B and a leftward arrow"
       ],
-      "ends_with": "The grid is in the rotate-then-shear position with e1 and e2 at their final positions. The panel shows S R = SR in teal, with a small right-to-left arrow under S R.",
+      "ends_with": "The plane rests in the rotated-then-sheared position over the ghost grid, with e1, e2 and v at their landing spots. The panel shows R and S at the top, the SR matrix in the middle, and below it (BA) v = B(A v) with a small 1 under A, a small 2 under B and a thin arrow pointing leftward beneath them.",
       "duration": 40,
-      "arc_step": 5
+      "arc_step": 5,
+      "interactive": []
     },
     {
-      "id": "s06_reverse_the_order",
-      "title": "Shear, then rotate",
-      "purpose": "Doing the motions in the opposite order gives a different final grid and a different matrix, RS, which is not SR. Order matters.",
-      "shows": "The current plane shrinks smoothly into the left half of the geometry area. It keeps its rotate-then-shear position and its teal label SR. A second plane fades in on the right half at the identity, with its own green e1 and red e2. On the right, the shear plays first: e1 stays still on the axis and e2 tilts to the diagonal. Pause. Then the rotation plays: e1 swings up to point straight up, and e2 swings to the upper left. The left plane stays still the whole time, so there is only one motion at a time. In the panel, R S appears and fills in as the purple RS matrix, with its columns taken from the right plane's final arrows. Both final grids are held side by side. Then a muted outline of the right grid and its arrows slides over the left plane. e1 points to the diagonal in one and straight up in the other, and the two grids clearly do not match. The outline slides back and fades. A ≠ sign appears between SR and RS in the panel.",
+      "id": "s06_swap_the_order",
+      "title": "The same motions, swapped",
+      "purpose": "Running the shear first and the rotation second sends e1 and e2 to different places, so the product RS has different columns from SR.",
+      "shows": "v and the order formula fade away and the plane eases back to rest; the ghost grid fades out, since two grids are about to share the space. The grid, with its e1 and e2, then shrinks calmly and glides into the left half of the geometry area, its lines warming to teal, with the short tag SR above it; an identical grid with its own green e1 and red e2 fades in on the right half, lines in purple, tagged RS. Both start in the same resting position. Now the two play in step. Step one: the left plane rotates (R glows) while the right plane shears (S glows); on the right, e1 lies on the horizontal axis and stays put, while e2 leans over. Pause. Step two: the left plane shears while the right plane rotates, carrying both right-hand arrows round a quarter turn. Hold: the two final grids, side by side, visibly lean in different ways, and the arrows point to different places. Then the right-hand arrows are read off as before: the landing spot of its e1 fills the green first column, and the landing spot of its e2 the red second column, of a new purple-framed matrix labelled RS, which builds beneath the SR matrix in the panel.",
       "key_points": [
-        "Shearing first leaves e1 alone and tilts e2. Rotating afterwards carries both on",
-        "Reading off the final arrows gives RS",
-        "Laid on top of each other, the two final grids disagree: e1 lands in different places",
-        "SR ≠ RS: the same two motions in a different order give a different map"
+        "Same two motions, opposite order, started from the same grid",
+        "Shear first: e1 does not move, e2 leans; then both turn",
+        "e1 and e2 end in different places than before",
+        "Reading off the columns gives RS, a different matrix from SR"
       ],
       "elements": [
-        "grid_SR: left plane in the rotate-then-shear position, with e1 and e2",
-        "grid_RS: right plane in the shear-then-rotate position, with e1 and e2",
-        "e1: green arrows in both planes",
-        "e2: red arrows in both planes",
-        "SR: teal matrix in the panel",
-        "RS: purple matrix in the panel, with ≠ between SR and RS"
+        "left grid: teal plane tagged SR, rotated then sheared, with its e1 (green) and e2 (red)",
+        "right grid: purple plane tagged RS, sheared then rotated, with its e1 (green) and e2 (red)",
+        "R matrix and S matrix: blue and gold, top of the panel",
+        "SR matrix: teal frame, green and red columns",
+        "RS matrix: purple frame, green and red columns, below SR"
       ],
-      "ends_with": "Two planes side by side: on the left the rotate-then-shear grid, on the right the shear-then-rotate grid, each with its green e1 and red e2. The panel shows the teal SR ≠ the purple RS.",
+      "ends_with": "Two half-size planes sit side by side in the geometry area: on the left the teal grid tagged SR in its rotated-then-sheared position, on the right the purple grid tagged RS in its sheared-then-rotated position, each with its own green e1 and red e2. The panel shows R and S at the top, then the SR matrix, then the RS matrix, each with green and red columns.",
       "duration": 55,
-      "arc_step": 6
+      "arc_step": 6,
+      "interactive": [
+        {
+          "id": "shear_amount",
+          "control": "slider",
+          "label": "Shear amount",
+          "changes": "The strength of the shear used in both orders, from none to a strong shear (default: the storyboarded shear); both final grids, all four arrows and both product matrices follow it",
+          "discover": "With no shear the two grids agree; as soon as the shear is switched on the two orders drift apart, and more shear means a bigger difference"
+        }
+      ]
     },
     {
-      "id": "s07_sometimes_equal",
-      "title": "Usually different, sometimes equal",
-      "purpose": "AB ≠ BA in general, but not always. Two rotations give the same result in either order, so whether the order matters depends on the motions.",
-      "shows": "Both planes smoothly undo their motions back to the identity at the same time. In the panel, SR ≠ RS moves to the top and becomes smaller. On the left, the plane rotates by a quarter turn, pauses, then rotates by an eighth of a turn. On the right, it rotates by an eighth of a turn, pauses, then rotates by a quarter turn. These play one after the other, never at the same time. Both final grids are held side by side, and they look the same. A muted outline of the right grid slides onto the left plane and lines up exactly with it, arrow for arrow. It slides back and fades. Under SR ≠ RS, the panel now shows the two rotation products in both orders, joined by an = sign. The final frame holds both comparisons in the panel: unequal for the shear and rotation, equal for the two rotations.",
+      "id": "s07_two_grids_do_not_match",
+      "title": "Two different grids",
+      "purpose": "Laid on top of each other, the two results clearly do not coincide: SR and RS are different maps, so the two products are different matrices.",
+      "shows": "The two planes glide toward the centre of the geometry area and grow back to full size until their origins coincide; the tags SR and RS settle near the top corners of the geometry area. The teal lines and the purple lines cross each other instead of lying on top of one another. The two green arrows point to different spots, and so do the two red arrows; a thin muted arc briefly spans the gap between each pair of same-coloured tips and then fades. In the panel the SR matrix and the RS matrix move onto one line, and the entries where they disagree pulse once together with the arrows that produced them; a not-equal sign eases in between the two matrices. Hold on the mismatched overlay.",
       "key_points": [
-        "Two rotations done in either order land the grid in the same place",
-        "So some pairs of matrices do commute",
-        "Non-commutativity means 'not in general', not 'never'"
+        "Overlay the two final grids on a shared origin",
+        "The grid lines do not coincide, and neither do the landing spots of e1 or of e2",
+        "Different landing spots mean different columns",
+        "SR ≠ RS"
       ],
       "elements": [
-        "grid_left: left plane after the quarter turn and then the eighth turn",
-        "grid_right: right plane after the eighth turn and then the quarter turn",
-        "e1: green arrows in both planes",
-        "e2: red arrows in both planes",
-        "comparison: SR ≠ RS above, and the two rotation products with = below, in the panel"
+        "teal grid: result of first R then S, with its e1 and e2, tagged SR",
+        "purple grid: result of first S then R, with its e1 and e2, tagged RS",
+        "R matrix and S matrix: blue and gold, top of the panel",
+        "SR matrix: teal frame, green and red columns",
+        "RS matrix: purple frame, green and red columns",
+        "not-equal sign: between the SR and RS matrices"
       ],
-      "ends_with": "Two planes rotated by the same total angle, matching exactly, each with green e1 and red e2. The panel shows SR ≠ RS above and the equality of the two rotation products below. Hold still.",
-      "duration": 45,
-      "arc_step": 7
+      "ends_with": "One full-size picture: the teal SR grid and the purple RS grid overlaid on a common origin, visibly not matching, each with its own green and red arrow and its tag. The panel shows R and S at the top and, below, the SR matrix and the RS matrix on one line with a not-equal sign between them.",
+      "duration": 35,
+      "arc_step": 6,
+      "interactive": [
+        {
+          "id": "rotation_angle",
+          "control": "slider",
+          "label": "Rotation angle",
+          "changes": "The angle of the rotation used in both orders, from no turn to a half turn (default: the quarter turn); both overlaid grids, their arrows, both matrices and the sign between them follow it",
+          "discover": "For almost every angle the grids disagree, but at no turn and at a half turn they fall exactly on top of each other: order usually matters, not always"
+        },
+        {
+          "id": "show_rs",
+          "control": "toggle",
+          "label": "RS grid",
+          "changes": "Shows or hides the purple sheared-then-rotated grid and its arrows on the overlay (default: shown)",
+          "discover": "Switching one grid off and on makes it easy to see, line by line and arrow by arrow, where the two results differ"
+        }
+      ]
+    },
+    {
+      "id": "s08_in_general_not_always",
+      "title": "Usually different, sometimes the same",
+      "purpose": "AB ≠ BA in general because the order of motions matters, yet some pairs, such as two rotations, give the same result either way; and in every case the columns of BA are B applied to the columns of A.",
+      "shows": "Both overlaid grids ease back to rest, where they merge into what looks like a single grid. In the panel the two product matrices shrink to the compact line SR ≠ RS, and the S matrix gives way to a second, smaller rotation Q in the text colour. Now the two grids are run through two rotations in opposite orders, in step: the teal one does the quarter turn first and the small turn second, the purple one the small turn first and the quarter turn second. Halfway they are visibly apart; at the end they glide exactly onto each other, every line and both pairs of arrows coinciding. Hold longer, and the line QR = RQ eases in beneath SR ≠ RS. Then both grids ease back to rest, pause, and in one calm blended move each travels to its rotation-and-shear result from before, so the mismatched teal and purple overlay returns. Above the two concrete lines the general statement AB ≠ BA eases in, with the two cases beneath it showing one pair that differs and one pair that agrees. Last, the R and Q matrices fade from the top of the panel and the column rule takes their place: BA written as a bracket whose first column is B applied to the first column of A in green and whose second column is B applied to the second column of A in red. Hold on the final picture.",
+      "key_points": [
+        "Two rotations in either order: different halfway, identical at the end",
+        "So some pairs do agree: QR = RQ",
+        "Rotation and shear do not: SR ≠ RS",
+        "In general AB ≠ BA, because order of motions matters",
+        "Columns of BA are B applied to the columns of A"
+      ],
+      "elements": [
+        "teal grid: first R then S result, with its e1 and e2",
+        "purple grid: first S then R result, with its e1 and e2",
+        "column rule: BA as a bracket with columns B·(column 1 of A) in green and B·(column 2 of A) in red",
+        "general statement: AB ≠ BA",
+        "examples: the lines SR ≠ RS and QR = RQ beneath it"
+      ],
+      "ends_with": "The mismatched teal and purple grids overlaid on a common origin, each with its green and red arrow. In the panel, top to bottom: the column rule for BA with a green first column and a red second column, then AB ≠ BA, then the two small lines SR ≠ RS and QR = RQ. Held still to close the film.",
+      "duration": 60,
+      "arc_step": 7,
+      "interactive": [
+        {
+          "id": "second_angle",
+          "control": "slider",
+          "label": "Angle of Q",
+          "changes": "The angle of the second rotation Q, from no turn to a half turn (default: the storyboarded small turn); the halfway positions and the final position of both grids in the two-rotation run follow it",
+          "discover": "However the second angle is chosen, the two orders of rotation always finish on the same grid: rotations about the origin commute with each other"
+        }
+      ]
     }
   ],
   "teaching_plan": {
-    "learning_goal": "The student can explain why the product BA is the matrix of doing A first and then B. They can work out BA without a formula by tracking where e1 and e2 land: the columns of A get carried along by B. They can say why AB and BA usually differ, using the rotation and shear as the example: doing two motions in a different order moves the grid somewhere different.",
+    "learning_goal": "The student can explain that the product BA is the single matrix for 'first A, then B', can build it column by column by following where e1 and e2 land (column i of BA = B times column i of A), and can show with the rotation-and-shear pair why swapping the order usually gives a different matrix.",
     "prerequisites": [
-      "A linear map of R^2 is fully determined by where it sends e1 and e2",
-      "The columns of a matrix are the images of e1 and e2 (column 1 = A e1, column 2 = A e2)",
-      "How to compute a matrix–vector product A v and read it as moving the vector v",
-      "Seeing a 2×2 matrix as a motion of the whole grid (grid lines stay straight, parallel and evenly spaced, and the origin stays fixed)",
-      "Recognising R = [[0,-1],[1,0]] as a 90° counterclockwise rotation and S = [[1,1],[0,1]] as a horizontal shear"
+      "A 2x2 matrix describes a linear map of the plane: the grid moves, lines stay straight and evenly spaced, and the origin stays fixed",
+      "The columns of a matrix are the landing spots of e1 and e2",
+      "Applying a matrix to a vector: A v = x·(column 1) + y·(column 2) for v = (x, y)",
+      "A linear map is fully determined by where e1 and e2 go"
     ],
-    "key_insight": "Doing one motion after another is a single motion, so it has one matrix. To find that matrix, you only need to watch where e1 and e2 finally land. That is why column i of BA is B applied to column i of A, and why the order matters.",
+    "key_insight": "A matrix product is not a new arithmetic rule to memorise. It is the record of where e1 and e2 end up after two motions are done one after the other. The columns of BA are what B does to the columns of A, so a different order of motions gives a different final grid and a different matrix.",
     "misconceptions": [
-      "Reading BA left to right as 'first B, then A' instead of 'first A, then B' (it acts on v from the right, like B(A v))",
-      "Thinking matrix multiplication is entry by entry ([[a,b],[c,d]]·[[e,f],[g,h]] = [[ae,bf],[cg,dh]])",
-      "Assuming order doesn't matter because ordinary number multiplication is commutative (expecting SR = RS)",
-      "Believing that composing two maps needs a new computation for every point, instead of just following e1 and e2 (forgetting that the composite is still linear)",
-      "Mixing up the column rule: thinking column i of BA is A times column i of B",
-      "Overcorrecting to 'AB is never equal to BA', when it only fails in general and some pairs, like two rotations, do commute"
+      "BA means 'first B, then A' because we read left to right (in fact the matrix next to the vector acts first)",
+      "Matrix multiplication is commutative like multiplication of numbers, so AB = BA",
+      "The product is formed by multiplying matching entries",
+      "The row-times-column recipe is an arbitrary rule with no meaning behind it",
+      "The composite of two linear maps might be something more complicated than a linear map, needing more than one matrix",
+      "AB ≠ BA means matrices never commute (it only fails in general; some pairs do agree)"
     ],
-    "concrete_example": "The 90° rotation R and the horizontal shear S act on the grid of the plane, with e1 drawn in one colour and e2 in another. Rotate first and then shear: e1 goes to (0,1) and then to (1,1), and e2 goes to (-1,0), where the shear leaves it alone. Reading off the final arrows gives SR = [[1,-1],[1,0]]. In the reverse order, shear first and then rotate: e1 stays at (1,0) and is rotated to (0,1), while e2 is sheared to (1,1) and rotated to (-1,1). That gives RS = [[0,-1],[1,1]]. Put side by side, the two final grids are visibly different, and e1 ends up at (1,1) in one and (0,1) in the other.",
+    "concrete_example": "The quarter-turn R = [[0,-1],[1,0]] and the shear S = [[1,1],[0,1]] acting on the grid of R^2, with e1 and e2 followed as coloured arrows. First rotate then shear: e1 goes (1,0) -> (0,1) -> (1,1) and e2 goes (0,1) -> (-1,0) -> (-1,0), giving SR = [[1,-1],[1,0]]. Then shear first and rotate second: e1 goes (1,0) -> (1,0) -> (0,1) and e2 goes (0,1) -> (1,1) -> (-1,1), giving RS = [[0,-1],[1,1]]. The two final grids are visibly different.",
     "arc": [
       {
-        "step": "Doing R and then S is a motion of the plane you can watch from start to finish, and the end result still looks like a linear map: straight, parallel, evenly spaced grid lines and a fixed origin.",
-        "why_now": "This rests only on the prerequisite picture of a matrix as a grid motion. It raises the question the rest of the film answers: if the end result is one linear map, what is its matrix?",
-        "visual_idea": "The grid with coloured e1 and e2 rotates 90° (R), pauses, then shears (S). Then the animation replays as one smooth motion from the original grid straight to the final grid, with a ghost of the original left behind. A caption asks: 'Is this one linear map? Which matrix?'"
+        "step": "Doing two linear motions in a row, first the rotation R and then the shear S, leaves a grid that still has straight, evenly spaced lines and a fixed origin. So the combined motion is itself one linear map.",
+        "why_now": "It starts with something the viewer can simply watch, using only the earlier picture of a matrix as a grid motion. It also raises the question that drives the film: if the result is a linear map, what is its matrix?",
+        "visual_idea": "The grid with e1 (green) and e2 (red) rotates a quarter turn, pauses, then shears to the right. The intermediate grid fades and the film replays the start-to-end motion as one smooth move, with a faint ghost of the original grid behind it. A question mark sits inside an empty 2x2 bracket."
       },
       {
-        "step": "Because the composite is linear, its matrix comes from tracking only e1 and e2 through both motions. That gives SR = [[1,-1],[1,0]].",
-        "why_now": "It reuses the earlier lesson that columns are the images of e1 and e2, now applied to a two-stage motion. The answer is found by watching before any product formula appears.",
-        "visual_idea": "Leave just the two basis arrows. e1 swings to (0,1) under R, then slides to (1,1) under S, and its trail is kept. e2 swings to (-1,0) under R, then stays put under S because it lies on the x-axis, and that pause is highlighted. The two final arrows drop into a matrix bracket as its columns: [[1,-1],[1,0]]."
+        "step": "The matrix of the combined motion can be read off by following e1 and e2 through both steps: e1 lands on (1,1) and e2 lands on (-1,0), so the matrix is [[1,-1],[1,0]].",
+        "why_now": "The viewer already knows that columns are the landing spots of the basis vectors. Applying that fact to the two-step motion produces the answer before any product notation appears.",
+        "visual_idea": "Follow e1 alone: it turns to (0,1), then the shear pushes it to (1,1), and its coordinates drop into the first column of the empty bracket. Then follow e2: it turns to (-1,0), which lies on the horizontal axis, so the shear leaves it there, and its coordinates fill the second column. The bracket now reads [[1,-1],[1,0]]."
       },
       {
-        "step": "The product of two matrices is defined to be the matrix of this composite: (BA)v = B(Av) for every v. The single matrix SR does in one step what R and then S do in two.",
-        "why_now": "Only now, after the composite matrix has been seen and read off, does it get a name and a definition. Name things after they have been seen.",
-        "visual_idea": "A sample vector v (say (2,1)) takes two routes on a split screen. The top route applies R, then S, as two hops. The bottom route applies the single matrix SR in one hop. Both land on the same point. The equation (SR)v = S(Rv) is written underneath, with arrows linking each side to its route."
+        "step": "The intermediate positions of e1 and e2 are the columns of R, and the final positions are S applied to those columns. This is the column rule: column i of SR equals S times column i of R.",
+        "why_now": "The viewer has just watched this happen and only needs it named. Turning the motion into a rule comes after the motion has been seen.",
+        "visual_idea": "Freeze the halfway frame, with the arrows at (0,1) and (-1,0), and show the matrix R beside it with its columns glowing in the same green and red. Then S acts on each coloured column separately: S·(0,1) = (1,1) and S·(-1,0) = (-1,0). The two results slide together into the matrix from step 2, with the colours carried through."
       },
       {
-        "step": "Column rule: column i of BA is B applied to column i of A. Column i of A is where A sent e_i, and B just carries it further.",
-        "why_now": "Step 2 already did this, so the rule is a summary of what was watched, not a new trick. Stating it now blocks entrywise multiplication and the A-times-columns-of-B mix-up before any computing.",
-        "visual_idea": "R and S are written side by side, and R's first column (0,1) is highlighted in e1's colour. It lifts out, passes through S like a machine, and comes out as (1,1), which slots into column 1 of SR. The same happens for column 2: (-1,0) becomes (-1,0). Briefly, a wrong entrywise 'product' of R and S flashes up, and its grid is drawn: it doesn't match the composite motion we watched, so it gets crossed out."
+        "step": "This one matrix does the whole job for every vector, not just e1 and e2: (SR) v = S(R v). That equation is the definition of the product, and in general (BA) v = B(A v).",
+        "why_now": "With the matrix built from the basis vectors, the viewer needs to see that it handles any vector. This justifies calling it 'the' matrix of the composite and motivates the general definition.",
+        "visual_idea": "A yellow test vector v = (2,1) takes the two-step route: R sends it to (-1,2), then S sends it to (1,2). A second copy of v takes the direct route, with the single matrix [[1,-1],[1,0]] applied in one move, and lands on the same point (1,2). The two paths form a triangle that closes, and the equation (SR) v = S(R v) is written underneath."
       },
       {
-        "step": "Order convention: in BA, the matrix next to the vector acts first. So BA means first A, then B, read right to left.",
-        "why_now": "The student has now written SR for 'rotate, then shear'. The mismatch with left-to-right reading is clear and needs fixing before the order is reversed.",
-        "visual_idea": "The expression S R v, with v on the right. An arrow sweeps right to left: v is first grabbed by R (the grid rotates in a small inset), then by S (the inset grid shears). A left-to-right reading 'S first' is played in a faded side panel and leads to a different picture, a teaser for the next step."
+        "step": "The order of writing is right to left. In S(R v) the matrix next to v acts first, so SR means 'first R, then S', and BA means 'first A, then B'.",
+        "why_now": "The notation S(R v) is on screen, so this is the natural moment to settle the reading order. It must be fixed before the order is swapped in the next step.",
+        "visual_idea": "In the expression S R v, the vector v sits on the right. R lights up first as the grid rotates, then S lights up as the grid shears, so the highlight moves right to left. Small labels '1st' under R and '2nd' under S appear, and an arrow sweeps leftward across the product."
       },
       {
-        "step": "Reversing the order gives a different motion and a different matrix: RS = [[0,-1],[1,1]], which is not SR. Order matters.",
-        "why_now": "This is the key insight in its sharpest form. All the tools are ready (tracking e1 and e2, the column rule, the right-to-left order), so the student can predict the result and then see it confirmed.",
-        "visual_idea": "Split screen, both starting from the same grid. Left: rotate, then shear. Right: shear, then rotate. The two play at the same time. On the right, e1 is untouched by the shear and then rotates to (0,1), while e2 is sheared to (1,1) and then rotates to (-1,1). The two final grids sit next to each other, then one is laid over the other: e1 points to (1,1) in one and (0,1) in the other, so they clearly don't match. The matrices SR and RS appear under each panel."
+        "step": "Doing the same two motions in the opposite order, first S then R, sends e1 to (0,1) and e2 to (-1,1), so RS = [[0,-1],[1,1]]. This is a different grid and a different matrix from SR = [[1,-1],[1,0]].",
+        "why_now": "This is the payoff. The viewer can now build a product from columns and read the order correctly, so they can run the swapped version themselves and see the result differ.",
+        "visual_idea": "Split screen with two identical starting grids. On the left the grid rotates then shears; on the right it shears then rotates, in sync. On the right e1 is untouched by the shear and then turns to (0,1), while e2 shears to (1,1) and then turns to (-1,1). The final grids are overlaid in two colours and clearly do not match, and the two matrices appear beneath with SR ≠ RS."
       },
       {
-        "step": "AB ≠ BA in general, but not always. Some pairs of motions, like two rotations, give the same result in either order. Non-commutativity is a fact about motions, not a rule that products are never equal.",
-        "why_now": "This consolidates the insight by marking its limits, and it stops the 'never equal' overcorrection. It also links to the exercise of computing RS and SR and checking that they differ.",
-        "visual_idea": "A quick second split screen: rotate 90° then 45°, versus rotate 45° then 90°. Both grids end in the same place and overlap exactly. Then a short everyday contrast: a book is rotated then flipped, versus flipped then rotated, and ends up in different poses. Final frame: the shear-and-rotation panels (different) next to the two-rotations panels (same), labelled 'usually different, sometimes equal'."
+        "step": "AB ≠ BA in general because the order of motions matters, but 'in general' does not mean 'never': two rotations give the same result in either order.",
+        "why_now": "This consolidates the insight by marking its boundary. It prevents the overcorrection that matrices never commute, and it keeps the reason tied to motions.",
+        "visual_idea": "A short contrast clip: two rotations applied in both orders on a split screen land on identical grids, and a quiet equals sign appears. Then cut back to the mismatched rotation-and-shear overlay with AB ≠ BA and the words 'in general'. Close on the column rule in colour: the columns of BA are B applied to the columns of A."
       }
     ]
   },

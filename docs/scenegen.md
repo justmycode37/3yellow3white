@@ -56,4 +56,5 @@ plugin folder next to the repo and its `scripts/bootstrap.ps1` run once.
 
 `examples/lecture-linear-algebra/` holds a short test lecture (`lecture.pdf`) and the
 pipeline output for it: `topics.json`, and per topic the storyboard (with its teaching
-plan), the first two animlib scenes, the manifest and the narration script.
+plan), the first animlib scenes, the manifest and the narration script. Topic 3 was
+generated with interactive elements and includes its scene prompts (`prompts/all_scenes.md`).

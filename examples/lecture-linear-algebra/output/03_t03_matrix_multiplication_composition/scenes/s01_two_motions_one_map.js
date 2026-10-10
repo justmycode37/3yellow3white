@@ -1,159 +1,149 @@
 export default scene({ mode: "2d", end: "advance", background: "BLACK" }, s => {
-  // ---------- layout ----------
-  const OX = -2.5, OY = 0;          // origin of the plane (left two thirds)
-  const RAD = 3.15;                 // the grid is drawn inside a disc, so it never reaches the panel
-  const N = 3;
-
-  // ---------- fixed text panel (right third), present from the first frame ----------
-  const panel = s.rectangle("panel", {
-    width: 4.2, height: 7.2, position: [4.6, 0, -0.2],
-    fill: "GREY_E", stroke: "GREY_C", strokeWidth: 0.02,
+  // ---------- control ----------
+  const deg = s.slider("rotation_angle", {
+    label: "Rotation angle", default: 90, min: 0, max: 180, step: 15,
+    position: [0.05, 0.80], width: 220,
   });
+  const th = deg * Math.PI / 180;
+  const c = Math.cos(th), sn = Math.sin(th);
 
-  // ---------- ghost of the original grid (muted, sits behind everything) ----------
+  // ---------- fixed layout ----------
+  const OX = -2.35;          // origin of the plane (centre of the geometry area)
+  const U = 1.3;             // world length of one grid unit
+  const PX = 4.74;           // centre of the text panel
+  const N = 10;              // moving grid: lines -N..N
+  const G = 5;               // ghost grid: lines -G..G
+
+  // ---------- linear algebra helpers (plane coordinates) ----------
+  const mul = (A, B) => [
+    [A[0][0] * B[0][0] + A[0][1] * B[1][0], A[0][0] * B[0][1] + A[0][1] * B[1][1]],
+    [A[1][0] * B[0][0] + A[1][1] * B[1][0], A[1][0] * B[0][1] + A[1][1] * B[1][1]],
+  ];
+  const ap = (A, p) => [A[0][0] * p[0] + A[0][1] * p[1], A[1][0] * p[0] + A[1][1] * p[1]];
+  const W = p => [U * p[0], U * p[1]];
+  const I2 = [[1, 0], [0, 1]];
+  const R = [[c, -sn], [sn, c]];
+  const Rinv = [[c, sn], [-sn, c]];
+  const S = [[1, 1], [0, 1]];
+  const T = mul(S, R);                 // first R, then S
+  const M = mul(Rinv, T);              // shear expressed inside the rotated group
+
+  // ---------- ghost of the starting grid (muted, behind everything) ----------
   const ghostLines = [];
-  const gridSpecs = [];
+  for (let i = -G; i <= G; i++) {
+    ghostLines.push(s.line("ghost-v-" + i, { points: [W([i, -8]), W([i, 8])], stroke: "GREY_D", strokeWidth: 0.02 }));
+    ghostLines.push(s.line("ghost-h-" + i, { points: [W([-8, i]), W([8, i])], stroke: "GREY_D", strokeWidth: 0.02 }));
+  }
+  const ghost = s.group("ghost-grid", ghostLines);
+  s.play(ghost.moveTo([OX, 0, -0.2]), { duration: 0 });
+
+  // ---------- the moving plane ----------
+  const lines = [];
   for (let i = -N; i <= N; i++) {
-    const h = Math.sqrt(RAD * RAD - i * i);
-    gridSpecs.push({ id: "v-" + i, base: [[i, -h], [i, h]], axis: i === 0 });
-    gridSpecs.push({ id: "h-" + i, base: [[-h, i], [h, i]], axis: i === 0 });
+    const axis = i === 0;
+    const style = { stroke: axis ? "GREY_A" : "GREY_C", strokeWidth: axis ? 0.03 : 0.02 };
+    const v = { a: [i, -N], b: [i, N] };
+    const h = { a: [-N, i], b: [N, i] };
+    v.el = s.line("grid-v-" + i, { points: [W(v.a), W(v.b)], ...style });
+    h.el = s.line("grid-h-" + i, { points: [W(h.a), W(h.b)], ...style });
+    lines.push(v, h);
   }
-  for (const g of gridSpecs) {
-    ghostLines.push(s.line("ghost-" + g.id, {
-      points: g.base, position: [OX, OY, -0.1],
-      stroke: "GREY_D", strokeWidth: g.axis ? 0.03 : 0.02, opacity: 0,
-    }));
-  }
+  const E1 = [1, 0], E2 = [0, 1];
+  const L1 = [0.62, -0.4], L2 = [-0.4, 0.62];   // label spots, inside a grid cell beside each tip
+  const e1 = s.arrow("e1", { points: [[0, 0], W(E1)], stroke: "GREEN", strokeWidth: 0.09, position: [0, 0, 0.1] });
+  const e2 = s.arrow("e2", { points: [[0, 0], W(E2)], stroke: "RED", strokeWidth: 0.09, position: [0, 0, 0.1] });
+  const lab1 = s.latex("e1-label", { tex: "e_1", fontSize: 0.5, fill: "GREEN", position: [U * L1[0], U * L1[1], 0.15] });
+  const lab2 = s.latex("e2-label", { tex: "e_2", fontSize: 0.5, fill: "RED", position: [U * L2[0], U * L2[1], 0.15] });
+  const plane = s.group("grid", lines.map(l => l.el).concat([e1, e2, lab1, lab2]));
+  s.play(plane.moveTo([OX, 0, 0]), { duration: 0 });
 
-  // ---------- the grid: every line lives at the plane's origin, points in plane coordinates ----------
-  const movers = [];   // everything that is carried by the linear map
-  const gridLines = [];
-  for (const g of gridSpecs) {
-    const line = s.line("grid-" + g.id, {
-      points: g.base, position: [OX, OY, 0],
-      stroke: g.axis ? "GREY_B" : "GREY_C", strokeWidth: g.axis ? 0.03 : 0.02, opacity: 0,
-    });
-    gridLines.push(line);
-    movers.push({ h: line, kind: "line", base: g.base });
-  }
-  const grid = s.group("grid", gridLines);
+  const lineTo = (A, l) => l.el.morphTo({ kind: "line", points: [W(ap(A, l.a)), W(ap(A, l.b))], closed: false });
+  const arrowTo = (A, el, p) => el.morphTo({ kind: "arrow", points: [[0, 0], W(ap(A, p))], closed: false });
+  const labelTo = (A, el, p) => { const q = ap(A, p); return el.moveTo([U * q[0], U * q[1], 0.15]); };
+  const planeTo = A => lines.map(l => lineTo(A, l)).concat([
+    arrowTo(A, e1, E1), arrowTo(A, e2, E2), labelTo(A, lab1, L1), labelTo(A, lab2, L2),
+  ]);
 
-  // ---------- basis vectors ----------
-  const e1 = s.arrow("e1", {
-    points: [[0, 0], [1, 0]], position: [OX, OY, 0.1],
-    stroke: "GREEN", strokeWidth: 0.075, opacity: 0,
-  });
-  const e2 = s.arrow("e2", {
-    points: [[0, 0], [0, 1]], position: [OX, OY, 0.1],
-    stroke: "RED", strokeWidth: 0.075, opacity: 0,
-  });
-  movers.push({ h: e1, kind: "arrow", base: [[0, 0], [1, 0]] });
-  movers.push({ h: e2, kind: "arrow", base: [[0, 0], [0, 1]] });
-
-  // label offsets from the origin (plane coordinates), chosen to stay clear of the arrows
-  const P = off => [OX + off[0], OY + off[1], 0.2];
-  const rot = (p, a) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a)];
-  const L1_START = [0.75, -0.5];
-  const L2_START = [0.5, 0.75];
-  const L1_MID = rot(L1_START, Math.PI / 4), L1_ROT = rot(L1_START, Math.PI / 2);
-  const L2_MID = rot(L2_START, Math.PI / 4), L2_ROT = rot(L2_START, Math.PI / 2);
-  const L1_END = [1.25, 0.55];
-  const L2_END = L2_ROT;            // the shear leaves e2 alone
-
-  const e1Label = s.latex("e1-label", {
-    tex: String.raw`\animpart{sym}{\mathbf{e}_1}`, position: P(L1_START),
-    fontSize: 0.42, fill: "GREEN", opacity: 0,
-  });
-  const e2Label = s.latex("e2-label", {
-    tex: String.raw`\animpart{sym}{\mathbf{e}_2}`, position: P(L2_START),
-    fontSize: 0.42, fill: "RED", opacity: 0,
-  });
+  // ---------- panel (masks the plane on the right third) ----------
+  const mask = s.rectangle("panel-mask", { width: 40, height: 60, position: [22.4, 0, 0.4], fill: "BLACK", stroke: "none" });
+  const panel = s.rectangle("panel", { width: 4.3, height: 7.2, position: [PX, 0, 0.5], fill: "GREY_E", stroke: "GREY_C", strokeWidth: 0.02 });
 
   // ---------- panel formulas ----------
-  const matS = s.latex("S", {
-    tex: String.raw`\animpart{mat}{\begin{bmatrix}1 & 1\\ 0 & 1\end{bmatrix}}`,
-    position: [3.68, 2.0], fontSize: 0.4, fill: "GOLD", opacity: 0,
+  const fmt = v => {
+    const r = Math.round(v * 100) / 100;
+    if (r === 0) return "0";
+    if (Number.isInteger(r)) return String(r);
+    return String(parseFloat(r.toFixed(2)));
+  };
+  const em = str => {
+    let w = 0;
+    for (const ch of str) w += ch === "-" ? 0.78 : ch === "." ? 0.28 : 0.5;
+    return w;
+  };
+  const r11 = fmt(c), r12 = fmt(-sn), r21 = fmt(sn), r22 = fmt(c);
+  const wR = 2.16 + Math.max(em(r11), em(r21)) + Math.max(em(r12), em(r22));
+  const wS = 3.16;
+  const gap = 0.45;
+  const F = Math.min(0.42, (3.7 - gap) / (wR + wS));
+  const total = (wR + wS) * F + gap;
+  const left = PX - total / 2;
+  const xR = left + wR * F / 2;
+  const xS = left + wR * F + gap + wS * F / 2;
+  const matTex = (name, a, b, cc, d) =>
+    String.raw`\begin{array}{c}\animpart{name}{` + name + String.raw`}\\[0.25em]\begin{bmatrix}\animpart{a11}{` + a +
+    String.raw`}&\animpart{a12}{` + b + String.raw`}\\ \animpart{a21}{` + cc + String.raw`}&\animpart{a22}{` + d +
+    String.raw`}\end{bmatrix}\end{array}`;
+  const matR = s.latex("matrix-R", { tex: matTex("R", r11, r12, r21, r22), fontSize: F, fill: "BLUE", position: [xR, 2.45, 0.6], opacity: 0 });
+  const matS = s.latex("matrix-S", { tex: matTex("S", "1", "1", "0", "1"), fontSize: F, fill: "GOLD", position: [xS, 2.45, 0.6], opacity: 0 });
+
+  const frame = s.rectangle("product-frame", { width: 3.4, height: 2.3, position: [PX, -0.4, 0.55], fill: "none", stroke: "TEAL", strokeWidth: 0.03, opacity: 0 });
+  const bracket = s.latex("product-bracket", {
+    tex: String.raw`\begin{bmatrix}\phantom{-1}&\phantom{-1}\\ \phantom{-1}&\phantom{-1}\end{bmatrix}`,
+    fontSize: 0.6, fill: "WHITE", position: [PX, -0.4, 0.6], opacity: 0,
   });
-  const matR = s.latex("R", {
-    tex: String.raw`\animpart{mat}{\begin{bmatrix}0 & -1\\ 1 & 0\end{bmatrix}}`,
-    position: [5.35, 2.0], fontSize: 0.4, fill: "BLUE", opacity: 0,
-  });
-  const bracket = s.latex("SR_bracket", {
-    tex: String.raw`\animpart{mat}{\begin{bmatrix}\phantom{1} & \phantom{-1}\\ \phantom{1} & \phantom{0}\end{bmatrix}}`,
-    position: [4.6, 0.4], fontSize: 0.4, fill: "TEAL", opacity: 0,
-  });
+  const question = s.latex("product-question", { tex: "?", fontSize: 0.7, fill: "WHITE", position: [PX, -0.4, 0.62], opacity: 0 });
 
-  // ---------- helpers: the plane as a function of one map ----------
-  // local points -> local points; the element's own rotation is applied afterwards
-  const morphAll = f => movers.map(m => m.h.morphTo({ kind: m.kind, points: m.base.map(f), closed: false }));
-  const rotateAll = a => movers.map(m => m.h.rotateTo(a));
-  const ident = p => [p[0], p[1]];
-  // shear S acting on the already rotated plane, written in the rotated frame: R^-1 S R
-  const shearInRotatedFrame = p => [p[0], p[1] - p[0]];
-  // the combined map SR = [[1,-1],[1,0]]
-  const SR = p => [p[0] - p[1], p[0]];
-
-  // ================= timeline (45 s) =================
-  s.wait(0.5);
-
-  // the plane with e1 and e2
-  s.play(
-    gridLines.map(l => l.fadeIn()).concat([e1.fadeIn(), e2.fadeIn(), e1Label.fadeIn(), e2Label.fadeIn()]),
-    { duration: 1.5, ease: "smooth" },
-  );
-  s.wait(1.0);
-
-  // R appears, then acts: a quarter turn driven by the angle
-  s.play(matR.fadeIn(), { duration: 1.0, ease: "smooth" });
-  s.wait(0.5);
-  s.play(rotateAll(Math.PI / 4).concat([e1Label.moveTo(P(L1_MID)), e2Label.moveTo(P(L2_MID))]),
-    { duration: 2.0, ease: "in" });
-  s.play(rotateAll(Math.PI / 2).concat([e1Label.moveTo(P(L1_ROT)), e2Label.moveTo(P(L2_ROT))]),
-    { duration: 2.0, ease: "out" });
+  // ---------- timeline (50 s) ----------
   s.wait(2.5);
 
-  // S appears to the left of R, then shears the rotated plane (entries blended from the identity)
-  s.play(matS.fadeIn(), { duration: 1.0, ease: "smooth" });
+  // 1. the rotation R: interpolated by angle; labels stay upright
+  s.play([plane.rotateTo(th), lab1.rotateTo(-th), lab2.rotateTo(-th), matR.fadeIn()], { duration: 5.5, ease: "smooth" });
+  s.wait(2);
+
+  // 2. the shear S: one parameter, (1-t) I + t S applied after the rotation
+  s.play(planeTo(M).concat([matS.fadeIn()]), { duration: 5.5, ease: "smooth" });
+  s.wait(1.5);
+
+  // the origin has not moved
+  const dot = s.circle("origin-dot", { radius: 0.1, position: [OX, 0, 0.2], fill: "WHITE", stroke: "none", opacity: 0 });
+  s.play(dot.fadeIn(), { duration: 1, ease: "smooth" });
+  s.wait(3);
+  s.play(dot.fadeOut(), { duration: 1, ease: "smooth" });
+  s.remove(dot);
   s.wait(0.5);
-  s.play(morphAll(shearInRotatedFrame).concat([e1Label.moveTo(P(L1_END))]),
-    { duration: 3.5, ease: "smooth" });
-  s.wait(2.5);
 
-  // undo smoothly: first the shear, then the rotation
-  s.play(morphAll(ident).concat([e1Label.moveTo(P(L1_ROT))]), { duration: 2.5, ease: "smooth" });
-  s.wait(0.5);
-  s.play(rotateAll(Math.PI / 4).concat([e1Label.moveTo(P(L1_MID)), e2Label.moveTo(P(L2_MID))]),
-    { duration: 1.5, ease: "in" });
-  s.play(rotateAll(0).concat([e1Label.moveTo(P(L1_START)), e2Label.moveTo(P(L2_START))]),
-    { duration: 1.5, ease: "out" });
+  // 3. ease calmly back onto the ghost
+  s.play(planeTo(I2).concat([plane.rotateTo(0), lab1.rotateTo(0), lab2.rotateTo(0)]), { duration: 5, ease: "smooth" });
+  s.wait(2);
 
-  // ghost of the original grid, underneath
-  s.play(ghostLines.map(l => l.fadeIn()), { duration: 1.0, ease: "smooth" });
-  s.wait(1.0);
-
-  // one direct motion: blend the identity into the combined matrix
-  s.play(morphAll(SR).concat([e1Label.moveTo(P(L1_END)), e2Label.moveTo(P(L2_END))]),
-    { duration: 4.5, ease: "smooth" });
-  s.wait(4.0);
-
-  // one map, so one matrix: still unknown
-  s.play(bracket.fadeIn(), { duration: 1.5, ease: "smooth" });
+  // 4. the same result as ONE motion: (1-t) I + t (S R), no stop in the middle
+  s.play(planeTo(T), { duration: 8, ease: "smooth" });
   s.wait(3.5);
 
-  // clear the helper
-  s.play(ghostLines.map(l => l.fadeOut()), { duration: 1.5, ease: "smooth" });
-  for (const l of ghostLines) s.remove(l);
-  s.wait(3.5);
+  // 5. one linear map, one matrix: which one?
+  s.play([frame.fadeIn(), bracket.fadeIn()], { duration: 2, ease: "smooth" });
+  s.wait(0.5);
+  s.play(question.fadeIn(), { duration: 1.5, ease: "smooth" });
+  s.wait(5);
 
   // ---------- handoff ----------
+  s.keep(ghost);
+  s.keep(plane);
+  s.keep(mask);
   s.keep(panel);
-  for (const l of gridLines) s.keep(l);
-  s.keep(grid);
-  s.keep(e1);
-  s.keep(e2);
-  s.keep(e1Label);
-  s.keep(e2Label);
   s.keep(matR);
   s.keep(matS);
+  s.keep(frame);
   s.keep(bracket);
+  s.keep(question);
 });

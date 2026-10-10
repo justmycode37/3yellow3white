@@ -1,67 +1,95 @@
 1
-00:00:00,600 --> 00:00:03,400
-Here's our familiar grid, with e1 and e2.
+00:00:01,000 --> 00:00:06,000
+Let's give the whole plane a quarter turn, R.
 
 2
-00:00:03,800 --> 00:00:08,300
-Let's apply a matrix R, which turns the whole plane a quarter turn.
+00:00:10,500 --> 00:00:15,500
+Then, without resetting anything, we shear it sideways with S.
 
 3
-00:00:11,000 --> 00:00:16,000
-Then a second matrix, S, shears that already rotated plane sideways.
+00:00:15,800 --> 00:00:18,800
+Notice the origin has stayed put.
 
 4
-00:00:17,000 --> 00:00:20,000
-That's two motions. Now let's rewind.
+00:00:19,000 --> 00:00:24,000
+And the lines are still straight, parallel and evenly spaced.
 
 5
-00:00:26,500 --> 00:00:31,000
-What if we go straight there, in one motion?
+00:00:24,800 --> 00:00:27,000
+Let's ease back home.
 
 6
-00:00:31,200 --> 00:00:36,200
-The lines stay straight and evenly spaced, the origin fixed.
+00:00:29,500 --> 00:00:34,500
+Can we reach that same grid in one smooth move?
 
 7
-00:00:36,500 --> 00:00:41,000
-So it's a single linear map, with one matrix.
+00:00:38,000 --> 00:00:41,500
+It lands exactly where two steps did.
 
 8
-00:00:41,400 --> 00:00:44,900
-We just don't know its columns yet.
+00:00:41,700 --> 00:00:45,800
+So it's one linear map, with one matrix.
 
 9
-00:00:46,000 --> 00:00:50,500
-To find those columns, just watch e1 and e2.
+00:00:46,000 --> 00:00:49,600
+The question is, which matrix is it?
 
 10
-00:00:53,200 --> 00:00:56,200
-The rotation swings e1 straight up.
+00:00:52,000 --> 00:00:55,500
+Let's bring e1 and e2 back home.
 
 11
-00:00:56,700 --> 00:01:01,200
-Then the shear slides it over to the diagonal.
+00:00:57,000 --> 00:01:02,000
+Now watch just the arrows as the plane turns.
 
 12
-00:01:01,500 --> 00:01:06,000
-Now e2. The rotation swings it to point left.
+00:01:02,200 --> 00:01:05,200
+e1 points up, e2 points left.
 
 13
-00:01:06,200 --> 00:01:09,200
-And the shear? Nothing at all.
+00:01:05,600 --> 00:01:10,100
+The shear slides e1 sideways, but e2 doesn't move.
 
 14
-00:01:09,400 --> 00:01:13,900
-It lies along the axis the shear leaves alone.
+00:01:10,200 --> 00:01:13,200
+It lies on the fixed axis.
 
 15
-00:01:14,500 --> 00:01:19,500
-Those two landing spots become the columns of S R.
+00:01:13,500 --> 00:01:18,500
+Read off where e1 landed: one, one. Our first column.
 
 16
-00:01:20,300 --> 00:01:23,800
-And we never used a multiplication rule.
+00:01:22,000 --> 00:01:26,500
+And e2, at minus one, zero, gives the second.
 
 17
-00:01:25,300 --> 00:01:29,800
-And the whole plane simply follows those two arrows.
+00:01:30,000 --> 00:01:34,500
+No new rule needed; we just followed two arrows.
+
+18
+00:01:36,000 --> 00:01:41,000
+Let's undo the shear and pause at the halfway point.
+
+19
+00:01:42,000 --> 00:01:46,500
+These halfway arrows are exactly the columns of R.
+
+20
+00:01:49,000 --> 00:01:54,500
+So when S shears the plane, it's acting on those columns.
+
+21
+00:01:56,000 --> 00:02:01,500
+S times the green column gives the green arrow's landing spot.
+
+22
+00:02:02,200 --> 00:02:04,700
+It matches what we found.
+
+23
+00:02:05,700 --> 00:02:10,200
+And S times the red column leaves it alone.
+
+24
+00:02:14,600 --> 00:02:19,600
+The product's columns are just S applied to R's columns.

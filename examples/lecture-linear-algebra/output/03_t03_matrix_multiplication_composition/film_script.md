@@ -1,24 +1,34 @@
 # Script: Matrix multiplication is composition
 
-## Rotate, then shear  (00:00.00 - 00:45.00)
+## Two motions in a row  (00:00.00 - 00:50.00)
 
-- **00:00.60** Here's our familiar grid, with e1 and e2.
-- **00:03.80** Let's apply a matrix R, which turns the whole plane a quarter turn.
-- **00:11.00** Then a second matrix, S, shears that already rotated plane sideways.
-- **00:17.00** That's two motions. Now let's rewind.
-- **00:26.50** What if we go straight there, in one motion?
-- **00:31.20** The lines stay straight and evenly spaced, the origin fixed.
-- **00:36.50** So it's a single linear map, with one matrix.
-- **00:41.40** We just don't know its columns yet.
+- **00:01.00** Let's give the whole plane a quarter turn, R.
+- **00:10.50** Then, without resetting anything, we shear it sideways with S.
+- **00:15.80** Notice the origin has stayed put.
+- **00:19.00** And the lines are still straight, parallel and evenly spaced.
+- **00:24.80** Let's ease back home.
+- **00:29.50** Can we reach that same grid in one smooth move?
+- **00:38.00** It lands exactly where two steps did.
+- **00:41.70** So it's one linear map, with one matrix.
+- **00:46.00** The question is, which matrix is it?
 
-## Follow e1 and e2  (00:45.00 - 01:35.00)
+## Follow e1 and e2  (00:50.00 - 01:35.00)
 
-- **00:46.00** To find those columns, just watch e1 and e2.
-- **00:53.20** The rotation swings e1 straight up.
-- **00:56.70** Then the shear slides it over to the diagonal.
-- **01:01.50** Now e2. The rotation swings it to point left.
-- **01:06.20** And the shear? Nothing at all.
-- **01:09.40** It lies along the axis the shear leaves alone.
-- **01:14.50** Those two landing spots become the columns of S R.
-- **01:20.30** And we never used a multiplication rule.
-- **01:25.30** And the whole plane simply follows those two arrows.
+- **00:52.00** Let's bring e1 and e2 back home.
+- **00:57.00** Now watch just the arrows as the plane turns.
+- **01:02.20** e1 points up, e2 points left.
+- **01:05.60** The shear slides e1 sideways, but e2 doesn't move.
+- **01:10.20** It lies on the fixed axis.
+- **01:13.50** Read off where e1 landed: one, one. Our first column.
+- **01:22.00** And e2, at minus one, zero, gives the second.
+- **01:30.00** No new rule needed; we just followed two arrows.
+
+## S acts on the columns of R  (01:35.00 - 02:20.00)
+
+- **01:36.00** Let's undo the shear and pause at the halfway point.
+- **01:42.00** These halfway arrows are exactly the columns of R.
+- **01:49.00** So when S shears the plane, it's acting on those columns.
+- **01:56.00** S times the green column gives the green arrow's landing spot.
+- **02:02.20** It matches what we found.
+- **02:05.70** And S times the red column leaves it alone.
+- **02:14.60** The product's columns are just S applied to R's columns.

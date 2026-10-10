@@ -14,6 +14,7 @@ import json
 import re
 
 TEXT_FIELDS = ("title", "purpose", "shows", "ends_with")
+CONTROL_KINDS = {"slider", "toggle", "select"}
 
 
 def starts_with(storyboard, index):
@@ -72,6 +73,22 @@ def validate(storyboard):
         duration = scene.get("duration")
         if not isinstance(duration, (int, float)) or not 10 <= duration <= 90:
             errors.append(f"{path}: duration must be 10-90 seconds")
+        controls = scene.get("interactive", [])
+        if not isinstance(controls, list) or len(controls) > 2:
+            errors.append(f"{path}: 'interactive' must be a list of at most 2 controls")
+        else:
+            seen = set()
+            for c in controls:
+                cid = c.get("id") if isinstance(c, dict) else None
+                if not isinstance(cid, str) or not re.fullmatch(r"[a-z0-9_]+", cid) or cid in seen:
+                    errors.append(f"{path}: interactive ids must be unique snake_case, got {cid!r}")
+                    continue
+                seen.add(cid)
+                if c.get("control") not in CONTROL_KINDS:
+                    errors.append(f"{path}: interactive '{cid}': control must be one of {sorted(CONTROL_KINDS)}")
+                for key in ("label", "changes", "discover"):
+                    if not isinstance(c.get(key), str) or not c[key].strip():
+                        errors.append(f"{path}: interactive '{cid}': '{key}' must be non-empty text")
         if "starts_with" in scene:
             errors.append(f"{path}: do not write starts_with; it is the previous scene's ends_with")
     return errors

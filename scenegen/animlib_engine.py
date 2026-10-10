@@ -121,6 +121,8 @@ On screen at the end, with the same names and roles used across the film:
 You choose the concrete example (numbers, vectors, positions) and how to animate it.
 Pick values that make the idea easy to see and keep them consistent with the START scene.
 
+{animation_prompt.interactive_section(scene)}
+
 ## Style
 
 {STYLE_GUIDE}
@@ -153,8 +155,17 @@ Hard rules:
   `rotateTo`; for other linear maps morph each line's points to its image.
 - Formulas use `s.latex` with named parts so later scenes can morph them; keep them
   in the right-hand panel area, clear of the geometry.
-- Interactivity is optional: at most one `s.slider` when letting the viewer change a
-  value genuinely helps (it must not change the scene's duration).
+- Interactive elements use animlib controls with exactly the ids listed above:
+  `const k = s.slider("id", {{ label, default, min, max, step, position: [x, y], width }})`,
+  `s.toggle("id", {{ label, default }})`, `s.select("id", {{ label, default, options }})`.
+  They return plain values; compute geometry, numbers and formulas from them with
+  ordinary JavaScript so the picture is correct for ANY value at ANY time (the
+  builder is re-run when the viewer moves a control). Place controls over the
+  bottom-left of the geometry area (e.g. `position: [0.05, 0.80]`), clear of the
+  formula panel and of the objects. Add no controls other than the listed ones.
+  (animlib has no draggable points; sliders, toggles and selects are the tools.)
+- Kept objects must be created from the control values too, so the next scene
+  inherits whatever the viewer chose.
 
 ## Deliverable
 
@@ -189,6 +200,10 @@ def animate_scene(provider, board, index, out, previous, max_repairs=3):
                                 f"{scene['duration']} s (±0.5): adjust durations and waits")
             if info["end"] != want_end:
                 problems.append(f'scene option end must be "{want_end}"')
+            wanted = sorted(c["id"] for c in scene.get("interactive") or [])
+            if sorted(info.get("controls", [])) != wanted:
+                problems.append(f"the scene must declare exactly these controls: {wanted or 'none'}; "
+                                f"it declares {sorted(info.get('controls', []))}")
             if not problems:
                 (out / "scenes").mkdir(exist_ok=True)
                 (out / "scenes" / f"{scene['id']}.js").write_text(source, encoding="utf-8")

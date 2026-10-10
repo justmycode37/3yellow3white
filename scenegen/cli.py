@@ -9,6 +9,7 @@ from pathlib import Path
 from . import animate, animation_prompt, animlib_engine, distill, package, preview, sample, schema, storyboard
 from .providers import PendingResponse, get_provider
 
+ENGINE = "animlib"  # set from --engine in main()
 DEFAULT_PLUGIN = Path(__file__).resolve().parents[2] / "explanation-studio-1.0.0"
 
 
@@ -19,12 +20,16 @@ def write_prompts(board, out, plugin_root):
         stale.unlink()
     for i, scene in enumerate(board["scenes"]):
         stem = f"{i + 1:02d}_{scene['id']}"
-        (prompts / f"{stem}.md").write_text(
-            animation_prompt.build(board, i, plugin_root), encoding="utf-8")
-        timing = out / "render" / scene["id"]
-        timing.mkdir(parents=True, exist_ok=True)
-        (timing / "timeline.json").write_text(
-            json.dumps(animation_prompt.timeline(scene), indent=2), encoding="utf-8")
+        if ENGINE == "animlib":
+            # The previous scene's source is attached when the scene is animated.
+            text = animlib_engine.build_prompt(board, i, [])
+        else:
+            text = animation_prompt.build(board, i, plugin_root)
+            timing = out / "render" / scene["id"]
+            timing.mkdir(parents=True, exist_ok=True)
+            (timing / "timeline.json").write_text(
+                json.dumps(animation_prompt.timeline(scene), indent=2), encoding="utf-8")
+        (prompts / f"{stem}.md").write_text(text, encoding="utf-8")
     combine(prompts, prompts / "all_scenes.md", "[0-9]*.md")
     schema.dump(board, out / "storyboard.json")
     zipped = package.zip_scenes(out, board)
@@ -155,6 +160,7 @@ def main(argv=None):
     p.add_argument("--audience")
     p.add_argument("--notes", help="text file with source material for the topic")
     p.add_argument("--scenes", type=int, help="exact number of scenes")
+    p.add_argument("--engine", default="animlib", choices=["animlib", "manim"])
     p.add_argument("--provider", default="claude-code",
                    choices=["claude-code", "anthropic", "openai", "handoff"])
     p.add_argument("--model")
@@ -165,6 +171,7 @@ def main(argv=None):
     p.add_argument("source", help="PDF, .txt or .md file")
     p.add_argument("--out", required=True)
     p.add_argument("--max-topics", type=int, default=8)
+    p.add_argument("--engine", default="animlib", choices=["animlib", "manim"])
     p.add_argument("--topic", action="append", help="only build storyboards for this topic id")
     p.add_argument("--replan", action="store_true", help="redo the topic list even if topics.json exists")
     p.add_argument("--provider", default="claude-code",
@@ -176,6 +183,7 @@ def main(argv=None):
     p = sub.add_parser("prompts", help="regenerate prompts from an edited storyboard.json")
     p.add_argument("storyboard")
     p.add_argument("--out")
+    p.add_argument("--engine", default="animlib", choices=["animlib", "manim"])
     p.add_argument("--plugin", default=str(DEFAULT_PLUGIN))
     p.set_defaults(func=cmd_prompts)
 
@@ -227,6 +235,8 @@ def main(argv=None):
     p.set_defaults(func=cmd_check)
 
     args = parser.parse_args(argv)
+    global ENGINE
+    ENGINE = getattr(args, "engine", "animlib")
     return args.func(args)
 
 

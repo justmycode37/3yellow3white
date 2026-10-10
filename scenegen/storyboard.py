@@ -37,7 +37,14 @@ FORMAT = """JSON format:
                          # reusing the same names across scenes for the same thing
     "ends_with": str,    # qualitative description of the final frame
     "duration": seconds, # 20-60: unhurried, room to watch and think
-    "arc_step": int      # which teaching-plan step this scene serves
+    "arc_step": int,     # which teaching-plan step this scene serves
+    "interactive": [{    # what the viewer can change while the scene plays (0-2 items)
+      "id": "snake_case",            # stable control id, unique in the scene
+      "control": "slider" | "toggle" | "select",
+      "label": str,                  # 1-3 words shown next to the control
+      "changes": str,                # which element/quantity it drives, and its sensible range
+      "discover": str                # what the student finds out by playing with it
+    }]
   }]
 }
 
@@ -55,6 +62,15 @@ Rules:
   next scene; ends_with is a clean picture.
 - Do not plan captions or explanatory sentences on screen: only labels, formulas,
   matrices and numbers. "shows" must explain through motion and pictures.
+- Interactivity: the player lets viewers change inputs live (sliders for numbers,
+  toggles for show/hide or on/off, selects for a few named choices), even while the
+  animation runs or is paused. Give a scene an interactive element when playing with
+  it deepens the scene's idea (e.g. a slider for a vector's coordinate or a matrix
+  entry, a toggle to compare with/without, a select for the order of two maps).
+  The default value must show exactly the storyboarded example, and the control must
+  drive the real geometry, not a decoration. Most films should have interactive
+  elements in at least half of their scenes; use an empty list where interaction
+  would distract (e.g. a scene that only assembles a formula). At most 2 per scene.
 - 4 to 8 scenes.
 """
 
