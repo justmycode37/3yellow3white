@@ -544,3 +544,50 @@ it('cancels capture before replacing the active compilation, even when a later s
     expect(rendering.frame?.elements[0].position[0]).toBeCloseTo(2);
   } finally {player.dispose();}
 });
+
+
+describe('time-dependent retained player frames', () => {
+  const wave = `export default scene({},s=>{
+    const a=s.slider('a',{reactive:true,default:1,min:0,max:3});
+    const m=s.mesh('m',{vertices:[[0,0,0],[1,0,0],[0,1,0]],triangles:[[0,1,2]],shading:'smooth'});
+    s.deform(m,[s.time,a],([x,y],i,t,a)=>[x,y,t*a*y]);s.wait(4);
+  });`;
+  const z = () => rendering.frame!.elements[0].geometry.vertices![2][2];
+  it('awaits seeks and paused controls, samples playback, and seeks repeatably', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      expect((await player.submit({type:'load',scenes:[{id:'a',source:wave}]})).ok).toBe(true);
+      await player.seek({scene:'a',time:2});expect(z()).toBe(2);
+      await player.setControl({scene:'a',id:'a',value:2});expect(z()).toBe(4);
+      await player.seek({scene:'a',time:0.5});expect(z()).toBe(1);
+      await player.seek({scene:'a',time:2});expect(z()).toBe(4);
+      await player.play();advance(0.5);
+      await vi.waitFor(()=>expect(z()).toBe(5));
+      player.pause();await vi.waitFor(()=>expect(player.getState().status).toBe('paused'));
+      const before=z();advance(0.5);await Promise.resolve();expect(z()).toBe(before);
+    } finally {player.dispose();}
+  });
+  it('a pending worker result cannot overwrite a later seek or queue unbounded playback samples', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const real=SourceCompiler.prototype.update;let release!:()=>void;
+      const update=vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this:SourceCompiler,...args){
+        await new Promise<void>(resolve=>{release=resolve;});return real.apply(this,args);
+      });
+      advance(0.5);await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+      advance(0.5);advance(0.5);expect(update).toHaveBeenCalledTimes(1);
+      const seek=player.seek({scene:'a',time:3});release();await seek;expect(z()).toBe(3);
+      expect(player.getState().status).toBe('paused');
+    } finally {player.dispose();}
+  });
+  it('a bad time sample keeps the last rendered frame and reports a blocked player', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave.replace('t*a*y','t===2?Infinity:t*a*y')}]});
+      await player.seek({scene:'a',time:1});expect(z()).toBe(1);
+      await player.seek({scene:'a',time:2});expect(z()).toBe(1);expect(player.getState().status).toBe('blocked');
+      await player.seek({scene:'a',time:3});expect(z()).toBe(3);expect(player.getState().error).toBeUndefined();
+    } finally {player.dispose();}
+  });
+});

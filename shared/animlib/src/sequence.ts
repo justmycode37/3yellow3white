@@ -34,16 +34,46 @@ export class SceneSequence {
     if (!this.compiled[index]) throw new Error(`Unknown scene index: ${index}`);
     return evaluateScene(this.compiled[index], time);
   }
+  /** Evaluate retained time callbacks in the sandbox, returning a serializable snapshot.
+   * Canonical compiled scenes keep their time-zero outputs; sampling never mutates them.
+   */
+  sample(index: number, time: number): Promise<CompiledScene> {
+    return this.enqueue(async () => {
+      if (this.disposed) throw new Error('Scene sequence is disposed');
+      let scene = this.compiled[index];
+      if (!scene) throw new Error(`Unknown scene index: ${index}`);
+      if (scene.reactiveBindings?.some(b => b.time) && !this.compiler.canUpdate(scene)) {
+        // Recover a lost worker even for time-only scenes with no input controls.
+        try {
+          const candidate = await this.reconstruct(this.sources, this.values);
+          this.compiled = candidate.compiled; this.values = candidate.values;
+          scene = this.compiled[index];
+        } finally { this.compiler.retain(this.compiled); }
+      }
+      return this.sampleScene(scene, time);
+    });
+  }
+  async evaluate(index: number, time: number): Promise<Frame> {
+    const snapshot = await this.sample(index, time);
+    return evaluateScene(snapshot, time);
+  }
+  private async sampleScene(scene: CompiledScene, time: number, values = Object.fromEntries(scene.controls.map(c => [c.id, c.value])), base = scene): Promise<CompiledScene> {
+    if (!Number.isFinite(time)) throw new Error('Sample time must be finite');
+    time = Math.max(0, Math.min(base.duration, time));
+    if (!base.reactiveBindings?.some(b => b.time) || time === base.reactiveTime) return base;
+    const updates = await this.compiler.update(scene, values, [], this.options, time);
+    return { ...base, reactiveBindings: mergeReactiveUpdates(base, updates, [], time), reactiveTime: time };
+  }
   private enqueue<T>(work: () => Promise<T>): Promise<T> {
     const result = this.queue.then(work); this.queue = result.catch(() => undefined); return result;
   }
-  private async reconstruct(sources: SceneSource[], values: Map<string, Record<string, ControlValue>>, prefix: CompiledScene[] = []) {
+  private async reconstruct(sources: SceneSource[], values: Map<string, Record<string, ControlValue>>, prefix: CompiledScene[] = [], outgoing?: Frame) {
     const compiled: CompiledScene[] = prefix.slice();
-    let previous: Frame | undefined = compiled.length ? evaluateScene(compiled.at(-1)!, compiled.at(-1)!.duration) : undefined;
+    let previous: Frame | undefined = sources.length > prefix.length ? outgoing ?? (compiled.length ? evaluateScene(await this.sampleScene(compiled.at(-1)!, compiled.at(-1)!.duration), compiled.at(-1)!.duration) : undefined) : undefined;
     for (const source of sources.slice(prefix.length)) {
       try {
         const scene = await this.compiler.compile(source.source, { previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
-        compiled.push(scene); previous = evaluateScene(scene, scene.duration);
+        compiled.push(scene); previous = evaluateScene(await this.sampleScene(scene, scene.duration), scene.duration);
       } catch (error) {
         if (error instanceof SceneCompileError) error.diagnostic.scene = source.id;
         throw error;
@@ -103,7 +133,8 @@ export class SceneSequence {
           const updated = { ...scene, controls: scene.controls.map(c => c.id === id ? { ...c, value } : c), reactiveBindings: mergeReactiveUpdates(scene, updates, [id]) };
           // Preserve transactional handoffs. Earlier scenes and the changed builder
           // are reused; downstream sources still receive a freshly evaluated end frame.
-          const candidate = await this.reconstruct(this.sources, values, [...this.compiled.slice(0, index), updated]);
+          const end = index < this.sources.length - 1 ? await this.sampleScene(scene, scene.duration, values.get(sceneId)!, updated) : undefined;
+          const candidate = await this.reconstruct(this.sources, values, [...this.compiled.slice(0, index), updated], end ? evaluateScene(end, scene.duration) : undefined);
           scene.controls = updated.controls; scene.reactiveBindings = updated.reactiveBindings;
           candidate.compiled[index] = scene; // Retain its callback program and live behavior identity.
           this.compiled = candidate.compiled; this.values = candidate.values;

@@ -18,7 +18,7 @@ worker.onmessage = event => {
     if (request.type === 'update') {
       const program = programs.get(request.session);
       if (!program) throw new Error('Reactive runtime is unavailable');
-      worker.postMessage({ id: request.id, ok: true, updates: program.update(request.values, request.changed) });
+      worker.postMessage({ id: request.id, ok: true, updates: program.update(request.values, request.changed, request.time) });
     } else {
       const program = await createSceneProgram(request.source, request.input, request.limits);
       if (program.scene.reactiveBindings?.length) programs.set(request.id, program);

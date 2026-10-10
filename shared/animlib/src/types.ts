@@ -50,6 +50,13 @@ export interface Material {
   emissiveIntensity?: number;
 }
 
+/** Palette ramp over a fixed mesh vertex set (rendered by the explanatory geometry stage). */
+export interface ScalarColors {
+  values: number[];
+  domain: [number, number];
+  colors: PaletteColor[];
+}
+
 export interface Geometry {
   kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
   radius?: number;
@@ -66,6 +73,7 @@ export interface Geometry {
   fontSize?: number;
   vertices?: Position[];
   triangles?: [number, number, number][];
+  scalarColors?: ScalarColors;
   /** Mesh lighting; omitted preserves unlit rendering. Smooth normals share vertex indices. */
   shading?: "unlit" | "flat" | "smooth";
   /** Optional per-vertex local normals for smooth mesh shading; normalized when rendered. */
@@ -201,14 +209,27 @@ export interface SliderHandle { readonly id: string; readonly reactive: true }
 export interface SliderOptions extends ControlPlacement {
   label?: string; default: number; min: number; max: number; step?: number;
 }
-/** Prototype bindings own a fixed set of properties, independent of scene time. */
-export type ReactiveProperties = Pick<ElementStyle, 'position' | 'rotation' | 'scale' | 'opacity' | 'fill'> & Pick<Geometry, 'radius'>;
+/** Scene-local seconds, clamped to the timeline; read only through a binding. */
+export interface TimeHandle { readonly time: true }
+export type ReactiveDependency = SliderHandle | TimeHandle;
+/** Absolute property replacements. Mesh connectivity is never writable. */
+export type ReactiveProperties = Pick<ElementStyle, 'position' | 'rotation' | 'scale' | 'opacity' | 'fill'> & Pick<Geometry, 'radius' | 'vertices'> & {
+  /** Null (or vertices without normals) recomputes shading normals. */
+  normals?: Vec3[] | null;
+  /** Whole-object replacements; null restores the original untextured/simple appearance. */
+  material?: Material | null;
+  texture?: ProceduralTexture | null;
+  scalarColors?: ScalarColors | null;
+};
 export interface ReactiveBinding {
   target: string;
+  /** Distinguishes disjoint bindings on one target; absent for a single binding. */
+  slot?: number;
   controls: string[];
+  time?: true;
   properties: ReactiveProperties;
 }
-export interface ReactiveUpdate { target: string; properties: ReactiveProperties }
+export interface ReactiveUpdate { target: string; slot?: number; properties: ReactiveProperties }
 
 export interface Lifecycle {
   time: number;
@@ -230,6 +251,8 @@ export interface CompiledScene {
   bindings?: BindingDeclaration[];
   /** Serializable outputs; callback functions stay in the sandbox runtime. */
   reactiveBindings?: ReactiveBinding[];
+  /** Time represented by retained callback outputs; absent for control-only scenes. */
+  reactiveTime?: number;
 }
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -362,7 +385,10 @@ export interface SceneContext {
   view(id: string, options: ViewOptions, builder: (context: ViewContext) => void): void;
   slider(id: string, options: SliderOptions & { reactive: true }): SliderHandle;
   slider(id: string, options: SliderOptions & { reactive?: false }): number;
-  bind(target: ElementHandle, controls: SliderHandle[], callback: (...values: number[]) => ReactiveProperties): void;
+  readonly time: TimeHandle;
+  bind(target: ElementHandle, dependencies: ReactiveDependency[], callback: (...values: number[]) => ReactiveProperties): void;
+  /** Deform captured rest vertices without changing triangle indices. */
+  deform(target: ElementHandle, dependencies: ReactiveDependency[], callback: (point: Vec3, index: number, ...values: number[]) => Vec3): void;
   toggle(id: string, options: ControlPlacement & { label?: string; default: boolean }): boolean;
   select(id: string, options: ControlPlacement & { label?: string; default: string; options: string[] }): string;
   previous: { get(id: string): ElementHandle; exiting(): ElementHandle };

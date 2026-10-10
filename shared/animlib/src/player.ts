@@ -20,6 +20,9 @@ export class Player {
   private readonly behaviors: BehaviorRuntime;
   private readonly input: CanvasInput;
   private presentationAt = 0;
+  private refreshGeneration = 0;
+  private sampling?: Promise<CompiledScene>;
+  private sampled?: { source: CompiledScene; bindings: CompiledScene['reactiveBindings']; time: number; snapshot: CompiledScene };
   private listeners = new Set<(state: PlayerState) => void>();
   private sceneId: string | null = null;
   private time = 0;
@@ -145,14 +148,42 @@ export class Player {
     this.refresh();
   }
 
-  private refresh(): void {
+  private async refresh(): Promise<void> {
     if (this.disposed) return;
+    const generation = ++this.refreshGeneration, time = this.time;
     const index = this.currentIndex();
     const scene = index < 0 ? undefined : this.sequence.compiled[index];
     if (scene) {
+      let snapshot = scene;
+      if (scene.reactiveBindings?.some(binding => binding.time)) {
+        try {
+          // Keep at most one worker sample in flight; passive invalidations coalesce.
+          if (this.sampling) await this.sampling.catch(() => undefined);
+          if (this.disposed || generation !== this.refreshGeneration) return;
+          const cached = this.sampled;
+          if (cached?.source === scene && cached.bindings === scene.reactiveBindings && cached.time === time) snapshot = cached.snapshot;
+          else {
+            const bindings = scene.reactiveBindings;
+            const pending = this.sequence.sample(index, time);
+            this.sampling = pending;
+            try { snapshot = await pending; }
+            finally { if (this.sampling === pending) this.sampling = undefined; }
+            this.sampled = { source: scene, bindings, time, snapshot };
+          }
+        }
+        catch (error) {
+          if (this.disposed || generation !== this.refreshGeneration) return;
+          this.stopClock(); this.status = 'blocked';
+          this.error = error instanceof Error ? error.message : String(error);
+          this.notify(); return;
+        }
+        // A newer seek, input refresh, source replacement, or disposal wins.
+        if (this.disposed || generation !== this.refreshGeneration) return;
+        if (scene !== this.currentScene()) return this.refresh();
+      }
       const now = performance.now(), dt = this.presentationAt ? Math.max(0, (now-this.presentationAt)/1000) : 0;
       this.presentationAt = now;
-      const frame = this.behaviors.evaluate(scene, evaluateScene(scene, this.time, { bindings: false }), this.time, dt);
+      const frame = this.behaviors.evaluate(scene, evaluateScene(snapshot, time, { bindings: false }), this.time, dt);
       this.input.sync();
       this.renderer.syncInteraction(this.sceneId!, this.time, scene, frame);
       this.renderer.setOrbitEnabled(scene.options.orbit && frame.camera.perspective > 0 && !frame.cameraAnimated);
@@ -211,7 +242,7 @@ export class Player {
         this.time = affected ? 0 : Math.min(this.time, this.currentScene()?.duration ?? 0);
       }
       this.status = this.sceneId ? "paused" : "empty";
-      this.refresh();
+      await this.refresh();
       // Compilation success is separate from browser playback permission.
       if (wasPlaying && change.type !== "load" && this.sceneId) await this.play().catch(() => {});
       return result;
@@ -232,8 +263,7 @@ export class Player {
       this.offset = this.time;
       this.startedAt = performance.now();
       this.status = "playing";
-      this.refresh();
-      this.scheduleFrame();
+      await this.refresh();
     } catch (error) {
       if (generation !== this.playbackGeneration || this.disposed) return;
       this.audio.stop();
@@ -275,8 +305,7 @@ export class Player {
         }
         return;
       }
-      this.refresh();
-      this.scheduleFrame();
+      void this.refresh();
     });
   }
 
@@ -291,14 +320,17 @@ export class Player {
     this.assertAlive();
     this.pendingControls.clear();
     if (!Number.isFinite(position.time)) throw new Error("Seek time must be finite");
-    const index = this.sequence.index(position.scene);
     this.stopClock();
-    this.input.cancel(); this.behaviors.reset();
-    this.sceneId = position.scene;
-    this.time = Math.max(0, Math.min(position.time, this.sequence.compiled[index].duration));
-    this.status = "paused";
-    this.error = undefined;
-    this.refresh();
+    await this.enqueue(async () => {
+      const index = this.sequence.index(position.scene);
+      this.stopClock();
+      this.input.cancel(); this.behaviors.reset();
+      this.sceneId = position.scene;
+      this.time = Math.max(0, Math.min(position.time, this.sequence.compiled[index].duration));
+      this.status = "paused";
+      this.error = undefined;
+      await this.refresh();
+    });
   }
 
   async next(): Promise<void> {
@@ -332,7 +364,7 @@ export class Player {
       if (this.disposed) return;
       if (this.currentScene() === oldScenes.get(this.sceneId ?? '')) {
         // Reactive patches retain timeline and live behavior state; audio keeps running.
-        this.time = this.clockTime(); this.error = undefined; this.refresh();
+        this.time = this.clockTime(); this.error = undefined; await this.refresh();
         return;
       }
       const wasPlaying = this.status === "playing";
@@ -341,7 +373,7 @@ export class Player {
       this.time = Math.min(this.time, this.currentScene()?.duration ?? 0);
       this.status = this.sceneId ? "paused" : "empty";
       this.error = undefined;
-      this.refresh();
+      await this.refresh();
       if (wasPlaying && this.time < (this.currentScene()?.duration ?? 0)) await this.play().catch(() => {});
       else if (wasPlaying) { this.status = "ended"; this.refresh(); }
     });
