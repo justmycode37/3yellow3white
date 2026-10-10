@@ -70,3 +70,10 @@ runs in a non-root Docker Compose container with persistent SQLite/narration bin
 mounts. Candidate images are tested before replacing production; failed activation
 restores the previous container or legacy systemd service. See
 [deployment setup, container commands, and recovery](docs/deployment.md).
+
+## scenegen: course file → animlib scenes
+
+`scenegen/` is a Python pipeline that distills a lecture file into topics, plans how to
+teach each one, writes a storyboard, and has an LLM write the scenes as animlib sources
+(compiled and checked with `animlib/core`), plus a timed narration script. See
+[docs/scenegen.md](docs/scenegen.md).

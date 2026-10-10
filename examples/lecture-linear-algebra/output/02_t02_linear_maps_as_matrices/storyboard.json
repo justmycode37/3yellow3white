@@ -1,0 +1,295 @@
+{
+  "topic": "Linear maps and their matrices",
+  "audience": "Beginning linear algebra students who work in the plane R^2. They already know vectors as arrows, the standard basis e1 and e2, and that coordinates (x, y) are a recipe of x steps along e1 and y steps along e2. They have not yet seen linear maps or matrices as transformations.",
+  "assumed": [
+    "Vectors in R^2 as arrows from the origin; adding vectors tip to tail; scaling a vector",
+    "The standard basis e1 = (1,0), e2 = (0,1), and v = x e1 + y e2 as a recipe of steps along e1 and e2",
+    "Span and coordinates, from earlier films",
+    "A function T: R^2 -> R^2 takes in a vector and gives back a vector"
+  ],
+  "central_question": "Why is a linear map of the plane completely decided by where it sends e1 and e2, and how does a 2x2 matrix record that?",
+  "palette": {
+    "background": "#0F1117",
+    "text": "#ECEFF4",
+    "muted": "#6B7280",
+    "grid": "#2A3A55",
+    "primary": "#58C4DD",
+    "secondary": "#FFFF00",
+    "accent_green": "#83C167",
+    "accent_red": "#FC6255",
+    "accent_teal": "#5CD0B3",
+    "accent_gold": "#F0AC5F",
+    "accent_purple": "#9A72AC"
+  },
+  "color_meanings": {
+    "original (untransformed) reference grid, faint and static": "grid",
+    "the moving, transformed grid": "primary",
+    "first basis vector e1 and its image T(e1); first column of every matrix": "accent_green",
+    "second basis vector e2 and its image T(e2); second column of every matrix": "accent_red",
+    "the tracked example vector v = (3,2) and its image T(v)": "secondary",
+    "helper vector u in the linearity rules": "accent_teal",
+    "helper vector w in the linearity rules": "accent_purple",
+    "the sum u + w and other sample vectors that are not v": "accent_gold",
+    "origin dot, labels, formulas and pass/fail marks": "text",
+    "dimmed or ghosted items, predicted landing outlines": "muted"
+  },
+  "opening": "An empty dark frame with the right-third text panel already in place (dark backing rectangle, thin border, empty). The left two thirds are blank.",
+  "scenes": [
+    {
+      "id": "s01_watch_the_rotation",
+      "title": "Watching the plane turn",
+      "purpose": "Show one linear map before naming anything: a 90° rotation moves the whole grid rigidly, the origin stays put, and v = (3,2) lands at (-2,3).",
+      "shows": "A faint reference grid fades in on the left, and a bright copy of the grid fades in on top of it, together with a white origin dot, green e1, red e2 and the yellow arrow v pointing to (3,2). The panel shows 'v = (3, 2)'. After a held pause, one ValueTracker rotates the bright grid and all three arrows counterclockwise by 90° over about 4 s. The faint grid stays still underneath, so the viewer sees that the bright lines remain parallel and evenly spaced and that the origin dot never moves. Green ends up pointing straight up, red points left, and yellow points up and to the left. A small label '(-2, 3)' appears beside v's tip, and the panel adds 'T(v) = (-2, 3)'. The final picture is held still.",
+      "key_points": [
+        "The whole plane moves as one object, not just the single vector",
+        "Grid lines stay parallel and evenly spaced; the origin stays fixed",
+        "The tracked vector v = (3,2) lands at (-2,3)"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid, now rotated 90°",
+        "origin_dot: fixed white dot at the origin",
+        "e1_arrow: green, now pointing up",
+        "e2_arrow: red, now pointing left",
+        "v_arrow: yellow, tip at (-2,3) with label",
+        "panel: v = (3,2), T(v) = (-2,3)"
+      ],
+      "ends_with": "The rotated bright grid sits over the faint reference grid. The origin dot is at the centre, green e1 points up, red e2 points left and yellow v points to (-2,3) with a small '(-2, 3)' label beside its tip. The panel reads 'v = (3, 2)' and 'T(v) = (-2, 3)'.",
+      "duration": 30,
+      "arc_step": 1
+    },
+    {
+      "id": "s02_what_counts_as_linear",
+      "title": "Good motions and bad motions",
+      "purpose": "Pin down the picture of 'linear': grid lines stay parallel and evenly spaced and the origin stays fixed. Shifts and uneven stretches fail.",
+      "shows": "First the rotation is undone smoothly over about 3 s. The label on v and the 'T(v)' line in the panel fade out, so the bright grid lies exactly on the reference grid again. v dims to muted so the attention goes to the grid. Then three test motions are played one at a time on the same plane, each driven by a ValueTracker and each undone smoothly before the next one starts. (1) A shear: the grid tilts but stays parallel and evenly spaced, and the origin dot stays on the reference origin. A white check appears in the panel next to a small shear icon. (2) A shift: the whole grid slides diagonally. The lines stay parallel, but the origin dot visibly leaves the reference origin, and a faint ring stays behind to mark the old spot. A white cross appears in the panel. (3) An uneven stretch: the lines stay straight, but the spacing bunches up toward one side, which is easy to see against the evenly spaced reference grid. A cross appears. Once the third test is undone, the word 'linear' appears beside the check row. The check/cross rows then fade out and the panel keeps only 'T : R² → R²   linear'. v brightens back to yellow.",
+      "key_points": [
+        "Shear: parallel, evenly spaced, origin fixed, so it passes",
+        "Shift: the origin moves, so it fails even though the lines stay straight and parallel",
+        "Uneven spacing: the lines stay straight but the spacing changes, so it fails",
+        "Only after the comparison is the passing kind named 'linear'"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid, back at identity",
+        "origin_dot: fixed white dot",
+        "e1_arrow: green at (1,0)",
+        "e2_arrow: red at (0,1)",
+        "v_arrow: yellow at (3,2)",
+        "panel: T : R² → R², linear"
+      ],
+      "ends_with": "The bright grid is back on top of the reference grid at the identity, with the origin dot, green e1 at (1,0), red e2 at (0,1) and yellow v at (3,2). The panel shows only 'T : R² → R²' and the word 'linear'. No test markers remain.",
+      "duration": 55,
+      "arc_step": 2
+    },
+    {
+      "id": "s03_the_two_rules",
+      "title": "Sums and scalings survive",
+      "purpose": "Connect the picture to the definition: T(u + w) = T(u) + T(w) means parallelograms survive, and T(c u) = c T(u) means evenly spaced copies survive.",
+      "shows": "v, e1 and e2 dim to muted so they recede. A teal arrow u and a purple arrow w are drawn, and w is copied tip to tail onto u to close a parallelogram. The gold diagonal u + w is drawn. The plane rotates 90° over about 3.5 s with everything attached, and the parallelogram turns as one rigid shape: the gold diagonal is still exactly the tip-to-tail sum of the rotated teal and purple arrows. The panel fades in 'T(u + w) = T(u) + T(w)'. Hold. The rotation is undone smoothly over about 3 s, and w, its copy and the gold diagonal fade out. Then a second teal copy of u slides on, tip to tail, to make 2u. The plane rotates again, and the two copies stay end to end and equal in length after the turn. The panel fades in 'T(c u) = c T(u)'. Hold. The rotation is undone smoothly, u and its copy fade out, and e1, e2 and v brighten back to full colour.",
+      "key_points": [
+        "Adding tip to tail and then mapping gives the same arrow as mapping and then adding",
+        "Scaling and then mapping gives the same arrow as mapping and then scaling",
+        "These two formulas are the algebraic names for 'parallel, evenly spaced, origin fixed'"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid at identity",
+        "origin_dot: fixed white dot",
+        "e1_arrow: green at (1,0)",
+        "e2_arrow: red at (0,1)",
+        "v_arrow: yellow at (3,2)",
+        "panel: T : R² → R², T(u+w) = T(u)+T(w), T(c u) = c T(u)"
+      ],
+      "ends_with": "The identity grid is back over the reference grid with the origin dot, green e1, red e2 and yellow v at (3,2), all at full colour. No u or w helpers remain. The panel shows 'T : R² → R²' with the two linearity formulas stacked below it.",
+      "duration": 58,
+      "arc_step": 3
+    },
+    {
+      "id": "s04_recipe_survives",
+      "title": "Same recipe, moved arrows",
+      "purpose": "v = 3 e1 + 2 e2 becomes T(v) = 3 T(e1) + 2 T(e2). The numbers 3 and 2 stay the same; only the arrows they count move.",
+      "shows": "The two linearity formulas shrink to the top of the panel. The panel shows 'v = 3 e1 + 2 e2', with 3 in green-tinted context and 2 in red. On the grid, v is rebuilt as a path: three green e1 copies laid tip to tail along the x-axis, then two red e2 copies going up, ending exactly at v's tip. Small counts '3' and '2' sit beside the green and red stretches. After a hold, the plane rotates 90° over about 4 s with the path attached. The three green copies swing to point up and the two red copies swing to point left, and the path still ends exactly at v's tip at (-2,3). The counts '3' and '2' ride along unchanged. The panel line transforms in place into 'T(v) = 3 T(e1) + 2 T(e2)', with the coefficients 3 and 2 not moving while e1 and e2 become T(e1) and T(e2). Hold. The path copies and counts fade out. The original e1 and e2 arrows remain at their new positions and are relabelled T(e1) and T(e2).",
+      "key_points": [
+        "v is the path of 3 green steps followed by 2 red steps",
+        "Rotating the plane turns every step, but the number of steps is unchanged",
+        "The same recipe applied to the moved arrows gives T(v); this explains why v landed at (-2,3)"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid rotated 90°",
+        "origin_dot: fixed white dot",
+        "e1_arrow: green, labelled T(e1), pointing up",
+        "e2_arrow: red, labelled T(e2), pointing left",
+        "v_arrow: yellow at (-2,3)",
+        "panel: linearity formulas (small), T(v) = 3 T(e1) + 2 T(e2)"
+      ],
+      "ends_with": "The rotated grid sits over the reference grid. Green T(e1) points up, red T(e2) points left and yellow v is at (-2,3). No path copies remain. The panel shows the two small linearity formulas at the top and 'T(v) = 3 T(e1) + 2 T(e2)' below them.",
+      "duration": 50,
+      "arc_step": 4
+    },
+    {
+      "id": "s05_two_arrows_decide",
+      "title": "Two arrows decide everything",
+      "purpose": "Key insight: once T(e1) and T(e2) are chosen, every vector has exactly one place to land, so the whole map is fixed.",
+      "shows": "The panel line generalises in place to 'T(v) = x T(e1) + y T(e2)'. A handful of small gold sample arrows fade in, spread across the plane, each attached to the moving grid by its own fixed recipe. Then the green and red arrow tips are dragged smoothly, one ValueTracker blending the matrix entries, from the rotation's landing spots to a clearly different pair (one that tilts and stretches). The whole bright grid, yellow v and every gold sample follow continuously, with each one keeping its recipe. Hold so the viewer can see that nothing else needed deciding. Then the tips glide back, over at least 3 s, to the rotation's pair (up and left), and the grid and all vectors return to the rotated picture. The gold samples fade out. In the panel, 'T(e1)' and 'T(e2)' are briefly highlighted in green and red to show they are the only inputs. The highlight is then removed.",
+      "key_points": [
+        "Every vector is x e1 + y e2, so it must go to x T(e1) + y T(e2)",
+        "Moving only the two basis tips drags the whole grid and every vector with it",
+        "So T(e1) and T(e2) are all the information the map contains"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid rotated 90°",
+        "origin_dot: fixed white dot",
+        "e1_arrow: green T(e1), pointing up",
+        "e2_arrow: red T(e2), pointing left",
+        "v_arrow: yellow at (-2,3)",
+        "panel: T(v) = x T(e1) + y T(e2)"
+      ],
+      "ends_with": "The same rotated picture as before: the rotated grid over the reference grid, green T(e1) up, red T(e2) left and yellow v at (-2,3). No gold samples remain. The panel shows 'T(v) = x T(e1) + y T(e2)', with the linearity formulas still small at the top.",
+      "duration": 50,
+      "arc_step": 5
+    },
+    {
+      "id": "s06_matrix_as_columns",
+      "title": "Writing down the landing spots",
+      "purpose": "A matrix is the record of the two landing spots, written as columns: A = [T(e1) T(e2)]. For the rotation, R has first column (0,1) and second column (-1,0).",
+      "shows": "The linearity formulas fade out of the panel to make room, and the general line moves up. A small coordinate tag '(0, 1)' appears beside the green arrow's tip, then lifts off and glides into the panel. On the way it turns from a horizontal pair into a vertical green column. A red tag '(-1, 0)' does the same from the red arrow's tip and settles as a red column to the right of the green one. Brackets grow around the two columns, and 'R =' appears to their left. Above, the panel shows the general form 'A = [ T(e1)  T(e2) ]' with T(e1) in green and T(e2) in red, aligned over the matching columns. The green column briefly pulses together with the green arrow, then the red column with the red arrow, to tie each column to its arrow. Hold.",
+      "key_points": [
+        "Column 1 is where e1 lands; column 2 is where e2 lands",
+        "Colour links each column to its arrow, so it cannot be mistaken for a row",
+        "R = [[0,-1],[1,0]] is just the rotation's two landing spots written side by side"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid rotated 90°",
+        "origin_dot: fixed white dot",
+        "e1_arrow: green T(e1), pointing up",
+        "e2_arrow: red T(e2), pointing left",
+        "v_arrow: yellow at (-2,3)",
+        "panel: T(v) = x T(e1) + y T(e2), A = [T(e1) T(e2)], R with green and red columns"
+      ],
+      "ends_with": "The rotated picture is unchanged: grid, green T(e1) up, red T(e2) left and yellow v at (-2,3). No coordinate tags remain on the geometry. The panel shows 'T(v) = x T(e1) + y T(e2)', then 'A = [ T(e1) T(e2) ]', then 'R =' with a green column (0,1) and a red column (-1,0) in brackets.",
+      "duration": 42,
+      "arc_step": 6
+    },
+    {
+      "id": "s07_matrix_times_vector",
+      "title": "R times v, column by column",
+      "purpose": "A v = x·(column 1) + y·(column 2). Here R(3,2) = 3(0,1) + 2(-1,0) = (-2,3), which is exactly the path the viewer has already watched.",
+      "shows": "Under R in the panel, 'R (3, 2)' is written with a yellow vector. The 3 slides over to stand in front of a copy of the green column and the 2 in front of a copy of the red column, giving '3 (0,1) + 2 (-1,0)'. As the green term appears, three green arrows are drawn tip to tail on the rotated grid, climbing up from the origin. As the red term appears, two red arrows continue leftward from there. The path ends exactly at the tip of yellow v, which briefly brightens. The panel finishes with '= (-2, 3)', matching where v landed in scene 1. Hold for the insight. Then the green and red path copies fade from the grid, and the panel calculation collapses to the single line 'R (3,2) = 3 (0,1) + 2 (-1,0) = (-2,3)', replacing the 'T(v) = x T(e1) + y T(e2)' line.",
+      "key_points": [
+        "The entries of v are the recipe: how many copies of each column to take",
+        "Matrix times vector means scaling the columns by x and y and adding them",
+        "The result (-2,3) is the same point v reached when the plane rotated"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid rotated 90°",
+        "origin_dot: fixed white dot",
+        "e1_arrow: green T(e1), pointing up",
+        "e2_arrow: red T(e2), pointing left",
+        "v_arrow: yellow at (-2,3)",
+        "panel: A = [T(e1) T(e2)], R with coloured columns, R(3,2) = 3(0,1) + 2(-1,0) = (-2,3)"
+      ],
+      "ends_with": "The rotated grid with green T(e1) up, red T(e2) left and yellow v at (-2,3). No path copies remain. The panel shows 'A = [ T(e1) T(e2) ]', the colour-coded R, and below it 'R (3,2) = 3 (0,1) + 2 (-1,0) = (-2,3)'.",
+      "duration": 48,
+      "arc_step": 7
+    },
+    {
+      "id": "s08_any_matrix_shear",
+      "title": "Reading a new matrix: the shear",
+      "purpose": "The column reading works for any matrix: from a shear's columns you can predict the transformed grid before you see it, and v lands at (5,2).",
+      "shows": "The R calculation shrinks into a compact block at the top of the panel ('R' with its coloured columns). The plane un-rotates smoothly over about 3 s back to the identity, and v returns to (3,2). A new matrix S appears in the panel with a green first column (1,0) and a red second column (1,1). Before anything moves, muted dashed outlines appear on the grid at the two positions the columns predict: one on top of e1 (it stays put) and one at (1,1). Hold so the viewer can predict. Then the grid shears over about 3.5 s, driven by one ValueTracker blending from the identity. Green e1 stays where it is, red e2 tips over exactly into its dashed outline, and v slides to (5,2). The outlines fade out. The panel writes 'S (3,2) = 3 (1,0) + 2 (1,1) = (5,2)', and while it does, three green steps and two red steps are drawn tip to tail on the sheared grid, ending at v's tip. Then they fade out. The final frame holds with the sheared plane on the left and R and S stacked in the panel, each with matching green and red columns.",
+      "key_points": [
+        "Reading the columns predicts where e1 and e2 go, before seeing the motion",
+        "The grid follows those two arrows, exactly as before",
+        "The same recipe gives S(3,2) = (5,2); a very different map, the same rule"
+      ],
+      "elements": [
+        "reference_grid: faint static original grid",
+        "moving_grid: bright grid, sheared",
+        "origin_dot: fixed white dot",
+        "e1_arrow: green T(e1) at (1,0)",
+        "e2_arrow: red T(e2) at (1,1)",
+        "v_arrow: yellow at (5,2)",
+        "panel: R and S with colour-coded columns, S(3,2) = 3(1,0) + 2(1,1) = (5,2)"
+      ],
+      "ends_with": "The sheared grid sits over the faint reference grid. The origin dot is fixed, green e1 is at (1,0), red e2 is at (1,1) and yellow v is at (5,2). No helpers or outlines remain. The panel shows R and S stacked, each with a green first column and a red second column, and below them 'S (3,2) = 3 (1,0) + 2 (1,1) = (5,2)'. The frame is held still.",
+      "duration": 58,
+      "arc_step": 8
+    }
+  ],
+  "teaching_plan": {
+    "learning_goal": "Students can see that a linear map of the plane moves the whole grid so lines stay parallel and evenly spaced and the origin stays put. They can explain why knowing T(e1) and T(e2) is enough to know T everywhere. They can read a 2×2 matrix as 'column 1 is where e1 lands, column 2 is where e2 lands' and work out A v as x times column 1 plus y times column 2. They can do this with the 90° rotation, which sends (3,2) to (-2,3).",
+    "prerequisites": [
+      "Vectors in R^2 as arrows from the origin; adding vectors tip to tail; scaling a vector",
+      "The standard basis e1 = (1,0), e2 = (0,1), and writing v = x e1 + y e2 (coordinates as a recipe of steps along e1 and e2)",
+      "The idea of a function T: R^2 -> R^2 as something that takes in a vector and gives back a vector"
+    ],
+    "key_insight": "A linear map has no freedom left once you know where e1 and e2 land. Every vector v = x e1 + y e2 has to land on x T(e1) + y T(e2), which is the same recipe used with the new basis arrows. A matrix is just a list of those two landing spots, written as its columns.",
+    "misconceptions": [
+      "Thinking any transformation that keeps straight lines straight is linear. A shift (translation) keeps lines straight and parallel but moves the origin, so it is not linear.",
+      "Thinking a 'linear' map only has to keep lines straight. A map that keeps lines straight but spaces the grid lines unevenly breaks T(c u) = c T(u).",
+      "Reading the columns of the matrix as rows, i.e. thinking R = [[0,-1],[1,0]] sends e1 to (0,-1). In fact the first column, (0,1), is where e1 lands.",
+      "Thinking A v has to be computed with a memorised 'row times column' rule that has no meaning. In fact it means taking x copies of column 1 and y copies of column 2 and adding them.",
+      "Thinking the coordinates of v change during the transformation. In fact the recipe (x, y) stays the same and only the basis arrows it is applied to move."
+    ],
+    "concrete_example": "Rotation of the plane by 90° counterclockwise, used all the way through. We follow one vector, v = (3,2), drawn as 3 steps along e1 and 2 steps along e2. As the plane rotates, e1 swings up to (0,1), e2 swings left to (-1,0), and v ends up at (-2,3). The film first watches this happen, then explains it by rebuilding the vector from the recipe '3 of the new e1, 2 of the new e2', and finally writes the two landing spots as the columns of R = [[0,-1],[1,0]].",
+    "arc": [
+      {
+        "step": "Watching the 90° rotation, students see that the whole grid moves rigidly: grid lines stay parallel and evenly spaced, and the origin stays put. The vector v = (3,2) visibly lands at (-2,3).",
+        "why_now": "Concrete before abstract: one map the viewer can watch, before any definition or notation. It also fixes v = (3,2) as the vector we will keep tracking.",
+        "visual_idea": "A faint copy of the original grid stays in the background while a bright grid rotates smoothly by 90° on top. The yellow arrow v = (3,2) is attached to the moving grid and turns with it. At the end its tip shows the label (-2,3)."
+      },
+      {
+        "step": "Students learn which transformations count as linear: grid lines stay parallel and evenly spaced, and the origin stays fixed. Shifts and uneven stretches do not count.",
+        "why_now": "Now that they have seen one 'good' motion, comparing it with bad ones pins down the property before it gets a name. This deals with the shift and uneven-spacing misconceptions by showing them.",
+        "visual_idea": "Three short clips side by side, all starting from the same grid. (1) A shear: the grid stays parallel and evenly spaced and the origin dot stays put, so a green check. (2) A shift: the grid slides and the origin dot visibly leaves the centre, so a red cross. (3) A map where the lines stay straight but bunch together toward one side, so a red cross. Only after this does the word 'linear' appear on the good one."
+      },
+      {
+        "step": "Students connect the picture to the algebraic definition: T(u + w) = T(u) + T(w) and T(c u) = c T(u) are what 'tip-to-tail parallelograms survive' and 'evenly spaced lines survive' mean.",
+        "why_now": "The geometric idea is already there, so the formulas now name what was seen rather than arriving out of nowhere. Both rules are needed for the next step.",
+        "visual_idea": "In the rotation, draw u, w and u + w as a parallelogram. Rotate everything, and the parallelogram is still a parallelogram, so the image of u + w is the sum of the images. Then draw 2u as two copies of u placed end to end. After the rotation it is still two copies of T(u) end to end. Each formula fades in next to its picture."
+      },
+      {
+        "step": "Students see that v = 3 e1 + 2 e2 becomes T(v) = 3 T(e1) + 2 T(e2). The recipe stays the same and only the basis arrows move.",
+        "why_now": "This uses both linearity rules from step 3 together with the coordinate recipe from the earlier film. It explains why v landed at (-2,3) in step 1.",
+        "visual_idea": "Before the rotation, v is drawn as a path: three green e1 arrows followed by two red e2 arrows. Rotate the plane and the whole path rotates with it, giving three copies of the new green arrow (pointing up) and two copies of the new red arrow (pointing left). The path still ends at the tip of v. The labels '3' and '2' never change; only the arrows they count turn."
+      },
+      {
+        "step": "Key insight: the whole map is fixed by T(e1) and T(e2). Choose those two landing spots and every other vector has nowhere else to go.",
+        "why_now": "Step 4 worked for one vector. Applying the same reasoning to every vector at once is the 'aha' the film is built around.",
+        "visual_idea": "Hide the transformation. Show only the original grid with e1 and e2, then drag their tips to new positions (first to the rotation's (0,1) and (-1,0), then to some other pair). The whole grid snaps into place each time, built from the new arrows. Many sample vectors scattered over the plane follow along with their recipes. Caption: 'Two arrows decide everything.'"
+      },
+      {
+        "step": "Students read the matrix as a record of the landing spots: A = [T(e1) T(e2)], with columns. For the rotation, R = [[0,-1],[1,0]] has first column (0,1) and second column (-1,0).",
+        "why_now": "The two landing spots have just been shown to be all the information there is, so the natural next move is to write them down. This is the point to give the matrix its name.",
+        "visual_idea": "The landed green arrow's coordinates (0,1) lift off the screen and fall into place as a vertical green column. The red arrow's coordinates (-1,0) become the red second column next to it. Brackets close around them to form R. The column colours match the arrows so the rows-versus-columns mix-up cannot happen."
+      },
+      {
+        "step": "Students understand the matrix-vector product: A v = x·(column 1) + y·(column 2). Applied here, R(3,2) = 3(0,1) + 2(-1,0) = (-2,3).",
+        "why_now": "This joins step 4 (recipe applied to moved arrows) with step 6 (the moved arrows are the columns). The product is no longer a rule to memorise; it is the computation the viewer has already watched.",
+        "visual_idea": "R(3,2) is written out. The 3 slides over to sit next to the green column and the 2 next to the red column, giving 3·(0,1) + 2·(-1,0). In parallel, on the rotated grid, three green arrows and two red arrows are drawn tip to tail, adding up step by step to the point (-2,3). This matches the label from step 1 and closes the loop."
+      },
+      {
+        "step": "Consolidation: the column reading works for any matrix, not just rotations. Given some A, students can predict the transformed grid from its columns, and vice versa.",
+        "why_now": "One more example checks that the insight applies beyond rotation, and that the result can be very different from a rotation.",
+        "visual_idea": "Show the matrix [[1,1],[0,1]] (a shear) first. The viewer is asked to predict: e1 stays at (1,0) and e2 tips to (1,1). Then the grid transforms to confirm it. The same v = (3,2) is rebuilt as 3·(1,0) + 2·(1,1) = (5,2) on the sheared grid. Finally the rotation and the shear are shown side by side, each with its colour-coded columns."
+      }
+    ]
+  },
+  "context": {
+    "source_title": "Linear Algebra, Lecture 3: Linear maps, matrices and determinants",
+    "position": "film 2 of 4",
+    "topic_summary": "A linear map is fully determined by where it sends e1 and e2. A matrix just records those two images as its columns, so A v means 'x times the first column plus y times the second'.",
+    "earlier_topics": [
+      "Basis vectors, coordinates and span"
+    ],
+    "later_topics": [
+      "Matrix multiplication is composition",
+      "The determinant as area scaling"
+    ]
+  }
+}

@@ -1,0 +1,292 @@
+{
+  "topic": "The determinant as area scaling",
+  "audience": "Beginning linear algebra students working in the plane R^2. They already know that a linear map is fixed by where it sends e1 and e2, that these images are the columns of its matrix A = [[a,b],[c,d]], that grid lines stay straight, parallel and evenly spaced, and that matrix multiplication BA means 'first A, then B'. They know the rotation R and shear S from earlier films, and the area of rectangles and parallelograms. The lecture is concise: definitions followed by short examples.",
+  "assumed": [
+    "A linear map of R^2 is determined by the images of e1 and e2, and these images are the columns of its matrix",
+    "Under a linear map, grid lines stay straight, parallel and evenly spaced, and the origin stays fixed",
+    "Matrix multiplication is composition: BA means apply A first, then B",
+    "Area of a rectangle and of a parallelogram (base × height)",
+    "The rotation matrix R and the shear matrix S from earlier films"
+  ],
+  "central_question": "By how much does a linear map stretch areas, and why is that one number, the determinant ad − bc, the same for every shape in the plane?",
+  "palette": {
+    "background": "#0F1117",
+    "text": "#ECEFF4",
+    "muted": "#6B7280",
+    "grid": "#2A3A55",
+    "primary": "#58C4DD",
+    "secondary": "#FFFF00",
+    "accent_green": "#83C167",
+    "accent_red": "#FC6255",
+    "accent_teal": "#5CD0B3",
+    "accent_gold": "#F0AC5F",
+    "accent_purple": "#9A72AC"
+  },
+  "color_meanings": {
+    "background grid and its transformed copy": "grid",
+    "first basis vector e1 and its image, the first column (a,c)": "accent_green",
+    "second basis vector e2 and its image, the second column (b,d)": "accent_red",
+    "shaded unit square and its image parallelogram, with positive orientation": "primary",
+    "the same shaded square or parallelogram after its orientation has flipped (negative determinant)": "accent_gold",
+    "the leaf-shaped region, a sample shape of any size and form": "accent_teal",
+    "the determinant / area scale factor wherever it appears in the panel": "secondary",
+    "tracked points that collapse together under a singular map": "accent_purple",
+    "cut-away pieces, struck-out wrong formulas and other temporary helper constructions": "muted",
+    "labels, formulas and matrices in the panel": "text"
+  },
+  "opening": "An empty dark frame. The right-third text panel (dark backing rectangle, thin border) is already in place and empty. On the left two thirds sits a faint background grid with the origin near the centre of the geometry area. No vectors and no shapes yet.",
+  "scenes": [
+    {
+      "id": "s01_every_square_times_six",
+      "title": "One factor for every area",
+      "purpose": "Under diag(2,3), every small grid square turns into the same 2-by-3 rectangle, so every region, whatever its size, shape or position, has its area multiplied by exactly 6.",
+      "shows": "First the basis vectors e1 (green) and e2 (red) grow from the origin. The shaded unit square (blue) fills in between them. A teal leaf fades in elsewhere on the grid, with a visible stem on one side, and a mosaic of small muted grid squares fills it, so the viewer sees that its area is made of little squares. The panel shows the matrix diag(2,3) and the leaf's area as a number. One ValueTracker then blends the identity into diag(2,3) over about 4 s. The grid, e1, e2, the unit square, the leaf and every mosaic square all stretch together: 2 wide and 3 tall. Each little square becomes an identical tall rectangle, and the unit square becomes a 2×3 rectangle. The panel updates to the new leaf area and the ratio ×6 in yellow, and this is held. Then a second leaf, larger and far from the origin, is shown briefly. It sits on the original grid, is stretched by the same smooth motion, and its panel ratio also reads ×6. The mosaic and the second leaf fade out. Finally the plane is undone smoothly back to the identity over about 3 s, so the next map starts from the plain square.",
+      "key_points": [
+        "Every grid square becomes the same 2×3 rectangle",
+        "A region made of small squares grows by the same factor as each square",
+        "The unit square goes from area 1 to area 6, and the leaf's area also goes ×6",
+        "Size and position do not matter: a bigger, farther leaf also goes ×6"
+      ],
+      "elements": [
+        "grid: background coordinate grid",
+        "e1: green first basis vector",
+        "e2: red second basis vector",
+        "unit_square: blue shaded square spanned by e1, e2",
+        "leaf: teal sample region with a stem",
+        "panel: right-side text panel, now empty"
+      ],
+      "ends_with": "The plane is back at the identity: the grid, the green e1, the red e2, the blue unit square and the teal leaf sit in their original places. The panel has been cleared and is empty again.",
+      "duration": 50,
+      "arc_step": 1
+    },
+    {
+      "id": "s02_one_parallelogram_one_factor",
+      "title": "Every square becomes the same parallelogram",
+      "purpose": "For any linear map, every grid square becomes the same parallelogram, so there is one area factor for the whole plane. It is the area of the image of the unit square, the parallelogram spanned by A's columns, and it is called det A.",
+      "shows": "The panel shows a general slanted matrix A with non-zero off-diagonal entries (e.g. [[3,1],[1,2]]), with its first column green and its second red. One ValueTracker blends the identity into A over about 4 s. The grid shears and stretches, e1 and e2 swing onto the two columns, the blue unit square becomes a slanted parallelogram, and the leaf distorts with it. Then three grid cells in different places are highlighted, and temporary copies of them glide over one at a time to lie exactly on top of the blue parallelogram. They match perfectly, and then they fade. This shows that every cell is that same parallelogram. Only after that does the panel write 'det A' in yellow, equal to the parallelogram's area, together with the leaf's area ratio, and the two show the same number.",
+      "key_points": [
+        "Parallel, evenly spaced grid lines force every cell to become a congruent parallelogram",
+        "So one factor scales all areas, including the leaf's",
+        "That factor is the area of the parallelogram spanned by the columns",
+        "Name it: det A = area scale factor"
+      ],
+      "elements": [
+        "grid: transformed grid under A",
+        "e1: green, now the first column of A",
+        "e2: red, now the second column of A",
+        "unit_square: blue parallelogram spanned by the columns",
+        "leaf: teal, transformed by A",
+        "panel: matrix A and 'det A = area of parallelogram'"
+      ],
+      "ends_with": "The plane is held under the slanted map A. The green and red column vectors span the blue parallelogram, and the teal leaf is distorted on the transformed grid. The panel shows A with coloured columns and det A in yellow, equal to the parallelogram's area.",
+      "duration": 50,
+      "arc_step": 2
+    },
+    {
+      "id": "s03_area_is_ad_minus_bc",
+      "title": "Computing the area: ad − bc",
+      "purpose": "The area of the parallelogram spanned by (a,c) and (b,d) is ad − bc, and the off-diagonal product bc really matters.",
+      "shows": "The grid and leaf dim slightly to put the focus on the blue parallelogram. A muted bounding rectangle appears around it, of width a+b and height c+d, with its side lengths labelled. The pieces outside the parallelogram are coloured muted: two pairs of corner triangles and two small corner rectangles. They slide out of the box one pair at a time and fade, and each removal adds a term to the panel. The panel algebra then simplifies step by step: (a+b)(c+d) − ac − bd − 2bc = ad − bc. The bounding box fades away, and the numbers are filled in to give the example's value in yellow (e.g. 6 − 1 = 5), which is held. Then the off-diagonal entries slide smoothly to 0 in the panel matrix while the plane follows them, and the parallelogram straightens into an upright rectangle. Meanwhile the diagonal entries blend to 2 and 3, so the picture becomes the diag(2,3) rectangle with area 2·3 − 0·0 = 6. The grid and leaf return to full brightness.",
+      "key_points": [
+        "The bounding box has area (a+b)(c+d)",
+        "Removing the triangles and corner rectangles leaves ad − bc",
+        "bc is subtracted, so det is not just the product of the diagonal",
+        "When the off-diagonal entries are 0, the formula gives back diag(2,3) with area 6"
+      ],
+      "elements": [
+        "grid: grid under diag(2,3)",
+        "e1: green column (2,0)",
+        "e2: red column (0,3)",
+        "unit_square: blue 2×3 rectangle",
+        "leaf: teal, stretched by diag(2,3)",
+        "panel: det [[a,b],[c,d]] = ad − bc and the current matrix with its det"
+      ],
+      "ends_with": "The plane is held under diag(2,3). The green and red columns span the blue 2×3 rectangle, and the teal leaf is stretched on the grid. The panel shows the general formula det = ad − bc together with diag(2,3) and its det = 6 in yellow; the intermediate algebra has been cleared.",
+      "duration": 55,
+      "arc_step": 3
+    },
+    {
+      "id": "s04_rotations_and_shears_keep_area",
+      "title": "Changing shape without changing area",
+      "purpose": "Rotations and shears change shape and lengths but keep every area: det R = 1 and det S = 1. The determinant measures area, not length or shape.",
+      "shows": "First the plane smoothly undoes diag(2,3) back to the identity (about 3 s), and the panel's det goes back to 1. Then a rotation is driven by its angle: the grid, columns, square and leaf turn together. The square stays a square and the leaf turns rigidly. The panel shows R, the computation cos²θ + sin²θ = 1, and det = 1 in yellow. The rotation is undone smoothly. Next the shear S slides the square sideways into a slanted parallelogram, like a pushed deck of cards. A muted base segment and a height segment are marked; both stay fixed in length while the top edge slides. A temporary muted diagonal visibly gets longer, showing that lengths change. The panel shows S and 1·1 − k·0 = 1. The helper segments fade. The shear is then undone smoothly so the plane returns to the identity.",
+      "key_points": [
+        "A rotation turns the square and the leaf but keeps their areas",
+        "det R = cos²θ + sin²θ = 1",
+        "A shear keeps the base and the height, so the area stays the same, even though a diagonal gets longer",
+        "det measures areas, not lengths or shape"
+      ],
+      "elements": [
+        "grid: background grid at the identity",
+        "e1: green basis vector",
+        "e2: red basis vector",
+        "unit_square: blue unit square",
+        "leaf: teal leaf in its original place",
+        "panel: det R = 1 and det S = 1 in yellow"
+      ],
+      "ends_with": "The plane is back at the identity, with the grid, the green e1, the red e2, the blue unit square and the teal leaf in their original places. The panel holds two short lines: det R = 1 and det S = 1.",
+      "duration": 55,
+      "arc_step": 4
+    },
+    {
+      "id": "s05_sign_means_flip",
+      "title": "Negative determinant: the plane flips over",
+      "purpose": "The sign of ad − bc records orientation. A negative determinant means the plane is flipped over like a mirror image, and areas are scaled by |det A|.",
+      "shows": "The panel lines from the previous scene are replaced by a matrix with one adjustable entry and its det in yellow. A small curved arrow inside the unit square goes counterclockwise from e1 to e2, and the leaf's stem marks its handedness. First the plane is smoothly blended into a map with det 2, for example a stretch. Then one entry slides slowly and continuously (about 6 s, driven by one ValueTracker). The green image of e1 swings toward the red image of e2, and the blue parallelogram thins to a segment at the moment the panel det reads 0. It then reopens on the other side: the turning arrow now goes clockwise, the leaf is mirrored with its stem on the other side, and the parallelogram's fill changes from blue to gold as det becomes negative. The panel det runs smoothly from +2 through 0 to −2, and the result is held. The panel adds 'area factor = |det A|' while the gold parallelogram's area is shown to be 2.",
+      "key_points": [
+        "The arrow from the first column to the second records orientation",
+        "Passing through det = 0, the parallelogram flattens and reopens mirrored",
+        "Negative det means the plane is flipped: the arrow is reversed and the leaf is mirrored",
+        "The area is scaled by |det A|, and the sign records the flip"
+      ],
+      "elements": [
+        "grid: grid under the flipping map",
+        "e1: green image of e1",
+        "e2: red image of e2",
+        "unit_square: gold parallelogram (flipped orientation) with a clockwise arrow",
+        "leaf: teal leaf, mirrored",
+        "panel: current matrix, det = −2 in yellow, area factor = |det A|"
+      ],
+      "ends_with": "The plane is held under a map with det −2. The green and red columns span a gold parallelogram with a clockwise orientation arrow, and the teal leaf is mirrored. The panel shows the matrix, det = −2 in yellow and 'area factor = |det A|'.",
+      "duration": 55,
+      "arc_step": 5
+    },
+    {
+      "id": "s06_zero_means_collapse",
+      "title": "Determinant zero: the plane collapses",
+      "purpose": "det A = 0 means the columns are parallel, so the whole plane is squashed onto a line (or a point), many points land on the same image, and the map cannot be undone.",
+      "shows": "The flipping map is first undone smoothly back to the identity: the parallelogram returns to the blue square and the arrow and leaf go back to normal. The orientation arrow fades out. The panel shows a singular, non-zero matrix such as [[1,2],[2,4]]. A muted line through the origin is drawn, the line its columns will lie on. Three purple dots are placed at distinct points that all lie on one line parallel to the kernel. The map is applied over about 4 s: the green and red columns both land on the muted line, the blue square thins to a segment, the leaf flattens onto the line, and the whole grid collapses onto it. The three purple dots slide together and meet at one single point on the line. The panel shows 1·4 − 2·2 = 0 in yellow, which is held. Then three faint muted dashed paths lead back from that single point to the three original positions with a '?' beside the point, showing that the inverse cannot choose. The dashed paths, the '?' and the dots fade. Finally the zero matrix is shown in the panel for a moment, and the flattened picture shrinks to the origin and comes back, showing that the zero matrix is only the extreme case. The singular map is then undone smoothly back to the identity.",
+      "key_points": [
+        "det 0 means the columns are parallel",
+        "The unit square, the leaf and the whole plane flatten onto a line, so their area becomes 0",
+        "Distinct points land on the same image",
+        "So no map can undo it, and a non-zero matrix can still have det 0"
+      ],
+      "elements": [
+        "grid: background grid at the identity",
+        "e1: green basis vector",
+        "e2: red basis vector",
+        "unit_square: blue unit square",
+        "leaf: teal leaf in its original place",
+        "panel: [[1,2],[2,4]] with det = 0 in yellow"
+      ],
+      "ends_with": "The plane is back at the identity, with the grid, the green e1, the red e2, the blue unit square and the teal leaf as at the start. The panel keeps only the singular matrix and its det = 0. All dots, dashed paths and helper lines are gone.",
+      "duration": 55,
+      "arc_step": 6
+    },
+    {
+      "id": "s07_composition_multiplies",
+      "title": "Two maps in a row multiply areas",
+      "purpose": "Composing maps multiplies the area factors: first areas are scaled by det A, then by det B, so det(BA) = det B · det A.",
+      "shows": "The panel clears and shows A, a shear-and-stretch with det 2. The plane blends into A over about 3.5 s: the square becomes a parallelogram of area 2, the leaf grows by the same factor, and the panel shows det A = 2 in yellow. After a pause, B (det 3, a vertical stretch) appears below it, and a second ValueTracker applies B on top of the already transformed plane. The parallelogram stretches to area 6 and the panel shows 2 → 6. This is held. The panel then writes BA and computes det(BA) = 3 · 2 = 6. Next to it a muted '2 + 3 = 5' appears and is struck out. To confirm, the plane is undone smoothly to the identity, and then BA is applied in one single motion. The square lands on exactly the same parallelogram of area 6. This is held for a long time.",
+      "key_points": [
+        "After A, every area has been multiplied by det A",
+        "After B, every area is multiplied again, by det B",
+        "One step with BA gives the same parallelogram",
+        "det(BA) = det B · det A, a product and not a sum"
+      ],
+      "elements": [
+        "grid: grid under BA",
+        "e1: green first column of BA",
+        "e2: red second column of BA",
+        "unit_square: blue parallelogram of area 6",
+        "leaf: teal leaf scaled by 6",
+        "panel: det(BA) = det B · det A = 3 · 2 = 6 in yellow"
+      ],
+      "ends_with": "The plane is held under BA. The green and red columns span the blue parallelogram of area 6, and the teal leaf is stretched. The panel shows only det(BA) = det B · det A = 3 · 2 = 6; the matrices A and B, the arrow 2 → 6 and the struck-out sum have been cleared.",
+      "duration": 55,
+      "arc_step": 7
+    },
+    {
+      "id": "s08_two_flips_unflip",
+      "title": "Two flips make no flip",
+      "purpose": "The product rule also tracks orientation: two reflections, each with det −1, compose to a map with det +1, and the leaf comes back unflipped.",
+      "shows": "The plane smoothly undoes BA back to the identity (about 3 s). The panel shows a reflection with det −1 in yellow. It is applied slowly (about 4 s): the square turns gold, the stem of the leaf switches to the other side, and the area stays the same. After a pause, a second, different reflection is applied to the flipped picture slowly (about 4 s). The square turns blue again and the leaf is back to its original handedness, though rotated, and its area is unchanged. The panel shows (−1)·(−1) = +1 and then the general rule det(BA) = det B · det A, which is held as the closing picture for several seconds.",
+      "key_points": [
+        "One reflection flips orientation: det −1",
+        "A second reflection flips it back",
+        "Signs multiply too: (−1)·(−1) = +1",
+        "det(BA) = det B · det A covers both area and orientation"
+      ],
+      "elements": [
+        "grid: grid under the composed reflections (a rotation)",
+        "e1: green image of e1",
+        "e2: red image of e2",
+        "unit_square: blue square, back to its original orientation",
+        "leaf: teal leaf, rotated but not mirrored",
+        "panel: (−1)·(−1) = +1 and det(BA) = det B · det A"
+      ],
+      "ends_with": "A calm final frame: the plane is held under the composition of the two reflections, which is a rotation. The green and red vectors span a blue square of area 1 with its original orientation, and the teal leaf is turned but not mirrored. The panel shows (−1)·(−1) = +1 above the boxed rule det(BA) = det B · det A in yellow.",
+      "duration": 45,
+      "arc_step": 7
+    }
+  ],
+  "teaching_plan": {
+    "learning_goal": "The student can explain why a linear map of R^2 multiplies every area by the same factor. They can find that factor as the signed area of the parallelogram spanned by A's columns, ad − bc, and read its sign as an orientation flip. They can say why det A = 0 means the plane is squashed onto a line or a point and the map can't be undone, and why det(BA) = det B · det A. They can check all of this on rotations, shears and diag(2,3).",
+    "prerequisites": [
+      "A linear map of R^2 is fully determined by where it sends e1 and e2, and these images are the columns of its matrix A = [[a,b],[c,d]]",
+      "Under a linear map, grid lines stay straight, parallel and evenly spaced, and the origin stays fixed",
+      "Matrix multiplication is composition: BA means 'first apply A, then apply B'",
+      "Area of a rectangle and of a parallelogram (base × height); the rotation matrix R and shear matrix S from earlier films"
+    ],
+    "key_insight": "A linear map turns every small grid square into the same parallelogram, so it scales all areas by one common factor. That factor is the area of the image of the unit square, the parallelogram spanned by A's columns, and its sign says whether the map flips the plane over.",
+    "misconceptions": [
+      "The scale factor depends on the shape or where it sits: big shapes or shapes far from the origin get scaled differently than small ones near the origin",
+      "If the shape changes (gets slanted or turned), its area must change too, so shears and rotations change area",
+      "The determinant measures how much lengths get stretched rather than how much areas get stretched",
+      "det is just the product of the diagonal entries (ad), so the off-diagonal entries don't matter",
+      "A negative determinant means the map shrinks things or makes 'negative area' that can't be pictured",
+      "Determinant 0 only happens for the zero matrix, or a map with det 0 still has a way to be undone",
+      "Under composition determinants add (det(BA) = det A + det B), or the order of the maps changes the total scale factor"
+    ],
+    "concrete_example": "The map diag(2,3) acting on the plane, with a shaded unit square, a background grid and a small blob-shaped region (for example a leaf) drawn on it. Each grid square becomes a 2-by-3 rectangle, the unit square becomes a rectangle of area 6, and the leaf's area also grows by exactly 6. This 'square plus leaf' setup stays on screen for the whole film. Swapping in other matrices (a general [[a,b],[c,d]], R, S, a reflection, the singular map [[1,2],[2,4]]) and finally chaining two maps lets every new idea be read off the same picture: one shaded square, one leaf, and one area counter.",
+    "arc": [
+      {
+        "step": "Under diag(2,3), every grid square becomes a 2×3 rectangle, so any shape, filled in by small squares, has its area multiplied by exactly 6. This holds no matter its size, its shape or where it sits.",
+        "why_now": "This starts with the easiest possible map, where area scaling is obvious to the eye. It sets up the claim 'one factor for all areas' before any formula or name appears.",
+        "visual_idea": "A leaf is drawn on the grid and filled with small squares. The plane stretches by 2 horizontally and 3 vertically, and every little square turns into an identical tall rectangle. A counter beside the leaf goes from 'area ≈ 1.4' to '≈ 8.4' with the ratio '×6' shown. A second copy of the leaf, far from the origin and twice as big, shows the same ×6."
+      },
+      {
+        "step": "The same thing works for any linear map: because grid lines stay parallel and evenly spaced, every grid square becomes the same parallelogram. So there is one scale factor for all areas, and it equals the area of the image of the unit square. That number is called the determinant.",
+        "why_now": "This generalises step 1 using only the prerequisite fact about grid lines. It turns 'one common factor' into 'look at the unit square', which tells us where to compute.",
+        "visual_idea": "A slanted map such as A = [[3,1],[1,2]] is applied to the same grid. A few grid cells are highlighted and lifted out, and they lay on top of each other as congruent parallelograms. The shaded unit square spanned by e1 and e2 morphs into the parallelogram spanned by the columns (3,1) and (1,2). Only after this is the label 'det A = area scale factor' written next to it."
+      },
+      {
+        "step": "The area of the parallelogram spanned by the columns (a,c) and (b,d) is ad − bc. Check: diag(2,3) gives 2·3 − 0·0 = 6, and [[3,1],[1,2]] gives 6 − 1 = 5.",
+        "why_now": "The geometric meaning is set up, so the formula can now be derived as a way to compute that meaning rather than a rule to memorise. The bc term answers the 'det = product of diagonal' misconception.",
+        "visual_idea": "The parallelogram for [[3,1],[1,2]] is put inside its bounding box of size (a+b) × (c+d). The corner triangles and the two small rectangles are cut away and slide off. The leftover area algebra simplifies on screen to ad − bc = 5. Then bc is set to 0 and the picture shrinks back to the diag(2,3) rectangle, area 6."
+      },
+      {
+        "step": "Rotations and shears change shape but keep every area: det R = 1 and det S = 1. The determinant measures area, not length or shape.",
+        "why_now": "This gives a contrast that sets the limits of the idea right after the formula. It addresses 'shape change = area change' and 'det measures lengths' with maps the student already knows.",
+        "visual_idea": "The square and leaf rotate. The shapes turn, the counter stays at ×1, and ad − bc = cos²θ + sin²θ = 1. Then the shear S slides the square into a slanted parallelogram like a pushed deck of cards: the base and height are marked and stay fixed, a diagonal visibly gets longer, and the counter still reads ×1."
+      },
+      {
+        "step": "The sign of ad − bc records orientation. If det < 0, the map flips the plane over, like a mirror, and the area scales by |det A|.",
+        "why_now": "The idea of area is solid now, so the 'signed' part can be added as the one new idea. Doing it before det = 0 lets the zero case show up as the boundary between the two signs.",
+        "visual_idea": "The unit square carries a small curved arrow from e1 to e2 (counterclockwise) and the leaf has a visible stem on one side. One entry of the matrix slides continuously, so the image of e1 swings across the image of e2. The parallelogram thins to a segment, then reopens with the arrow now clockwise and the leaf mirrored. The counter goes +2 → +1 → 0 → −1 → −2, and the colour switches from blue to red when it goes negative."
+      },
+      {
+        "step": "det A = 0 means the columns are parallel (or zero), so the whole plane is squashed onto a line (or a point). Many points land on the same image, so the map can't be undone (Exercise 2, e.g. [[1,2],[2,4]]).",
+        "why_now": "The flip animation just passed through 0, so the student has already glimpsed collapse. This step looks at that moment on its own and connects zero area to 'cannot be undone'.",
+        "visual_idea": "The map [[1,2],[2,4]] is applied. Both column arrows land on the line y = 2x, the whole grid and the leaf flatten onto that line, and the counter shows 1·4 − 2·2 = 0. Several distinct coloured points are tracked as they land on one single point of the line. A rewind arrow then has to choose which original point to go back to, and stops with a question mark. Briefly, the zero matrix crushes everything to the origin, and a non-zero matrix can still have det 0."
+      },
+      {
+        "step": "Composing maps multiplies the scale factors, so det(BA) = det B · det A, because areas are scaled first by det A and then by det B.",
+        "why_now": "This builds on the prerequisite 'multiplication = composition' and on the meaning of det as a single area factor. The multiplication rule then follows from the picture with no extra algebra.",
+        "visual_idea": "The square and leaf go through A = [[2,1],[0,1]] (det 2) and the counter shows 1 → 2. Then B = diag(1,3) (det 3) acts on the result and the counter shows 2 → 6. The single matrix BA is then applied directly to a fresh square and lands on the same parallelogram with area 6. A crossed-out '2 + 3 = 5' sits next to the correct '2 · 3 = 6'. A final quick replay uses a reflection followed by a reflection: (−1)·(−1) = +1, and the leaf comes back unflipped."
+      }
+    ]
+  },
+  "context": {
+    "source_title": "Linear Algebra, Lecture 3: Linear maps, matrices and determinants",
+    "position": "film 4 of 4",
+    "topic_summary": "The determinant is the single factor by which a linear map scales every area, with a sign that records whether orientation flips. When it is zero, the plane collapses and the map cannot be undone. Determinants multiply under composition.",
+    "earlier_topics": [
+      "Basis vectors, coordinates and span",
+      "Linear maps and their matrices",
+      "Matrix multiplication is composition"
+    ],
+    "later_topics": []
+  }
+}

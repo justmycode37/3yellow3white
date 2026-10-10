@@ -1,0 +1,3 @@
+# Only the provider you use is needed.
+anthropic>=1.0  # --provider anthropic (testing)
+openai          # --provider openai (later)

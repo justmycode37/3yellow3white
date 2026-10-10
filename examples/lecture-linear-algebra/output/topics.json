@@ -1,0 +1,88 @@
+{
+  "source_title": "Linear Algebra, Lecture 3: Linear maps, matrices and determinants",
+  "audience": "Beginning linear algebra students working in the plane R^2. The lecture is concise and gives definitions with short examples, building the picture of matrices as linear maps from the ground up.",
+  "assumed": [
+    "Vectors in R^2 as pairs of numbers / arrows from the origin",
+    "Vector addition and scalar multiplication",
+    "Basic arithmetic with 2x2 arrays of numbers",
+    "Area of a parallelogram / the idea of signed area",
+    "Rotations and shears as geometric motions of the plane"
+  ],
+  "topics": [
+    {
+      "id": "t01_basis_and_span",
+      "title": "Basis vectors, coordinates and span",
+      "summary": "Every vector in the plane is a unique combination x e1 + y e2 of the standard basis vectors, and its coordinates are just the scaling amounts. Combining two non-parallel vectors in this way reaches the whole plane.",
+      "why_visual": "Show e1 and e2 as arrows, then stretch them by x and y and add them tip to tail to land on v. Then sweep a and b over all values for two vectors u, w: if they are not parallel the reachable points fill the plane, and if they are parallel they only fill a line.",
+      "key_ideas": [
+        "Standard basis vectors e1 = (1,0) and e2 = (0,1), also called i-hat and j-hat",
+        "Coordinates as scaling amounts: v = x e1 + y e2, e.g. (3,2) = 3 e1 + 2 e2",
+        "The decomposition is unique",
+        "Linear combination a u + b w",
+        "Span = set of all linear combinations; for non-parallel u, w the span is the whole plane"
+      ],
+      "requires": [],
+      "source_refs": "Page 1, Section 3.1 'Basis vectors and linear combinations'",
+      "notes": "Every v in R^2 can be written uniquely as v = x e1 + y e2 with e1 = (1,0), e2 = (0,1) (i-hat, j-hat). x and y are the coordinates of v. A linear combination of u and w is a u + b w. The span of u and w is the set of all their linear combinations. If u and w are not parallel, their span is the whole plane. Example: (3,2) = 3 e1 + 2 e2."
+    },
+    {
+      "id": "t02_linear_maps_as_matrices",
+      "title": "Linear maps and their matrices",
+      "summary": "A linear map is fully determined by where it sends e1 and e2. A matrix just records those two images as its columns, so A v means 'x times the first column plus y times the second'.",
+      "why_visual": "Animate the whole grid transforming while it stays parallel, evenly spaced and fixed at the origin. Track e1 and e2 as they land on their images, then rebuild T(v) as x T(e1) + y T(e2) on the transformed grid. The rotation by 90° makes a concrete example: (3,2) ends up at (-2,3).",
+      "key_ideas": [
+        "Definition: T(u + w) = T(u) + T(w) and T(c u) = c T(u)",
+        "Geometric picture: grid lines stay parallel and evenly spaced, origin fixed",
+        "From v = x e1 + y e2, linearity gives T(v) = x T(e1) + y T(e2)",
+        "So T is determined by T(e1) and T(e2), and these become the columns of A = [T(e1) T(e2)]",
+        "Matrix-vector product: A v = x (column 1) + y (column 2)",
+        "Worked example: 90° rotation R = [[0,-1],[1,0]], R(3,2) = (-2,3)"
+      ],
+      "requires": [
+        "t01_basis_and_span"
+      ],
+      "source_refs": "Page 1, Section 3.2 'Linear maps'",
+      "notes": "T: R^2 -> R^2 is linear if T(u + w) = T(u) + T(w) and T(c u) = c T(u) for all vectors u, w and scalars c. Geometrically, a linear map keeps grid lines parallel and evenly spaced and keeps the origin fixed. Since v = x e1 + y e2, T(v) = x T(e1) + y T(e2), so T is completely determined by T(e1) and T(e2). The matrix is A = [T(e1) T(e2)] (these are its columns), and A v = x (first column of A) + y (second column of A). Example: rotation by 90 degrees sends e1 -> (0,1) and e2 -> (-1,0), so R = [[0,-1],[1,0]] (rows written out). R(3,2) = 3(0,1) + 2(-1,0) = (-2,3)."
+    },
+    {
+      "id": "t03_matrix_multiplication_composition",
+      "title": "Matrix multiplication is composition",
+      "summary": "Multiplying matrices means doing one linear map after another. BA means 'first A, then B', and each column of BA is B applied to the matching column of A. Because order matters for motions, AB ≠ BA in general.",
+      "why_visual": "Apply the rotation R to the grid and then the shear S, and follow where e1 and e2 end up to read off SR. Then replay the motions in the opposite order, side by side, and watch the grid land somewhere else to get RS. Seeing the two different final grids shows directly why multiplication is not commutative.",
+      "key_ideas": [
+        "Applying A and then B gives v -> B(A v), which is again linear",
+        "Its matrix is the product BA, defined so that (BA) v = B(A v)",
+        "Column rule: column i of BA = B times column i of A",
+        "Order convention: BA means first A, then B (read right to left)",
+        "Example: R = [[0,-1],[1,0]], S = [[1,1],[0,1]] give SR = [[1,-1],[1,0]] and RS = [[0,-1],[1,1]]",
+        "In general AB ≠ BA: doing two motions in a different order gives a different result"
+      ],
+      "requires": [
+        "t02_linear_maps_as_matrices"
+      ],
+      "source_refs": "Page 1, Section 3.3 'Matrix multiplication is composition'; Page 2, Exercise 1",
+      "notes": "If we first apply A and then B, the map v -> B(A v) is linear. Its matrix is BA, defined by (BA) v = B(A v) for every v. The first column of BA is B times the first column of A, and the second column of BA is B times the second column of A. Order: BA means 'first A, then B'. Example: R = [[0,-1],[1,0]] (90° rotation), S = [[1,1],[0,1]] (shear). SR = [[1,-1],[1,0]] and RS = [[0,-1],[1,1]]. Matrix multiplication is not commutative (AB ≠ BA in general) because doing two motions in a different order gives a different result. (Exercise 1 asks students to compute RS and SR and check that they differ.)"
+    },
+    {
+      "id": "t04_determinant",
+      "title": "The determinant as area scaling",
+      "summary": "The determinant is the single factor by which a linear map scales every area, with a sign that records whether orientation flips. When it is zero, the plane collapses and the map cannot be undone. Determinants multiply under composition.",
+      "why_visual": "Shade the unit square and watch it deform into the parallelogram spanned by A's columns, with its area shown as ad − bc. Rotations and shears move the shape but keep its area at 1, while diag(2,3) blows it up to 6. Then show a map that flips the square over (negative determinant) and one that crushes the plane onto a line (zero). Finally chain two maps and watch the area scale by det A and then by det B.",
+      "key_ideas": [
+        "A linear map scales all areas by the same factor",
+        "The unit square spanned by e1, e2 becomes the parallelogram spanned by A's columns",
+        "det A = signed area of that parallelogram = ad − bc for A = [[a,b],[c,d]]",
+        "Negative determinant: orientation is flipped",
+        "Zero determinant: the plane is squashed onto a line or a point, and the map cannot be undone",
+        "Composition: det(BA) = det B · det A",
+        "Examples: det R = 1, det S = 1, det [[2,0],[0,3]] = 6"
+      ],
+      "requires": [
+        "t02_linear_maps_as_matrices",
+        "t03_matrix_multiplication_composition"
+      ],
+      "source_refs": "Page 1, Section 3.4 'The determinant'; Page 2, Exercise 2",
+      "notes": "A linear map scales all areas by the same factor. The unit square spanned by e1 and e2 is mapped to the parallelogram spanned by the columns of A. Its signed area is the determinant: det A = ad − bc for A = [[a,b],[c,d]]. If det A < 0, the map flips orientation. If det A = 0, the plane is squashed onto a line or a point and the map cannot be undone. Since areas are scaled first by det A and then by det B, det(BA) = det B det A. Examples: det R = 1 (rotations keep areas), det S = 1 (shears keep areas), det [[2,0],[0,3]] = 6. (Exercise 2 asks for a 2x2 matrix with determinant 0 and a description of what it does to the plane.)"
+    }
+  ]
+}

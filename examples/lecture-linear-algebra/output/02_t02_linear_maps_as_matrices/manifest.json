@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "id": "02_t02_linear_maps_as_matrices",
+  "title": "Linear maps and their matrices",
+  "status": "complete",
+  "provider": "scenegen",
+  "scenes": [
+    {
+      "id": "s01_watch_the_rotation",
+      "index": 0,
+      "source": "export default scene({ mode: \"2d\", end: \"advance\", background: \"BLACK\" }, s => {\n  // ---- layout -------------------------------------------------------------\n  // Frame is about 14.2 x 8 units. Geometry lives in the left two thirds,\n  // centred on CX; the panel occupies the right third.\n  const CX = -2.4;          // screen x of the plane's origin\n  const U = 0.95;           // scene units per grid step\n  const R = 3.75;           // bright grid is clipped to a disc of this radius (grid steps)\n  const QUARTER = Math.PI / 2;\n\n  // ---- panel (already in place on the first frame) -------------------------\n  const panel = s.rectangle(\"panel\", {\n    position: [4.65, 0], width: 4.1, height: 7.2,\n    fill: { color: \"GREY_E\", opacity: 0.55 },\n    stroke: \"GREY_C\", strokeWidth: 0.02,\n  });\n\n  s.wait(1);\n\n  // ---- faint static reference grid ----------------------------------------\n  const refLines = [];\n  for (let i = -4; i <= 4; i++) {\n    refLines.push(s.line(\"reference-grid-v-\" + i, {\n      points: [[CX + i * U, -3.6], [CX + i * U, 3.6]],\n      stroke: { color: \"GREY_B\", opacity: 0.32 }, strokeWidth: 0.018, opacity: 0,\n    }));\n  }\n  for (let j = -3; j <= 3; j++) {\n    refLines.push(s.line(\"reference-grid-h-\" + j, {\n      points: [[CX - 4.3, j * U], [CX + 4.3, j * U]],\n      stroke: { color: \"GREY_B\", opacity: 0.32 }, strokeWidth: 0.018, opacity: 0,\n    }));\n  }\n  const referenceGrid = s.group(\"reference-grid\", refLines);\n  s.play(refLines.map(l => l.fadeIn()), { duration: 1.5, ease: \"smooth\" });\n  s.wait(0.5);\n\n  // ---- bright moving grid (each line pivots about the plane's origin) ------\n  const movingLines = [];\n  for (let i = -3; i <= 3; i++) {\n    const half = Math.sqrt(R * R - i * i) * U;\n    const w = i === 0 ? 0.04 : 0.025;\n    movingLines.push(s.line(\"moving-grid-v-\" + i, {\n      position: [CX, 0], points: [[i * U, -half], [i * U, half]],\n      stroke: \"BLUE\", strokeWidth: w, opacity: 0,\n    }));\n    movingLines.push(s.line(\"moving-grid-h-\" + i, {\n      position: [CX, 0], points: [[-half, i * U], [half, i * U]],\n      stroke: \"BLUE\", strokeWidth: w, opacity: 0,\n    }));\n  }\n  const movingGrid = s.group(\"moving-grid\", movingLines);\n\n  // ---- basis arrows, tracked vector, origin dot ----------------------------\n  const e1 = s.arrow(\"e1-arrow\", {\n    position: [CX, 0], points: [[0, 0], [U, 0]],\n    stroke: \"GREEN\", strokeWidth: 0.075, opacity: 0,\n  });\n  const e2 = s.arrow(\"e2-arrow\", {\n    position: [CX, 0], points: [[0, 0], [0, U]],\n    stroke: \"RED\", strokeWidth: 0.075, opacity: 0,\n  });\n  const v = s.arrow(\"v-arrow\", {\n    position: [CX, 0], points: [[0, 0], [3 * U, 2 * U]],\n    stroke: \"YELLOW\", strokeWidth: 0.075, opacity: 0,\n  });\n  const originDot = s.circle(\"origin-dot\", {\n    position: [CX, 0], radius: 0.09, fill: \"WHITE\", stroke: \"none\", opacity: 0,\n  });\n\n  // ---- panel formulas and the tip label ------------------------------------\n  const panelV = s.latex(\"panel-v\", {\n    tex: \"\\\\animpart{v}{\\\\mathbf{v}}\\\\;\\\\animpart{eq}{=}\\\\;\\\\animpart{val}{(3,\\\\,2)}\",\n    anchor: \"eq\", position: [4.35, 2.6], fontSize: 0.5, fill: \"YELLOW\", opacity: 0,\n  });\n  const panelTv = s.latex(\"panel-Tv\", {\n    tex: \"\\\\animpart{T}{T}\\\\animpart{lp}{(}\\\\animpart{v}{\\\\mathbf{v}}\\\\animpart{rp}{)}\\\\;\\\\animpart{eq}{=}\\\\;\\\\animpart{val}{(-2,\\\\,3)}\",\n    anchor: \"eq\", position: [4.35, 1.6], fontSize: 0.5, fill: \"YELLOW\", opacity: 0,\n  });\n  const tipLabel = s.latex(\"v-tip-label\", {\n    tex: \"\\\\animpart{val}{(-2,\\\\,3)}\",\n    position: [CX - 2 * U - 1.05, 3 * U + 0.15], fontSize: 0.38, fill: \"WHITE\", opacity: 0,\n  });\n\n  // ---- build the starting picture, calmly ----------------------------------\n  s.play(movingLines.map(l => l.fadeIn()).concat([originDot.fadeIn()]), { duration: 1.5, ease: \"smooth\" });\n  s.wait(0.5);\n  s.play([e1.fadeIn(), e2.fadeIn()], { duration: 1, ease: \"smooth\" });\n  s.wait(0.5);\n  s.play([v.fadeIn(), panelV.fadeIn()], { duration: 1.2, ease: \"smooth\" });\n  s.wait(3);\n\n  // ---- the whole plane turns by 90 degrees: one angle drives everything -----\n  s.play(\n    movingLines.map(l => l.rotateTo(QUARTER)).concat([\n      e1.rotateTo(QUARTER), e2.rotateTo(QUARTER), v.rotateTo(QUARTER),\n    ]),\n    { duration: 5, ease: \"smooth\" },\n  );\n  s.wait(3);\n\n  // ---- confirm where v landed ----------------------------------------------\n  s.play(tipLabel.fadeIn(), { duration: 1, ease: \"smooth\" });\n  s.wait(1.3);\n  s.play(panelTv.fadeIn(), { duration: 1.2, ease: \"smooth\" });\n  s.wait(7.8);\n\n  // ---- handoff ---------------------------------------------------------------\n  s.keep(panel);\n  s.keep(referenceGrid);\n  s.keep(movingGrid);\n  s.keep(e1);\n  s.keep(e2);\n  s.keep(v);\n  s.keep(originDot);\n  s.keep(tipLabel);\n  s.keep(panelV);\n  s.keep(panelTv);\n});\n",
+      "duration": 30,
+      "captions": [
+        {
+          "start": 1.0,
+          "end": 6.0,
+          "text": "Here is the plane, with a bright copy on top."
+        },
+        {
+          "start": 6.3,
+          "end": 10.8,
+          "text": "We're about to turn it. Where will v land?"
+        },
+        {
+          "start": 11.0,
+          "end": 15.5,
+          "text": "Now watch the whole plane turn, all at once."
+        },
+        {
+          "start": 16.5,
+          "end": 20.5,
+          "text": "The origin never moved, and v rode along."
+        },
+        {
+          "start": 21.0,
+          "end": 26.0,
+          "text": "It lands at negative two, three: call that T of v."
+        }
+      ]
+    },
+    {
+      "id": "s02_what_counts_as_linear",
+      "index": 1,
+      "source": "export default scene({ mode: \"2d\", end: \"advance\", background: \"BLACK\" }, s => {\n  // ---- layout (identical to the previous scene) -----------------------------\n  const CX = -2.4;          // screen x of the plane's origin\n  const U = 0.95;           // scene units per grid step\n  const R = 3.75;           // bright grid is clipped to a disc of this radius\n  const TOTAL = 55;\n\n  // ---- sequential timing helpers that keep track of the clock ---------------\n  let clock = 0;\n  const P = (actions, duration) => { s.play(actions, { duration, ease: \"smooth\" }); clock += duration; };\n  const W = seconds => { s.wait(seconds); clock += seconds; };\n\n  // ---- carried objects -------------------------------------------------------\n  const panel = s.previous.get(\"panel\");\n  const referenceGrid = s.previous.get(\"reference-grid\");\n  const movingGrid = s.previous.get(\"moving-grid\");\n  const e1 = s.previous.get(\"e1-arrow\");\n  const e2 = s.previous.get(\"e2-arrow\");\n  const v = s.previous.get(\"v-arrow\");\n  const originDot = s.previous.get(\"origin-dot\");\n  const tipLabel = s.previous.get(\"v-tip-label\");\n  const panelV = s.previous.get(\"panel-v\");\n  const panelTv = s.previous.get(\"panel-Tv\");\n\n  // Each bright grid line, with its identity end points in grid steps.\n  const gridLines = [];\n  for (let i = -3; i <= 3; i++) {\n    const half = Math.sqrt(R * R - i * i);\n    gridLines.push({ h: s.previous.get(\"moving-grid-v-\" + i), a: [i, -half], b: [i, half] });\n    gridLines.push({ h: s.previous.get(\"moving-grid-h-\" + i), a: [-half, i], b: [half, i] });\n  }\n\n  // Morph the whole plane (grid + arrows) to its image under a map f given in\n  // grid steps. End points are blended linearly, so every frame is the map\n  // (1 - t) * identity + t * f.\n  const identity = p => p;\n  const toScene = p => [p[0] * U, p[1] * U];\n  const planeTo = f => {\n    const actions = gridLines.map(l => l.h.morphTo({ kind: \"line\", points: [toScene(f(l.a)), toScene(f(l.b))] }));\n    actions.push(e1.morphTo({ kind: \"arrow\", points: [[0, 0], toScene(f([1, 0]))] }));\n    actions.push(e2.morphTo({ kind: \"arrow\", points: [[0, 0], toScene(f([0, 1]))] }));\n    actions.push(v.morphTo({ kind: \"arrow\", points: [[0, 0], toScene(f([3, 2]))] }));\n    return actions;\n  };\n  // A shift moves every object, origin dot included.\n  const planeShift = (dx, dy) => gridLines.map(l => l.h.moveTo([CX + dx, dy])).concat([\n    e1.moveTo([CX + dx, dy]), e2.moveTo([CX + dx, dy]), v.moveTo([CX + dx, dy]),\n    originDot.moveTo([CX + dx, dy]),\n  ]);\n\n  // The three test maps (grid steps).\n  const shear = p => [p[0] + 0.5 * p[1], p[1]];\n  const uneven = p => [p[0] - 0.11 * p[0] * p[0], p[1]];\n  const SHIFT = [1.2 * U, -0.4 * U];\n\n  // ---- panel content created for this scene ----------------------------------\n  const mapLabel = s.latex(\"panel-map\", {\n    tex: \"\\\\animpart{T}{T}\\\\animpart{colon}{\\\\,:\\\\,}\\\\animpart{dom}{\\\\mathbb{R}^2}\\\\animpart{to}{\\\\;\\\\to\\\\;}\\\\animpart{cod}{\\\\mathbb{R}^2}\",\n    position: [4.65, 2.6], fontSize: 0.5, fill: \"WHITE\", opacity: 0,\n  });\n\n  const ICON_X = 3.4, MARK_X = 4.35;\n  const ROW_Y = [0.9, -0.3, -1.5];\n\n  // Small icon: a mini grid drawn from segments (local coordinates) plus a dot.\n  const makeIcon = (name, y, segments, dot, ring) => {\n    const parts = segments.map((seg, k) => s.line(\"icon-\" + name + \"-line-\" + k, {\n      position: [ICON_X, y], points: seg,\n      stroke: \"BLUE\", strokeWidth: 0.025, opacity: 0,\n    }));\n    if (ring) {\n      parts.push(s.circle(\"icon-\" + name + \"-ring\", {\n        position: [ICON_X, y], radius: 0.085,\n        fill: \"none\", stroke: { color: \"GREY_B\", opacity: 0.8 }, strokeWidth: 0.018, opacity: 0,\n      }));\n    }\n    parts.push(s.circle(\"icon-\" + name + \"-dot\", {\n      position: [ICON_X + dot[0], y + dot[1]], radius: 0.05,\n      fill: \"WHITE\", stroke: \"none\", opacity: 0,\n    }));\n    return parts;\n  };\n  const makeCheck = (name, y) => [s.path(\"mark-\" + name, {\n    position: [MARK_X, y], points: [[-0.2, 0.0], [-0.06, -0.16], [0.22, 0.2]], closed: false,\n    fill: \"none\", stroke: \"WHITE\", strokeWidth: 0.06, opacity: 0,\n  })];\n  const makeCross = (name, y) => [\n    s.line(\"mark-\" + name + \"-a\", {\n      position: [MARK_X, y], points: [[-0.17, -0.17], [0.17, 0.17]],\n      stroke: \"WHITE\", strokeWidth: 0.06, opacity: 0,\n    }),\n    s.line(\"mark-\" + name + \"-b\", {\n      position: [MARK_X, y], points: [[-0.17, 0.17], [0.17, -0.17]],\n      stroke: \"WHITE\", strokeWidth: 0.06, opacity: 0,\n    }),\n  ];\n\n  // Icon geometry: 3 x 3 mini grids, step m.\n  const m = 0.3;\n  const shearSegs = [], shiftSegs = [], unevenSegs = [];\n  for (let k = -1; k <= 1; k++) {\n    // shear icon\n    shearSegs.push([[k * m - 0.5 * m, -m], [k * m + 0.5 * m, m]]);\n    shearSegs.push([[-m + 0.5 * k * m, k * m], [m + 0.5 * k * m, k * m]]);\n    // shift icon (whole mini grid displaced)\n    shiftSegs.push([[k * m + 0.17, -m - 0.1], [k * m + 0.17, m - 0.1]]);\n    shiftSegs.push([[-m + 0.17, k * m - 0.1], [m + 0.17, k * m - 0.1]]);\n    // uneven icon: horizontals\n    unevenSegs.push([[-0.41, k * m], [0.27, k * m]]);\n  }\n  [-0.41, -0.19, 0, 0.15, 0.27].forEach(x => unevenSegs.push([[x, -m], [x, m]]));\n\n  const row1 = makeIcon(\"shear\", ROW_Y[0], shearSegs, [0, 0], false).concat(makeCheck(\"shear\", ROW_Y[0]));\n  const row2 = makeIcon(\"shift\", ROW_Y[1], shiftSegs, [0.17, -0.1], true).concat(makeCross(\"shift\", ROW_Y[1]));\n  const row3 = makeIcon(\"uneven\", ROW_Y[2], unevenSegs, [0, 0], false).concat(makeCross(\"uneven\", ROW_Y[2]));\n\n  const linearWord = s.latex(\"panel-linear\", {\n    tex: \"\\\\animpart{word}{\\\\text{linear}}\",\n    position: [5.5, ROW_Y[0]], fontSize: 0.5, fill: \"WHITE\", opacity: 0,\n  });\n\n  // Faint ring that marks where the origin was during the shift.\n  const originRing = s.circle(\"origin-ring\", {\n    position: [CX, 0], radius: 0.19,\n    fill: \"none\", stroke: { color: \"GREY_B\", opacity: 0.85 }, strokeWidth: 0.025, opacity: 0,\n  });\n\n  // ---- 1. undo the rotation ---------------------------------------------------\n  W(1);\n  P([tipLabel.fadeOut(), panelTv.fadeOut()], 1);\n  s.remove(tipLabel);\n  s.remove(panelTv);\n  W(0.5);\n  P(gridLines.map(l => l.h.rotateTo(0)).concat([e1.rotateTo(0), e2.rotateTo(0), v.rotateTo(0)]), 3);\n  W(0.8);\n  P([v.animate({ opacity: 0.35 }), panelV.fadeOut(), mapLabel.fadeIn()], 1);\n  s.remove(panelV);\n  W(0.7);\n\n  // ---- 2. test one: a shear (passes) -------------------------------------------\n  P(planeTo(shear), 3);\n  W(2);\n  P(row1.map(h => h.fadeIn()), 0.8);\n  W(1.4);\n  P(planeTo(identity), 2.5);\n  W(0.8);\n\n  // ---- 3. test two: a shift (origin leaves its spot) ---------------------------\n  P(planeShift(SHIFT[0], SHIFT[1]).concat([originRing.fadeIn()]), 3);\n  W(2);\n  P(row2.map(h => h.fadeIn()), 0.8);\n  W(1.4);\n  P(planeShift(0, 0), 2.5);\n  P(originRing.fadeOut(), 0.5);\n  s.remove(originRing);\n  W(0.5);\n\n  // ---- 4. test three: uneven spacing (lines straight, spacing broken) ----------\n  P(planeTo(uneven), 3);\n  W(2.2);\n  P(row3.map(h => h.fadeIn()), 0.8);\n  W(1.4);\n  P(planeTo(identity), 2.5);\n  W(1);\n\n  // ---- 5. only now name the passing kind ---------------------------------------\n  P(linearWord.fadeIn(), 1);\n  W(3.5);\n  const rows = row1.concat(row2, row3);\n  P(rows.map(h => h.fadeOut()), 1);\n  rows.forEach(h => s.remove(h));\n  W(0.3);\n  P(linearWord.moveTo([4.65, 1.75]), 1.2);\n  W(0.5);\n  P(v.animate({ opacity: 1 }), 1);\n  W(Math.max(0, TOTAL - clock));\n\n  // ---- handoff -------------------------------------------------------------------\n  s.keep(panel);\n  s.keep(referenceGrid);\n  s.keep(movingGrid);\n  s.keep(e1);\n  s.keep(e2);\n  s.keep(v);\n  s.keep(originDot);\n  s.keep(mapLabel);\n  s.keep(linearWord);\n});\n",
+      "duration": 55,
+      "captions": [
+        {
+          "start": 0.5,
+          "end": 5.5,
+          "text": "Let's turn it back and ask what made that special."
+        },
+        {
+          "start": 8.0,
+          "end": 12.5,
+          "text": "Here's a tilt. Lines stay parallel and evenly spaced."
+        },
+        {
+          "start": 13.0,
+          "end": 17.0,
+          "text": "And the origin stays put, so this passes."
+        },
+        {
+          "start": 18.5,
+          "end": 22.5,
+          "text": "Now slide everything. Still parallel, but look closely."
+        },
+        {
+          "start": 23.0,
+          "end": 27.5,
+          "text": "The origin has left its old spot. That fails."
+        },
+        {
+          "start": 29.2,
+          "end": 34.2,
+          "text": "One more: the lines are straight, but the spacing bunches."
+        },
+        {
+          "start": 34.5,
+          "end": 38.5,
+          "text": "Uneven spacing breaks the rule too, so no."
+        },
+        {
+          "start": 40.0,
+          "end": 45.0,
+          "text": "Parallel, evenly spaced, origin fixed: that's what we call linear."
+        },
+        {
+          "start": 46.0,
+          "end": 51.0,
+          "text": "So T is linear. What does that force on v?"
+        }
+      ]
+    }
+  ]
+}

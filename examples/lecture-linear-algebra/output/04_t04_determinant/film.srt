@@ -1,0 +1,71 @@
+1
+00:00:00,600 --> 00:00:04,000
+Our basis vectors span one square.
+
+2
+00:00:04,300 --> 00:00:08,300
+Nearby sits a leaf, filled with tiny squares.
+
+3
+00:00:08,400 --> 00:00:11,900
+This matrix stretches two wide, three tall.
+
+4
+00:00:15,600 --> 00:00:20,600
+Every one becomes a two by three rectangle: six times bigger.
+
+5
+00:00:20,900 --> 00:00:24,000
+So the whole leaf grows sixfold.
+
+6
+00:00:24,200 --> 00:00:28,700
+What about a bigger leaf, far away? Any guess?
+
+7
+00:00:31,300 --> 00:00:35,300
+Times six again. Size and position don't matter.
+
+8
+00:00:36,000 --> 00:00:40,500
+Because every region is made of those same squares.
+
+9
+00:00:41,000 --> 00:00:45,500
+Let's undo that, and try a less tidy map.
+
+10
+00:00:50,800 --> 00:00:55,300
+This matrix has columns two, one and one, two.
+
+11
+00:00:55,600 --> 00:01:00,100
+Our basis vectors land on them; the square slants.
+
+12
+00:01:00,600 --> 00:01:05,100
+Now pick any grid cell and slide it over.
+
+13
+00:01:05,600 --> 00:01:08,600
+A perfect fit. Try another one.
+
+14
+00:01:11,000 --> 00:01:15,500
+Every cell is that same parallelogram, wherever it started.
+
+15
+00:01:16,300 --> 00:01:20,800
+So square and leaf should grow by one factor.
+
+16
+00:01:20,900 --> 00:01:23,400
+And they do: times three.
+
+17
+00:01:23,600 --> 00:01:28,600
+That factor, the parallelogram's area, is the determinant of A.
+
+18
+00:01:29,200 --> 00:01:33,700
+Here it's three: one number for the whole plane.

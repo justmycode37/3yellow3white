@@ -1,0 +1,55 @@
+1
+00:00:01,000 --> 00:00:06,000
+Here is the plane, with a bright copy on top.
+
+2
+00:00:06,300 --> 00:00:10,800
+We're about to turn it. Where will v land?
+
+3
+00:00:11,000 --> 00:00:15,500
+Now watch the whole plane turn, all at once.
+
+4
+00:00:16,500 --> 00:00:20,500
+The origin never moved, and v rode along.
+
+5
+00:00:21,000 --> 00:00:26,000
+It lands at negative two, three: call that T of v.
+
+6
+00:00:30,500 --> 00:00:35,500
+Let's turn it back and ask what made that special.
+
+7
+00:00:38,000 --> 00:00:42,500
+Here's a tilt. Lines stay parallel and evenly spaced.
+
+8
+00:00:43,000 --> 00:00:47,000
+And the origin stays put, so this passes.
+
+9
+00:00:48,500 --> 00:00:52,500
+Now slide everything. Still parallel, but look closely.
+
+10
+00:00:53,000 --> 00:00:57,500
+The origin has left its old spot. That fails.
+
+11
+00:00:59,200 --> 00:01:04,200
+One more: the lines are straight, but the spacing bunches.
+
+12
+00:01:04,500 --> 00:01:08,500
+Uneven spacing breaks the rule too, so no.
+
+13
+00:01:10,000 --> 00:01:15,000
+Parallel, evenly spaced, origin fixed: that's what we call linear.
+
+14
+00:01:16,000 --> 00:01:21,000
+So T is linear. What does that force on v?

@@ -1,0 +1,253 @@
+{
+  "topic": "Basis vectors, coordinates and span",
+  "audience": "Beginning linear algebra students working in the plane R^2. They know vectors as arrows from the origin written as pairs, can add vectors tip to tail and scale them, but have not yet seen coordinates treated as scaling instructions or met the idea of span. This builds toward matrices as linear maps.",
+  "assumed": [
+    "Vectors in R^2 as arrows from the origin, written as pairs (x, y)",
+    "Vector addition tip to tail (the parallelogram picture)",
+    "Scalar multiplication: stretching, shrinking, and flipping with negative numbers",
+    "Two vectors are parallel when one is a scalar multiple of the other"
+  ],
+  "central_question": "What does it really mean for a vector to have coordinates (x, y), and which points can you reach by stretching and adding two fixed arrows?",
+  "palette": {
+    "background": "#0F1117",
+    "text": "#ECEFF4",
+    "muted": "#6B7280",
+    "grid": "#2A3A55",
+    "primary": "#58C4DD",
+    "secondary": "#FFFF00",
+    "accent_green": "#83C167",
+    "accent_red": "#FC6255",
+    "accent_teal": "#5CD0B3",
+    "accent_gold": "#F0AC5F",
+    "accent_purple": "#9A72AC"
+  },
+  "color_meanings": {
+    "first standard basis vector e1 (i-hat) and its scaling amount x": "accent_green",
+    "second standard basis vector e2 (j-hat) and its scaling amount y": "accent_red",
+    "the target vector v = (3,2) and its dot": "secondary",
+    "general vector u and its scalar a": "primary",
+    "general vector w (and w after it turns parallel) and its scalar b": "accent_gold",
+    "span / reachable set (trail and fill)": "accent_teal",
+    "coordinate grid, guide tracks and unreachable/dimmed states": "muted",
+    "labels and formulas": "text"
+  },
+  "opening": "An empty dark frame: a faint square coordinate grid with axes fills the left two thirds, centred on the origin; the right third holds the empty text panel (dark backing rectangle, thin border). Nothing else.",
+  "scenes": [
+    {
+      "id": "s01_basis_vectors",
+      "title": "The two building blocks",
+      "purpose": "There are two special unit arrows: e1 points one step right and e2 points one step up. Everything later is built by stretching and adding them.",
+      "shows": "From the origin a green arrow grows smoothly to the right, exactly one grid square long. After a short hold a red arrow grows upward, also one square long. A brief, gentle highlight of the single grid square they span shows that each is exactly one unit. Only after both are drawn do their labels fade in beside their tips (e1 / î and e2 / ĵ). In the panel, e1 = (1,0) and e2 = (0,1) are written in matching colours, each entry lighting up as the matching arrow is briefly emphasised.",
+      "key_points": [
+        "e1 is one unit to the right, e2 is one unit up",
+        "They are called e1, e2 or i-hat, j-hat",
+        "Show the arrows first, name them afterwards"
+      ],
+      "elements": [
+        "grid: square coordinate plane",
+        "e1: green unit arrow along the x-axis with label",
+        "e2: red unit arrow along the y-axis with label",
+        "panel_basis: e1 = (1,0), e2 = (0,1) in the panel, colour-matched"
+      ],
+      "ends_with": "The square grid with the green e1 and red e2 unit arrows at the origin, labelled; the panel shows e1 = (1,0) and e2 = (0,1) in matching colours. The unit-square highlight is gone.",
+      "duration": 30,
+      "arc_step": 1
+    },
+    {
+      "id": "s02_coordinates_as_scaling",
+      "title": "Coordinates are instructions",
+      "purpose": "The pair (3,2) is a recipe: stretch e1 by 3, stretch e2 by 2, add tip to tail. Coordinates are scaling amounts.",
+      "shows": "A yellow dot appears at (3,2). The panel basis definitions shrink to the top of the panel. The panel shows x = 0 in green; as x slides smoothly up to 3, e1 itself stretches along the x-axis to three units, its label becoming 3e1. Hold. Then y slides to 2 in red and e2 stretches upward to two units, label 2e2. The stretched e2 then glides, keeping its direction, until its tail sits on the tip of 3e1; its tip lands exactly on the yellow dot. Hold. A yellow arrow v grows from the origin to the dot. Only now does the panel write (3,2) = 3 e1 + 2 e2, with the 3 in green and the 2 in red. Finally the stretched arrows shrink smoothly back to unit length at the origin, leaving v standing alone with its recipe.",
+      "key_points": [
+        "The dot (3,2) is reached by 3 copies of e1 followed by 2 copies of e2",
+        "x and y are how much each basis arrow is stretched",
+        "v = x e1 + y e2, here (3,2) = 3 e1 + 2 e2"
+      ],
+      "elements": [
+        "grid: square coordinate plane",
+        "e1: green unit arrow with label",
+        "e2: red unit arrow with label",
+        "v: yellow arrow from origin to (3,2) with label and dot",
+        "panel_basis: e1, e2 definitions (small, top of panel)",
+        "panel_recipe: (3,2) = 3 e1 + 2 e2, colour-matched"
+      ],
+      "ends_with": "Square grid; unit e1 (green) and e2 (red) at the origin; yellow arrow v to the dot at (3,2), labelled v. Panel: small e1, e2 definitions on top and (3,2) = 3 e1 + 2 e2 below. The x, y readouts are gone.",
+      "duration": 45,
+      "arc_step": 2
+    },
+    {
+      "id": "s03_uniqueness",
+      "title": "Only one recipe works",
+      "purpose": "Each point has exactly one pair (x, y): changing x moves the tip only sideways and changing y only up and down, so just one setting hits the target.",
+      "shows": "Green 3e1 and red 2e2 are rebuilt tip to tail ending on v's tip, and the panel shows x and y values. Now x is nudged away from 3: the combined tip slides only horizontally along a faint muted horizontal track and leaves the yellow dot; it slides back. Then y is nudged: the tip slides only vertically along a faint vertical track, and back. Both tracks are now visible, crossing at a single point, exactly the yellow dot. Hold on that crossing. Then x and y move together so the tip visits two or three other points, and each time the horizontal and vertical tracks through it cross at one point, with the panel showing its single matching pair. The tip returns to (3,2), the tracks fade, and the stretched arrows shrink back to unit e1 and e2.",
+      "key_points": [
+        "Changing x moves the tip only horizontally",
+        "Changing y moves the tip only vertically",
+        "One horizontal line and one vertical line meet in exactly one point, so the pair (x, y) is unique"
+      ],
+      "elements": [
+        "grid: square coordinate plane",
+        "e1: green unit arrow with label",
+        "e2: red unit arrow with label",
+        "v: yellow arrow to (3,2) with dot",
+        "panel_recipe: (3,2) = 3 e1 + 2 e2"
+      ],
+      "ends_with": "Same clean picture as before: square grid, unit e1 and e2, yellow v to the dot at (3,2), and the panel showing (3,2) = 3 e1 + 2 e2 (the basis definitions may remain small above it). The tracks and other sample points are gone.",
+      "duration": 45,
+      "arc_step": 3
+    },
+    {
+      "id": "s04_linear_combination",
+      "title": "Any two arrows can be building blocks",
+      "purpose": "The same stretch-and-add recipe works with any two arrows: a u + b w is a linear combination, and the scalars may be negative.",
+      "shows": "The yellow v arrow fades back to just its dot; e1 and e2 fade out slowly together with the panel recipe. A blue arrow u = (2,1) and a gold arrow w = (1,1) grow from the origin, labelled. u stays put while a copy of w glides so its tail sits on u's tip; its tip lands on the yellow dot. Hold. The panel writes (3,2) = 1·u + 1·w, then generalises to a u + b w with a in blue and b in gold, showing a = 1, b = 1. The tip-to-tail chain is now driven by the panel values: a slides smoothly from 1 down to -1, and u (with w riding on its tip) shrinks through zero and points backwards; the combined tip moves away from the dot to the other side of the origin. a slides back to 1 and the chain lands on the dot again. The helper copy of w is removed.",
+      "key_points": [
+        "u and w replace e1 and e2 as building blocks",
+        "The same dot (3,2) equals 1·u + 1·w",
+        "a u + b w is called a linear combination",
+        "Scalars can be negative: the arrow flips backwards"
+      ],
+      "elements": [
+        "grid: square coordinate plane",
+        "u: blue arrow (2,1) with label",
+        "w: gold arrow (1,1) with label",
+        "target: yellow dot at (3,2)",
+        "panel_combo: a u + b w with a = 1, b = 1 and (3,2) = 1·u + 1·w"
+      ],
+      "ends_with": "Square grid with blue u and gold w drawn from the origin, the yellow dot at (3,2), no tip-to-tail copy. Panel: a u + b w, a = 1, b = 1, and (3,2) = 1·u + 1·w.",
+      "duration": 45,
+      "arc_step": 4
+    },
+    {
+      "id": "s05_span_whole_plane",
+      "title": "Where can a u + b w reach?",
+      "purpose": "The span of u and w is every point a u + b w can reach; for non-parallel u and w this is the whole plane, far beyond the parallelogram between them.",
+      "shows": "A single teal tip marks a u + b w. Holding b fixed, a sweeps smoothly from negative to large positive values; the tip leaves a thin teal trail: a whole line parallel to u, running behind the origin and off screen. b steps calmly to other values and a sweeps again, adding parallel teal lines; then a is held and b sweeps, adding lines parallel to w, together forming a skewed grid. Hold, so the viewer sees that these lines extend far past the small parallelogram of u and w. Then the sweeps speed up and densify continuously until the teal fills the whole geometry area as a smooth glow, not as dots. Hold. The panel adds span{u, w} = all a u + b w = R^2. The teal glow then dims to a faint wash and the trail lines fade.",
+      "key_points": [
+        "Let a and b take every value, including negative and larger than 1",
+        "Sweeping one scalar traces a full line; sweeping both fills the plane",
+        "span{u, w} = set of all a u + b w",
+        "Non-parallel u and w span the whole plane"
+      ],
+      "elements": [
+        "grid: square coordinate plane",
+        "u: blue arrow with label",
+        "w: gold arrow with label",
+        "target: yellow dot at (3,2)",
+        "span_fill: faint teal wash over the whole plane",
+        "panel_span: span{u, w} = all a u + b w = R^2"
+      ],
+      "ends_with": "Square grid under a faint teal wash covering the whole geometry area; blue u, gold w, yellow dot at (3,2). Panel: span{u, w} = all a u + b w = R^2. The trail lines and moving tip are gone; the earlier a, b values are cleared.",
+      "duration": 55,
+      "arc_step": 5
+    },
+    {
+      "id": "s06_parallel_collapse",
+      "title": "When two arrows point the same way",
+      "purpose": "If u and w are parallel, their combinations never leave one line through the origin; non-parallel is exactly what is needed to reach everything.",
+      "shows": "The teal wash fades away. Gold w rotates and stretches slowly and continuously (driven by one value) until it lies along u as w' = (4,2), label updating to w'. The panel shows w' = 2u. The same sweep as before runs: a and b move through negative and large values, but the teal trail draws only a single line through the origin along u, never leaving it however long the sweep runs. Hold. The yellow dot sits clearly off the line and dims to muted grey; the panel span line becomes span{u, w'} = a line. Hold. Then w' rotates slowly back to its original direction (w), and the teal wash spreads smoothly outward from the line to cover the plane again while the yellow dot regains its colour. Finally the teal fades out and the panel clears.",
+      "key_points": [
+        "Rotate w until it is parallel to u (w' = 2u)",
+        "Every combination stays on the line through u",
+        "(3,2) can no longer be reached",
+        "Turning w back off the line restores the whole plane"
+      ],
+      "elements": [
+        "grid: square coordinate plane",
+        "u: blue arrow with label",
+        "w: gold arrow back at (1,1) with label",
+        "target: yellow dot at (3,2)"
+      ],
+      "ends_with": "Square grid with blue u, gold w back in its original direction, and the yellow dot at (3,2) in full colour. No teal, no trail; the panel is empty.",
+      "duration": 50,
+      "arc_step": 6
+    },
+    {
+      "id": "s07_standard_basis_is_special_case",
+      "title": "Coordinates are a linear combination",
+      "purpose": "e1 and e2 are simply the most convenient non-parallel pair: their linear combinations give the familiar coordinates, and their span is the whole plane.",
+      "shows": "The panel writes (3,2) = 1·u + 1·w with u, w in their colours, and u then w-from-the-tip of u is briefly rebuilt to the dot, then the copy is removed. Over the geometry, a faint skewed grid of lines along u and w fades in, briefly glows teal to show it covers the whole plane, then fades. Next, u and w morph slowly and continuously back into e1 and e2 (one value blending their entries), recoloured in place to green and red as they arrive since they become those objects. The panel line below transforms to (3,2) = 3 e1 + 2 e2, and the yellow v arrow grows again to the dot. The square grid glows teal briefly to show the span of e1 and e2 is also the whole plane, then the glow fades. Hold on the clean picture.",
+      "key_points": [
+        "(3,2) = 1·u + 1·w and (3,2) = 3 e1 + 2 e2 both describe the same point",
+        "The skewed u,w grid and the square e1,e2 grid both cover the plane",
+        "Coordinates are the scalars of the special linear combination x e1 + y e2"
+      ],
+      "elements": [
+        "grid: square coordinate plane",
+        "e1: green unit arrow with label",
+        "e2: red unit arrow with label",
+        "v: yellow arrow to (3,2) with dot",
+        "panel_recipe: (3,2) = 1·u + 1·w and (3,2) = 3 e1 + 2 e2"
+      ],
+      "ends_with": "The square grid with green e1, red e2 and yellow v to (3,2); the panel shows (3,2) = 1·u + 1·w above (3,2) = 3 e1 + 2 e2. No teal, no skewed grid: a clean standard plane ready for linear maps.",
+      "duration": 50,
+      "arc_step": 7
+    }
+  ],
+  "teaching_plan": {
+    "learning_goal": "Given any vector in the plane, the student can draw it as 'x copies of e1 plus y copies of e2' and explain that its coordinates are the amounts of stretching. They can explain why this decomposition is unique. They can also predict what set of points a u + b w can reach: the whole plane when u and w are not parallel, and only a line through the origin when they are parallel.",
+    "prerequisites": [
+      "Vectors in R^2 as arrows from the origin, written as pairs (x, y)",
+      "Vector addition tip to tail (the parallelogram picture)",
+      "Scalar multiplication: stretching, shrinking, and flipping with negative numbers",
+      "Two vectors are parallel when one is a scalar multiple of the other"
+    ],
+    "key_insight": "Coordinates are not labels stuck on a point. They are instructions: stretch e1 by x, stretch e2 by y, and add. Once you see vectors as stretched-and-added building blocks, the question 'where can a u + b w reach?' has a clear answer. Two non-parallel directions together reach every point in the plane. Two parallel ones never leave their shared line.",
+    "misconceptions": [
+      "The idea that the coordinates (3,2) are just a name for the point rather than scaling amounts. The film shows 3 e1 and 2 e2 being built and added to land exactly on the point.",
+      "The idea that a point might have several valid (x, y) decompositions. The film shows that changing x slides the tip only horizontally and changing y slides it only vertically, so exactly one pair of slider values hits the target.",
+      "The idea that a linear combination of u and w only reaches the parallelogram between them. The film lets the scalars go negative and larger than 1, so the tip moves behind and far beyond the arrows.",
+      "The idea that any two vectors span the plane. The film shows a parallel pair whose combinations stay trapped on a single line, however the sliders move.",
+      "The idea that the span is a finite set of grid points. The film sweeps a and b continuously, so the reachable set fills in densely rather than as dots only."
+    ],
+    "concrete_example": "One running target, v = (3, 2). First it is built as 3 e1 + 2 e2. Then the same point is reached with a new pair, u = (2, 1) and w = (1, 1), because (3, 2) = 1·u + 1·w. Finally w is replaced by w' = (4, 2), which is parallel to u. Now the sweep collapses to the line through u, and (3, 2) cannot be reached at all.",
+    "arc": [
+      {
+        "step": "There are two special unit arrows: e1 = (1,0) points one step right and e2 = (0,1) points one step up. They are also called i-hat and j-hat.",
+        "why_now": "Everything that follows is built from stretching and adding fixed arrows. The viewer needs the two simplest building blocks on screen first.",
+        "visual_idea": "An empty grid. Two short arrows grow from the origin, one green pointing right and one red pointing up, each exactly one grid square long. Their names e1/i-hat and e2/j-hat appear only after they are drawn."
+      },
+      {
+        "step": "The point (3,2) is reached by stretching e1 by 3, stretching e2 by 2, and adding the results tip to tail. So the coordinates are scaling amounts: v = 3 e1 + 2 e2.",
+        "why_now": "It uses the two building blocks just introduced and the familiar operations of scaling and adding. It turns the abstract pair (3,2) into a recipe the viewer can watch.",
+        "visual_idea": "A dot marks (3,2). e1 stretches smoothly to 3 times its length while a counter reads 'x = 3'. Then e2 stretches to 2 while the counter reads 'y = 2'. The e2 arrow slides so its tail sits at the tip of 3 e1 and lands exactly on the dot. A yellow arrow v is drawn from the origin. Only then does the equation (3,2) = 3 e1 + 2 e2 appear, with each number color-matched to its arrow."
+      },
+      {
+        "step": "Every vector has exactly one such pair (x, y). The decomposition is unique.",
+        "why_now": "Once building one point is clear, the natural question is whether there could be another recipe. Answering it now justifies calling x and y 'the' coordinates.",
+        "visual_idea": "Two sliders control x and y. Moving x makes the tip slide only along a horizontal track, and moving y makes it slide only vertically. A faint horizontal line through the target and a faint vertical line through it cross at exactly one point, so only one setting of the sliders hits the target. Several other target points then flash, each with its own unique pair."
+      },
+      {
+        "step": "The same stretch-and-add idea works with any two arrows: a u + b w is called a linear combination. For example, with u = (2,1) and w = (1,1), the same point (3,2) equals 1·u + 1·w.",
+        "why_now": "Building with e1 and e2 is now familiar. Swapping in other arrows generalizes the recipe without adding a new operation, and the name is given only after the process has been seen twice.",
+        "visual_idea": "e1 and e2 fade out and two new arrows u (blue) and w (orange) appear. The target dot (3,2) stays. u is drawn, w is slid tip to tail, and they land on the dot. The term 'linear combination a u + b w' appears with sliders a = 1, b = 1. Moving a to -1 makes u flip backwards, showing that negative scalars are allowed."
+      },
+      {
+        "step": "The span of u and w is the set of every point a u + b w can reach. For non-parallel u and w, that set is the whole plane.",
+        "why_now": "With sliders for a and b in place, the viewer is ready to ask where all possible settings lead. This is the key insight the film has been building toward.",
+        "visual_idea": "The sliders sweep through all values, including negative ones and values above 1. The tip of a u + b w leaves a glowing trail. First it traces a skewed grid of lines along u and w, then it fills in until the whole screen is lit. The trail clearly extends behind and far beyond the parallelogram between u and w. The caption reads 'span{u, w} = all a u + b w = the whole plane'."
+      },
+      {
+        "step": "If the two vectors are parallel, their span is only a line through the origin. Non-parallel is exactly what is needed to reach everything.",
+        "why_now": "This contrast marks the boundary of the key insight and directly answers the idea that any two vectors span the plane.",
+        "visual_idea": "w rotates until it becomes w' = (4,2), which lies along u. The same slider sweep runs again, but the trail stays on a single line through the origin no matter how far the sliders move. The old target (3,2) blinks red off the line and cannot be reached. w' then rotates back off the line, and the light instantly floods the whole plane again."
+      },
+      {
+        "step": "Consolidation: e1 and e2 are simply the most convenient non-parallel pair. Their span is the plane, and their scaling amounts are the familiar coordinates.",
+        "why_now": "It ties the general idea of span back to where the film started. Coordinates are seen as one special case of linear combinations, which prepares for matrices as linear maps that move e1 and e2.",
+        "visual_idea": "Split screen. The left side shows the plane lit by sweeping x e1 + y e2 over the standard square grid. The right side shows it lit by a u + b w over a skewed grid. The point (3,2) is marked on both sides, with recipes '3 e1 + 2 e2' and '1 u + 1 w'. Both grids glow fully, then the right panel fades out, leaving the standard grid ready for the next section."
+      }
+    ]
+  },
+  "context": {
+    "source_title": "Linear Algebra, Lecture 3: Linear maps, matrices and determinants",
+    "position": "film 1 of 4",
+    "topic_summary": "Every vector in the plane is a unique combination x e1 + y e2 of the standard basis vectors, and its coordinates are just the scaling amounts. Combining two non-parallel vectors in this way reaches the whole plane.",
+    "earlier_topics": [],
+    "later_topics": [
+      "Linear maps and their matrices",
+      "Matrix multiplication is composition",
+      "The determinant as area scaling"
+    ]
+  }
+}
