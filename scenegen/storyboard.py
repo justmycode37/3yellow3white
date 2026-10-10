@@ -62,6 +62,8 @@ Rules:
   next scene; ends_with is a clean picture.
 - Do not plan captions or explanatory sentences on screen: only labels, formulas,
   matrices and numbers. "shows" must explain through motion and pictures.
+- Spatial subjects (molecules, 3D shapes) may be shown in 3D; the viewer can then
+  rotate the view with the mouse, which counts as interaction but needs no control.
 - Interactivity: the player lets viewers change inputs live (sliders for numbers,
   toggles for show/hide or on/off, selects for a few named choices), even while the
   animation runs or is paused. Give a scene an interactive element when playing with

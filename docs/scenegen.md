@@ -20,7 +20,7 @@ file ─LLM→ topics.json ─LLM→ teaching plan ─LLM→ storyboard.json ─
    writes scenes that follow that arc. Scenes are qualitative: `purpose`, `shows`,
    `key_points`, `elements`, `ends_with`, `duration`. Scene *i* starts on scene
    *i−1*'s `ends_with`.
-2. **Prompts** (`prompts/NN_scene.md`, `all_scenes.md`, `scenes.zip`): one
+2. **Prompts** (`prompts/NN_scene.md`, one file per scene, all bundled in `scenes.zip`; `all_scenes.md` joins them): one
    self-contained prompt per scene with overarching context, START and END scene,
    the animation to perform and the shared style rules (simplicity, minimal on-screen
    text, smooth and unhurried motion, fixed colour meanings and layout).
@@ -57,4 +57,5 @@ plugin folder next to the repo and its `scripts/bootstrap.ps1` run once.
 `examples/lecture-linear-algebra/` holds a short test lecture (`lecture.pdf`) and the
 pipeline output for it: `topics.json`, and per topic the storyboard (with its teaching
 plan), the first animlib scenes, the manifest and the narration script. Topic 3 was
-generated with interactive elements and includes its scene prompts (`prompts/all_scenes.md`).
+generated with interactive elements and includes its scene prompts, one `.md` per scene in `prompts/`, bundled with the scene
+code and manifest in `scenes.zip`.

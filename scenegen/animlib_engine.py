@@ -15,7 +15,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from . import animation_prompt, schema, script
+from . import animation_prompt, package, schema, script
 from .style import STYLE_GUIDE
 
 REPO = Path(__file__).resolve().parents[1]
@@ -143,6 +143,10 @@ Read these before writing (paths relative to `{REPO}`):
 Hard rules:
 - The source is exactly one module: `export default scene({{ mode: "2d", end: "{'hold' if last else 'advance'}", background: "BLACK" }}, s => {{ ... }});`
   No imports, no audio option, no DOM, timers or async code.
+- Use `mode: "2d"` for flat subjects. When the subject is genuinely spatial (molecules,
+  3D geometry), use 3D: spheres, `line3D` / `arrow3D`, camera transitions, and
+  `orbit: true` or an `s.view` region so the viewer can rotate it with the mouse
+  (reference section 6; the chemistry scene in `demo/scenes.ts` is a worked example).
 - Colours are palette tokens only (`Color.BLUE` or `"BLUE"`); raw CSS colours are rejected.
 - Timing is sequential: `s.play(action or [actions], {{ duration, ease: "smooth" }})` and
   `s.wait(seconds)`. The durations must add up to **{scene['duration']} s** (±0.5 s).
@@ -257,4 +261,5 @@ def run(provider, storyboard_path, only=None, redo=False, subtitles=True):
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"Manifest: {out / 'manifest.json'}")
+    print(f"Scene files: {package.zip_scenes(out, board)}")
     return manifest
