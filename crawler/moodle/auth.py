@@ -42,9 +42,9 @@ def login_eth_moodle(
     page.goto(course_url, wait_until="domcontentloaded", timeout=timeout)
 
     # Check if already authenticated
-    # if _is_on_course_page(page, course_url):
-    #     logger.info("Already authenticated and on course page.")
-    #     return
+    if _is_on_course_page(page, course_url):
+        logger.info("Already authenticated and on course page: %s", page.url)
+        return
 
     deadline = time.time() + (timeout / 1000)
 

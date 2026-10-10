@@ -2,8 +2,9 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import List
 
-from crawler.models import Credentials
+from crawler.models import CourseCrawlResult, Credentials
 from crawler.moodle.crawler import MoodleCrawler
 
 
@@ -17,7 +18,6 @@ def setup_logging(verbose: bool = False) -> None:
 
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
-    # Remove existing handlers to avoid duplicates
     root_logger.handlers = [handler]
 
 
@@ -28,16 +28,22 @@ def parse_args(args=None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "url",
-        nargs="?",
-        default=None,
-        help="Moodle course URL (e.g. https://moodle-app2.let.ethz.ch/course/view.php?id=26473)",
+        "urls",
+        nargs="*",
+        default=[],
+        help="One or more Moodle course URLs (e.g. https://moodle-app2.let.ethz.ch/course/view.php?id=26473)",
     )
     parser.add_argument(
         "--url",
-        dest="url_opt",
-        default=None,
-        help="Alternative flag to specify Moodle course URL",
+        dest="url_opts",
+        action="append",
+        default=[],
+        help="Specify Moodle course URL (can be used multiple times)",
+    )
+    parser.add_argument(
+        "-f",
+        "--urls-file",
+        help="Path to a text file containing course URLs (one URL per line)",
     )
     parser.add_argument(
         "-c",
@@ -49,7 +55,7 @@ def parse_args(args=None) -> argparse.Namespace:
         "-o",
         "--output-dir",
         default="./downloads",
-        help="Directory to save downloaded PDF files",
+        help="Base directory to save downloaded PDF files (subfolders created per course)",
     )
     parser.add_argument(
         "--headed",
@@ -72,14 +78,49 @@ def parse_args(args=None) -> argparse.Namespace:
     return parser.parse_args(args)
 
 
+def resolve_course_urls(parsed: argparse.Namespace) -> List[str]:
+    """
+    Collect and deduplicate course URLs from positional arguments, --url flags, and --urls-file.
+    """
+    urls: List[str] = list(parsed.urls)
+    if parsed.url_opts:
+        urls.extend(parsed.url_opts)
+
+    if parsed.urls_file:
+        file_path = Path(parsed.urls_file).expanduser().resolve()
+        if not file_path.is_file():
+            raise FileNotFoundError(f"URLs file not found: {file_path}")
+        for line in file_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                urls.append(line)
+
+    # Deduplicate while preserving order
+    seen = set()
+    unique_urls = []
+    for u in urls:
+        if u not in seen:
+            seen.add(u)
+            unique_urls.append(u)
+
+    return unique_urls
+
+
 def main(args=None) -> int:
     parsed = parse_args(args)
     setup_logging(parsed.verbose)
     logger = logging.getLogger("crawler")
 
-    course_url = parsed.url_opt or parsed.url
-    if not course_url:
-        logger.error("Error: Course URL is required. Provide it as an argument or via --url.")
+    try:
+        course_urls = resolve_course_urls(parsed)
+    except Exception as e:
+        logger.error("Failed to load URLs: %s", e)
+        return 1
+
+    if not course_urls:
+        logger.error(
+            "Error: At least one course URL is required. Provide via arguments, --url, or -f/--urls-file."
+        )
         return 1
 
     try:
@@ -91,7 +132,7 @@ def main(args=None) -> int:
     output_dir = Path(parsed.output_dir)
 
     crawler = MoodleCrawler(
-        course_url=course_url,
+        course_urls=course_urls,
         credentials=credentials,
         output_dir=output_dir,
         headless=not parsed.headed,
@@ -99,38 +140,55 @@ def main(args=None) -> int:
     )
 
     try:
-        results = crawler.crawl()
+        course_results = crawler.crawl()
     except Exception as e:
-        logger.exception("Crawling failed with an error: %s", e)
+        logger.exception("Crawling failed with an unexpected error: %s", e)
         return 2
 
     # Print summary
-    successful = [r for r in results if r.success]
-    failed = [r for r in results if not r.success]
+    total_courses = len(course_results)
+    successful_courses = sum(1 for c in course_results if c.success)
+    total_pdfs = sum(len(c.resources) for c in course_results)
+    total_downloaded = sum(sum(1 for d in c.downloads if d.success) for c in course_results)
+    total_failed = sum(sum(1 for d in c.downloads if not d.success) for c in course_results)
+    total_bytes = sum(sum(d.file_size for d in c.downloads if d.success) for c in course_results)
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 65)
     print("CRAWL SUMMARY")
-    print("=" * 60)
-    print(f"Target URL:         {course_url}")
-    print(f"Output Directory:   {output_dir.resolve()}")
-    print(f"Total PDFs found:   {len(results)}")
-    print(f"Successfully saved: {len(successful)}")
-    print(f"Failed downloads:   {len(failed)}")
+    print("=" * 65)
+    print(f"Courses Requested:   {len(course_urls)}")
+    print(f"Courses Processed:   {successful_courses}/{total_courses}")
+    print(f"Total PDFs Found:    {total_pdfs}")
+    print(f"Total Downloaded:    {total_downloaded}")
+    print(f"Total Failed:        {total_failed}")
+    print(f"Total Download Size: {total_bytes / (1024 * 1024):.2f} MB")
+    print(f"Base Directory:      {output_dir.resolve()}")
+    print("-" * 65)
 
-    if successful:
-        print("\nDownloaded files:")
-        for r in successful:
-            size_kb = (r.file_size or 0) / 1024
-            name = r.file_path.name if r.file_path else "unknown"
-            print(f"  ✓ {name} ({size_kb:.1f} KB)")
+    has_errors = False
+    for c in course_results:
+        status_icon = "✓" if c.success else "✗"
+        print(f"\n{status_icon} Course: {c.folder_name}")
+        print(f"  URL:      {c.course_url}")
+        print(f"  Folder:   {output_dir.resolve() / c.folder_name}")
 
-    if failed:
-        print("\nFailed items:")
-        for r in failed:
-            print(f"  ✗ {r.resource.title}: {r.error_message}")
+        if c.success:
+            successful_dl = [d for d in c.downloads if d.success]
+            failed_dl = [d for d in c.downloads if not d.success]
+            print(f"  Files:    {len(successful_dl)}/{len(c.resources)} saved")
+            for d in successful_dl:
+                size_kb = (d.file_size or 0) / 1024
+                fname = d.file_path.name if d.file_path else "unknown"
+                print(f"    • {fname} ({size_kb:.1f} KB)")
+            for d in failed_dl:
+                has_errors = True
+                print(f"    ✗ {d.resource.title}: {d.error_message}")
+        else:
+            has_errors = True
+            print(f"  Error:    {c.error_message}")
 
-    print("=" * 60 + "\n")
-    return 0 if not failed else 3
+    print("=" * 65 + "\n")
+    return 0 if not has_errors else 3
 
 
 if __name__ == "__main__":

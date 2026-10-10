@@ -1,7 +1,33 @@
 import os
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
+
+
+def sanitize_folder_name(folder_name: str) -> str:
+    """
+    Sanitize folder name to prevent directory traversal and remove invalid filesystem characters.
+    """
+    sanitized = re.sub(r'[\x00-\x1f\x7f/\\:\*\?"<>\|]', '_', folder_name)
+    sanitized = sanitized.strip(". ")
+    if not sanitized:
+        sanitized = "course"
+    return sanitized[:200]
+
+
+def extract_course_folder_name(dom_title: str, fallback: str = "course") -> str:
+    """
+    Process subfolder name from DOM title using:
+    name = title.split(':', 1)[1].split('|', 1)[0].strip()
+    """
+    try:
+        name = dom_title.split(":", 1)[1].split("|", 1)[0].strip()
+        if name:
+            return sanitize_folder_name(name)
+    except (IndexError, AttributeError):
+        pass
+    return sanitize_folder_name(fallback)
 
 
 @dataclass
@@ -51,3 +77,13 @@ class DownloadResult:
     status_code: Optional[int] = None
     error_message: Optional[str] = None
     file_size: int = 0
+
+
+@dataclass
+class CourseCrawlResult:
+    course_url: str
+    folder_name: str
+    resources: List[PDFResource] = field(default_factory=list)
+    downloads: List[DownloadResult] = field(default_factory=list)
+    success: bool = True
+    error_message: Optional[str] = None
