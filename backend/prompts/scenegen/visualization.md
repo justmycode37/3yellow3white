@@ -143,12 +143,12 @@ Building shapes (strict):
 
 On-screen text (strict):
 - Only necessary text: short object labels (e.g. v, î, A), formulas, matrices and
-  numbers that are part of the mathematics. Nothing else.
-- NO explanatory sentences or captions in the animation ("Lines stay straight",
-  "Record where î lands", "Order matters!", titles, bullet points). The motion itself
-  must carry the explanation; a narrator will add the words later.
-- If a word seems necessary, show the idea visually instead (highlight, colour,
-  motion, side-by-side comparison).
+  numbers that are part of the explanation, plus brief definitions when useful.
+  Tie symbols to their spoken meanings; do not use unexplained notation as decoration.
+- Avoid paragraphs and duplicate captions in the animation. Use motion, highlights,
+  colour, and comparisons to develop the planned argument alongside the supplied
+  narration. Show the evidence and symbol correspondences specified by the storyboard;
+  do not assume a narrator will add missing explanations later.
 
 LaTeX (strict; one unsupported command stops the whole lesson from playing):
 - Formulas are rendered by MathJax with only the base, ams, newcommand and html
