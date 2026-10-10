@@ -83,7 +83,7 @@ test("logout revokes at the provider before removing local credentials and retai
 });
 
 function message(text: string, stopReason: AssistantMessage["stopReason"] = "stop"): AssistantMessage {
-  return { role: "assistant", content: [{ type: "text", text }], provider: "openai", api: "openai-responses", model: "gpt-6.1-sol",
+  return { role: "assistant", content: [{ type: "text", text }], provider: "openai", api: "openai-responses", model: "gpt-6-astra",
     usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
     stopReason, timestamp: Date.now(), ...(stopReason === "error" ? { errorMessage: "401 sensitive-provider-detail" } : {}) };
 }

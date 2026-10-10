@@ -160,7 +160,7 @@ API-key mode holds the key in memory and ignores saved OAuth credentials.
 Subscription mode requires OAuth and cannot fall back to an API key. Changing
 modes does not revoke the previous subscription registration.
 
-`AGENT_MODEL` defaults to `gpt-6.1-sol`, `AGENT_THINKING` to `medium`, and
+`AGENT_MODEL` defaults to `gpt-6-astra`, `AGENT_THINKING` to `high`, and
 `AGENT_TIMEOUT_MS` to 300000 per script/scene including repairs. The model must
 exist in the pinned catalog and be available to your account; `agents:check`
 verifies inference. Runs allow twelve agent turns and three final-output
