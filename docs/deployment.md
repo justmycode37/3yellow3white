@@ -51,6 +51,15 @@ Optional runtime configuration can live in `/etc/3yellow3white/environment` on
 the VM. The legacy `/srv/apps/3yellow3white/.env` is also read if it exists. Do not
 set `APP_REVISION` in either file: it is supplied by the deployment unit.
 
+Narration requires `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`,
+`NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch`, and an absolute persistent
+`NARRATION_DATA_DIR` owned by `deploy` (for example
+`/var/lib/3yellow3white/narration`). Keep that directory outside releases so
+deployments and rollbacks retain audio and timing packages. Leave
+`NARRATION_ALLOW_LOCAL` disabled in production. The service relies on VISCon's
+trusted identity headers for narration ownership. See [narration](narration.md)
+for setup, retry behaviour, and the single-worker constraint.
+
 ## Manual verification and recovery
 
 After running the build/test commands, package a release:

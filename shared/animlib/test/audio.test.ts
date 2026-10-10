@@ -4,7 +4,7 @@ import type { CompiledScene } from "../src/types.js";
 
 function scene(audio?: string, duration = 2): CompiledScene {
   return {
-    options: { mode: "2d", end: "hold", orbit: false, background: "#000", audio },
+    options: { mode: "2d", end: "hold", orbit: false, background: "BLACK", audio },
     duration, controls: [], initial: [], lifecycle: [], tracks: [],
     camera: { yaw: 0, pitch: 0, target: [0, 0, 0], height: 8, distance: 10, perspective: 0 },
   };

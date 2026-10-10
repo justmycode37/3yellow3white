@@ -1,6 +1,7 @@
 import { realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { narrationRoutes } from "./narration/routes.js";
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
 
@@ -24,6 +25,7 @@ function inside(root: string, path: string) {
 
 export function createHandler(frontendDir = defaultFrontendDir) {
   const root = resolve(frontendDir);
+  const narration = narrationRoutes();
 
   async function serveFile(path: string) {
     const candidate = resolve(root, path);
@@ -44,6 +46,7 @@ export function createHandler(frontendDir = defaultFrontendDir) {
     try { path = decodeURIComponent(new URL(request.url).pathname); }
     catch { return Response.json({ detail: "Invalid URL" }, { status: 400 }); }
     if (path.includes("\0")) return Response.json({ detail: "Invalid URL" }, { status: 400 });
+    if (path === "/api/narrations" || path.startsWith("/api/narrations/")) return narration(request, path);
 
     const api = path === "/api/hello" || path === "/api/me" || path === "/healthz";
     const page = path === "/" || path === "/plan" || /^\/plan\/[^/]+$/.test(path) || path === "/library" || path === "/settings" || /^\/watch\/[^/]+$/.test(path);

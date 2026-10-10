@@ -222,12 +222,12 @@ it('keeps mapped glyphs visually identical throughout a self-morph and the resto
     await renderer.prepare([]);
     const geometry: Geometry = {kind: 'latex', tex: String.raw`\animpart{glyph}{\text{n}}`, fontSize: 1};
     const element: ElementState = {id: 'label', geometry, position: [0,0,0], rotation: [0,0,0], scale: 1,
-      opacity: 1, fill: '#fff', stroke: 'none', strokeWidth: 0, space: 'world', persistent: false};
+      opacity: 1, fill: "WHITE", stroke: 'none', strokeWidth: 0, space: 'world', persistent: false};
     const area = (progress?: number) => {
       writes.length = 0;
       renderer.render({elements: [{...element, ...(progress === undefined ? {} : {morph: {from: geometry, to: geometry, progress, map: {glyph: 'glyph'}}})}],
         camera: {yaw: 0, pitch: 0, target: [0,0,0], height: 8, distance: 10, perspective: 0}, cameraAnimated: false},
-      {mode: '2d', end: 'hold', orbit: false, background: '#000'});
+      {mode: '2d', end: 'hold', orbit: false, background: "BLACK"});
       const data = writes[0], points = Array.from({length: data.length / stride}, (_, i) => Array.from(data.subarray(i * stride, i * stride + 3)) as Vec3);
       let total = 0;
       for (let i = 0; i < points.length; i += 3) {

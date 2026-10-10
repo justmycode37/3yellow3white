@@ -1,9 +1,11 @@
 import { SceneCompileError } from "./compiler.js";
 import { SourceCompiler } from "./compiler-client.js";
 import { evaluateScene } from "./timeline.js";
-import type { CompiledScene, ControlValue, Frame, SceneSource, Submission, SubmitResult } from "./types.js";
+import { paletteResolver } from "./palette.js";
+import type { ColorPalette, CompiledScene, ControlValue, Frame, SceneSource, Submission, SubmitResult } from "./types.js";
 
 export interface SequenceOptions {
+  palette?: ColorPalette;
   seed?: number;
   executionLimitMs?: number;
   prepare?: (scenes: CompiledScene[]) => Promise<void>;
@@ -18,7 +20,9 @@ export class SceneSequence {
   private queue: Promise<unknown> = Promise.resolve();
   private compiler = new SourceCompiler();
   private disposed = false;
-  constructor(private options: SequenceOptions = {}) {}
+  constructor(private options: SequenceOptions = {}) {
+    this.options = { ...options, palette: paletteResolver(options.palette).palette };
+  }
 
   index(id: string): number {
     const index = this.sources.findIndex(s => s.id === id);
@@ -37,7 +41,7 @@ export class SceneSequence {
     let previous: Frame | undefined;
     for (const source of sources) {
       try {
-        const scene = await this.compiler.compile(source.source, { previous, controls: values.get(source.id), seed: this.options.seed ?? 1 }, this.options);
+        const scene = await this.compiler.compile(source.source, { previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
         compiled.push(scene); previous = evaluateScene(scene, scene.duration);
       } catch (error) {
         if (error instanceof SceneCompileError) error.diagnostic.scene = source.id;

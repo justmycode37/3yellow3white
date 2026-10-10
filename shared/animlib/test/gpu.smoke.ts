@@ -10,6 +10,8 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {deflateSync} from 'node:zlib';
 import {join} from 'node:path';
 import colorString from 'color-string';
+import {Color,paletteResolver} from '../src/palette.js';
+import type {PaletteColor} from '../src/types.js';
 import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 
@@ -71,7 +73,7 @@ describe('native Vulkan WebGPU rendering',()=> {
     const rows=Buffer.alloc(height*(width*4+1));for(let y=0;y<height;y++)rows.set(image.subarray(y*width*4,(y+1)*width*4),y*(width*4+1)+1);
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
-  function changedPixels(image:Uint8Array,background='#000000'):number {const rgb=colorString.get.rgb(background)!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
   it('compiles the production WGSL and renders all three demonstrations',async()=> {
     const observations:number[]=[];
     for(let i=0;i<sequence.compiled.length;i++) {
@@ -86,8 +88,8 @@ describe('native Vulkan WebGPU rendering',()=> {
   });
   it('renders every Aha lesson in light and dark mode with deterministic seeking',async()=> {
     for(const lesson of lessons) for(const dark of [false,true]) {
-      const background=dark?'#000000':'#d6e2df';
-      const result=await sequence.submit({type:'load',scenes:lessonScenes(lesson,{background,ink:dark?'#f4f1ed':'#29282e',accent:dark?'#8acde5':'#365f80'})});
+      const background=dark?Color.BLACK:Color.WHITE;
+      const result=await sequence.submit({type:'load',scenes:lessonScenes(lesson,{background,ink:dark?Color.WHITE:Color.GREY_E,accent:dark?Color.BLUE:Color.BLUE_E})});
       expect(result.ok).toBe(true);
       const scene=sequence.compiled[0];
       renderer.render(sequence.frame(0,scene.duration/2),scene.options);
@@ -105,15 +107,15 @@ describe('native Vulkan WebGPU rendering',()=> {
   });
   it('clips independent view regions and renders scene screen overlays above them',async()=> {
     const result=await sequence.submit({type:'load',scenes:[{id:'regions',source:`export default scene({},s=>{
-      s.rectangle("background",{width:100,height:100,fill:"#00ff00"});
+      s.rectangle("background",{width:100,height:100,fill:"PURE_GREEN"});
       s.view("left",{rect:[0.05,0.1,0.4,0.7],camera:{perspective:0,yaw:0,pitch:0}},v=>{
-        v.rectangle("red",{width:100,height:100,fill:"#ff0000"});
-        v.rectangle("local-marker",{space:"screen",width:10,height:10,fill:"#ffff00"});
+        v.rectangle("red",{width:100,height:100,fill:"PURE_RED"});
+        v.rectangle("local-marker",{space:"screen",width:10,height:10,fill:"YELLOW"});
       });
       s.view("right",{rect:[0.5,0.1,0.4,0.7],camera:{perspective:0,yaw:0,pitch:0}},v=>{
-        v.rectangle("blue",{width:100,height:100,fill:"#0000ff"});
+        v.rectangle("blue",{width:100,height:100,fill:"PURE_BLUE"});
       });
-      s.rectangle("overlay",{space:"screen",position:[-224,0],width:10,height:10,fill:"#ffffff"});
+      s.rectangle("overlay",{space:"screen",position:[-224,0],width:10,height:10,fill:"WHITE"});
       s.wait(1);
     });`}]});
     expect(result.ok).toBe(true);
@@ -128,10 +130,10 @@ describe('native Vulkan WebGPU rendering',()=> {
   it('rotating one 3D region changes only its pixels',async()=> {
     const result=await sequence.submit({type:'load',scenes:[{id:'rotate-regions',source:`export default scene({},s=>{
       s.view("left",{rect:[0,0,0.5,1]},v=>{
-        v.sphere("left-ball",{position:[1,0.5,1],radius:0.6,fill:"#ff0000"});
+        v.sphere("left-ball",{position:[1,0.5,1],radius:0.6,fill:"PURE_RED"});
       });
       s.view("right",{rect:[0.5,0,0.5,1]},v=>{
-        v.sphere("right-ball",{position:[1,0.5,1],radius:0.6,fill:"#0000ff"});
+        v.sphere("right-ball",{position:[1,0.5,1],radius:0.6,fill:"PURE_BLUE"});
       });
       s.wait(1);
     });`}]});
@@ -158,10 +160,10 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect((await sequence.submit({type:'load',scenes:[{id:'camera-handoff',source:`export default scene({},s=>{
       let camera;
       s.view("left",{rect:[0,0,0.5,1]},v=>{
-        camera=v.camera;v.sphere("left-ball",{position:[1,0.5,1],radius:0.6,fill:"#ff0000"});
+        camera=v.camera;v.sphere("left-ball",{position:[1,0.5,1],radius:0.6,fill:"PURE_RED"});
       });
       s.view("right",{rect:[0.5,0,0.5,1]},v=>{
-        v.sphere("right-ball",{position:[1,0.5,1],radius:0.6,fill:"#0000ff"});
+        v.sphere("right-ball",{position:[1,0.5,1],radius:0.6,fill:"PURE_BLUE"});
       });
       s.wait(2);s.play(camera.animate({yaw:1.4,pitch:0.1}),{duration:2,ease:"linear"});s.wait(1);
     });`}] })).ok).toBe(true);
@@ -198,8 +200,8 @@ describe('native Vulkan WebGPU rendering',()=> {
   });
   it('keeps world-up, billboard labels, CPU projection, and lighting aligned throughout an orbit',async()=> {
     expect((await sequence.submit({type:'load',scenes:[{id:'upright-orbit',source:`export default scene({mode:"3d",orbit:false},s=>{
-      s.sphere("lit",{radius:0.5,fill:"#00ff00",stroke:"none"});
-      s.rectangle("label",{position:[0,1.5,0],billboard:true,billboardOffset:[0.2,0.1,0.25],width:0.6,height:0.3,fill:"#ff0000",stroke:"none"});
+      s.sphere("lit",{radius:0.5,fill:"PURE_GREEN",stroke:"none"});
+      s.rectangle("label",{position:[0,1.5,0],billboard:true,billboardOffset:[0.2,0.1,0.25],width:0.6,height:0.3,fill:"PURE_RED",stroke:"none"});
       s.wait(1);
     });`}] })).ok).toBe(true);
     const base=sequence.frame(0,0);
@@ -239,9 +241,9 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(during).not.toEqual(end);expect(errors).toEqual([]);
   });
   it('depth-tests intersecting mesh faces per pixel rather than by average face depth',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'depth',source:String.raw`export default scene({mode:"3d",background:"#101b2c"},s=>{
-      s.mesh("slanted",{vertices:[[-2,-2,2],[2,-2,-2],[0,2,0]],triangles:[[0,1,2]],fill:"#ff0000",stroke:"none"});
-      s.mesh("flat",{vertices:[[-2,-2,0],[2,-2,0],[0,2,0]],triangles:[[0,1,2]],fill:"#0000ff",stroke:"none"});
+    const result=await sequence.submit({type:'load',scenes:[{id:'depth',source:String.raw`export default scene({mode:"3d",background:"GREY_E"},s=>{
+      s.mesh("slanted",{vertices:[[-2,-2,2],[2,-2,-2],[0,2,0]],triangles:[[0,1,2]],fill:"PURE_RED",stroke:"none"});
+      s.mesh("flat",{vertices:[[-2,-2,0],[2,-2,0],[0,2,0]],triangles:[[0,1,2]],fill:"PURE_BLUE",stroke:"none"});
       s.wait(1);
     });`}]});
     expect(result.ok).toBe(true);renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
@@ -251,8 +253,8 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(at(width/2+40,height/2)).toEqual([0,0,255]);expect(errors).toEqual([]);
   });
   it('uses centered CSS pixels for screen labels independently of camera projection',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'screen',source:String.raw`export default scene({mode:"3d",background:"#101b2c"},s=>{
-      s.rectangle("marker",{space:"screen",position:[100,50],width:20,height:20,fill:"#ff0000",stroke:"none"});
+    const result=await sequence.submit({type:'load',scenes:[{id:'screen',source:String.raw`export default scene({mode:"3d",background:"GREY_E"},s=>{
+      s.rectangle("marker",{space:"screen",position:[100,50],width:20,height:20,fill:"PURE_RED",stroke:"none"});
       s.wait(1);
     });`}]});
     expect(result.ok).toBe(true);
@@ -260,10 +262,11 @@ describe('native Vulkan WebGPU rendering',()=> {
     const image=await pixels();
     const at=(x:number,y:number)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3));
     expect(at(width/2+100,height/2-50)).toEqual([255,0,0]);
-    expect(at(width/2,height/2)).toEqual([16,27,44]);expect(errors).toEqual([]);
+    // The scene uses the Manim GREY_E background token.
+    expect(at(width/2,height/2)).toEqual([34,34,34]);expect(errors).toEqual([]);
   });  it('keeps the arrow silhouette stable through an identity morph',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'arrow',source:String.raw`export default scene({background:"#000000"},s=>{
-      const a=s.arrow("arrow",{points:[[0,0],[2,1]],stroke:"#ffffff",strokeWidth:0.12});
+    const result=await sequence.submit({type:'load',scenes:[{id:'arrow',source:String.raw`export default scene({background:"BLACK"},s=>{
+      const a=s.arrow("arrow",{points:[[0,0],[2,1]],stroke:"WHITE",strokeWidth:0.12});
       s.wait(1);s.play(a.morphTo({kind:"arrow",points:[[0,0],[2,1]]}),{duration:2});
     });`}]});expect(result.ok).toBe(true);
     renderer.render(sequence.frame(0,0),sequence.compiled[0].options);const before=await pixels();
@@ -272,17 +275,17 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(differences).toBeLessThan(32);expect(changedPixels(during)).toBeGreaterThan(500);expect(errors).toEqual([]);
   });
   it('antialiases stroke boundaries without double-blending shared corner joins',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'stroke',source:String.raw`export default scene({background:"#000000"},s=>{
-      s.rectangle("box",{width:3,height:2,position:[0.013,0.017],fill:"none",stroke:"white",strokeWidth:0.06,opacity:0.5});s.wait(1);
+    const result=await sequence.submit({type:'load',scenes:[{id:'stroke',source:String.raw`export default scene({background:"BLACK"},s=>{
+      s.rectangle("box",{width:3,height:2,position:[0.013,0.017],fill:"none",stroke:"WHITE",strokeWidth:0.06,opacity:0.5});s.wait(1);
     });`}]});expect(result.ok).toBe(true);
     renderer.render(sequence.frame(0,0),sequence.compiled[0].options);const image=await pixels();await artifact('antialiased-border',image);
     let max=0,antialiased=0;for(let i=0;i<image.length;i+=4){max=Math.max(max,image[i]);if(image[i]>0&&image[i]<120)antialiased++;}
     expect(max).toBeLessThanOrEqual(128);expect(max).toBeGreaterThanOrEqual(127);expect(antialiased).toBeGreaterThan(100);expect(errors).toEqual([]);
   });
   it('occludes a center-to-edge bond behind a lit sphere surface',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'sphere',source:String.raw`export default scene({mode:"3d",background:"#000000"},s=>{
-      s.sphere("atom",{radius:1,fill:"#00aaff",stroke:"none"});
-      s.line("bond",{points:[[0,0,0],[2,0,0]],stroke:"white",strokeWidth:0.08});s.wait(1);
+    const result=await sequence.submit({type:'load',scenes:[{id:'sphere',source:String.raw`export default scene({mode:"3d",background:"BLACK"},s=>{
+      s.sphere("atom",{radius:1,fill:"PURE_BLUE",stroke:"none"});
+      s.line("bond",{points:[[0,0,0],[2,0,0]],stroke:"WHITE",strokeWidth:0.08});s.wait(1);
     });`}]});expect(result.ok).toBe(true);
     const frame=sequence.frame(0,0);
     renderer.render(frame,sequence.compiled[0].options);const image=await pixels();await artifact('sphere-bond-occlusion',image);
@@ -292,17 +295,17 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(at(Math.round(exposedBond.x),Math.round(exposedBond.y))).toEqual([255,255,255]);expect(errors).toEqual([]);
   });
   it('retains rear alpha contributions when translucent mesh faces intersect',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'alpha',source:String.raw`export default scene({mode:"3d",background:"black"},s=>{
-      s.mesh("slanted",{vertices:[[-2,-2,2],[2,-2,-2],[0,2,0]],triangles:[[0,1,2]],fill:"red",stroke:"none",opacity:0.5});
-      s.mesh("flat",{vertices:[[-2,-2,0],[2,-2,0],[0,2,0]],triangles:[[0,1,2]],fill:"blue",stroke:"none",opacity:0.5});s.wait(1);
+    const result=await sequence.submit({type:'load',scenes:[{id:'alpha',source:String.raw`export default scene({mode:"3d",background:"BLACK"},s=>{
+      s.mesh("slanted",{vertices:[[-2,-2,2],[2,-2,-2],[0,2,0]],triangles:[[0,1,2]],fill:"PURE_RED",stroke:"none",opacity:0.5});
+      s.mesh("flat",{vertices:[[-2,-2,0],[2,-2,0],[0,2,0]],triangles:[[0,1,2]],fill:"PURE_BLUE",stroke:"none",opacity:0.5});s.wait(1);
     });`}]});expect(result.ok).toBe(true);
     renderer.render(sequence.frame(0,0),sequence.compiled[0].options);const image=await pixels();await artifact('translucent-depth',image);
     for(const x of [width/2-40,width/2+40]){const at=(height/2*width+x)*4;expect(image[at]).toBeGreaterThan(40);expect(image[at+2]).toBeGreaterThan(40);}
     expect(errors).toEqual([]);
   });
   it('slides a grouped 3D element outside an ultrawide viewport under retained orbit',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'exit',source:String.raw`export default scene({mode:"3d",orbit:true,background:"black"},s=>{
-      const sphere=s.sphere("sphere",{radius:0.42,fill:"blue",stroke:"none"});const group=s.group("exit",[sphere]);
+    const result=await sequence.submit({type:'load',scenes:[{id:'exit',source:String.raw`export default scene({mode:"3d",orbit:true,background:"BLACK"},s=>{
+      const sphere=s.sphere("sphere",{radius:0.42,fill:"PURE_BLUE",stroke:"none"});const group=s.group("exit",[sphere]);
       s.play(group.animate({viewportOffset:[-1.5,0]}),{duration:1});
     });`}]});expect(result.ok).toBe(true);
     Object.assign(canvas,{getBoundingClientRect:()=>({width:1920,height:540})});
@@ -315,8 +318,8 @@ describe('native Vulkan WebGPU rendering',()=> {
   });
   it('keeps round 3D shafts and cone arrowheads visible from perpendicular sides and end-on',async()=> {
     const result=await sequence.submit({type:'load',scenes:[{id:'round-lines',source:`export default scene({mode:"3d",orbit:false},s=>{
-      s.line3D("line",{points:[[-2,-0.7,0],[2,-0.7,0]],strokeWidth:0.15,stroke:"#58c4dd"});
-      s.arrow3D("arrow",{points:[[-2,0.7,0],[2,0.7,0]],strokeWidth:0.08,stroke:"#fc6255"});
+      s.line3D("line",{points:[[-2,-0.7,0],[2,-0.7,0]],strokeWidth:0.15,stroke:"BLUE"});
+      s.arrow3D("arrow",{points:[[-2,0.7,0],[2,0.7,0]],strokeWidth:0.08,stroke:"RED"});
       s.wait(1);
     });`}]});
     expect(result.ok).toBe(true);
@@ -341,8 +344,8 @@ describe('native Vulkan WebGPU rendering',()=> {
   });
   it('renders full-size Latin glyph contours cleanly at device pixel ratio two',async()=> {
     vi.stubGlobal('devicePixelRatio',2);
-    const result=await sequence.submit({type:'load',scenes:[{id:'text',source:String.raw`export default scene({background:"#000000"},s=>{
-      s.text("word",{text:"ascending",fontSize:1.25,fill:"white",stroke:"none"});s.wait(1);
+    const result=await sequence.submit({type:'load',scenes:[{id:'text',source:String.raw`export default scene({background:"BLACK"},s=>{
+      s.text("word",{text:"ascending",fontSize:1.25,fill:"WHITE",stroke:"none"});s.wait(1);
     });`}]});expect(result.ok).toBe(true);
     // Simulate the native observer after a browser moves the canvas to a high-DPR display.
     (renderer as unknown as {resize():void}).resize();
@@ -364,8 +367,8 @@ describe('native Vulkan WebGPU rendering',()=> {
     vi.stubGlobal('devicePixelRatio',1);(renderer as unknown as {resize():void}).resize();
     for(const geometry of cases)for(const opacity of [1,0.45]) {
       const method=geometry.kind==='arrow'?'arrow3D':geometry.kind;
-      const props={...geometry,opacity,fill:geometry.kind==='arrow'?'none':'#fc6255',stroke:geometry.kind==='arrow'?'#fc6255':'none',strokeWidth:0.12};
-      const result=await sequence.submit({type:'load',scenes:[{id:'identity',source:`export default scene({background:'#29394b'},s=>{
+      const props={...geometry,opacity,fill:geometry.kind==='arrow'?Color.NONE:Color.RED,stroke:geometry.kind==='arrow'?Color.RED:Color.NONE,strokeWidth:0.12};
+      const result=await sequence.submit({type:'load',scenes:[{id:'identity',source:`export default scene({background:'GREY_E'},s=>{
         const shape=s.${method}('shape',${JSON.stringify(props)});
         s.wait(1);s.play(shape.morphTo(${JSON.stringify(geometry)}),{duration:2,ease:'linear'});s.wait(1);
       });`}]});expect(result.ok).toBe(true);
@@ -379,8 +382,8 @@ describe('native Vulkan WebGPU rendering',()=> {
   });
 
   it('interpolates the font size of unchanged text without fading it',async()=> {
-    const result=await sequence.submit({type:'load',scenes:[{id:'text-size',source:`export default scene({background:'#152438'},s=>{
-      const label=s.text('label',{text:'A',fontSize:1,fill:'white',opacity:0.65});
+    const result=await sequence.submit({type:'load',scenes:[{id:'text-size',source:`export default scene({background:'GREY_E'},s=>{
+      const label=s.text('label',{text:'A',fontSize:1,fill:'WHITE',opacity:0.65});
       s.play(label.morphTo({kind:'text',text:'A',fontSize:3}),{duration:2,ease:'linear'});s.wait(1);
     });`}]});expect(result.ok).toBe(true);
     const scene=sequence.compiled[0],frame=sequence.frame(0,1);

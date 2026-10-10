@@ -14,6 +14,7 @@ mkdir -p "$staging/backend" "$staging/shared/animlib" "$staging/frontend" "$stag
 cp package.json package-lock.json "$staging/"
 cp backend/package.json "$staging/backend/"
 cp -R backend/src "$staging/backend/"
+cp -R backend/prompts "$staging/backend/"
 cp shared/animlib/package.json "$staging/shared/animlib/"
 cp -R shared/animlib/dist "$staging/shared/animlib/"
 # The standalone demo is not needed by the app runtime.

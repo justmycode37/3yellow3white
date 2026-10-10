@@ -1,9 +1,22 @@
+import type { Color, PaletteColor } from "./palette.js";
+export type { Color, PaletteColor } from "./palette.js";
+
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
 export type Position = Vec2 | Vec3;
 export type Mode = "2d" | "3d";
 export type Ease = "linear" | "smooth" | "in" | "out";
 export type ControlValue = number | boolean | string;
+
+/** Immutable host-owned palette. Scene code cannot replace or disable it. */
+export interface ColorPalette {
+  readonly colors: Readonly<Partial<Record<PaletteColor, string>>>;
+  readonly background: PaletteColor;
+  readonly foreground: PaletteColor;
+}
+
+/** A named color, optionally with separate alpha; arbitrary CSS is not accepted. */
+export type ColorValue = Color | { readonly color: PaletteColor; readonly opacity: number };
 
 export interface Geometry {
   kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
@@ -30,8 +43,8 @@ export interface ElementStyle {
   rotation?: Position | number;
   scale?: number;
   opacity?: number;
-  fill?: string;
-  stroke?: string;
+  fill?: ColorValue;
+  stroke?: ColorValue;
   strokeWidth?: number;
   /** Round world-space tubes instead of flat stroke ribbons. Not animated. */
   strokeProfile?: "flat" | "round";
@@ -50,8 +63,8 @@ export interface ElementState {
   rotation: Vec3;
   scale: number;
   opacity: number;
-  fill: string;
-  stroke: string;
+  fill: ColorValue;
+  stroke: ColorValue;
   strokeWidth: number;
   strokeProfile?: "flat" | "round";
   space: "world" | "screen";
@@ -100,7 +113,7 @@ export interface SceneOptions {
   end?: "hold" | "advance";
   audio?: string;
   orbit?: boolean;
-  background?: string;
+  background?: PaletteColor;
 }
 
 export interface AnimationAction {
@@ -144,7 +157,7 @@ export interface Lifecycle {
 }
 
 export interface CompiledScene {
-  options: Required<Omit<SceneOptions, "audio">> & { audio?: string };
+  options: Required<Omit<SceneOptions, "audio">> & { audio?: string; palette?: ColorPalette };
   duration: number;
   controls: ControlDefinition[];
   initial: ElementState[];
@@ -237,6 +250,8 @@ export interface PlayerState {
 }
 
 export interface CompileInput {
+  /** Defaults to THREE_BLUE_ONE_BROWN_PALETTE. */
+  palette?: ColorPalette;
   previous?: Frame;
   controls?: Record<string, ControlValue>;
   seed?: number;
@@ -244,6 +259,8 @@ export interface CompileInput {
 
 export interface Asset { kind: "audio"; url: string }
 export interface PlayerOptions {
+  /** Defaults to THREE_BLUE_ONE_BROWN_PALETTE; applies to every scene. */
+  palette?: ColorPalette;
   canvas: HTMLCanvasElement;
   /** Defaults to an overlay on the canvas parent. false leaves controls headless. */
   controlsRoot?: HTMLElement | false;

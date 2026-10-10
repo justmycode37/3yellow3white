@@ -75,7 +75,7 @@ describe("demo choreography through the host source API", () => {
   it("builds filled spherical methane atoms and surface-to-surface tetrahedral bonds", async () => {
     const sequence = await examples();
     const carbonGrowing = find(sequence, 1, 0.9, "carbon");
-    expect(carbonGrowing).toMatchObject({ geometry: { kind: "sphere", radius: 0.42 }, fill: "#58c4dd", stroke: "none", opacity: 1 });
+    expect(carbonGrowing).toMatchObject({ geometry: { kind: "sphere", radius: 0.42 }, fill: "BLUE", stroke: "none", opacity: 1 });
     expect(carbonGrowing.scale).toBeGreaterThan(0);
     expect(carbonGrowing.scale).toBeLessThan(1);
     expect(carbonGrowing.morph).toBeUndefined();
