@@ -1,7 +1,16 @@
 import { createHandler } from "./server.js";
 import { VideoService } from './videos.js';
+import { NarrationService } from './narration/service.js';
+import { agentConfig } from './agents/config.js';
+import { PiAgentRunner } from './agents/runtime.js';
+import { createPiGenerator } from './agents/generator.js';
 
-const videos = new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite');
+const generation = process.env.VIDEO_GENERATOR ?? 'pi';
+if (generation !== 'pi' && generation !== 'simulated') throw new Error('VIDEO_GENERATOR must be pi or simulated.');
+const narration = new NarrationService();
+const config = generation === 'pi' ? agentConfig() : undefined;
+const videos = new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite',
+  config ? createPiGenerator(new PiAgentRunner(config), narration, config.dataDir) : undefined, generation);
 
 const localNarration = process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1";
 const hostname = process.env.HOST ?? (localNarration ? "127.0.0.1" : "0.0.0.0");
@@ -12,7 +21,8 @@ const server = Bun.serve({
   hostname,
   port: Number(process.env.PORT ?? 8080),
   idleTimeout: 30,
-  fetch: createHandler(undefined, videos),
+  maxRequestBodySize: 101 * 1024 * 1024,
+  fetch: createHandler(undefined, videos, narration),
   error(error) {
     console.error(error);
     return Response.json({ detail: "Internal Server Error" }, { status: 500 });

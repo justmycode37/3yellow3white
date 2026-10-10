@@ -1,5 +1,6 @@
 import type { CameraState, ColorValue, CompiledScene, ElementState, Frame, Track } from "./types.js";
 import { paletteResolver } from "./palette.js";
+import { applyBindings } from "./bindings.js";
 
 export function easeAt(progress: number, ease: Track["ease"]): number {
   const t = Math.max(0, Math.min(1, progress));
@@ -15,7 +16,7 @@ function interpolate(from: unknown, to: unknown, t: number): unknown {
 }
 
 /** Pure evaluation: seek and normal playback return the same frame for the same inputs. */
-export function evaluateScene(scene: CompiledScene, requestedTime: number): Frame {
+export function evaluateScene(scene: CompiledScene, requestedTime: number, options: { bindings?: boolean } = {}): Frame {
   const palette = paletteResolver(scene.options.palette);
   const time = Math.max(0, Math.min(scene.duration, requestedTime));
   const elements = new Map(scene.initial.map(e => [e.id, structuredClone(e)]));
@@ -75,5 +76,6 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number): Fram
   for (const e of elements.values()) {
     palette.validate(e.fill); palette.validate(e.stroke);
   }
-  return { elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
+  const frame = { elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
+  return options.bindings === false ? frame : applyBindings(frame, scene.bindings);
 }

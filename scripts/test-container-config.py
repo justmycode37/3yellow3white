@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 import importlib.util
+import json
+import os
+import re
+import subprocess
 import tempfile
+import textwrap
 import unittest
 from unittest.mock import patch
 from pathlib import Path
@@ -66,6 +71,68 @@ class EnvironmentTests(unittest.TestCase):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 config.host_path(path)
         self.assertEqual(config.host_path('/tmp/aha/videos.sqlite'), Path('/tmp/aha/videos.sqlite'))
+
+    def test_agent_state_is_persistent_and_separate_from_releases(self):
+        with tempfile.TemporaryDirectory() as root:
+            base = Path(root)
+            release = base / 'releases' / 'candidate'
+            release.mkdir(parents=True)
+            values = {'NARRATION_DATA_DIR': str(base / 'narration')}
+            with patch.object(config, 'read_environment', return_value=values), patch.object(config.sys, 'argv', ['config', str(release), str(base), 'a' * 40, 'image']):
+                config.main()
+                paths = json.loads((release / 'paths.json').read_text())
+                self.assertEqual(paths['agents'], str(base / 'agents'))
+                self.assertIn(f'AHA_AGENT_DATA_DIR={base}/agents\n', (release / 'compose.env').read_text())
+                for path in [base / 'data', base / 'narration' / 'pi', release / 'pi', base / 'releases']:
+                    with self.subTest(path=path), self.assertRaises(ValueError):
+                        values['AGENT_STATE_DIR'] = str(path)
+                        config.main()
+
+    def test_deployment_settings_override_host_values_without_losing_storage(self):
+        with tempfile.TemporaryDirectory() as root:
+            base = Path(root)
+            release = base / 'releases' / 'candidate'
+            release.mkdir(parents=True)
+            override = base / 'deployment.env'
+            override.write_text('ELEVENLABS_API_KEY="literal$secret\\\\value\\\"quote"\nELEVENLABS_VOICE_ID=alice\n')
+            host = {'ELEVENLABS_API_KEY': 'old-key', 'AGENT_MODEL': 'existing-model',
+                    'VIDEO_DB_PATH': str(base / 'videos' / 'jobs.sqlite'),
+                    'NARRATION_DATA_DIR': str(base / 'narration')}
+            original_read = config.read_environment
+            def read(paths):
+                return host if paths[0] == Path('/srv/apps/3yellow3white/.env') else original_read(paths)
+            argv = ['config', str(release), str(base), 'a' * 40, 'image', str(override)]
+            with patch.object(config, 'read_environment', side_effect=read), patch.object(config.sys, 'argv', argv):
+                config.main()
+            # Compose reads the generated runtime file with format: raw.
+            runtime = (release / 'runtime.env').read_text()
+            self.assertIn('ELEVENLABS_API_KEY=literal$secret\\value"quote\n', runtime)
+            self.assertIn('ELEVENLABS_VOICE_ID=alice\n', runtime)
+            self.assertIn('AGENT_MODEL=existing-model\n', runtime)
+            self.assertEqual(json.loads((release / 'paths.json').read_text())['video'], str(base / 'videos'))
+            self.assertEqual((release / 'runtime.env').stat().st_mode & 0o777, 0o600)
+
+    def test_workflow_serializes_private_narration_settings_and_rejects_invalid_secrets(self):
+        workflow = Path(__file__).parent.parent / '.github/workflows/ci.yml'
+        step = workflow.read_text().split('      - name: Deploy the tested Docker image over SSH\n', 1)[1]
+        script = textwrap.dedent(re.search(r"          python3 - <<'PY'\n(.*?)          PY\n", step, re.S)[1])
+        with tempfile.TemporaryDirectory() as root:
+            (Path(root) / 'aha-ssh').mkdir(mode=0o700)
+            values = {'ELEVENLABS_API_KEY': 'literal$secret\\value"quote', 'ELEVENLABS_VOICE_ID': 'alice',
+                      'ELEVENLABS_MODEL_ID': 'eleven_multilingual_v2', 'NARRATION_PUBLIC_ORIGIN': 'https://example.test'}
+            env = dict(os.environ, **values, RUNNER_TEMP=root)
+            result = subprocess.run([config.sys.executable, '-c', script], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, '')
+            path = Path(root) / 'aha-ssh/deployment.env'
+            self.assertEqual(config.read_environment([path]), values)
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+            for invalid in ['', 'secret\nINJECTED=value']:
+                env['ELEVENLABS_API_KEY'] = invalid
+                result = subprocess.run([config.sys.executable, '-c', script], env=env, capture_output=True, text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('ELEVENLABS_API_KEY', result.stderr)
+                self.assertNotIn('INJECTED', result.stderr)
 
 
 if __name__ == '__main__':

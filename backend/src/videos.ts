@@ -2,10 +2,19 @@ import { Database } from 'bun:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { SceneSequence } from 'animlib/core'
+import type { Frame } from 'animlib/core'
 import type { VideoManifest, VideoRequest, VideoScene } from '../../shared/video/contract'
+import { AgentError } from './agents/config.js'
+import type { ImageContent } from '@earendil-works/pi-ai'
+import { extractUpload, MAX_FILE_BYTES, MAX_UPLOAD_BYTES, uploadMetadata, uploadType } from './uploads.js'
+import type { Upload } from './uploads.js'
+
+import { SHARED_OWNER } from './identity.js'
+export { SHARED_OWNER } from './identity.js'
 
 type Row = { id: string; owner: string; request: string; manifest: string }
-export type Generator = (request: VideoRequest, index: number) => Promise<{ scene: Omit<VideoScene, 'audio'>; audio: Uint8Array } | null>
+export interface GenerationContext { videoId: string; owner: string; previousFrame?: Frame; signal: AbortSignal; images?: ImageContent[] }
+export type Generator = (request: VideoRequest, index: number, context?: GenerationContext) => Promise<{ scene: Omit<VideoScene, 'audio'> & { audio?: { id: string } }; audio: Uint8Array } | null>
 
 // A deterministic fixture exercises audio delivery without claiming to generate narration.
 export const simulatedGenerator: Generator = async (_request, index) => {
@@ -37,17 +46,20 @@ export const simulatedGenerator: Generator = async (_request, index) => {
 /** One durable queue per Bun process. A replacement process resumes unfinished jobs. */
 export class VideoService {
   private db: Database
-  private listeners = new Map<string, Set<(manifest: VideoManifest) => void>>()
+  private listeners = new Map<string, Set<(manifest: VideoManifest | null) => void>>()
   private running = false
   private stopped = false
   private idle: Promise<void> = Promise.resolve()
+  private abort = new AbortController()
+  private active?: { id: string; abort: AbortController }
 
-  constructor(path: string, private generate: Generator = simulatedGenerator) {
+  constructor(path: string, private generate: Generator = simulatedGenerator, private provider: VideoManifest['provider'] = 'simulated') {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
     this.db = new Database(path, { create: true })
     this.db.exec(`PRAGMA journal_mode=WAL;
       CREATE TABLE IF NOT EXISTS videos (id TEXT PRIMARY KEY, owner TEXT NOT NULL, key TEXT NOT NULL, request TEXT NOT NULL, manifest TEXT NOT NULL, UNIQUE(owner,key));
-      CREATE TABLE IF NOT EXISTS video_audio (video TEXT NOT NULL, scene TEXT NOT NULL, bytes BLOB NOT NULL, PRIMARY KEY(video,scene));`)
+      CREATE TABLE IF NOT EXISTS video_audio (video TEXT NOT NULL, scene TEXT NOT NULL, bytes BLOB NOT NULL, PRIMARY KEY(video,scene));
+      CREATE TABLE IF NOT EXISTS video_uploads (video TEXT NOT NULL, position INTEGER NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL, text TEXT, PRIMARY KEY(video,position));`)
     this.kick()
   }
 
@@ -56,19 +68,51 @@ export class VideoService {
     const row = this.row(id)
     return row?.owner === owner ? JSON.parse(row.manifest) : undefined
   }
-  list(owner: string): VideoManifest[] {
-    return (this.db.query('SELECT manifest FROM videos WHERE owner = ? ORDER BY rowid DESC').all(owner) as { manifest: string }[]).map(row => JSON.parse(row.manifest))
+  list(owner?: string): VideoManifest[] {
+    const rows = owner === undefined ? this.db.query('SELECT manifest FROM videos ORDER BY rowid DESC').all() : this.db.query('SELECT manifest FROM videos WHERE owner = ? ORDER BY rowid DESC').all(owner)
+    return (rows as { manifest: string }[]).map(row => JSON.parse(row.manifest))
   }
-  create(owner: string, key: string, request: VideoRequest): VideoManifest {
+  create(owner: string, key: string, request: VideoRequest, uploads: Upload[] = []): VideoManifest {
     const prior = this.db.query('SELECT * FROM videos WHERE owner = ? AND key = ?').get(owner, key) as Row | null
     if (prior) {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
       return JSON.parse(prior.manifest)
     }
-    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: 'simulated', createdAt: new Date().toISOString(), scenes: [] }
-    this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
+    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [] }
+    this.db.transaction(() => {
+      this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
+      uploads.forEach((upload, index) => this.db.query('INSERT INTO video_uploads VALUES (?, ?, ?, ?, ?, NULL)').run(manifest.id, index, upload.name, upload.mimeType, upload.bytes))
+    })()
     this.kick()
     return manifest
+  }
+  delete(id: string): boolean {
+    if (!this.row(id)) return false
+    if (this.active?.id === id) this.active.abort.abort()
+    this.db.transaction(() => {
+      this.db.query('DELETE FROM video_audio WHERE video = ?').run(id)
+      this.db.query('DELETE FROM video_uploads WHERE video = ?').run(id)
+      this.db.query('DELETE FROM videos WHERE id = ?').run(id)
+    })()
+    for (const listener of this.listeners.get(id) ?? []) listener(null)
+    return true
+  }
+  private async sources(row: Row, signal: AbortSignal) {
+    const request: VideoRequest = JSON.parse(row.request)
+    const images: ImageContent[] = []
+    const uploads = this.db.query('SELECT * FROM video_uploads WHERE video = ? ORDER BY position').all(row.id) as { position: number; name: string; mime: string; bytes: Uint8Array; text: string | null }[]
+    for (const upload of uploads) {
+      signal.throwIfAborted()
+      if (upload.mime.startsWith('image/')) images.push({ type: 'image', mimeType: upload.mime, data: Buffer.from(upload.bytes).toString('base64') })
+      else {
+        const text = upload.text ?? await extractUpload({ name: upload.name, mimeType: upload.mime, bytes: upload.bytes })
+        signal.throwIfAborted()
+        if (upload.text === null) this.db.query('UPDATE video_uploads SET text = ? WHERE video = ? AND position = ?').run(text, row.id, upload.position)
+        request.documents.push({ name: upload.name, text })
+      }
+    }
+    if (Buffer.byteLength(JSON.stringify(request)) > 1_000_000) throw new AgentError('DOCUMENT', 'Combined source text must be under 1 MB. Split your material into smaller videos.')
+    return { request, images }
   }
   private save(manifest: VideoManifest) {
     manifest.revision++
@@ -86,19 +130,28 @@ export class VideoService {
         if (!row) break
         const manifest: VideoManifest = JSON.parse(row.manifest)
         const sequence = new SceneSequence()
+        const abort = new AbortController()
+        const signal = AbortSignal.any([this.abort.signal, abort.signal])
+        this.active = { id: row.id, abort }
         try {
+          if (manifest.provider === 'pi' && this.provider !== 'pi') throw new AgentError('CONFIG', 'This video requires VIDEO_GENERATOR=pi.')
+          const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
           manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
+          const { request: input, images } = await this.sources(row, signal)
           const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
           if (!initial.ok) throw new Error('Stored scenes could not be restored')
           while (!this.stopped) {
-            const next = await this.generate(JSON.parse(row.request), manifest.scenes.length)
-            if (this.stopped) break
+            const priorIndex = manifest.scenes.length - 1
+            const next = await generate(input, manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
+              previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal, images })
+            if (this.stopped || !this.row(row.id)) break
             if (!next) { manifest.status = 'complete'; this.save(manifest); this.notify(manifest); break }
-            const scene: VideoScene = { ...next.scene, audio: { id: `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
-            if (scene.index !== manifest.scenes.length || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
+            const scene: VideoScene = { ...next.scene, audio: { id: next.scene.audio?.id ?? `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
+            if (scene.index !== manifest.scenes.length || !Number.isFinite(scene.duration) || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
             const result = await sequence.submit({ type: 'insert', after: manifest.scenes.at(-1)?.id ?? null, scenes: [scene] })
             if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join('; '))
-            if (sequence.compiled.at(-1)?.duration !== scene.duration) throw new Error('Scene timing does not match its declared duration')
+            if (Math.abs(sequence.compiled.at(-1)!.duration - scene.duration) > 1e-6) throw new Error('Scene timing does not match its declared duration')
+            signal.throwIfAborted()
             // Publish the scene and its asset atomically before sending an event.
             this.db.transaction(() => {
               this.db.query('INSERT INTO video_audio VALUES (?, ?, ?)').run(manifest.id, scene.id, next.audio)
@@ -107,48 +160,75 @@ export class VideoService {
             this.notify(manifest)
           }
         } catch (error) {
-          manifest.status = 'failed'; manifest.error = 'Generation failed. Available scenes can still be played.'
-          console.error('Video generation failed', manifest.id, error)
+          if (this.stopped || !this.row(row.id)) continue
+          manifest.status = 'failed'; manifest.error = error instanceof AgentError ? error.message : 'Generation failed. Available scenes can still be played.'
+          console.error('Video generation failed', manifest.id, error instanceof AgentError ? error.code : 'GENERATION')
           this.save(manifest); this.notify(manifest)
-        } finally { sequence.dispose() }
+        } finally { this.active = undefined; sequence.dispose() }
       }
     }).finally(() => { this.running = false })
   }
-  async close() { this.stopped = true; await this.idle; this.db.close() }
+  async close() { this.stopped = true; this.abort.abort(); await this.idle; this.db.close() }
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url), parts = url.pathname.split('/')
-    const cookie = request.headers.get('cookie')?.match(/(?:^|;\s*)aha-session=([a-f0-9-]{36})(?:;|$)/)?.[1]
-    const session = cookie ?? crypto.randomUUID()
-    const owner = request.headers.get('x-user-id') ? `user:${request.headers.get('x-user-id')}` : `session:${session}`
+    const owner = SHARED_OWNER
     const headers = new Headers({ 'Cache-Control': 'no-store' })
-    if (!cookie) headers.set('Set-Cookie', `aha-session=${session}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${url.protocol === 'https:' ? '; Secure' : ''}`)
     const json = (body: unknown, status = 200) => Response.json(body, { status, headers })
-    if (parts.length === 3) {
-      if (request.method === 'GET') return json(this.list(owner))
-      if (request.method !== 'POST') return json({ detail: 'Method Not Allowed' }, 405)
+    if (request.method === 'POST' || request.method === 'DELETE') {
       const origin = request.headers.get('origin')
-      // The trusted TLS proxy preserves Host and supplies the external protocol.
       const protocol = request.headers.get('x-forwarded-proto') ?? url.protocol.slice(0, -1)
-      if (origin && origin !== `${protocol}://${url.host}`) return json({ detail: 'Invalid origin' }, 403)
+      const publicOrigin = process.env.NARRATION_PUBLIC_ORIGIN ?? `${protocol}://${url.host}`
+      if (request.headers.get('sec-fetch-site') === 'cross-site' || (origin && origin !== publicOrigin)) return json({ detail: 'Invalid origin' }, 403)
+    }
+    if (parts.length === 3) {
+      if (request.method === 'GET') return json(this.list())
+      if (request.method !== 'POST') return json({ detail: 'Method Not Allowed' }, 405)
       const key = request.headers.get('Idempotency-Key')
       if (!key || key.length > 128) return json({ detail: 'An Idempotency-Key is required' }, 400)
       // Bound streamed bodies as well as Content-Length before JSON parsing.
+      const multipart = request.headers.get('content-type')?.startsWith('multipart/form-data')
+      const limit = multipart ? MAX_UPLOAD_BYTES + 1_000_000 : 1_000_000
       const reader = request.body?.getReader(); let size = 0; const chunks: Uint8Array[] = []
       if (reader) while (true) {
         const { value, done } = await reader.read(); if (done) break
         size += value.length
-        if (size > 1_000_000) { await reader.cancel(); return json({ detail: 'Source text must be under 1 MB' }, 413) }
+        if (size > limit) { await reader.cancel(); return json({ detail: multipart ? 'Uploads must total 100 MB or less' : 'Source text must be under 1 MB' }, 413) }
         chunks.push(value)
       }
       let body: VideoRequest
-      try { body = JSON.parse(await new Blob(chunks.map(chunk => new Uint8Array(chunk))).text()) } catch { return json({ detail: 'Invalid JSON' }, 400) }
-      if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.length > 10 || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()))) return json({ detail: 'Provide a title and topic or document text' }, 400)
-      const normalized = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })) }
-      try { return json(this.create(owner, key, normalized), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }
+      const uploads: Upload[] = []
+      try {
+        const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)))
+        if (multipart) {
+          const form = await new Response(blob, { headers: { 'Content-Type': request.headers.get('content-type')! } }).formData()
+          const payload = form.get('request')
+          if (typeof payload !== 'string') return json({ detail: 'Provide request JSON with your files' }, 400)
+          if (Buffer.byteLength(payload) > 1_000_000) return json({ detail: 'Source text must be under 1 MB' }, 413)
+          body = JSON.parse(payload)
+          const files = form.getAll('files')
+          if (files.length > 10) return json({ detail: 'Upload at most 10 files' }, 400)
+          let total = 0
+          for (const file of files) {
+            if (typeof file === 'string' || !file.name || file.name.length > 255) return json({ detail: 'Provide named files' }, 400)
+            const mimeType = uploadType(file.name)
+            if (!mimeType) return json({ detail: 'Choose PDF, DOCX, TXT, Markdown, PNG, JPEG, or WebP files' }, 415)
+            total += file.size
+            if (!file.size || file.size > MAX_FILE_BYTES || total > MAX_UPLOAD_BYTES) return json({ detail: 'Each file must be 1 byte–50 MB; total uploads must be at most 100 MB' }, 413)
+            uploads.push({ name: file.name, mimeType, bytes: new Uint8Array(await file.arrayBuffer()) })
+          }
+        } else body = JSON.parse(await blob.text())
+      } catch { return json({ detail: 'Invalid request body' }, 400) }
+      if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.length + uploads.length > 10 || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
+      const normalized: VideoRequest = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })),
+        ...(uploads.length ? { uploads: uploads.map(uploadMetadata) } : {}) }
+      try { return json(this.create(owner, key, normalized, uploads), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }
     }
-    const manifest = this.get(parts[3], owner)
+    // All visitors share the library, including jobs saved under earlier session identities.
+    const row = this.row(parts[3])
+    const manifest: VideoManifest | undefined = row ? JSON.parse(row.manifest) : undefined
     if (!manifest) return json({ detail: 'Not Found' }, 404)
+    if (parts.length === 4 && request.method === 'DELETE') { this.delete(manifest.id); return new Response(null, { status: 204, headers }) }
     if (request.method !== 'GET') return json({ detail: 'Method Not Allowed' }, 405)
     if (parts.length === 4) return json(manifest)
     if (parts.length === 6 && parts[4] === 'audio') {
@@ -173,8 +253,9 @@ export class VideoService {
           if (!listeners.size) this.listeners.delete(manifest.id)
           request.signal.removeEventListener('abort', abort)
         }
-        const send = (snapshot: VideoManifest) => {
+        const send = (snapshot: VideoManifest | null) => {
           if (closed) return
+          if (!snapshot) { controller.enqueue(encoder.encode('event: deleted\ndata: {}\n\n')); abort(); return }
           controller.enqueue(encoder.encode(`id: ${snapshot.revision}\nevent: manifest\ndata: ${JSON.stringify(snapshot)}\n\n`))
           if (snapshot.status === 'complete' || snapshot.status === 'failed') abort()
         }

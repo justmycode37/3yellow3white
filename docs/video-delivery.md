@@ -1,19 +1,35 @@
 # Progressive interactive video delivery
 
-The first implementation uses a simulated server generator: three six-second
-interactive scenes with a short test tone, not generated explanations or speech.
-Uploaded PDF, DOCX, text and Markdown documents are read by the existing browser
-reader; extracted text and the requested topic are sent to and stored on the server.
-Raw document upload/OCR and real generation/TTS providers are not implemented.
+The default Pi pipeline writes storyline Markdown with spoken narration and a visual
+brief for every scene. ElevenLabs supplies audio and character alignment, from which
+the server derives word timings. Each scene agent receives those timings, the animlib
+API, and the evaluated end-state of the preceding scene. See [Pi setup](agents.md).
+Set `VIDEO_GENERATOR=simulated` explicitly for three scenes with a diagnostic test tone.
+
+The workspace uploads PDF, DOCX, UTF-8 text, Markdown, PNG, JPEG, and WebP files.
+Original bytes are stored in SQLite before the server accepts the job. The durable
+worker extracts document text on the server and passes photos to the script model
+as image attachments. Scanned PDFs without selectable text need photos or pasted text.
 
 ## Contract and ownership
 
 `shared/video/contract.ts` defines the versioned manifest and request types.
 `POST /api/videos` accepts `{title, topic, documents: [{name, text}]}` with an
 `Idempotency-Key` header, returning HTTP 202 and a stable manifest. Reusing the key
-with different input returns 409. Request bodies are limited to 1 MB.
+with different input returns 409. JSON source bodies are limited to 1 MB.
+Alternatively send multipart form data: `request` contains that JSON and repeated
+`files` fields contain the original files. Each file is at most 50 MB, all uploads
+at most 100 MB, and a request contains at most ten source documents/files. Extracted
+source text is limited to 1 MB in total. File hashes are part of idempotency identity.
 
-`GET /api/videos` lists the current viewer's saved jobs. `GET /api/videos/:id`
+POST and DELETE validate the browser's origin. Behind the production gateway, set
+`NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` to the exact public browser
+origin, without a trailing slash. Video and narration writes share this setting,
+so internal HTTP forwarding or a rewritten host does not reject legitimate requests.
+Without the setting, the expected origin uses `X-Forwarded-Proto` (or the request
+scheme) and the request URL's host. Cross-site requests remain rejected.
+
+`GET /api/videos` lists all saved jobs for the shared user. `GET /api/videos/:id`
 returns a snapshot. `GET /api/videos/:id/events` sends named `manifest` SSE events
 with monotonically increasing revision IDs. Every event is a full snapshot:
 reconnections receive current state regardless of Last-Event-ID, and clients
@@ -22,10 +38,16 @@ terminal manifests close the stream. Disconnecting a viewer does not cancel work
 
 Scene order is contiguous and published scenes are immutable. Audio bytes and
 scene metadata commit in the same SQLite transaction before notification. Audio
-URLs use the same owner check as manifests. An upstream trusted `x-user-id` owns
-authenticated jobs; otherwise a random HttpOnly SameSite session cookie owns them.
-The reverse proxy must strip client-supplied identity headers before setting its
-own. Anonymous libraries belong to that browser cookie, not a cross-device account.
+URLs address the same stored scenes. There are no browser sessions or separate
+accounts: all visitors share one application user, and existing jobs created under
+older session identities remain visible.
+
+`DELETE /api/videos/:id` removes the video, its stored audio, and its original uploads
+atomically. It aborts active scene generation and sends a terminal `deleted` event to
+subscribers. Deletion during compilation cannot republish the removed video. Internal
+agent/narration caches remain on disk for stage reuse; deletion removes the video
+and its assets from the library and database. The dashboard refreshes job status and
+removes videos deleted by another viewer.
 
 ## Generation and persistence
 
@@ -35,12 +57,17 @@ or generating jobs at their first unpublished scene. `VIDEO_DB_PATH` defaults to
 worker against this database. Multiple workers require leases/claims before use.
 Back up the SQLite database using a SQLite-aware backup procedure.
 
-The `Generator` interface receives the persisted request and next scene index and
-returns source, duration, captions and WAV bytes, or null when complete. A real
-provider should generate narration/audio first, align animation timing, and return
-short ready-to-play scenes. The service compiles and validates scenes with
-`animlib/core` before publication. Provider failures persist a terminal failure
-while retaining available scenes. Retry/resume of failed provider jobs, cancellation,
+The `Generator` interface receives the persisted request, next scene index, and
+job context (shared owner, previous frame, image attachments, and cancellation signal). It returns source,
+duration, narration, visual description, word timings, captions, an audio ID and WAV bytes, or null when complete. Pi persists
+completed scripts and scenes separately and reuses the narration service cache. The service compiles and validates scenes with
+`animlib/core` before publication. Narration publishes each completed scene's audio and timing packet atomically to
+disk. Scene generation starts from the first ready packet while later speech continues;
+it does not wait for the combined narration WAV. Code agents run one scene at a time.
+Interrupted narration for a resumed video is retried automatically using saved chunks;
+a speech request interrupted before its result was saved may be billed again.
+Provider failures persist a terminal failure
+while retaining available scenes. Retry/resume of failed provider jobs,
 retention policies, quotas, distributed queues and object storage are future work.
 
 ## Playback and interactivity
@@ -72,7 +99,7 @@ Run `npm run backend:dev` on port 8080 and optionally `npm run app:dev` for Vite
 which proxies `/api`. Run `npm test`, `npm run app:test`, `npm run backend:test`,
 `npm run backend:typecheck`, and `npm run app:build` for validation.
 
-Tests cover idempotency, ownership, atomic publication, snapshot reconnection,
+Tests cover idempotency, shared ownership, durable uploads and extraction, deletion, early scene delivery, atomic publication, snapshot reconnection,
 restart recovery, append continuity, control propagation, buffering, pause intent,
 duplicate delivery, and partial generation failure. No startup latency target has
 been set; fixture delays are not estimates of real generation performance.

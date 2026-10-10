@@ -10,12 +10,12 @@ project="aha-check-$(id -u)-${work##*.}"
 project=${project,,}
 export AHA_IMAGE="$image" AHA_REVISION="$revision" AHA_UID AHA_GID
 AHA_UID=$(id -u); AHA_GID=$(id -g)
-export AHA_VIDEO_DATA_DIR="$work/videos" AHA_NARRATION_DATA_DIR="$work/narration"
+export AHA_VIDEO_DATA_DIR="$work/videos" AHA_NARRATION_DATA_DIR="$work/narration" AHA_AGENT_DATA_DIR="$work/agents"
 export AHA_RUNTIME_ENV="$work/runtime.env" AHA_BIND_ADDRESS=127.0.0.1 AHA_PORT=0 AHA_RESTART_POLICY=unless-stopped AHA_VIDEO_DB_NAME=videos.sqlite
-mkdir "$work/videos" "$work/narration"
+mkdir "$work/videos" "$work/narration" "$work/agents"
 # Keep literal dollars/quotes to verify that secrets are not interpolated.
 # shellcheck disable=SC2016
-printf '%s\n' 'CONTAINER_LITERAL=literal-$value-with-"quotes"' > "$work/runtime.env"
+printf '%s\n' 'CONTAINER_LITERAL=literal-$value-with-"quotes"' 'VIDEO_GENERATOR=simulated' > "$work/runtime.env"
 # Pass settings in a file: sudo correctly strips exported shell variables.
 cat > "$work/compose.env" <<SETTINGS
 AHA_IMAGE=$AHA_IMAGE
@@ -24,6 +24,7 @@ AHA_UID=$AHA_UID
 AHA_GID=$AHA_GID
 AHA_VIDEO_DATA_DIR=$AHA_VIDEO_DATA_DIR
 AHA_NARRATION_DATA_DIR=$AHA_NARRATION_DATA_DIR
+AHA_AGENT_DATA_DIR=$AHA_AGENT_DATA_DIR
 AHA_RUNTIME_ENV=$AHA_RUNTIME_ENV
 AHA_BIND_ADDRESS=127.0.0.1
 AHA_PORT=0
@@ -60,6 +61,8 @@ python3 "$root/scripts/check-container-http.py" "$url" "$revision" create "$work
 "${compose[@]}" exec -T app bun -e 'if (process.getuid() === 0 || process.env.CONTAINER_LITERAL !== `literal-$value-with-"quotes"`) process.exit(1); try { await Bun.write("/app/readonly-check", "fail"); process.exit(1); } catch (e) { if (e.code !== "EROFS" && e.code !== "EACCES") throw e; }'
 # Exercise writable narration storage without invoking a paid speech provider.
 "${compose[@]}" exec -T app bun -e 'await Bun.write("/data/narration/container-check", "persistent");'
+"${compose[@]}" exec -T app bun backend/src/agents/cli.ts status
+"${compose[@]}" exec -T app bun -e 'await Bun.write("/data/agents/container-check", "persistent");'
 # Stop with a job still in progress; the replacement must resume it.
 python3 "$root/scripts/check-container-http.py" "$url" "$revision" interrupt "$work/job"
 "${compose[@]}" stop --timeout 30
@@ -77,4 +80,5 @@ python3 "$root/scripts/check-container-http.py" "http://$("${compose[@]}" port a
 "${compose[@]}" up --detach --wait --wait-timeout 60
 python3 "$root/scripts/check-container-http.py" "http://$("${compose[@]}" port app 8080)" "$revision" verify "$work/job"
 "${compose[@]}" exec -T app bun -e 'if (await Bun.file("/data/narration/container-check").text() !== "persistent") process.exit(1);'
+"${compose[@]}" exec -T app bun -e 'if (await Bun.file("/data/agents/container-check").text() !== "persistent") process.exit(1);'
 printf 'Container health, routes, assets, jobs, audio, stop/start, crash recovery, and recreation passed: %s\n' "$revision"

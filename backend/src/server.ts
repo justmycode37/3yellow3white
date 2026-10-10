@@ -3,17 +3,12 @@ import { isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VideoService } from './videos.js';
 import { narrationRoutes } from "./narration/routes.js";
+import type { NarrationService } from "./narration/service.js";
+import { SHARED_OWNER } from './identity.js';
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
 
-function user(request: Request) {
-  const rawName = request.headers.get("x-user-name");
-  let name = rawName || null;
-  if (name) {
-    try { name = decodeURIComponent(name); } catch { /* Keep malformed proxy text readable. */ }
-  }
-  return { id: request.headers.get("x-user-id"), name };
-}
+function user(_request: Request) { return { id: SHARED_OWNER, name: 'Demo user' }; }
 
 function notFound() {
   return Response.json({ detail: "Not Found" }, { status: 404 });
@@ -24,10 +19,10 @@ function inside(root: string, path: string) {
   return suffix !== ".." && !suffix.startsWith(`..${sep}`) && !isAbsolute(suffix);
 }
 
-export function createHandler(frontendDir = defaultFrontendDir, videoService?: VideoService) {
+export function createHandler(frontendDir = defaultFrontendDir, videoService?: VideoService, narrationService?: NarrationService) {
   const root = resolve(frontendDir);
   let videos = videoService;
-  const narration = narrationRoutes();
+  const narration = narrationRoutes(narrationService);
 
   async function serveFile(path: string) {
     const candidate = resolve(root, path);

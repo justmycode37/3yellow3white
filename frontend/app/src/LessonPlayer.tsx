@@ -101,7 +101,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
     <div className={`player-heading ${controls || !state.playing ? 'show-controls' : ''}`}>
       <h1>{lesson.title}</h1>
-      {lesson.videoId && <p>Interactive sample · test tone only</p>}
+      {lesson.videoId && <p>{manifest?.provider === 'simulated' || (!manifest && lesson.demo) ? 'Interactive sample · test tone only' : 'Narrated visual explanation'}</p>}
       {lesson.demo && !lesson.videoId && <p>Sample preview · video generation coming soon</p>}
       {(connection || state.generationError) && <p role="status">{state.generationError || connection}</p>}
       {manifest && state.generating && <p>Preparing more scenes. Your video is saved to your library.</p>}

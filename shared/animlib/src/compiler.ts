@@ -38,6 +38,7 @@ function geometry(g: Geometry) {
   if (g.kind === "path") check((g.points?.length ?? 0) >= 2, "Path requires at least two points");
   if (g.kind === "line" || g.kind === "arrow") check((g.points?.length ?? 0) >= 2, "Line/arrow requires at least two points");
   if (g.kind === "group") check(Array.isArray(g.children) && g.children.length <= 2000 && g.children.every(id => typeof id === "string"), "Invalid group children");
+  if (g.isolated !== undefined) check(g.kind === "group" && typeof g.isolated === "boolean", "Only groups support isolation");
   if (g.kind === "mesh") {
     check(Array.isArray(g.vertices) && Array.isArray(g.triangles) && g.triangles.length <= 20000, "Mesh requires vertices and triangles");
     for (const triangle of g.triangles) check(triangle.length === 3 && triangle.every(i => Number.isInteger(i) && i >= 0 && i < g.vertices!.length), "Invalid mesh triangle index");
@@ -109,6 +110,62 @@ export function validateCompiledScene(scene: CompiledScene): void {
     const next = new Set(path).add(id); for (const child of groupGraph.get(id) ?? []) visit(child, next); visited.add(id);
   };
   for (const id of groupGraph.keys()) visit(id, new Set());
+  const all = new Map([...scene.initial, ...scene.lifecycle.flatMap(e => e.elements ?? [])].map(e => [e.id, e]));
+  for (const root of all.values()) if (root.geometry.isolated) {
+    const spaces = new Set<string>();
+    const inspect = (id: string, depth: number) => {
+      const e = all.get(id); if (!e) return;
+      const next = depth + (e.geometry.isolated ? 1 : 0);
+      check(next <= 16, "Isolated group nesting limit exceeded (16)");
+      if (e.geometry.kind === "group") for (const child of e.geometry.children ?? []) inspect(child, next);
+      else spaces.add(e.space);
+    };
+    inspect(root.id, 0);check(spaces.size <= 1, "An isolated group must use one coordinate space");
+  }
+  check(scene.behaviors === undefined || Array.isArray(scene.behaviors) && scene.behaviors.length <= 4000, "Invalid or oversized behaviors");
+  const behaviorKeys = new Set<string>();
+  for (const { target, behavior: b } of scene.behaviors ?? []) {
+    check(all.has(target) && b && ["drag", "spring", "custom"].includes(b.type), "Invalid behavior target or type");
+    const key = JSON.stringify([target, b.type, b.type === "custom" ? b.name : ""]);
+    check(!behaviorKeys.has(key), "Duplicate behavior"); behaviorKeys.add(key);
+    if (b.type === "drag") {
+      check(b.plane === undefined || ["screen", "xy", "xz", "yz"].includes(b.plane), "Invalid drag plane");
+      check(b.axis === undefined || ["x", "y", "z"].includes(b.axis), "Invalid drag axis");
+      check(b.axis === undefined || b.plane === undefined, "Choose a drag axis or plane");
+    } else if (b.type === "spring") {
+      for (const k of ["stiffness", "damping"] as const) if (b[k] !== undefined) { number(b[k], k); check(b[k]! > 0 && b[k]! <= 1000, `Invalid spring ${k}`); }
+    } else {
+      check(typeof b.name === "string" && b.name.length > 0 && b.name.length <= 128, "Invalid custom behavior name");
+      check(JSON.stringify(b.options ?? null).length <= 16000, "Custom behavior options exceed 16 KB");
+    }
+  }
+  check(scene.bindings === undefined || Array.isArray(scene.bindings) && scene.bindings.length <= 2000, "Invalid or oversized bindings");
+  const dependencies = new Map<string, string[]>();
+  // Parent transforms and bindings both contribute dependencies.
+  for (const e of all.values()) for (const id of e.geometry.children ?? []) dependencies.set(id, [e.id]);
+  const bound = new Set<string>();
+  for (const b of scene.bindings ?? []) {
+    check(b && ["attach", "connect"].includes(b.type) && all.has(b.target), "Invalid binding");
+    check(!bound.has(b.target), "An element can have only one binding"); bound.add(b.target);
+    const target = all.get(b.target)!;
+    const sources = b.type === "attach" ? [b.source] : [b.from, b.to];
+    for (const id of sources) check(all.has(id) && all.get(id)!.view === target.view && all.get(id)!.space === target.space, "Bindings require existing elements in the same view and space");
+    if (b.type === "attach") { if (b.offset !== undefined) vec(b.offset, "attachment offset"); }
+    else {
+      check(["line", "arrow"].includes(target.geometry.kind), "Connect requires a line or arrow");
+      check(b.endpoints === undefined || ["center", "surface"].includes(b.endpoints), "Invalid connector endpoints");
+      if (b.offset !== undefined) number(b.offset, "connector offset");
+      if (b.endpoints === "surface") for (const id of sources) check(["sphere", "circle"].includes(all.get(id)!.geometry.kind), "Surface connectors require spheres or circles");
+    }
+    dependencies.set(b.target, [...(dependencies.get(b.target) ?? []), ...sources]);
+  }
+  const resolved = new Set<string>();
+  const resolve = (id: string, path = new Set<string>()) => {
+    check(!path.has(id), "Cyclic binding or parent dependency"); if (resolved.has(id)) return;
+    const next = new Set(path).add(id); for (const dep of dependencies.get(id) ?? []) resolve(dep, next); resolved.add(id);
+  };
+  for (const id of dependencies.keys()) resolve(id);
+  for (const b of scene.behaviors ?? []) check(!bound.has(b.target), "A bound element cannot also have behaviors");
   const live = new Map(scene.initial.map(e => [e.id, structuredClone(e)]));
   const checkGroups = () => {
     const owners = new Map<string, string>();

@@ -9,12 +9,14 @@ vi.mock("../src/renderer.js", () => ({
     setOrbit(value: { yaw: number; pitch: number }) { rendering.orbit = value; }
     setOrbitEnabled() {}
     syncInteraction() {}
+    interactionSnapshot() { const frame=rendering.frame;return frame?{frame,camera:frame.camera,width:800,height:600,rect:[0,0,1,1]}:undefined; }
     resetInteraction() { rendering.orbit = { yaw: 0, pitch: 0 }; }
     async prepare(_scenes: CompiledScene[]) {}
     render(frame: Frame, options: CompiledScene['options']) { rendering.frame = structuredClone(frame); rendering.options = structuredClone(options); }
     dispose() { rendering.disposed = true; }
   },
 }));
+import { Canvas } from "./canvas-stub.js";
 import { createPlayer } from "../src/player.js";
 import { ControlOverlay } from "../src/controls.js";
 import { SceneSequence } from "../src/sequence.js";
@@ -133,6 +135,31 @@ const second = `export default scene({ end: "hold" }, s => {
 const wait = (seconds: number, end = "hold") => `export default scene({end:"${end}"},s=>s.wait(${seconds}));`;
 
 describe("player navigation and live source updates", () => {
+  it('schedules stateful behaviors while paused and stops when they settle', async () => {
+    let ticks=0;
+    const disposed=vi.fn();
+    const player=createPlayer({canvas:{} as HTMLCanvasElement,behaviors:{pulse:()=>({
+      update:context=>{context.element.opacity=Math.min(1,++ticks/4);return ticks<4;},dispose:disposed,
+    })}});
+    try {
+      expect((await player.submit({type:'load',scenes:[{id:'a',source:`export default scene({},s=>{const a=s.circle('a');s.behavior(a,{type:'custom',name:'pulse'});s.wait(2);});`}]})).ok).toBe(true);
+      expect(player.getState().status).toBe('paused');expect(frames.size).toBe(1);
+      for(let i=0;i<3;i++)advance(1/60);
+      expect(rendering.frame?.elements[0].opacity).toBe(1);expect(player.getState().time).toBe(0);expect(frames.size).toBe(0);
+      await player.seek({scene:'a',time:1});expect(disposed).toHaveBeenCalledTimes(1);
+    } finally {player.dispose();}
+    expect(disposed).toHaveBeenCalledTimes(2);expect(frames.size).toBe(0);
+  });
+
+  it('rejects unknown custom behavior factories without replacing the valid scene', async () => {
+    const player=createPlayer({canvas:{} as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wait(2)}]});
+      const result=await player.submit({type:'load',scenes:[{id:'b',source:`export default scene({},s=>{const a=s.circle('a');s.behavior(a,{type:'custom',name:'missing'});s.wait(2);});`}]});
+      expect(result.ok).toBe(false);expect(player.getState().scene).toBe('a');
+    } finally {player.dispose();}
+  });
+
   it("passes the host palette through compilation, playback, and clearing", async () => {
     const player = createPlayer({ canvas: {} as HTMLCanvasElement, palette: {
       colors: { BLACK: "#222222", WHITE: "#dddddd" }, background: "WHITE", foreground: "BLACK",
@@ -359,4 +386,24 @@ describe("player navigation and live source updates", () => {
     expect(rendering.frame?.elements[0].position[0]).toBe(2);
     player.dispose();
   });
+});
+
+it('cancels capture before replacing the active compilation, even when a later scene changes',async()=>{
+  const canvas=new Canvas(),events:string[]=[];
+  const player=createPlayer({canvas:canvas as unknown as HTMLCanvasElement,behaviors:{observe:()=>({input:e=>{events.push(e.type);},dispose:()=>{events.push('dispose');}})}});
+  const source=`export default scene({},s=>{const a=s.circle('a');s.behavior(a,{type:'drag'});s.behavior(a,{type:'custom',name:'observe'});s.wait(2);});`;
+  try {
+    expect((await player.submit({type:'load',scenes:[{id:'a',source},{id:'b',source:wait(2)}]})).ok).toBe(true);
+    await player.seek({scene:'a',time:1});events.length=0;
+    canvas.send('pointerdown');expect(canvas.captures.size).toBe(1);
+    // Appends retain the compiled instance and must preserve the gesture.
+    await player.submit({type:'insert',after:'b',scenes:[{id:'c',source:wait(1)}]});
+    expect(canvas.captures.size).toBe(1);
+    expect((await player.submit({type:'replace',scene:'b',source:wait(3)})).ok).toBe(true);
+    expect(canvas.captures.size).toBe(0);expect(events).toEqual(['start','cancel','dispose']);
+    expect(player.getState()).toMatchObject({scene:'a',time:1,status:'paused'});
+    expect(canvas.send('pointermove',375,200).prevented).toBe(false);
+    canvas.send('pointerdown');canvas.send('pointermove',375,200);
+    expect(rendering.frame?.elements[0].position[0]).toBeCloseTo(2);
+  } finally {player.dispose();}
 });

@@ -23,8 +23,8 @@ an automatically allocated **loopback-only** port. It checks compilation, routes
 built assets, identity headers, owner isolation, stored video/WAV audio, literal
 environment values, a non-root process, a read-only app filesystem, clean shutdown,
 stop/start with an unfinished job, crash recovery, and removal/recreation with
-persistent SQLite and narration files. It does not invoke ElevenLabs or use
-production data.
+persistent SQLite, narration, and agent files. It imports Pi under Bun without
+external inference, ElevenLabs calls, or production data.
 
 The VM must have Docker Engine running and enabled at boot, **Docker Compose
 2.30.0 or newer**, SSH, Bash, tar, curl, Python 3, and flock. The existing `deploy`
@@ -67,6 +67,7 @@ The existing repository configuration is reused:
 
 - Secret `VM_SSH_PRIVATE_KEY`: dedicated deployment private key.
 - Secret `VM_SSH_KNOWN_HOSTS`: verified VM host-key line.
+- Secret `ELEVENLABS_API_KEY`: demo account key with text-to-speech access.
 - Variable `VM_HOST`: `11-direct.viscon-hackathon.ch`.
 - Variable `VM_SSH_USER`: `deploy`.
 
@@ -77,7 +78,14 @@ limited to `main`. No new registry credentials are needed.
 ## Runtime configuration and storage
 
 Settings are read from `/srv/apps/3yellow3white/.env`, then
-`/etc/3yellow3white/environment` (later values win). Use one `KEY=value` per line;
+`/etc/3yellow3white/environment` (later values win). GitHub Actions supplies a
+private `deployment.env` beside the uploaded archive; its values take precedence
+over both VM files. It contains the GitHub ElevenLabs key and the workflow's public
+voice, model, and origin settings. Secrets are supplied during deployment, outside
+the Docker image and uploaded build artifact. Missing secrets stop deployment
+before production is replaced. Temporary runner/upload copies are removed by
+workflow cleanup; each release retains its mode-600 runtime file for restart and rollback.
+Use one `KEY=value` per line;
 whole values can be single/double quoted. Root-owned files are read through sudo
 without logging their values. Shell commands and `$` references are
 never executed/interpolated; single-line backslash escapes follow systemd's
@@ -96,14 +104,21 @@ host ownership and persist across replacement:
   `VIDEO_DB_PATH` in the runtime files is honored by mounting its parent.
 - Narration: `/var/lib/3yellow3white/narration` by default, or the existing absolute
   `NARRATION_DATA_DIR`. Mounted at `/data/narration` inside the container.
+- Pi: `/srv/apps/3yellow3white-actions/agents` by default, or absolute
+  `AGENT_STATE_DIR`. Mounted at `/data/agents`, holding private credentials in
+  `pi/` and generated scripts/scenes in `jobs/`. New directories use mode 700.
+  See [agent login, API-key switching, and remote disconnect](agents.md).
 
-Paths must be outside release directories and use letters, numbers, `/`, `_`,
+The three data directories must be separate, without nesting. Paths must be outside release directories and use letters, numbers, `/`, `_`,
 `.`, or `-`. Missing data directories are created for `deploy`; existing directory
 ownership is not changed. Configured paths should match those used by the old
 service before migration.
 
-Narration additionally requires `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and
-`NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch`. Never run a second writer
+The workflow sets `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` for both
+video and narration origin validation behind the gateway, and supplies
+`ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`. Manual deployments can supply
+`deployment.env` beside the archive or configure these values in the VM files.
+Never run a second writer
 or the narration CLI against the active data directory. See [narration](narration.md).
 
 ## Build and verify without activating production

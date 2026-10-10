@@ -53,10 +53,10 @@ Limits: 50,000 Markdown characters, 20,000 spoken characters, 100 scenes, 500 bl
 From the repository root, install dependencies with `npm ci`, copy `backend/.env.example` to `backend/.env.local`, and configure:
 
 - `ELEVENLABS_API_KEY`: server-only ElevenLabs key, with text-to-speech access.
-- `ELEVENLABS_VOICE_ID`: `hIru3zkEJ3dBYHTbMy2V`, verified as **Alexander - Clear, Steady and Refined** in the project's account. Voice access must also be available to the runtime key; another account may need to add the same voice.
+- `ELEVENLABS_VOICE_ID`: `Xb7hH8MSUJpSbSDYk0k2`, verified as **Alice - Clear, Engaging Educator** with the demo account. Voice access must also be available to the runtime key; another account may need to select a different voice.
 - `ELEVENLABS_MODEL_ID`: defaults to `eleven_multilingual_v2`.
 - `NARRATION_DATA_DIR`: an absolute writable directory, e.g. a `.narration` directory in the checkout.
-- `NARRATION_ALLOW_LOCAL=1`: permits the local developer identity; the backend then defaults to a loopback bind. It refuses a shared bind with this bypass enabled and ignores it in production.
+- `NARRATION_ALLOW_LOCAL=1`: is a legacy local binding option; the backend then defaults to a loopback bind. It refuses a shared bind with this bypass enabled and ignores it in production.
 - Omit `NARRATION_PUBLIC_ORIGIN` locally. Behind the production gateway set it to the exact public browser origin, `https://11.hackathon.ethz.ch`.
 
 Never use `VITE_` for credentials. `.env` files and generated audio are ignored by Git. The checked-in example contains no API key.
@@ -81,7 +81,7 @@ Run only one writer process per data directory. Do not run the direct CLI while 
 
 ## HTTP and service interfaces
 
-Production requests use the existing trusted ingress `x-user-id` identity. The gateway must strip untrusted identity headers, and the backend must remain behind that gateway. Jobs and assets are scoped to that identity. Responses do not contain keys or internal owner fields.
+The application currently uses a single shared user for all video and narration requests. Login headers and browser cookies do not divide the library. Responses do not contain keys or internal owner fields.
 
 | Request | Response |
 |---|---|
@@ -118,7 +118,7 @@ Audio uses signed 16-bit mono PCM at 24 kHz wrapped in WAV. Default voice settin
 
 The initial worker is serial and in-process. Job metadata, complete audio/alignment chunks, source Markdown, scene WAVs, the combined WAV, and the handoff package are written atomically beneath `NARRATION_DATA_DIR`. Identical requests reuse their owner-scoped content hash. Context, settings, and processing version are included in chunk identity. Regenerated or changed speech requires a new package; never combine new audio with old timings.
 
-After a restart, queued/running jobs become `interrupted`; an explicit retry reuses saved chunks. Reposting identical failed input only returns its current state. Explicit retries can repeat the last request if the provider completed it but the server never received/saved it, so it may be billed twice. Network timeouts are not retried automatically. Only explicit HTTP 429/503 rejection gets bounded retries; auth, quota, voice and invalid-alignment errors are surfaced separately. Logs/public errors never include the key or provider response body.
+After a restart, queued/running jobs become `interrupted`; an explicit retry reuses saved chunks. Resuming an unfinished video automatically retries its interrupted narration. Completed scene audio and timings are available to the video generator before the full narration package is complete. Reposting identical failed input only returns its current state. Explicit retries can repeat the last request if the provider completed it but the server never received/saved it, so it may be billed twice. Network timeouts are not retried automatically. Only explicit HTTP 429/503 rejection gets bounded retries; auth, quota, voice and invalid-alignment errors are surfaced separately. Logs/public errors never include the key or provider response body.
 
 Production runs Bun in the Docker Compose app container and reads `/etc/3yellow3white/environment`. Create a persistent directory owned by `deploy`, such as `/var/lib/3yellow3white/narration`, outside the immutable release directories. Set the key, pinned voice, data directory, and public origin there. No external queue/database is required. Artifacts are retained until explicitly removed by an operator; monitor disk use. Horizontal workers and automatic retention are not part of this version.
 
@@ -134,4 +134,4 @@ npm test
 npm run demo:build
 ```
 
-Backend fixtures compare differently formatted AI responses against the same expected spoken sequence, including lists, headings, quotes, code fences, comments, line endings, synonyms, and tables. They cover source offsets, ambiguous inputs failing before provider calls, the guidance example, Unicode/repeated-word alignment, provider rounding, exact silence and duration offsets, caching, explicit retry, restart recovery, owner isolation, API errors, and compilation of the timed demo. An HTTP-to-provider-to-scene test checks that normalized narration reaches ElevenLabs without production notes and retains its pause/audio/word offsets. Ordinary tests never call ElevenLabs. The optional CLI smoke test uses real credits. CI additionally packages and tests a Linux Docker image, including the Markdown extensions, storyline guidance, clean shutdown, and persistence across container recreation.
+Backend fixtures compare differently formatted AI responses against the same expected spoken sequence, including lists, headings, quotes, code fences, comments, line endings, synonyms, and tables. They cover source offsets, ambiguous inputs failing before provider calls, the guidance example, Unicode/repeated-word alignment, provider rounding, exact silence and duration offsets, caching, explicit retry, restart recovery, internal owner checks, shared-user HTTP access, API errors, and compilation of the timed demo. An HTTP-to-provider-to-scene test checks that normalized narration reaches ElevenLabs without production notes and retains its pause/audio/word offsets. Ordinary tests never call ElevenLabs. The optional CLI smoke test uses real credits. CI additionally packages and tests a Linux Docker image, including the Markdown extensions, storyline guidance, clean shutdown, and persistence across container recreation.

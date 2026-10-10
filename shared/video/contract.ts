@@ -3,6 +3,7 @@ export interface VideoRequest {
   title: string
   topic: string
   documents: { name: string; text: string }[]
+  uploads?: { name: string; mimeType: string; size: number; sha256: string }[]
 }
 
 export interface VideoScene {
@@ -12,6 +13,9 @@ export interface VideoScene {
   duration: number
   audio: { id: string; url: string }
   captions: { start: number; end: number; text: string }[]
+  narration?: string
+  visualDescription?: string
+  words?: { id: string; text: string; start: number; end: number }[]
 }
 
 export interface VideoManifest {
@@ -20,7 +24,7 @@ export interface VideoManifest {
   title: string
   revision: number
   status: 'queued' | 'generating' | 'complete' | 'failed'
-  provider: 'simulated'
+  provider: 'simulated' | 'pi'
   createdAt: string
   scenes: VideoScene[]
   error?: string

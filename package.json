@@ -10,6 +10,11 @@
     "@xmldom/xmldom": "0.9.12"
   },
   "scripts": {
+    "agents:login": "npm run agents:login --workspace @aha/backend",
+    "agents:status": "npm run agents:status --workspace @aha/backend",
+    "agents:check": "npm run agents:check --workspace @aha/backend",
+    "agents:logout": "npm run agents:logout --workspace @aha/backend",
+    "agents:review": "npm run agents:review --workspace @aha/backend --",
     "dev": "npm run dev --workspace animlib",
     "build": "npm run build --workspace animlib",
     "test": "npm run test --workspace animlib",

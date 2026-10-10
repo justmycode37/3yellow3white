@@ -3,7 +3,12 @@ import { ControlOverlay } from "./controls.js";
 import { CanvasRenderer } from "./renderer.js";
 import { SceneSequence } from "./sequence.js";
 import { paletteResolver } from "./palette.js";
-import type { Asset, ColorPalette, CompiledScene, ControlValue, PlayerOptions, PlayerState, Submission, SubmitResult } from "./types.js";
+import { evaluateScene } from "./timeline.js";
+import { BehaviorRuntime } from "./behaviors.js";
+import { CanvasInput } from "./canvas-input.js";
+import { cameraRay } from "./spatial.js";
+import { project } from "./geometry.js";
+import type { Asset, ColorPalette, CompiledScene, ControlValue, PlayerOptions, PlayerState, Submission, SubmitResult, Vec3 } from "./types.js";
 
 export class Player {
   private readonly renderer: CanvasRenderer;
@@ -11,6 +16,9 @@ export class Player {
   private readonly sequence: SceneSequence;
   private readonly palette: ColorPalette;
   private readonly overlay?: ControlOverlay;
+  private readonly behaviors: BehaviorRuntime;
+  private readonly input: CanvasInput;
+  private presentationAt = 0;
   private listeners = new Set<(state: PlayerState) => void>();
   private sceneId: string | null = null;
   private time = 0;
@@ -28,17 +36,21 @@ export class Player {
     const palette = paletteResolver(options.palette).palette;
     this.palette = palette;
     this.renderer = new CanvasRenderer(options.canvas, palette);
+    this.behaviors = new BehaviorRuntime(options.behaviors);
+    this.input = new CanvasInput(options.canvas, this.behaviors, view => this.renderer.interactionSnapshot(view), () => this.invalidateFrame());
     this.audio = new AudioClock(options.assets);
     this.sequence = new SceneSequence({
       palette,
       seed: options.seed,
       executionLimitMs: options.executionLimitMs,
       prepare: async scenes => {
+        this.behaviors.validate(scenes);
         await this.audio.prepare(scenes);
         await this.renderer.prepare(scenes);
       },
     });
-    this.renderer.onCanvasChange = canvas => { this.overlay?.setCanvas(canvas); options.onCanvasChange?.(canvas); };
+    this.renderer.onCanvasChange = canvas => { this.input.setCanvas(canvas); this.overlay?.setCanvas(canvas); options.onCanvasChange?.(canvas); };
+    this.renderer.onInvalidate = () => this.invalidateFrame();
     this.renderer.onRecovered = () => {
       if (this.disposed) return;
       if (this.rendererError) {
@@ -48,9 +60,10 @@ export class Player {
       }
       this.refresh();
     };
-    this.renderer.onOrbitChange = () => this.refresh();
+    this.renderer.onOrbitChange = () => this.invalidateFrame();
     this.renderer.onError = error => {
       if (this.disposed) return;
+      this.input.cancel();
       this.stopClock();
       this.status = "blocked";
       this.rendererError = error;
@@ -58,7 +71,7 @@ export class Player {
       // A failed GPU must not be asked to render again while reporting its error.
       this.notify();
     };
-    const controlsRoot = options.controlsRoot === false ? undefined : options.controlsRoot ?? options.canvas.parentElement;
+    const controlsRoot = options.controlsRoot || undefined;
     if (controlsRoot) {
       this.overlay = new ControlOverlay(controlsRoot, (id, value) => {
         if (this.sceneId) return this.setControl({ scene: this.sceneId, id, value }).catch(error => this.report(error));
@@ -69,6 +82,21 @@ export class Player {
   /** The active drawing surface can change when a failed WebGPU context is replaced. */
   get canvas(): HTMLCanvasElement { return this.renderer.canvasElement; }
   get backend(): "webgpu" | "webgl2" | undefined { return this.renderer.backend; }
+
+  getInteractionSnapshot(view = '') { this.assertAlive(); return this.renderer.interactionSnapshot(view); }
+  getPan(view = ''): Vec3 { this.assertAlive(); return this.renderer.getPan(view); }
+  setPan(value: Vec3, view = ''): void { this.assertAlive(); this.renderer.setPan(value, view); this.invalidateFrame(); }
+  setNavigationMode(mode: 'orbit' | 'pan'): void { this.assertAlive(); this.renderer.setNavigationMode(mode); }
+  resetView(): void { this.assertAlive(); this.input.cancel(); this.behaviors.reset(); this.renderer.resetInteraction(); this.invalidateFrame(); }
+  invalidateFrame(): void { this.assertAlive(); this.time = this.clockTime(); this.refresh(); }
+  project(point: Vec3, view = '') {
+    const snapshot = this.getInteractionSnapshot(view); if (!snapshot) return;
+    return project(point, snapshot.camera, snapshot.width, snapshot.height);
+  }
+  ray(x: number, y: number, view = '') {
+    const snapshot = this.getInteractionSnapshot(view); if (!snapshot) return;
+    return cameraRay(x, y, snapshot.camera, snapshot.width, snapshot.height);
+  }
 
   private assertAlive(): void {
     if (this.disposed) throw new Error("Player is disposed");
@@ -108,7 +136,10 @@ export class Player {
     const index = this.currentIndex();
     const scene = index < 0 ? undefined : this.sequence.compiled[index];
     if (scene) {
-      const frame = this.sequence.frame(index, this.time);
+      const now = performance.now(), dt = this.presentationAt ? Math.max(0, (now-this.presentationAt)/1000) : 0;
+      this.presentationAt = now;
+      const frame = this.behaviors.evaluate(scene, evaluateScene(scene, this.time, { bindings: false }), this.time, dt);
+      this.input.sync();
       this.renderer.syncInteraction(this.sceneId!, this.time, scene, frame);
       this.renderer.setOrbitEnabled(scene.options.orbit && frame.camera.perspective > 0 && !frame.cameraAnimated);
       this.renderer.render(frame, scene.options);
@@ -121,6 +152,7 @@ export class Player {
     }
     this.overlay?.update(this.sceneId ?? "", scene?.controls ?? [], scene ? paletteResolver(this.palette).resolve(scene.options.background) : undefined);
     this.notify();
+    this.scheduleFrame();
   }
 
   private notify(): void {
@@ -150,6 +182,8 @@ export class Player {
       const wasPlaying = this.status === "playing";
       // Read the old clock before changing active ID, even if the active scene moved.
       this.stopClock(this.clockTime(oldCompiled[oldIndex]));
+      // Reconstruction can replace the active instance even when only a later source changed.
+      if (affected || oldCompiled[oldIndex] !== this.currentScene()) { this.input.cancel(); this.behaviors.reset(); }
       this.error = undefined;
       if (change.type === "load") this.renderer.resetInteraction();
       if (change.type === "load" || !activeId) {
@@ -193,10 +227,11 @@ export class Player {
   }
 
   private scheduleFrame(): void {
-    if (this.disposed || this.status !== "playing" || this.raf !== undefined) return;
+    if (this.disposed || this.rendererError || this.status !== "playing" && !this.behaviors.active || this.raf !== undefined) return;
     this.raf = requestAnimationFrame(() => {
       this.raf = undefined;
-      if (this.disposed || this.status !== "playing") return;
+      if (this.disposed || this.rendererError) return;
+      if (this.status !== "playing") { this.refresh(); return; }
       this.time = this.clockTime();
       const scene = this.currentScene()!;
       if (scene.options.audio && this.audio.interrupted) {
@@ -210,6 +245,7 @@ export class Player {
         this.stopClock();
         const next = this.currentIndex() + 1;
         if (scene.options.end === "advance" && next < this.sequence.sources.length) {
+          this.input.cancel();
           this.sceneId = this.sequence.sources[next].id;
           this.time = 0;
           this.status = "paused";
@@ -239,6 +275,7 @@ export class Player {
     if (!Number.isFinite(position.time)) throw new Error("Seek time must be finite");
     const index = this.sequence.index(position.scene);
     this.stopClock();
+    this.input.cancel(); this.behaviors.reset();
     this.sceneId = position.scene;
     this.time = Math.max(0, Math.min(position.time, this.sequence.compiled[index].duration));
     this.status = "paused";
@@ -265,6 +302,7 @@ export class Player {
       if (this.disposed) return;
       const wasPlaying = this.status === "playing";
       this.stopClock(this.clockTime(oldScenes.get(this.sceneId ?? "")));
+      this.input.cancel(); this.behaviors.reset();
       this.time = Math.min(this.time, this.currentScene()?.duration ?? 0);
       this.status = this.sceneId ? "paused" : "empty";
       this.error = undefined;
@@ -310,6 +348,7 @@ export class Player {
     this.stopClock();
     this.disposed = true;
     this.listeners.clear();
+    this.input.dispose(); this.behaviors.reset();
     this.overlay?.dispose();
     this.renderer.dispose();
     this.audio.dispose();

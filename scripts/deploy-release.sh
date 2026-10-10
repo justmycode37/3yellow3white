@@ -98,7 +98,7 @@ image_id=$(sudo -n docker image inspect --format '{{.Id}}' "$image_tag")
 [[ $(sudo -n docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image_id") == "$revision" ]]
 # All candidate jobs and narration writes use temporary, isolated directories.
 bash "$release/scripts/smoke-container.sh" "$image_id" "$revision"
-python3 "$release/scripts/container-config.py" "$release" "$base" "$revision" "$image_id"
+python3 "$release/scripts/container-config.py" "$release" "$base" "$revision" "$image_id" "${archive%/*}/deployment.env"
 compose "$release" config --quiet
 # The archive is no longer needed; preserve the image and small recovery files.
 rm -- "$release/image.tar.gz"
@@ -106,11 +106,11 @@ if [[ "$mode" == --check ]]; then
   echo 'Container lifecycle verified; production was not changed.'
   exit 0
 fi
-mapfile -t directories < <(python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); print(p["video"]); print(p["narration"])' "$release/paths.json")
-[[ ${#directories[@]} == 2 ]]
+mapfile -t directories < <(python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); print(p["video"]); print(p["narration"]); print(p["agents"])' "$release/paths.json")
+[[ ${#directories[@]} == 3 ]]
 for directory in "${directories[@]}"; do
   if [[ ! -d "$directory" ]]; then
-    sudo -n install -d -o deploy -g deploy -m 750 "$directory"
+    sudo -n install -d -o deploy -g deploy -m 700 "$directory"
   fi
   [[ -w "$directory" && -x "$directory" ]] || { echo "deploy cannot write $directory" >&2; exit 1; }
 done

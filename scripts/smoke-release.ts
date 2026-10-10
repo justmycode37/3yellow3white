@@ -3,11 +3,26 @@ import { createHandler } from "../backend/src/server.js";
 import { compileSource, evaluateScene } from "animlib/core";
 import { buildStorylineMessages } from "../backend/src/storyline-prompt.js";
 import { parseStoryline } from "../backend/src/narration/markdown.js";
+import { createModelRuntime } from "../backend/src/agents/auth.js";
+import { agentConfig } from "../backend/src/agents/config.js";
+
+// Import the actual Pi SDK under the shipped Bun runtime without making paid calls.
+const agentSettings = agentConfig({ AGENT_AUTH_MODE: "api-key", OPENAI_API_KEY: "container-fixture" });
+const agentRuntime = await createModelRuntime(agentSettings);
+assert(agentRuntime.getModel(agentSettings.provider, agentSettings.model), "Pinned agent model is missing");
+assert((await Bun.file(new URL("../shared/animlib/docs/reference.md", import.meta.url)).text()).includes("s.wait"));
 
 const revision = (await Bun.file(new URL("../REVISION", import.meta.url)).text()).trim();
 assert.equal(process.env.APP_REVISION, revision);
 const guidance = (await buildStorylineMessages("Release verification"))[0].content;
-assert(guidance.includes("PRODUCTION HANDOFF"), "Storyline guidance is missing from the release");
+const example = /```md\s*\n([\s\S]*?)```/.exec(guidance)?.[1];
+assert(example, 'Storyline guidance must ship a parseable script example');
+const exampleStory = parseStoryline(example);
+assert(exampleStory.beats.length > 0 && exampleStory.beats.every(beat => beat.context.trim() && beat.blocks.some(block => block.kind === 'speech')),
+  'Shipped guidance example must contain scene context and spoken narration');
+for (const prompt of ['scene-craft.md', 'scene-review.md', 'story-review.md']) {
+  assert((await Bun.file(new URL(`../backend/prompts/${prompt}`, import.meta.url)).text()).trim().length > 100, `${prompt} is missing from the release`);
+}
 assert.equal(parseStoryline("Narration: A working release.").beats.length, 1);
 assert.equal(parseStoryline("| Voiceover | Pause (s) |\n| --- | --- |\n| A working release. | 1 |").beats[0].blocks.length, 2);
 const scene = await compileSource(`export default scene({}, s => {
