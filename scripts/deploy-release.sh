@@ -98,7 +98,7 @@ image_id=$(sudo -n docker image inspect --format '{{.Id}}' "$image_tag")
 [[ $(sudo -n docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image_id") == "$revision" ]]
 # All candidate jobs and narration writes use temporary, isolated directories.
 bash "$release/scripts/smoke-container.sh" "$image_id" "$revision"
-python3 "$release/scripts/container-config.py" "$release" "$base" "$revision" "$image_id"
+python3 "$release/scripts/container-config.py" "$release" "$base" "$revision" "$image_id" "${archive%/*}/deployment.env"
 compose "$release" config --quiet
 # The archive is no longer needed; preserve the image and small recovery files.
 rm -- "$release/image.tar.gz"

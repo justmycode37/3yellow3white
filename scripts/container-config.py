@@ -72,9 +72,10 @@ def host_path(value):
 
 
 def main():
-    release, base, revision, image_id = sys.argv[1:]
+    release, base, revision, image_id, *overrides = sys.argv[1:]
     release, base = Path(release), Path(base)
     values = read_environment([Path("/srv/apps/3yellow3white/.env"), Path("/etc/3yellow3white/environment")])
+    values.update(read_environment([Path(path) for path in overrides]))
     video_db = host_path(values.get("VIDEO_DB_PATH", str(base / "data/videos.sqlite")))
     narration = host_path(values.get("NARRATION_DATA_DIR", "/var/lib/3yellow3white/narration"))
     agents = host_path(values.get("AGENT_STATE_DIR", str(base / "agents")))
