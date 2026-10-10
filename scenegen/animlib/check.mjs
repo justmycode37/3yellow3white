@@ -2,6 +2,7 @@
 // report diagnostics and durations as JSON. Usage: node check.mjs <scenes.json>
 import { readFile } from 'node:fs/promises';
 import { SceneSequence } from '../../shared/animlib/dist/core.js';
+import { layoutLatexGeometry } from '../../shared/animlib/dist/latex.js';
 
 const scenes = JSON.parse(await readFile(process.argv[2], 'utf8'));
 // The app's player builds each scene within animlib's default 200 ms budget, so the
@@ -20,6 +21,24 @@ try {
   }
   const out = { ok: result.ok, diagnostics: result.diagnostics, scenes: [] };
   if (result.ok) {
+    // Formulas are laid out only in the player: run that layout here, or one
+    // unsupported command would stop the lesson from playing.
+    const walk = (value, visit, seen = new Set()) => {
+      if (!value || typeof value !== 'object' || seen.has(value)) return;
+      seen.add(value);
+      if (value.kind === 'latex' && typeof value.tex === 'string') visit(value);
+      for (const child of Array.isArray(value) ? value : Object.values(value)) walk(child, visit, seen);
+    };
+    sequence.compiled.forEach((compiled, i) => walk(compiled, geometry => {
+      try { layoutLatexGeometry(geometry); }
+      catch (error) {
+        out.ok = false;
+        out.diagnostics.push({ severity: 'error', code: 'LATEX', scene: scenes[i].id, message: String(error.message ?? error),
+          hint: 'Only MathJax base, ams, newcommand and html are loaded: no \\boldsymbol or \\bm (use \\mathbf or \\vec), \\color, \\ce, \\cancel, \\si, \\degree.' });
+      }
+    }));
+  }
+  if (out.ok) {
     out.scenes = sequence.compiled.map((c, i) => {
       const last = sequence.frame(i, c.duration);
       return { id: scenes[i].id, duration: c.duration, end: c.options.end, mode: c.options.mode,

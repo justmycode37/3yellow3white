@@ -18,6 +18,7 @@ import { PiAgentRunner, validationMessage } from "../../backend/src/agents/runti
 import { sceneSource } from "../../backend/src/agents/generator.js";
 import { validateScenePlan } from "../../backend/src/agents/scene-plan.js";
 import { SCENE_AGENT_INSTRUCTIONS } from "../../backend/src/narration/handoff.js";
+import { latexErrors, LATEX_HINT } from "./latex-check.ts";
 
 const [videoId, indexArg, ...flags] = process.argv.slice(2);
 const index = Number(indexArg);
@@ -44,6 +45,8 @@ async function validate(output: string) {
     throw new Error(`The scene must last ${duration} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
   }
   if (planned) validateScenePlan(compiled, evaluateScene(compiled, duration), planned);
+  const broken = latexErrors(compiled);
+  if (broken.length) throw new Error(`${broken.join("\n")}\n${LATEX_HINT}`);
 }
 
 /** Swap the scene into the saved manifest once all later scenes still build on it. */

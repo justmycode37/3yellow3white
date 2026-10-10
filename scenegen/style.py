@@ -66,6 +66,16 @@ On-screen text (strict):
 - If a word seems necessary, show the idea visually instead (highlight, colour,
   motion, side-by-side comparison).
 
+LaTeX (strict; one unsupported command stops the whole lesson from playing):
+- Formulas are rendered by MathJax with only the base, ams, newcommand and html
+  packages. Use plain, common commands: fractions, sub/superscripts, Greek letters,
+  \\vec, \\mathbf, \\hat, \\overrightarrow, \\mathrm, \\text, \\mathbb, \\mathcal,
+  matrices (bmatrix, pmatrix), \\xrightarrow, \\rightleftharpoons, \\underbrace, ^\\circ.
+- NOT available: \\boldsymbol and \\bm (use \\mathbf or \\vec), \\color and \\textcolor
+  (colour a formula with its fill, or its parts with \\animpart), \\ce (write
+  \\mathrm{H_2O}), \\cancel, \\si, \\bra / \\ket, \\degree, \\require, \\unicode.
+- When unsure whether a command exists, use a simpler one.
+
 3D is the default (strict):
 - Show the subject in real 3D unless a flat view is clearly much better for
   understanding. Anything with a real spatial shape or arrangement MUST be 3D:
