@@ -59,3 +59,30 @@ pipeline output for it: `topics.json`, and per topic the storyboard (with its te
 plan), the first animlib scenes, the manifest and the narration script. Topic 3 was
 generated with interactive elements and includes its scene prompts, one `.md` per scene in `prompts/`, bundled with the scene
 code and manifest in `scenes.zip`.
+
+## Using the visualization prompt inside the app
+
+The backend has its own generation pipeline (lesson plan, script review, ElevenLabs
+narration with word timings, validated animlib scenes). To work on how scenes look
+while keeping all of that, run the backend through the scenegen wrapper:
+
+```sh
+cd backend
+bun --watch ../scenegen/backend/dev.ts
+```
+
+It starts the same server, unchanged, except that scene agents receive
+`scenegen/prompts/visualization.md` in place of `backend/prompts/scene-craft.md`. The
+file is re-read for every scene, and each prompt actually sent is saved in
+`out/visualization-prompts/`. No backend file is modified.
+
+To retry one scene of an existing video with an edited prompt, keeping its narration,
+audio and captions:
+
+```sh
+bun ../scenegen/backend/rescene.ts <videoId> <sceneIndex>           # candidate only
+bun ../scenegen/backend/rescene.ts <videoId> <sceneIndex> --apply   # also show it in the app
+```
+
+`--apply` replaces the scene in the saved video only if every later scene still
+compiles on top of it, and keeps the previous source for `--restore <file>`.
