@@ -52,6 +52,15 @@ When writing the plan:
   compared), and carry at most one formula into the next scene: the one it starts
   from. Every planned formula is an entity with an id, listed under cleanup in the
   scene where it leaves. No boxed results and no panels around text.
+- **Time to take an equation in.** Right after a formula has been fully explained,
+  give the student a quiet moment with it: one short spoken invitation ("Take a
+  moment to read it." / "Look at how each term matches the picture.") followed by a
+  `Pause:` line in the script. Scale the pause to the formula: about 3 seconds for a
+  short one (`F = ma`), 5 to 6 for one with several terms, a sum, an integral or a
+  matrix product, up to 8 for the central formula of the lesson. Do this for every
+  formula that matters; a formula not worth a pause is not worth showing. The next
+  sentence after the pause continues from that formula instead of rushing to a new
+  one. Count these pauses in the scene's length.
 - **Show little (2D and 3D alike):** a scene shows only what the student needs to
   see for its one idea: the objects being talked about and short labels. Fewer,
   larger, well-spaced things beat a full screen.

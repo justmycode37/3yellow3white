@@ -119,6 +119,13 @@ Equations (strict; a formula nobody is explaining is clutter):
   the short form the narration actually says over a longer derivation.
 - Readouts tied to a control (a value that follows a slider) count as formulas: show
   one only when the narration talks about that value.
+- Let a formula be read. Once a formula is complete it stays fully visible and
+  perfectly still for at least 2.5 s (4 s or more for one with several terms, a sum,
+  an integral or a matrix) before anything else appears, moves or fades. When the
+  narration packet has a pause after a formula, that pause belongs to the formula:
+  hold the formula and the picture it describes, start nothing new, and do not
+  remove the formula until the narration resumes. Never fade a formula out in the
+  same breath it finished appearing.
 - A LaTeX morph needs an explicit part map: write both formulas with `\animpart`
   names and pass `map`, or fade the old formula out and the new one in instead.
 

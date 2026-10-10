@@ -9,7 +9,7 @@
       "revisions": [
         {
       "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
-      "sha256": "81face5ba433dc2492031c0b5344081ba41f8e550fb51bf0ec6abbe1692c65d8",
+      "sha256": "ba5dc464f2c5e52257a62c24205c38c386b2843ee69cfc44406605023dff19d6",
       "revisions": [
         {
           "reason": "Update spatial authoring guidance for mesh shading, function and parametric surfaces, basic solids, and swept tubes."
@@ -29,7 +29,7 @@
       "source": "scenegen/prompts/planning.md (maintained here since PR 59)",
       "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
       "pullRequest": 59,
-      "sha256": "b2ea9c70f23fcb36b1cd6922f9877e2cd8e51f520e6daa5dd206320224e0ece8"
+      "sha256": "e97b262c56fd91f67e13d03e023d9c5fc1aa524ef0b252a853d50afee60a03f5"
     },
     {
       "file": "topics-system.md",
