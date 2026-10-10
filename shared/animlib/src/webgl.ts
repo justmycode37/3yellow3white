@@ -1,4 +1,6 @@
 import type { CameraState } from './types.js';
+import type { RenderCommand } from './composition.js';
+import { GLCompositor } from './gl-compositor.js';
 
 /** The same packed triangles and camera data are submitted by both backends. */
 export interface RenderBatch {
@@ -8,6 +10,7 @@ export interface RenderBatch {
   rect?: number[];
   opaqueVertices: number;
   floatCount: number;
+  commands?: RenderCommand[];
 }
 
 const vertex = `#version 300 es
@@ -69,6 +72,7 @@ export class WebGLBackend {
   private angles: WebGLUniformLocation;
   private viewport: WebGLUniformLocation;
   private capacity = 0;
+  private compositor?: GLCompositor;
   readonly maxSize: number;
 
   constructor(readonly gl: WebGL2RenderingContext) {
@@ -131,6 +135,7 @@ export class WebGLBackend {
     gl.clear(gl.COLOR_BUFFER_BIT);
     let first = 0;
     for (const batch of batches) {
+      gl.useProgram(this.program);
       // Match WebGPU's independent depth attachment clear for every view/overlay.
       gl.disable(gl.SCISSOR_TEST); gl.depthMask(true); gl.clear(gl.DEPTH_BUFFER_BIT);
       const [x, top, w, h] = batch.rect ?? [0, 0, width, height];
@@ -141,15 +146,23 @@ export class WebGLBackend {
       gl.uniform4f(this.angles, c.yaw, c.pitch, c.distance, c.perspective);
       gl.uniform4f(this.viewport, batch.width, batch.height, c.height, 0);
       const count = batch.floatCount / 15;
-      if (batch.opaqueVertices) gl.drawArrays(gl.TRIANGLES, first, batch.opaqueVertices);
-      gl.depthMask(false);
-      if (count > batch.opaqueVertices) gl.drawArrays(gl.TRIANGLES, first + batch.opaqueVertices, count - batch.opaqueVertices);
+      const commands = batch.commands ?? [{ first, count: batch.opaqueVertices, opaque: true }, { first: first+batch.opaqueVertices, count: count-batch.opaqueVertices, opaque: false }];
+      const draw = (command: Extract<RenderCommand,{first:number}>) => {
+        gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.depthMask(command.opaque);
+        gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+        gl.drawArrays(gl.TRIANGLES,command.first,command.count);
+      };
+      if (commands.some(command => 'children' in command)) {
+        this.compositor ??= new GLCompositor(gl);
+        this.compositor.render(commands,batch.rect,width,height,draw);
+      } else for (const command of commands) if ('first' in command) draw(command);
       first += count;
     }
     gl.depthMask(true); gl.disable(gl.SCISSOR_TEST); gl.bindVertexArray(null);
   }
 
   dispose(): void {
+    this.compositor?.dispose();
     this.gl.deleteBuffer(this.buffer); this.gl.deleteVertexArray(this.vao); this.gl.deleteProgram(this.program);
   }
 }

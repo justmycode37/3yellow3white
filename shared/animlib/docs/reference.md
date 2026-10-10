@@ -109,13 +109,16 @@ helpers built from animlib's shapes, text, paths, meshes, and groups.
 - Modern desktop browsers are the initial target.
 - A scene can have one audio track.
 
-**Controls:** native sliders, toggles, and selects mount over the canvas by default
-using its parent as the overlay host. `controlsRoot` chooses a different host;
-`controlsRoot: false` leaves controls headless: read definitions from player state
-and update values through `setControl`. Position the canvas inside a container
-that can hold an overlay. Object picking and dragging are future work.
+**Canvas-only by default:** `createPlayer({ canvas })` renders and handles input on
+the canvas without creating surrounding DOM. Native sliders, toggles and selects
+require an explicit `controlsRoot: overlayElement`. Omit it (or pass `false`) to
+read definitions from player state and update values through `setControl` yourself.
+This changes the previous automatic-parent-overlay default; pass
+`controlsRoot: canvas.parentElement` to retain that UI. Object interaction is
+declared with behaviors, and the player owns pointer capture and frame scheduling.
 Open the demo at `http://localhost:5173/?interactive` for positioned controls and
 two independently rotatable 3D views.
+Open `/behaviors.html` for a canvas-only drag/spring/binding/compositing example.
 
 ## 2. The host interface
 
@@ -381,6 +384,149 @@ start of the interval. Scene-builder calls never draw intermediate frames.
 Basic creation methods are `circle`, `sphere`, `rectangle`, `line`, `arrow`,
 `path`, `text`, `latex`, `mesh`, and `group`. All take stable IDs and plain
 data. Groups supply parent transforms and operate on their children together.
+
+### Fading a composed object
+
+Use `s.group(id, children, { isolated: true })` when overlapping components belong
+to one visual object. The renderer draws its children into a transparent layer,
+then applies the group's opacity once to the resulting image. Two opaque parts
+at 50% group opacity therefore stay at 50% opacity where they overlap.
+
+```js
+const object = s.group('object', [shape, outline, label], { isolated: true });
+s.play(object.fadeOut(), { duration: 1 });
+```
+
+Animate the **group's** opacity; fading each child separately still represents
+independent translucency. Ordinary groups retain their existing behavior of
+multiplying opacity into each child. Explicit child transparency is preserved
+inside an isolated group, and nested isolated groups each apply their opacity
+once. Isolation is a static group option, not an animated property.
+
+Both WebGPU and WebGL2 composite premultiplied color and preserve nearest surface
+depth for external occlusion. An isolated group is an atomic compositing unit:
+arbitrary interleaving with other translucent objects remains approximate, as it
+does for ordinary transparent meshes. Each isolated group must use one view and
+one coordinate space. Nesting is limited to 16 isolated layers. Offscreen targets
+are allocated lazily and reused by nesting depth, resized with the canvas, and
+released on disposal/backend recovery. Use isolation for visual objects that need
+it; it adds offscreen color/depth work and storage.
+
+### Behaviors and live bindings
+
+Scene builders declare behavior data; they do not install browser listeners or
+execute an application animation loop. These declarations apply throughout the
+target element's lifetime in that scene.
+
+```js
+s.behavior(atom, { type: 'drag', plane: 'screen' });
+s.behavior(atom, { type: 'spring', stiffness: 65, damping: 9 });
+s.attach(label, atom, { offset: [0, 0.7, 0] });
+s.connect(bond, atom, otherAtom, { endpoints: 'surface' });
+```
+
+`drag` accepts a camera-facing `plane: 'screen'` (the default), a world plane
+`'xy'`, `'xz'` or `'yz'`, or a world `axis: 'x'`, `'y'` or `'z'`. Choose either an
+axis or a plane. The grab point is preserved, and the held object stays at its
+world position while the authored target moves. After release, a drag on its own
+retains its local offset from the authored timeline.
+
+`spring` is independent of dragging. It restores the position toward the current
+authored target when the object is not held. Defaults are stiffness 65 and damping
+9; both must be positive and at most 1000. The player advances live behavior time
+even when scene playback is paused, and stops requesting frames when all behaviors
+settle. Spring integration clamps long elapsed times and subdivides its steps.
+
+Built-in hit testing supports spheres, planar circles/rectangles, and triangle
+meshes, including nested transforms and billboard placement. A behavior on a group
+uses its supported descendant shapes as hit targets. Picking chooses the nearest
+eligible surface; it does not test arbitrary text outlines, rods or path strokes,
+nor infer continuously morphing mesh topology. Elements below 0.01 effective opacity
+are ignored. Screen elements use pixel coordinates within their view.
+
+`attach(target, source, { offset })` binds the target's position to the source's
+center, with an optional offset in world units (pixels for screen elements).
+`connect(line, from, to, { endpoints, offset })` maintains a line/arrow's endpoints.
+`endpoints: 'surface'` clips to sphere/circle radii, accounting for scale and radius
+morphs; the default is `'center'`. A signed strand `offset` creates parallel bonds
+using a deterministic perpendicular. Overlapping endpoint surfaces hide the rod.
+The connector binding owns the line's geometry. Bindings work across transformed
+groups, require the same view/coordinate space, resolve in dependency order, and
+reject cycles (including cycles through parent transforms). Missing sources hide
+their dependents. A bound target cannot simultaneously have behaviors or a second
+binding; animate or interact with its source instead.
+
+Pure `evaluateScene` resolves bindings, so headless frames and scene handoffs have
+attached geometry. The player evaluates the authored frame, applies live behaviors,
+resolving live parent/source dependencies before dependent behaviors and bindings. Live interaction never enters
+compiled tracks or outgoing scene handoffs. A seek, reset, successful recompilation,
+or scene change clears live behavior state. Removing a target disposes its behaviors
+and cancels its held gesture. View pan/orbit is retained across control changes;
+`resetView()` clears pan/orbit and behavior state without changing scene time.
+
+#### Custom behaviors
+
+Register trusted host implementations by name. Generated scene code still contains
+only serializable declarations; it never receives DOM access or host callbacks.
+
+```ts
+const player = createPlayer({
+  canvas,
+  behaviors: {
+    pulse: options => {
+      let elapsed = 0;
+      return {
+        update(ctx) {
+          elapsed += Math.min(ctx.dt, 0.04);
+          ctx.element.scale = ctx.authored.scale * (1 + 0.08 * Math.sin(elapsed * 4));
+          return true; // request another live frame, even when paused
+        },
+        dispose() { /* release any resources owned by this instance */ },
+      };
+    },
+  },
+});
+// In submitted scene code:
+// s.behavior(dot, { type: 'custom', name: 'pulse', options: null });
+```
+
+A factory returns a `Behavior` with optional `update`, `input`, and `dispose`
+methods. The context supplies scene `time`, wall-clock `dt`, `held`, the authored
+element, the mutable presentation element/frame, and world-position helpers.
+`setWorldPosition` retains a local offset from the authored position.
+An `input` method receives `start`, `move`, `end`, `cancel`, or `key`; pointer events
+include a ray, and `start` includes the camera-plane normal. Return true from
+`start` to claim pointer capture; return true from `key` to consume that key.
+Keyboard input goes to the last selected behavior target on the focused canvas;
+Escape cancels a held gesture. Factories are instantiated per live target and scene.
+Unknown factory names reject the submission without replacing the current scene.
+
+Multiple behaviors on one target execute in declaration order; later writes to a
+property win. Parent behaviors execute before child behaviors. A behavior should
+return true only while it needs another frame. Duplicate built-in behaviors or
+custom names on the same target are rejected. Hosts are responsible for their
+custom implementation's validity, bounded work and cleanup.
+
+#### Canvas navigation and camera access
+
+An unclaimed left drag rotates its view. Shift-drag, middle-drag, right-drag, or
+`player.setNavigationMode('pan')` pans it. Shift takes precedence over object
+picking; ordinary object dragging takes precedence over background navigation.
+`setNavigationMode('orbit')` restores the default background gesture. Pan works
+with 2D/3D cameras and independent views. Right-drag suppresses the context menu.
+
+`player.getPan(view?)`, `setPan([x,y,z], view?)`, `resetView()` and
+`invalidateFrame()` expose navigation and paused redraw. `getInteractionSnapshot(view?)`
+returns detached frame/camera copies plus logical view dimensions and its normalized
+rectangle, or undefined before rendering. `project(point, view?)` and
+`ray(x, y, view?)` use that same effective camera, including pan and viewer rotation.
+Ray coordinates are logical pixels from the selected view's top-left corner;
+omit the view ID for the main canvas. The internal controller also accounts for
+CSS canvas bounds and pixel density. Canvas replacement rebinds input automatically.
+The player sets `touch-action: none`, makes an otherwise unfocusable canvas focusable,
+and restores those attributes/styles when it releases that canvas.
+
+### Element animation and coordinates
 
 Common animatable properties include position, rotation, scale, opacity, fill,
 stroke, stroke width, and geometry. Elements expose actions such as `moveTo`,
@@ -799,7 +945,7 @@ rotation. `billboardOffset: [x, y, z]` displaces a billboard along camera right,
 up, and toward the viewer in scene units; this keeps an atom label beside or in
 front of its sphere while orbiting. The molecule demo supplies tetrahedral spatial
 layout and surface-to-surface bond meshes. Physically based materials, model
-loading, picking, and object dragging are not yet implemented.
+loading are not yet implemented. Object interaction uses the behavior API above.
 
 ## 7. Live source submissions
 
@@ -977,8 +1123,8 @@ and cones. The renderer does not provide a comprehensive material system. Shape 
 part correspondence or arbitrary mesh topology.
 
 Not yet included: custom fonts and general text shaping, images/video textures,
-element dragging/picking, custom interaction callbacks, LaTeX split/merge mappings,
-physics integration, infinite scenes, branching navigation, playback-rate controls,
+general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
+infinite scenes, branching navigation, playback-rate controls,
 video export, or mobile-browser support guarantees. The initial control surface
 is sliders, toggles, selects, and requested orbit rotation.
 

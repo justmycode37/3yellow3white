@@ -31,6 +31,8 @@ export interface Geometry {
   vertices?: Position[];
   triangles?: [number, number, number][];
   children?: string[];
+  /** Composite this group's children before applying its opacity. */
+  isolated?: boolean;
   /** Named LaTeX part whose center is the element's origin. */
   anchor?: string;
   /** Values rendered in fixed-width \\animnum{name} LaTeX slots. */
@@ -165,7 +167,50 @@ export interface CompiledScene {
   views?: ViewState[];
   lifecycle: Lifecycle[];
   tracks: Track[];
+  behaviors?: BehaviorDeclaration[];
+  bindings?: BindingDeclaration[];
 }
+
+export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+export type BehaviorSpec =
+  | { type: "drag"; plane?: "screen" | "xy" | "xz" | "yz"; axis?: "x" | "y" | "z" }
+  | { type: "spring"; stiffness?: number; damping?: number }
+  | { type: "custom"; name: string; options?: JsonValue };
+export interface BehaviorDeclaration { target: string; behavior: BehaviorSpec; }
+export type BindingDeclaration =
+  | { type: "attach"; target: string; source: string; offset?: Vec3 }
+  | { type: "connect"; target: string; from: string; to: string; endpoints?: "center" | "surface"; offset?: number };
+export interface Ray { origin: Vec3; direction: Vec3; }
+export interface InteractionSnapshot {
+  /** Detached copy of the displayed frame and effective view camera. */
+  frame: Frame; camera: CameraState; width: number; height: number;
+  rect: [number, number, number, number];
+}
+export interface BehaviorInput {
+  type: "start" | "move" | "end" | "cancel" | "key";
+  ray?: Ray; normal?: Vec3; key?: string;
+}
+export interface BehaviorContext {
+  readonly time: number;
+  readonly dt: number;
+  readonly held: boolean;
+  readonly authored: Readonly<ElementState>;
+  /** Mutable presentation copy. Changes never modify the authored timeline. */
+  readonly element: ElementState;
+  readonly frame: Frame;
+  worldPosition(): Vec3;
+  authoredWorldPosition(): Vec3;
+  /** Retains a local position offset relative to the moving authored target. */
+  setWorldPosition(position: Vec3): void;
+}
+export interface Behavior {
+  /** Return true while another presentation frame is needed, including when paused. */
+  update?(context: BehaviorContext): boolean | void;
+  /** Return true from start to capture this gesture. */
+  input?(event: BehaviorInput, context: BehaviorContext): boolean | void;
+  dispose?(): void;
+}
+export type BehaviorFactory = (options: JsonValue | undefined) => Behavior;
 
 export interface Frame {
   elements: ElementState[];
@@ -198,7 +243,10 @@ export interface SceneContext {
   text(id: string, props: ElementProps): ElementHandle;
   latex(id: string, props: ElementProps): ElementHandle;
   mesh(id: string, props: ElementProps): ElementHandle;
-  group(id: string, children: ElementHandle[]): ElementHandle;
+  group(id: string, children: ElementHandle[], options?: { isolated?: boolean }): ElementHandle;
+  behavior(target: ElementHandle, behavior: BehaviorSpec): void;
+  attach(target: ElementHandle, source: ElementHandle, options?: { offset?: Position }): void;
+  connect(target: ElementHandle, from: ElementHandle, to: ElementHandle, options?: { endpoints?: "center" | "surface"; offset?: number }): void;
   play(actions: AnimationAction | AnimationAction[], options: { duration: number; ease?: Ease }): void;
   wait(seconds: number): void;
   keep(element: ElementHandle): void;
@@ -266,8 +314,10 @@ export interface PlayerOptions {
   canvas: HTMLCanvasElement;
   /** Called when recovery replaces a context-locked canvas with a fresh surface. */
   onCanvasChange?: (canvas: HTMLCanvasElement) => void;
-  /** Defaults to an overlay on the canvas parent. false leaves controls headless. */
+  /** Explicit opt-in to DOM controls. The default player only owns its canvas. */
   controlsRoot?: HTMLElement | false;
+  /** Host-registered implementations for declarative custom behaviors. */
+  behaviors?: Record<string, BehaviorFactory>;
   assets?: Record<string, Asset>;
   seed?: number;
   executionLimitMs?: number;
