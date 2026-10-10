@@ -2,6 +2,8 @@ import { afterEach, expect, test } from 'bun:test'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { Database } from 'bun:sqlite'
+import { AgentError } from '../src/agents/config'
 import { SHARED_OWNER, VideoService } from '../src/videos'
 import type { Generator } from '../src/videos'
 import { parseThumbnailSVG } from '../src/agents/thumbnail'
@@ -17,6 +19,76 @@ async function waitFor(check: () => boolean) {
   for (let i = 0; i < 300; i++) { if (check()) return; await Bun.sleep(10) }
   throw new Error('Timed out waiting for generation')
 }
+
+test('video failures use user-facing messages in live events and preserve ready scenes', async () => {
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  const service = new VideoService(':memory:', async (request, index) => {
+    if (index === 1) { await gate; throw new AgentError('PROVIDER', 'Check agents:check. Authorization: Bearer private-token') }
+    return fixture(request, index)
+  }); services.push(service)
+  const video = service.create(SHARED_OWNER, 'failed', input)
+  try {
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.scenes.length === 1)
+    const response = await service.handle(api(`/${video.id}/events`))
+    const events = response.text()
+    release()
+    const text = await events
+    const manifest = service.get(video.id, SHARED_OWNER)!
+    expect(manifest.status).toBe('failed')
+    expect(manifest.errorCode).toBe('PROVIDER')
+    expect(manifest.error).toBe("We couldn't finish creating this video. Please try creating it again. You can still watch the parts that are ready.")
+    expect(text).toContain(JSON.stringify(manifest))
+    expect(text).not.toMatch(/agents:check|Authorization|private-token/)
+    expect(manifest.scenes).toHaveLength(1)
+    expect((await service.handle(new Request(`http://localhost${manifest.scenes[0].audio.url}`))).status).toBe(200)
+    expect(await (await service.handle(api(`/${video.id}`))).json()).toEqual(manifest)
+    expect(await (await service.handle(api())).json()).toEqual([manifest])
+  } finally { release() }
+})
+
+test('operator and unknown error messages never enter video responses', async () => {
+  for (const code of ['AUTH', 'MODEL', 'CONFIG', 'NARRATION', 'LIMIT', 'VALIDATION', 'DOCUMENT', undefined]) {
+    const service = new VideoService(':memory:', async () => {
+      if (code) throw new AgentError(code, 'Stop the backend, check AGENT_MODEL, OPENAI_API_KEY and agents:login; private-detail')
+      throw new Error('private-detail')
+    }); services.push(service)
+    const video = service.create(SHARED_OWNER, 'failed', input)
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.status === 'failed')
+    const manifest = await (await service.handle(api(`/${video.id}`))).json()
+    expect(manifest.error).not.toMatch(/backend|AGENT_MODEL|OPENAI_API_KEY|agents:login|private-detail/)
+    expect(manifest.error).not.toContain('parts that are ready')
+    if (['AUTH', 'MODEL', 'CONFIG', 'NARRATION'].includes(code ?? '')) expect(manifest.error).toContain('currently unavailable')
+    if (code === 'LIMIT') expect(manifest.error).toContain('try again later')
+    if (code === 'DOCUMENT') expect(manifest.error).toContain('split it into smaller videos')
+  }
+})
+
+test('legacy saved errors are sanitized for reads, lists, events and idempotent creation', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'aha-legacy-error-'))
+  const path = join(dir, 'videos.sqlite')
+  const original = new VideoService(path, async () => { throw new Error('Fail') })
+  try {
+    const video = original.create(SHARED_OWNER, 'legacy', input)
+    await waitFor(() => original.get(video.id, SHARED_OWNER)?.status === 'failed')
+    await original.close()
+    const db = new Database(path)
+    try {
+      const legacy = { ...video, status: 'failed', error: 'The agent request failed. Check agents:check and retry the job.' }
+      db.query('UPDATE videos SET manifest = ? WHERE id = ?').run(JSON.stringify(legacy), video.id)
+    } finally { db.close() }
+    const service = new VideoService(path, async () => { throw new Error('Must not regenerate') })
+    try {
+      const manifest = service.get(video.id, SHARED_OWNER)!
+      expect(manifest.error).toBe("We couldn't finish creating this video. Please try creating it again.")
+      expect(service.list()).toEqual([manifest])
+      expect(service.create(SHARED_OWNER, 'legacy', input)).toEqual(manifest)
+      expect(await (await service.handle(api(`/${video.id}`))).json()).toEqual(manifest)
+      expect(await (await service.handle(api())).json()).toEqual([manifest])
+      expect(await (await service.handle(api(`/${video.id}/events`))).text()).not.toContain('agents:check')
+    } finally { await service.close() }
+  } finally { await original.close().catch(() => {}); await rm(dir, { recursive: true, force: true }) }
+})
 
 test('thumbnail generation overlaps scenes, persists, and finishes before the terminal event', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'aha-thumbnails-'))

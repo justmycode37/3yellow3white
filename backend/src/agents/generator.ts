@@ -103,6 +103,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       const task = {
         systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${reference}`,
         prompt: `Generate this scene using the authoritative narration packet and lesson plan:\n${JSON.stringify({ ...input, planning })}`, validate, signal,
+        logContext: { videoId, sceneIndex: index, stage: 'scene' as const },
       };
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
       await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning }));

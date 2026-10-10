@@ -6,6 +6,9 @@ import { createModelRuntime } from "./auth.js";
 import { agentConfig, AgentError, agentFailure } from "./config.js";
 import type { AgentConfig } from "./config.js";
 import { SceneCompileError } from 'animlib/core';
+import { setTimeout as delay } from 'node:timers/promises';
+import { logEvent } from '../logging.js';
+import type { LogFields } from '../logging.js';
 
 export function validationMessage(error: unknown): string {
   if (error instanceof SceneCompileError) {
@@ -21,15 +24,42 @@ export interface AgentTask {
   validate?: (output: string) => Promise<void>;
   signal?: AbortSignal;
   images?: ImageContent[];
+  logContext?: Pick<LogFields, 'videoId' | 'stage' | 'sceneIndex'>;
 }
 export interface AgentRunner { run(task: AgentTask): Promise<string> }
 
 /** One credential runtime, a fresh conversation for every script or scene. */
 export class PiAgentRunner implements AgentRunner {
   private runtime?: Promise<ModelRuntime>;
-  constructor(readonly config: AgentConfig = agentConfig(), private runtimeFactory = () => createModelRuntime(config)) {}
+  constructor(readonly config: AgentConfig = agentConfig(), private runtimeFactory = () => createModelRuntime(config),
+    private wait: (ms: number, signal?: AbortSignal) => Promise<void> = async (ms, signal) => { await delay(ms, undefined, { signal }); }) {}
 
   async run(task: AgentTask): Promise<string> {
+    const agentRunId = crypto.randomUUID();
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const result = await this.runAttempt(task);
+        if (attempt > 1) logEvent('agent.recovered', { ...task.logContext, agentRunId, providerAttempt: attempt });
+        return result;
+      } catch (error) {
+        const failure = agentFailure(error);
+        const retry = failure.diagnostics.retryable === true && attempt < 3 && !task.signal?.aborted;
+        const retryDelayMs = retry ? 1000 * 2 ** (attempt - 1) + Math.floor(Math.random() * 250) : undefined;
+        logEvent(retry ? 'agent.retrying' : 'agent.failed', { ...task.logContext, agentRunId, providerAttempt: attempt,
+          code: failure.code, ...failure.diagnostics, retryDelayMs }, retry ? 'warn' : 'error');
+        if (!retry) throw failure;
+        try { await this.wait(retryDelayMs!, task.signal); }
+        catch (error) {
+          if (task.signal?.aborted) throw task.signal.reason instanceof AgentError ? task.signal.reason : new AgentError('ABORTED', 'Agent generation was cancelled.');
+          throw agentFailure(error);
+        }
+      }
+    }
+    throw new AgentError('PROVIDER', 'Agent retry attempts exhausted.');
+  }
+
+  /** Recreate the conversation so failed partial output never enters a retry. */
+  private async runAttempt(task: AgentTask): Promise<string> {
     const controller = new AbortController();
     const signal = task.signal ? AbortSignal.any([task.signal, controller.signal]) : controller.signal;
     let session: Awaited<ReturnType<typeof createAgentSession>>["session"] | undefined;
@@ -67,6 +97,8 @@ export class PiAgentRunner implements AgentRunner {
         await session.prompt(prompt, attempt === 0 ? { images: task.images } : undefined);
         signal.throwIfAborted();
         const last = [...session.messages].reverse().find(message => message.role === "assistant");
+        if (last?.stopReason === 'aborted') throw new AgentError('ABORTED', 'Agent generation was cancelled.');
+        if (last?.stopReason === 'length') throw new AgentError('OUTPUT', 'The agent response exceeded the model output limit.');
         if (!last || last.stopReason !== "stop") throw agentFailure(new Error(last?.errorMessage ?? "Incomplete model response"));
         const output = session.getLastAssistantText()?.trim();
         if (!output || output.length > 256000) throw new AgentError("OUTPUT", "The agent returned an empty or oversized result.");

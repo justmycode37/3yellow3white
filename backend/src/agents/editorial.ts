@@ -54,6 +54,7 @@ export async function authorReviewedLesson(runner: AgentRunner, request: VideoRe
         ? `Revise the complete lesson and plan to correct the material editorial errors below. Preserve sound content, requested scope, stable entity IDs/meanings, and scene IDs where possible. Update narration and nonspoken planning together. Return the full planning envelope.\n${JSON.stringify({ request, draft: repair.lesson, issues: repair.issues })}`
         : `Write a concise visual lesson and its plan from this request:\n${messages[1].content}`,
       signal, images, validate: async output => { parsePlannedLesson(output, request); },
+      logContext: { videoId, stage: 'draft' },
     };
     await atomicWrite(join(runDirectory, `lesson-draft-${attempt}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
     const lesson = parsePlannedLesson(await logStage({ videoId, stage: 'draft', attempt: attempt + 1 }, () => runner.run(task)), request);
@@ -64,6 +65,7 @@ export async function authorReviewedLesson(runner: AgentRunner, request: VideoRe
       systemPrompt: `${guidance}\n\nExplanation guidance:\n${messages[0].content}\n\nThe review response contract above takes priority over the guidance's authoring output format.`,
       prompt: `Review this complete lesson before speech synthesis. Source images are attached in the same order as the authoring call.\n${JSON.stringify({ request, draft: lesson, parsedScenes: parseStoryline(lesson.markdown).beats })}`,
       signal, images, validate: async output => { parseEditorialReview(output, lesson); },
+      logContext: { videoId, stage: 'review' },
     };
     await atomicWrite(join(runDirectory, `lesson-review-${attempt}.prompt.md`), `${reviewTask.systemPrompt}\n\n${reviewTask.prompt}`);
     const review = parseEditorialReview(await logStage({ videoId, stage: 'review', attempt: attempt + 1 }, () => runner.run(reviewTask)), lesson);

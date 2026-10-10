@@ -34,4 +34,5 @@ export interface VideoManifest {
   thumbnail?: import('./thumbnail').ThumbnailArtwork
   thumbnailStatus?: 'generating' | 'complete' | 'failed'
   error?: string
+  errorCode?: string
 }
