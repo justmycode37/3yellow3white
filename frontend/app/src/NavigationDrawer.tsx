@@ -67,10 +67,9 @@ export default function NavigationDrawer({ open, current, onClose, onWorkspace, 
         <button onClick={onCreate}><span className="drawer-icon sage"><Plus size={22}/></span><span>New video</span><ArrowUpRight size={18}/></button>
       </nav>
       <div className="drawer-bottom">
-        <div className="drawer-theme" role="group" aria-label="Color theme">
-          <button aria-pressed={theme === 'light'} onClick={() => onTheme('light')}><Sun size={18}/><span>Light</span></button>
-          <button aria-pressed={theme === 'dark'} onClick={() => onTheme('dark')}><Moon size={18}/><span>Dark</span></button>
-        </div>
+        <button className="drawer-theme-toggle" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onClick={() => onTheme(theme === 'light' ? 'dark' : 'light')}>
+          {theme === 'light' ? <Sun size={22}/> : <Moon size={22}/>}
+        </button>
         <button className={`drawer-settings ${current === 'settings' ? 'active' : ''}`} aria-current={current === 'settings' ? 'page' : undefined} onClick={onSettings}><Settings size={22}/><span>Settings</span><ArrowUpRight size={18}/></button>
       </div>
     </aside>

@@ -85,9 +85,8 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .drawer-icon { display: grid; place-items: center; width: 43px; height: 43px; flex-shrink: 0; border-radius: 15px; }
 .drawer-links > button > svg:last-child, .drawer-settings > svg:last-child { margin-left: auto; color: var(--muted); }
 .drawer-bottom { margin-top: auto; padding-top: 24px; flex-shrink: 0; }
-.drawer-theme { display: flex; gap: 6px; margin-bottom: 14px; padding: 5px; border: 1px solid var(--line); border-radius: 18px; }
-.drawer-theme > button { display: flex; flex: 1; align-items: center; justify-content: center; gap: 9px; min-height: 44px; border-radius: 13px; font-size: 14px; color: var(--muted); }
-.drawer-theme > button:hover, .drawer-theme > button[aria-pressed=true] { background: var(--soft); color: var(--ink); }
+.drawer-theme-toggle { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 14px; padding: 0; border: 0; border-radius: 15px; background: var(--sage); color: var(--card-ink); }
+.drawer-theme-toggle:hover { filter: brightness(.95); }
 .drawer-settings { display: flex; align-items: center; gap: 15px; min-height: 63px; width: 100%; padding: 18px 20px; border: 1px solid var(--line); border-radius: 22px; font-size: 15px; text-align: left; background: var(--soft); }
 .drawer-settings:hover, .drawer-settings.active { background: var(--lavender); color: var(--card-ink); }
 .drawer-settings.active > svg:last-child { color: inherit; }
