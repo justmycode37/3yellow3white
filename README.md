@@ -30,9 +30,9 @@ For a live frontend development server, run `npm run app:dev`. The source app's 
 Lesson playback uses animlib's clock and a full-viewport canvas, preferring WebGPU
 with automatic WebGL2 fallback. The app's controls drive play, pause, seeking,
 and replay; opening navigation or a dialog pauses the animation. Existing sample
-lessons play locally. New previews persist on the server and deliver interactive
-scenes and audio progressively. Enable real generation using the [Pi agent setup](docs/agents.md),
-or use the default simulated scenes and test tone. See [video delivery](docs/video-delivery.md).
+lessons play locally. Workspace submissions persist on the server and run Astra to produce a private scene-script ZIP.
+The status screen reports when the explanation is prepared; rendered playback is a downstream stage.
+The existing [Pi agent setup](docs/agents.md) and simulated scene/test-tone mode remain explicit opt-ins. See [video delivery](docs/video-delivery.md).
 
 ## Run the combined app
 
@@ -41,7 +41,7 @@ npm ci
 npm run backend:dev
 ```
 
-Open <http://localhost:8080>. Direct visits to `/library`, `/plan`, `/plan/:subject`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. The Plan page reads material locally and saves chapters and source text in local storage. Creating a video sends extracted document text to the server; jobs and scenes persist in SQLite. Raw files stay in browser memory.
+Open <http://localhost:8080>. Direct visits to `/library`, `/plan`, `/plan/:subject`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. The Plan page reads material locally and saves chapters and source text in local storage. Creating an explanation sends text and selected documents, photos, or videos to the backend. Original uploads and jobs persist privately in SQLite; the backend prepares source text and images for Astra. See [source formats, limits, and configuration](docs/story-orchestration.md#workspace-uploads-and-durable-handoff).
 
 For deployment, run `npm run backend:start` instead of the previous Uvicorn
 command. The default bind address is `0.0.0.0:8080`; override it with `HOST` and
@@ -61,8 +61,14 @@ The backend also normalizes AI-written storyline Markdown through `/api/narratio
 common label, formatting, pause, and table variations), generates
 ElevenLabs narration with word timings and explicit pauses, and provides a
 validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
-The storyline writer should receive `backend/prompts/guidance.md`; its section 16
-specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent.
+The backend now has an Astra orchestration stage: request +
+`backend/prompts/guidance.md` → reviewed, validated story ZIP for the next agent
+layer. The ZIP contains only one Markdown file per scene: brief nonspoken context
+(overall goal, before, this scene, after), then the finished spoken script and
+optional pause markers. There are no visual instructions or extra archive files.
+Reviews and metadata remain outside the ZIP. This is an internal handoff with no frontend. See [story orchestration](docs/story-orchestration.md)
+for service integration, runtime setup, example requests, and the ZIP contract.
+This is the default workspace pipeline (`VIDEO_GENERATOR=astra`); set `OPENAI_API_KEY`, or use `STORY_PROVIDER=codex` locally with a signed-in CLI. Audio-bearing video uploads require an API key for transcription. The Docker image includes the media-processing tools.
 
 ## Automatic deployment
 

@@ -1,0 +1,7 @@
+{
+  "prompt": "Write a short spoken explanation of why binary search depends on sorted data. Walk through one concrete successful search and one situation where discarding half would be unjustified. The viewer should understand the reason the method works rather than just memorize the steps.",
+  "sourceMaterial": "Use the sorted distinct array [3, 8, 12, 17, 24, 31, 42, 56] and target 31. Use zero-based indices and the lower midpoint: start low=0, high=7, mid=3 gives 17; then low=4, high=7, mid=5 gives 31. Sorting guarantees every value to the left of 17 is smaller than 31. An unsorted contrast can be [31, 8, 12, 17, 24, 3, 42, 56]; comparing target 31 with midpoint value 17 would incorrectly discard the left half where the target sits. For an absent target, a correct binary search terminates when the search interval is empty. Do not claim that this particular eight-element example always needs three comparisons; successful searches can take up to four comparisons with this convention.",
+  "audience": "Beginner programmer who understands arrays and comparisons",
+  "language": "English",
+  "durationSec": 120
+}

@@ -4,7 +4,7 @@ The narration stage normalizes AI-written Markdown, synthesizes the requested Al
 
 ## Give the storyline writer its instructions
 
-`backend/prompts/guidance.md` contains the explanation guidance and the production Markdown contract in section 16. `buildStorylineMessages(material)` from `backend/src/storyline-prompt.ts` loads this file into a system message and places the source material in a separate user message. Pass those messages to the future storyline writer, then pass its Markdown response to `NarrationService.submit(owner, markdown)`. Release packaging includes the prompt, and the smoke check verifies it is present.
+The [Astra orchestration stage](story-orchestration.md) produces an internal ZIP containing only `scene-01.md`, `scene-02.md`, and so on. Each scene contains brief `Context (not spoken)` entries (overall goal, before, this scene, after) and a separate script of finished spoken sentences and optional pauses. Neither section contains visual instructions. `readStoryArchive(zip, job.zipSha256).narrationMarkdown` removes the context and joins only the scripts in order for `NarrationService.submit(owner, markdown)` without adding another ZIP entry. `backend/prompts/guidance.md` defines these mandatory boundaries for both structured and standalone callers. `buildStorylineMessages(material)` loads the same guidance. Release packaging includes the prompt, and the smoke check verifies it is present.
 
 Preferred output:
 
@@ -122,7 +122,7 @@ After a restart, queued/running jobs become `interrupted`; an explicit retry reu
 
 Production runs Bun in the Docker Compose app container and reads `/etc/3yellow3white/environment`. Create a persistent directory owned by `deploy`, such as `/var/lib/3yellow3white/narration`, outside the immutable release directories. Set the key, pinned voice, data directory, and public origin there. No external queue/database is required. Artifacts are retained until explicitly removed by an operator; monitor disk use. Horizontal workers and automatic retention are not part of this version.
 
-The existing storyline and scene AI services are not yet implemented on main. This change defines their boundary, makes the guidance loadable, and supplies executable validation/demo integration without replacing the production mock creation flow.
+The storyline service now produces reviewed Astra story ZIPs; the scene-generation AI and the connection to the simulated video creation flow remain downstream work. The narration contract and executable validation/demo integration remain available independently.
 
 ## Verification
 

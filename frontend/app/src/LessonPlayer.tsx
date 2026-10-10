@@ -6,7 +6,7 @@ import { formatTime } from './data'
 import { LessonPlayback } from './lessonPlayback'
 import type { LessonPlaybackState } from './lessonPlayback'
 import { lessonScenes } from './lessonScenes'
-import { watchVideo } from './videos'
+import { retryVideo, watchVideo } from './videos'
 import type { VideoManifest } from '../../../shared/video/contract'
 
 const loadingState: LessonPlaybackState = { time: 0, duration: 0, playing: false, ended: false, ready: false, error: '' }
@@ -28,6 +28,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   const [controls, setControls] = useState(false)
   const [isFullscreen, setFullscreen] = useState(false)
   const state = useSyncExternalStore(playback?.subscribe ?? subscribeLoading, playback?.getState ?? getLoadingState)
+  const isStory = manifest?.provider === 'astra'
   const error = startupError || state.error
   const duration = state.duration || lesson.duration
   const progress = duration ? Math.min(1, state.time / duration) : 0
@@ -42,10 +43,11 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     let disconnect: (() => void) | undefined
     setPlayback(undefined)
     setStartupError('')
-    // Load the renderer only when opening a lesson, keeping the workspace light.
-    void import('animlib').then(({ createPlayer, Color }) => {
+    setManifest(undefined)
+    // Script preparation has no playable scenes; observe it without loading a renderer.
+    let renderer: Promise<LessonPlayback | undefined> | undefined
+    const loadRenderer = () => renderer ??= import('animlib').then(({ createPlayer }) => {
       if (!active || !host || !screen.current) return
-      // Own the canvas imperatively: renderer recovery can replace a context-locked surface.
       const canvas = document.createElement('canvas')
       canvas.className = 'lesson-canvas'
       canvas.setAttribute('aria-label', `Animated preview: ${lesson.title}`)
@@ -54,22 +56,25 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
       controller = new LessonPlayback(createPlayer({ canvas, controlsRoot: host.parentElement! }), !lesson.videoId)
       void controller.setSuspended(suspended.current)
       setPlayback(controller)
-      if (lesson.videoId) {
-        const current = controller
-        disconnect = watchVideo(lesson.videoId, manifest => {
-          setManifest(manifest)
-          void current.acceptManifest(manifest)
-        }, setConnection)
-        return
-      }
-      void controller.load(lessonScenes(lesson, {
-        background: theme === 'dark' ? Color.BLACK : Color.WHITE,
-        ink: theme === 'dark' ? Color.WHITE : Color.GREY_E,
-        accent: theme === 'dark' ? Color.BLUE : Color.BLUE_E,
-      }), lesson.duration * (lesson.progress ?? 0))
-    }).catch(error => {
-      if (active) setStartupError(error instanceof Error ? error.message : String(error))
+      return controller
     })
+    const failed = (error: unknown) => { if (active) setStartupError(error instanceof Error ? error.message : String(error)) }
+    if (lesson.videoId) {
+      disconnect = watchVideo(lesson.videoId, manifest => {
+        if (!active) return
+        setManifest(manifest)
+        if (manifest.provider !== 'astra') void loadRenderer().then(current => { if (active) return current?.acceptManifest(manifest) }).catch(failed)
+      }, setConnection)
+    } else {
+      void Promise.all([loadRenderer(), import('animlib')]).then(([current, { Color }]) => {
+        if (!active || !current) return
+        return current.load(lessonScenes(lesson, {
+          background: theme === 'dark' ? Color.BLACK : Color.WHITE,
+          ink: theme === 'dark' ? Color.WHITE : Color.GREY_E,
+          accent: theme === 'dark' ? Color.BLUE : Color.BLUE_E,
+        }), lesson.duration * (lesson.progress ?? 0))
+      }).catch(failed)
+    }
     return () => { active = false; disconnect?.(); controller?.dispose(); host?.replaceChildren() }
   }, [lesson, theme, attempt])
 
@@ -101,14 +106,17 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
     <div className={`player-heading ${controls || !state.playing ? 'show-controls' : ''}`}>
       <h1>{lesson.title}</h1>
-      {lesson.videoId && <p>Interactive sample · test tone only</p>}
+      {manifest?.provider === 'simulated' && <p>Interactive sample · test tone only</p>}
       {lesson.demo && !lesson.videoId && <p>Sample preview · video generation coming soon</p>}
-      {(connection || state.generationError) && <p role="status">{state.generationError || connection}</p>}
-      {manifest && state.generating && <p>Preparing more scenes. Your video is saved to your library.</p>}
+      {(connection || (!isStory && state.generationError)) && <p role="status">{connection || state.generationError}</p>}
+      {manifest && !isStory && state.generating && <p>Preparing more scenes. Your video is saved to your library.</p>}
     </div>
     <div className="player-stage">
       <div ref={canvasHost} className="lesson-canvas-host"/>
-      {!state.ready && !error && <p className="player-status" role="status">{state.generationError || 'Loading your lesson…'}</p>}
+      {isStory ? <div className="player-status" role="status">
+        <p>{manifest.status === 'script_ready' ? 'Your explanation is prepared. Video playback is not available yet.' : manifest.status === 'failed' ? manifest.error : 'Preparing your explanation…'}</p>
+        {manifest.status === 'failed' && manifest.retryable && <button className="secondary-button" onClick={() => { void retryVideo(manifest.id).then(() => setAttempt(old => old + 1)).catch(error => setConnection(error.message)) }}>Try again</button>}
+      </div> : !state.ready && !error && <p className="player-status" role="status">{state.generationError || 'Loading your lesson…'}</p>}
       {state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}
       {error && <div className="player-status player-error" role="alert"><strong>This lesson couldn’t play.</strong><p>{error}</p><button className="secondary-button" onClick={() => setAttempt(old => old + 1)}>Try again</button></div>}
     </div>

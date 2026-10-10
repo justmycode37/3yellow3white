@@ -25,7 +25,8 @@
     "backend:dev": "npm run build && npm run dev --workspace @aha/backend",
     "backend:start": "npm run build && npm run start --workspace @aha/backend",
     "backend:test": "npm run build && npm run test --workspace @aha/backend",
-    "backend:typecheck": "npm run build && npm run typecheck --workspace @aha/backend"
+    "backend:typecheck": "npm run build && npm run typecheck --workspace @aha/backend",
+    "story": "bun backend/src/story/cli.ts"
   },
   "devDependencies": {
     "bun": "1.4.2"

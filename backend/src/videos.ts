@@ -4,6 +4,9 @@ import { dirname } from 'node:path'
 import { SceneSequence } from 'animlib/core'
 import type { Frame } from 'animlib/core'
 import type { VideoManifest, VideoRequest, VideoScene } from '../../shared/video/contract'
+import { StoryError } from './story/types.js'
+import { readWorkspaceRequest } from './story/workspace.js'
+import type { WorkspaceRequest, WorkspacePipeline, StoryHandoff } from './story/workspace.js'
 import { AgentError } from './agents/config.js'
 
 type Row = { id: string; owner: string; request: string; manifest: string }
@@ -46,12 +49,13 @@ export class VideoService {
   private idle: Promise<void> = Promise.resolve()
   private abort = new AbortController()
 
-  constructor(path: string, private generate: Generator = simulatedGenerator, private provider: VideoManifest['provider'] = 'simulated') {
+  constructor(path: string, private generate: Generator = simulatedGenerator, private provider: VideoManifest['provider'] = 'simulated', private storyPipeline?: WorkspacePipeline) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
     this.db = new Database(path, { create: true })
     this.db.exec(`PRAGMA journal_mode=WAL;
       CREATE TABLE IF NOT EXISTS videos (id TEXT PRIMARY KEY, owner TEXT NOT NULL, key TEXT NOT NULL, request TEXT NOT NULL, manifest TEXT NOT NULL, UNIQUE(owner,key));
-      CREATE TABLE IF NOT EXISTS video_audio (video TEXT NOT NULL, scene TEXT NOT NULL, bytes BLOB NOT NULL, PRIMARY KEY(video,scene));`)
+      CREATE TABLE IF NOT EXISTS video_audio (video TEXT NOT NULL, scene TEXT NOT NULL, bytes BLOB NOT NULL, PRIMARY KEY(video,scene));
+      CREATE TABLE IF NOT EXISTS video_story_handoffs (video TEXT PRIMARY KEY, story TEXT NOT NULL, sha256 TEXT);`)
     this.kick()
   }
 
@@ -63,16 +67,28 @@ export class VideoService {
   list(owner: string): VideoManifest[] {
     return (this.db.query('SELECT manifest FROM videos WHERE owner = ? ORDER BY rowid DESC').all(owner) as { manifest: string }[]).map(row => JSON.parse(row.manifest))
   }
-  create(owner: string, key: string, request: VideoRequest): VideoManifest {
+  create(owner: string, key: string, request: WorkspaceRequest): VideoManifest {
     const prior = this.db.query('SELECT * FROM videos WHERE owner = ? AND key = ?').get(owner, key) as Row | null
     if (prior) {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
       return JSON.parse(prior.manifest)
     }
+    const queued = this.db.query("SELECT count(*) AS n FROM videos WHERE json_extract(manifest, '$.status') IN ('queued','generating')").get() as { n: number }
+    if (queued.n >= 10) throw new StoryError('QUEUE_FULL', 'The generation queue is full. Try again shortly.', 429, true)
+    if (request.files?.length && this.provider !== 'astra') throw new StoryError('SOURCE_CONFIG', 'File uploads require VIDEO_GENERATOR=astra on the server.', 503)
     const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [] }
     this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
     this.kick()
     return manifest
+  }
+  /** Backend-only handoff. No ZIP, job id, or artifact URL is exposed in browser manifests. */
+  storyHandoff(id: string, owner: string): StoryHandoff | undefined {
+    if (this.get(id, owner)?.status !== 'script_ready') return undefined
+    const row = this.db.query('SELECT story, sha256 FROM video_story_handoffs WHERE video = ?').get(id) as { story: string; sha256: string } | null
+    return row?.sha256 ? { storyId: row.story, zipSha256: row.sha256 } : undefined
+  }
+  private storyId(id: string) {
+    return (this.db.query('SELECT story FROM video_story_handoffs WHERE video = ?').get(id) as { story: string } | null)?.story
   }
   private save(manifest: VideoManifest) {
     manifest.revision++
@@ -91,8 +107,21 @@ export class VideoService {
         const manifest: VideoManifest = JSON.parse(row.manifest)
         const sequence = new SceneSequence()
         try {
+          if (manifest.provider === 'astra') {
+            if (!this.storyPipeline) throw new StoryError('MODEL_CONFIG', 'This job requires VIDEO_GENERATOR=astra.', 503, true)
+            manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
+            const handoff = await this.storyPipeline.run(JSON.parse(row.request), { owner: row.owner, signal: this.abort.signal, storyId: this.storyId(row.id),
+              checkpoint: id => { this.db.query('INSERT OR REPLACE INTO video_story_handoffs VALUES (?, ?, NULL)').run(row.id, id) } })
+            if (this.stopped) break
+            this.db.transaction(() => {
+              this.db.query('INSERT OR REPLACE INTO video_story_handoffs VALUES (?, ?, ?)').run(row.id, handoff.storyId, handoff.zipSha256)
+              manifest.status = 'script_ready'; delete manifest.error; delete manifest.retryable; this.save(manifest)
+            })()
+            this.notify(manifest)
+            continue
+          }
           if (manifest.provider === 'pi' && this.provider !== 'pi') throw new AgentError('CONFIG', 'This video requires VIDEO_GENERATOR=pi.')
-          const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
+          const generate = manifest.provider === 'simulated' && this.provider !== 'simulated' ? simulatedGenerator : this.generate
           manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
           const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
           if (!initial.ok) throw new Error('Stored scenes could not be restored')
@@ -116,7 +145,8 @@ export class VideoService {
           }
         } catch (error) {
           if (this.stopped) break
-          manifest.status = 'failed'; manifest.error = error instanceof AgentError ? error.message : 'Generation failed. Available scenes can still be played.'
+          manifest.status = 'failed'; manifest.error = error instanceof AgentError || error instanceof StoryError ? error.message : 'Generation failed. Available scenes can still be played.'
+          manifest.retryable = manifest.provider === 'astra' && (!(error instanceof StoryError) || error.retryable)
           console.error('Video generation failed', manifest.id, error instanceof AgentError ? error.code : 'GENERATION')
           this.save(manifest); this.notify(manifest)
         } finally { sequence.dispose() }
@@ -139,25 +169,26 @@ export class VideoService {
       const origin = request.headers.get('origin')
       // The trusted TLS proxy preserves Host and supplies the external protocol.
       const protocol = request.headers.get('x-forwarded-proto') ?? url.protocol.slice(0, -1)
-      if (origin && origin !== `${protocol}://${url.host}`) return json({ detail: 'Invalid origin' }, 403)
+      if (request.headers.get('sec-fetch-site') === 'cross-site' || (origin && origin !== `${protocol}://${url.host}`)) return json({ detail: 'Invalid origin' }, 403)
       const key = request.headers.get('Idempotency-Key')
       if (!key || key.length > 128) return json({ detail: 'An Idempotency-Key is required' }, 400)
-      // Bound streamed bodies as well as Content-Length before JSON parsing.
-      const reader = request.body?.getReader(); let size = 0; const chunks: Uint8Array[] = []
-      if (reader) while (true) {
-        const { value, done } = await reader.read(); if (done) break
-        size += value.length
-        if (size > 1_000_000) { await reader.cancel(); return json({ detail: 'Source text must be under 1 MB' }, 413) }
-        chunks.push(value)
-      }
-      let body: VideoRequest
-      try { body = JSON.parse(await new Blob(chunks.map(chunk => new Uint8Array(chunk))).text()) } catch { return json({ detail: 'Invalid JSON' }, 400) }
-      if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.length > 10 || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()))) return json({ detail: 'Provide a title and topic or document text' }, 400)
-      const normalized = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })) }
-      try { return json(this.create(owner, key, normalized), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }
+      try { return json(this.create(owner, key, await readWorkspaceRequest(request)), 202) }
+      catch (error) { return json({ detail: error instanceof Error ? error.message : 'Invalid request' }, error instanceof StoryError ? error.status : 409) }
     }
     const manifest = this.get(parts[3], owner)
     if (!manifest) return json({ detail: 'Not Found' }, 404)
+    if (request.method === 'POST' && parts.length === 5 && parts[4] === 'retry') {
+      const origin = request.headers.get('origin'), protocol = request.headers.get('x-forwarded-proto') ?? url.protocol.slice(0, -1)
+      if (request.headers.get('sec-fetch-site') === 'cross-site' || (origin && origin !== `${protocol}://${url.host}`)) return json({ detail: 'Invalid origin' }, 403)
+      if (manifest.status !== 'failed' || !manifest.retryable || !this.storyPipeline) return json({ detail: 'This job cannot be retried.' }, 409)
+      try {
+        const storyId = this.storyId(manifest.id)
+        if (storyId) await this.storyPipeline.retry(owner, storyId)
+        manifest.status = 'queued'; delete manifest.error; delete manifest.retryable
+        this.save(manifest); this.notify(manifest); this.kick()
+        return json(manifest, 202)
+      } catch (error) { return json({ detail: error instanceof StoryError ? error.message : 'Could not retry this job.' }, error instanceof StoryError ? error.status : 500) }
+    }
     if (request.method !== 'GET') return json({ detail: 'Method Not Allowed' }, 405)
     if (parts.length === 4) return json(manifest)
     if (parts.length === 6 && parts[4] === 'audio') {
@@ -185,7 +216,7 @@ export class VideoService {
         const send = (snapshot: VideoManifest) => {
           if (closed) return
           controller.enqueue(encoder.encode(`id: ${snapshot.revision}\nevent: manifest\ndata: ${JSON.stringify(snapshot)}\n\n`))
-          if (snapshot.status === 'complete' || snapshot.status === 'failed') abort()
+          if (snapshot.status === 'complete' || snapshot.status === 'script_ready' || snapshot.status === 'failed') abort()
         }
         listeners.add(send); request.signal.addEventListener('abort', abort, { once: true })
         if (request.signal.aborted) abort(); else send(manifest)

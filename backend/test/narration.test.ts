@@ -52,6 +52,8 @@ test("guidance production example is accepted by the actual parser", async () =>
   const example = /```md\n([\s\S]*?)```/.exec(guidance)![1];
   const parsed = parseStoryline(example);
   expect(parsed.beats).toHaveLength(2);
+  expect(parsed.beats.every(beat => beat.context.includes("Overall goal:") && beat.context.includes("Before:") && beat.context.includes("After:"))).toBe(true);
+  expect(parsed.beats.flatMap(beat => beat.blocks).filter(block => block.kind === "speech").map(block => block.text).join(" ")).not.toContain("Overall goal:");
   expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(2);
   const messages = await buildStorylineMessages("Explain binary search.");
   expect(messages[0]).toEqual({ role: "system", content: guidance });

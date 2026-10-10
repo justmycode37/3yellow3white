@@ -31,8 +31,7 @@ These npm commands run from `backend/`, so Bun reads the same `.env.local` for
 login and the server. Credentials default to `~/.aha/pi/auth.json`, outside the
 checkout. To override this, use the same absolute `PI_CODING_AGENT_DIR` for every
 command. Each developer logs in separately. A persistent `host-id` identifies
-each installation. Without `VIDEO_GENERATOR=pi`, previews use the existing
-simulated generator. Queued simulated jobs retain that generator after enabling Pi.
+each installation. The default `VIDEO_GENERATOR=astra` uses the [private script-ZIP pipeline](story-orchestration.md). Select `VIDEO_GENERATOR=simulated` explicitly for sample scenes and test tones. Queued simulated jobs retain their original generator.
 Login refuses to overwrite a saved registration: stop the backend and log out
 before logging in again, so an old remote session is not left behind.
 

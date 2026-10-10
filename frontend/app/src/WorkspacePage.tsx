@@ -13,9 +13,9 @@ const modes = [
   { id: 'photos', label: 'Photos', icon: FileImage },
 ] as const
 type InputMode = typeof modes[number]['id']
-const acceptedFiles = '.pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif,.avif,.heic,.heif'
+const acceptedFiles = '.pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif,.avif,.heic,.heif,.mp4,.mov,.webm,.m4v'
 const imageFile = /\.(png|jpe?g|webp|gif|avif|heic|heif)$/i
-const supportedFile = /\.(pdf|docx|txt|md|png|jpe?g|webp|gif|avif|heic|heif)$/i
+const supportedFile = /\.(pdf|docx|txt|md|png|jpe?g|webp|gif|avif|heic|heif|mp4|mov|webm|m4v)$/i
 
 function PhotoPreview({ file }: { file: File }) {
   const [url, setUrl] = useState('')
@@ -60,8 +60,8 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
     const next = [...files]
     const errors = new Set<string>()
     for (const file of incoming) {
-      if (!(mode === 'photos' ? imageFile : supportedFile).test(file.name)) { errors.add(mode === 'photos' ? 'Choose an image for Photos.' : 'Choose a PDF, DOCX, text file, or image.'); continue }
-      if (file.size > 50 * 1024 * 1024) { errors.add('Each file must be 50 MB or smaller.'); continue }
+      if (!(mode === 'photos' ? imageFile : supportedFile).test(file.name)) { errors.add(mode === 'photos' ? 'Choose an image for Photos.' : 'Choose a document, image, or MP4, MOV, or WebM video.'); continue }
+      if (file.size + next.reduce((sum, item) => sum + item.size, 0) > 50 * 1024 * 1024) { errors.add('Files must total 50 MB or less.'); continue }
       if (next.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) continue
       if (next.length >= 10) { errors.add('You can add up to 10 files to one video.'); continue }
       next.push(file)
@@ -89,22 +89,14 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
     const text = mode === 'text' ? topic.trim() : ''
     const title = text.split('\n')[0].slice(0, 100) || files[0].name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ')
     try {
-      if (files.some(file => imageFile.test(file.name))) throw new Error('Photo-to-video is not available yet. Use text or a PDF, Word, or text file.')
       const documents = []
-      if (files.length) {
-        const { readPlanDocument } = await import('./documentReader')
-        for (const file of files) {
-          const document = await readPlanDocument(file, () => {})
-          documents.push({ name: document.name, text: document.lines.map(line => line.text).join('\n') })
-        }
-      }
       if (!mounted.current) return
       const context = mode === 'text' ? initialTopic : null
       if (context) documents.unshift({ name: context.sourceName, text })
       const body = { title, topic: text, documents }
-      const serialized = JSON.stringify(body)
+      const serialized = JSON.stringify({ ...body, files: await Promise.all(files.map(async file => ({ name: file.name, hash: Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))), size: file.size }))) })
       if (serialized !== requestBody.current) { requestBody.current = serialized; requestKey.current = crypto.randomUUID() }
-      const lesson = videoLesson(await requestVideo(body, requestKey.current))
+      const lesson = videoLesson(await requestVideo(body, requestKey.current, files))
       if (mounted.current) onCreate({ ...lesson, subtitle: context?.chapter || lesson.subtitle, subject: context?.subject || lesson.subject, artwork: artworkForTitle(title, 'idea'), color: context?.color || lesson.color, source: context ? { text, chapter: context.chapter, name: context.sourceName } : undefined })
     } catch (error) {
       if (mounted.current) setError(error instanceof Error ? error.message : 'Could not create your video.')
@@ -138,7 +130,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
 
             {mode === 'text' ? <textarea id="video-topic" aria-label="What would you like explained?" disabled={creating} value={topic} onChange={event => setTopic(event.target.value)} placeholder="Explain something I’ve always wondered about…" maxLength={10000}/>
             : mode === 'drop' ? <button className="composer-upload-area" type="button" onClick={() => picker.current?.click()}>
-              <Upload size={38}/><strong>Drop your material here</strong><span>Documents, notes, or images</span><span className="upload-browse">Choose files <Plus size={14}/></span>
+              <Upload size={38}/><strong>Drop your material here</strong><span>Documents, notes, images, or videos</span><span className="upload-browse">Choose files <Plus size={14}/></span>
             </button>
             : cameraOpen ? <PhotoCapture onCapture={file => { addFiles([file]); setCameraOpen(false) }} onClose={() => setCameraOpen(false)}/>
             : <div className="composer-photo-area">

@@ -19,9 +19,10 @@ export interface VideoManifest {
   id: string
   title: string
   revision: number
-  status: 'queued' | 'generating' | 'complete' | 'failed'
-  provider: 'simulated' | 'pi'
+  status: 'queued' | 'generating' | 'script_ready' | 'complete' | 'failed'
+  provider: 'simulated' | 'pi' | 'astra'
   createdAt: string
   scenes: VideoScene[]
+  retryable?: boolean
   error?: string
 }

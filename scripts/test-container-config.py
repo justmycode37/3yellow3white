@@ -66,11 +66,11 @@ class EnvironmentTests(unittest.TestCase):
         for path in ['relative', '/tmp/$HOME', '/tmp/line\nbreak', '/tmp/"quote"']:
             with self.subTest(path=path), self.assertRaises(ValueError):
                 config.host_path(path)
-        self.assertEqual(config.host_path('/tmp/aha/videos.sqlite'), Path('/tmp/aha/videos.sqlite'))
+        self.assertEqual(config.host_path('/tmp/aha/videos.sqlite'), Path('/tmp/aha/videos.sqlite').resolve())
 
     def test_agent_state_is_persistent_and_separate_from_releases(self):
         with tempfile.TemporaryDirectory() as root:
-            base = Path(root)
+            base = Path(root).resolve()
             release = base / 'releases' / 'candidate'
             release.mkdir(parents=True)
             values = {'NARRATION_DATA_DIR': str(base / 'narration')}

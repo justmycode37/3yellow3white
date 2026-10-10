@@ -1,19 +1,15 @@
 # Progressive interactive video delivery
 
-The default simulated generator produces three six-second scenes with a test tone.
-With `VIDEO_GENERATOR=pi`, Pi writes storyline Markdown, ElevenLabs generates
-narration, and Pi writes validated scene code aligned to the audio. See
-[Pi setup and authentication](agents.md).
-Uploaded PDF, DOCX, text and Markdown documents are read by the existing browser
-reader; extracted text and the requested topic are sent to and stored on the server.
-Raw document upload/OCR is not implemented.
+The default `VIDEO_GENERATOR=astra` connects workspace input to a reviewed private ZIP containing only scene Markdown. Text, uploaded documents, photos/screenshots, and videos are processed by the backend. Its manifest stops at `script_ready`; it does not publish simulated scenes or claim that rendered playback exists. See [Astra orchestration, uploads, and handoff](story-orchestration.md).
+
+The existing `VIDEO_GENERATOR=pi` harness writes storyline Markdown, generates ElevenLabs narration, and writes validated scene code aligned to the audio. `VIDEO_GENERATOR=simulated` explicitly selects the three-scene test-tone fixture. These legacy generators accept topic/document text; multipart files require Astra. See [Pi setup and authentication](agents.md).
 
 ## Contract and ownership
 
 `shared/video/contract.ts` defines the versioned manifest and request types.
 `POST /api/videos` accepts `{title, topic, documents: [{name, text}]}` with an
 `Idempotency-Key` header, returning HTTP 202 and a stable manifest. Reusing the key
-with different input returns 409. Request bodies are limited to 1 MB.
+with different input (including file bytes) returns 409. Text-only JSON bodies are limited to 1 MB. Multipart requests contain a `request` JSON field and repeated `files` fields, totaling up to 50 MB of files plus bounded metadata.
 
 `GET /api/videos` lists the current viewer's saved jobs. `GET /api/videos/:id`
 returns a snapshot. `GET /api/videos/:id/events` sends named `manifest` SSE events
@@ -32,7 +28,7 @@ own. Anonymous libraries belong to that browser cookie, not a cross-device accou
 ## Generation and persistence
 
 `VideoService` runs one durable queue in one Bun process. Startup resumes queued
-or generating jobs at their first unpublished scene. `VIDEO_DB_PATH` defaults to
+or generating legacy jobs at their first unpublished scene. Astra jobs reuse their private story checkpoint; interrupted model calls require an explicit owner retry. `POST /api/videos/:id/retry` handles retryable Astra failures, and completed `script_ready` handoffs survive restart. `VIDEO_DB_PATH` defaults to
 `data/videos.sqlite`; deployment sets it outside release directories. Run only one
 worker against this database. Multiple workers require leases/claims before use.
 Back up the SQLite database using a SQLite-aware backup procedure.
@@ -42,7 +38,7 @@ job context (owner, previous frame, and cancellation signal). It returns source,
 duration, captions, an audio ID and WAV bytes, or null when complete. Pi persists
 completed scripts and scenes separately and reuses the narration service cache. The service compiles and validates scenes with
 `animlib/core` before publication. Provider failures persist a terminal failure
-while retaining available scenes. Retry/resume of failed provider jobs, cancellation,
+while retaining available scenes. Astra has explicit failure retries; legacy failed-job retries, cancellation,
 retention policies, quotas, distributed queues and object storage are future work.
 
 ## Playback and interactivity

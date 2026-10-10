@@ -10,7 +10,7 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+      - /tmp:rw,noexec,nosuid,size=256m,mode=1777
     env_file:
       - path: ${AHA_RUNTIME_ENV:-./runtime.env}
         format: raw
@@ -22,6 +22,9 @@ services:
       VIDEO_DB_PATH: /data/videos/${AHA_VIDEO_DB_NAME:-videos.sqlite}
       NARRATION_DATA_DIR: /data/narration
       NARRATION_ALLOW_LOCAL: "0"
+      STORY_DATA_DIR: /data/narration/stories
+      STORY_ALLOW_LOCAL: "0"
+      STORY_PROVIDER: openai
       PI_CODING_AGENT_DIR: /data/agents/pi
       AGENT_DATA_DIR: /data/agents/jobs
     ports:

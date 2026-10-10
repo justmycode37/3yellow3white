@@ -1,6 +1,6 @@
 # Aha!
 
-A React and Vite frontend for turning learning material into visual explanations. Served by the Bun backend and integrated with the shared animlib player. AI video generation is not connected.
+A React and Vite frontend for turning learning material into visual explanations. Served by the Bun backend and integrated with the shared animlib player. The workspace sends source material to the backend Astra script pipeline; rendering remains a downstream stage.
 
 ```sh
 cd ../..
@@ -13,7 +13,7 @@ npm run app:test
 
 ## Screens and interactions
 
-- Workspace: `/`, three overlapping coloured input cards: Drag & drop, Text & file, and Photos. Side cards reveal further on hover or keyboard focus; click or tap brings a mode to the front. Each mode keeps its own inputs, and only the active mode is submitted. Photos supports image selection and an on-demand camera with capture, cancellation, permission-error handling, and stream cleanup. File selection accepts up to 10 files of 50 MB each. Creation submits an idempotent server job and opens its player while scenes arrive. Photo-to-video/OCR is not connected; image submissions report this before creating a job.
+- Workspace: `/`, three overlapping coloured input cards: Drag & drop, Text & file, and Photos. Side cards reveal further on hover or keyboard focus; click or tap brings a mode to the front. Each mode keeps its own inputs, and only the active mode is submitted. Photos supports image selection and an on-demand camera with capture, cancellation, permission-error handling, and stream cleanup. File selection accepts up to 10 files totaling 50 MB, including PDFs, Word/text documents, images, and MP4/MOV/WebM videos. Creation submits an idempotent server job and opens its status view. Backend processing supplies image pixels and scanned PDF pages to Astra.
 - Library: a separate `/library` page reached from the workspace or navigation drawer. Includes six example videos in Organic chemistry and Linear algebra, saved previews under their subject or My ideas, subject filters, search, sorting, and bookmarks.
 - Plan: `/plan`, a subject list with rounded coloured icons on the left and a half-width curriculum on the right, using the supplied ETH timetable. Short subject names, original class positions, and lunch gaps are preserved without visible times. Selecting a subject opens its plan below the overview without selection outlines. Empty subjects show file upload or pasted-text input; existing material appears as ordered chapters and video topic widgets. Hover or keyboard focus reveals a rounded black “Make me a video” action; touch devices keep it visible. The action opens Workspace with the topic text and source details filled in. On mobile the curriculum sits below the list. The curriculum is only shown on Plan.
 - Settings: `/settings`, light and dark appearance cards. Dark mode uses a pure-black page background.
@@ -34,7 +34,7 @@ npm run app:test
 - `src/Artwork.tsx`: placeholder educational diagrams for thumbnails and demo playback.
 - `src/styles.css`, `src/interface.css`, `src/workspace.css`, and `src/plan.css`: shared component styles, the rounded pastel interface, responsive layouts, and reduced-motion support.
 
-Raw uploaded files remain in browser memory. Creating a video sends extracted source text to the server and produces a labeled interactive sample with a test tone. Plan chapters and their extracted source text remain in local browser storage. Real explanation and narration providers are not connected to the video queue; the separate ElevenLabs narration API remains available. See [video delivery](../../docs/video-delivery.md) and [narration](../../docs/narration.md).
+Workspace submissions send the selected raw files and topic to the backend, which persists and processes them privately. The default Astra pipeline reports preparation status and errors, with explicit retries. No script, ZIP, or orchestration metadata is displayed or downloaded by the browser, and the renderer is not initialized for script-only jobs. Plan chapters and extracted source text remain in local browser storage; its on-device document reader is separate from workspace ingestion. See [source formats and orchestration](../../docs/story-orchestration.md), [legacy video delivery](../../docs/video-delivery.md), and [narration](../../docs/narration.md).
 
 Typography uses locally bundled Google Fonts: DynaPuff for the Aha! wordmark and DM Sans for the interface. “Cream” was not found in the Google Fonts catalog; the wordmark font can be replaced in `src/main.tsx` and `.wordmark` when the intended font is supplied.
 

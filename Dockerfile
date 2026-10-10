@@ -19,7 +19,7 @@ RUN echo "$APP_REVISION" | grep -Eq '^[0-9a-f]{40}$' \
     && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
 
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libstdc++6 \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libstdc++6 ffmpeg poppler-utils libheif-examples \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 1001 --create-home app \
     && mkdir -p /data/videos /data/narration /data/agents && chown -R app:app /data
@@ -39,7 +39,7 @@ COPY --from=build /app/scripts/ scripts/
 ARG APP_REVISION
 LABEL org.opencontainers.image.revision=$APP_REVISION
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080 APP_REVISION=$APP_REVISION \
-    VIDEO_DB_PATH=/data/videos/videos.sqlite NARRATION_DATA_DIR=/data/narration
+    VIDEO_DB_PATH=/data/videos/videos.sqlite NARRATION_DATA_DIR=/data/narration STORY_DATA_DIR=/data/narration/stories
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=6 \

@@ -11,6 +11,11 @@ const agentRuntime = await createModelRuntime(agentConfig({ AGENT_AUTH_MODE: "ap
 assert(agentRuntime.getModel("openai", "gpt-6.1-sol"), "Pinned agent model is missing");
 assert((await Bun.file(new URL("../shared/animlib/docs/reference.md", import.meta.url)).text()).includes("s.wait"));
 
+// Media preprocessing must be available in the actual production image.
+for (const [command, flag] of [['ffmpeg', '-version'], ['ffprobe', '-version'], ['pdfinfo', '-v'], ['pdftoppm', '-v'], ['heif-convert', '--version']]) {
+  const result = Bun.spawnSync([command, flag], { stdout: 'ignore', stderr: 'ignore' });
+  assert.equal(result.exitCode, 0, `${command} is missing from the runtime`);
+}
 const revision = (await Bun.file(new URL("../REVISION", import.meta.url)).text()).trim();
 assert.equal(process.env.APP_REVISION, revision);
 const guidance = (await buildStorylineMessages("Release verification"))[0].content;

@@ -1,0 +1,7 @@
+{
+  "prompt": "Explain why averaging two percentages can give the wrong result. Build a clear spoken explanation around two classes taking the same quiz, and help the viewer discover how group size changes the combined result. Finish with a small transfer question. Keep the script conversational, accurate, compact, and useful to someone who knows percentages but has not learned weighted averages.",
+  "sourceMaterial": "Reference facts for this lesson: Class A has 10 students, of whom 9 pass: 90%. Class B has 30 students, of whom 15 pass: 50%. Combined, 24 out of 40 pass: 60%, not the unweighted mean of 70%. Weighting the class rates by their sizes gives (10*0.9 + 30*0.5)/40 = 0.6. Equal-sized groups are the special case in which the unweighted average works. With 10 students in each class and pass counts 9 and 5, the combined rate is 14/20 = 70%. These are fictional toy classes, not a reported study. A weighted average with nonnegative weights lies between the smallest and largest component values. The learning objective is to reason from total successes and total trials, not merely memorize a formula.",
+  "audience": "Curious teenager or adult; understands fractions and percentages",
+  "language": "English",
+  "durationSec": 180
+}
