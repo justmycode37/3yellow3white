@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from '../src/texture-shader.js';
 /// <reference types="@webgpu/types" />
 import {afterEach,expect,it,vi} from 'vitest';
 import {create,globals} from 'webgpu';
@@ -33,7 +34,7 @@ it.each([false,true])('public Player preserves an async backend error, prior bud
   try{
     expect((await load(budgetFirst?oversized:small)).ok).toBe(true);
     expect(player.getState().status).toBe(budgetFirst?'blocked':'paused');
-    if(budgetFirst)expect(player.getState().error).toContain('312480744');
+    if(budgetFirst)expect(player.getState().error).toContain(String(312480744 / 31 * VERTEX_FLOATS));
     expect(errors).toEqual([]); // The shadow/budget scene itself raises no GPU error.
 
     // Deliberate native fault injection, outside animlib's controlled allocation.

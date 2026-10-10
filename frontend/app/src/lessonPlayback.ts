@@ -124,7 +124,7 @@ export class LessonPlayback {
         if (this.scenes.some(existing => existing.id === scene.id)) continue
         if (scene.index !== this.scenes.length) throw new Error('Video scenes arrived out of order')
         const boundary = this.state.duration
-        this.player.registerAssets?.({ [scene.audio.id]: { kind: 'audio', url: scene.audio.url } })
+        this.player.registerAssets?.({ ...scene.assets, [scene.audio.id]: { kind: 'audio', url: scene.audio.url } })
         this.extendingBoundary = boundary || Infinity
         let result
         try { result = await this.player.submit({ type: 'insert', after: this.scenes.at(-1)?.id ?? null, scenes: [scene] }) }

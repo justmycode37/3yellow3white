@@ -1,3 +1,5 @@
+import type { ModelAsset, ModelMetadata, ModelProps, ModelHandle, ModelReference } from './model-types.js';
+export type * from './model-types.js';
 import type { ExplanatoryGeometry, ScalarColors } from "./explanatory-types.js";
 export type { ClipPlane, MeshOutline, ScalarRamp, ScalarColors, SurfaceScalar, ExplanatoryGeometry } from "./explanatory-types.js";
 import type { Color, PaletteColor } from "./palette.js";
@@ -55,7 +57,8 @@ export interface Material {
 export interface Geometry extends ExplanatoryGeometry {
   /** Text/LaTeX: default depth tests glyphs; other modes act on the whole label anchor. */
   labelOcclusion?: "depth" | "overlay" | "hide" | "fade";
-  kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
+  kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group" | "model";
+  model?: ModelReference;
   radius?: number;
   width?: number;
   height?: number;
@@ -431,6 +434,7 @@ export interface SceneContext {
   text(id: string, props: ElementProps): ElementHandle;
   latex(id: string, props: ElementProps): ElementHandle;
   mesh(id: string, props: ElementProps): ElementHandle;
+  model(id: string, props: ModelProps): ModelHandle;
   /** Sample z = fn(x, y) into a shaded triangle mesh. */
   surface(id: string, props: SurfaceProps): ElementHandle;
   /** Sample a two-parameter map into a shaded triangle mesh. */
@@ -500,6 +504,7 @@ export interface PlayerState {
 }
 
 export interface CompileInput {
+  models?: Record<string, ModelMetadata>;
   /** Defaults to THREE_BLUE_ONE_BROWN_PALETTE. */
   palette?: ColorPalette;
   previous?: Frame;
@@ -507,7 +512,7 @@ export interface CompileInput {
   seed?: number;
 }
 
-export interface Asset { kind: "audio"; url: string }
+export type Asset = { kind: "audio"; url: string } | ModelAsset;
 export interface PlayerOptions {
   /** Defaults to THREE_BLUE_ONE_BROWN_PALETTE; applies to every scene. */
   palette?: ColorPalette;

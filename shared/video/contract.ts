@@ -11,6 +11,7 @@ export interface VideoRequest {
 }
 
 export interface VideoScene {
+  assets?: Record<string, import("../animlib/src/model-types").ModelAsset>
   id: string
   index: number
   source: string

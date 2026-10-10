@@ -189,8 +189,12 @@ run asynchronous builders.
 
 ## Current boundaries
 
-- No image/video textures, UV mapping, imported 3D models, photorealistic materials,
-  image bump/normal maps, displacement, environment maps, self-shadowing, arbitrary mesh shadow receivers, bloom, point/spot lights,
+- Static GLB models can include UV-mapped image materials and named parts. The scene agent
+  publishes/downloads assets through `publish_model`, then references their IDs with
+  `s.model`. Parts can move, rotate, fade and receive palette tints; assets persist
+  through scene handoffs. No skinning, animation clips or imported topology morphs yet.
+- No standalone image/video textures, photorealistic materials,
+  image maps on procedural primitives, displacement, environment maps, self-shadowing, arbitrary mesh shadow receivers, bloom, point/spot lights,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
 - SVG support accepts path geometry, not complete SVG files or their styling.
   Filled contours must be closed, simple, and nonintersecting; nested contours

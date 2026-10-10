@@ -1,3 +1,6 @@
+import { ModelAssets } from '../model-assets.js';
+import { createModelGLB } from 'animlib/core';
+import type { ModelAsset, GeneratedModel } from 'animlib/core';
 import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -37,6 +40,36 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     if (!narration.available) throw new AgentError("NARRATION", "Configure ElevenLabs before generating a narrated video.");
     const directory = join(root, videoId);
     await mkdir(directory, { recursive: true, mode: 0o700 });
+    const modelStore = new ModelAssets();
+    const assetsPath = join(directory, 'model-assets.json');
+    const assets: Record<string,ModelAsset> = JSON.parse(await saved(assetsPath) ?? '{}');
+    const modelMetadata = () => Object.fromEntries(Object.entries(assets).map(([id,a]) => [id,a.metadata]));
+    let publication: Promise<unknown> = Promise.resolve();
+    const publishModel: NonNullable<AgentTask['publishModel']> = (input, toolSignal) => {
+      const work = publication.then(async () => {
+      toolSignal.throwIfAborted();
+      if (Boolean(input.url) === Boolean(input.generated)) throw new Error('Provide exactly one of url or generated');
+      if (Object.keys(assets).length >= 16) throw new Error('Lesson model limit reached (16)');
+      let published;
+      const provenance = { license: input.license, attribution: input.attribution };
+      if (input.url) published = await modelStore.importURL(input.url, provenance, toolSignal);
+      else {
+        const generated = JSON.parse(input.generated!) as GeneratedModel;
+        for (const part of generated.parts ?? []) if (part.texture) {
+          const texture = part.texture as unknown as {base64:string;mime:'image/png'|'image/jpeg'};
+          if (typeof texture.base64 !== 'string') throw new Error('Generated texture requires base64');
+          part.texture = {bytes:new Uint8Array(Buffer.from(texture.base64,'base64')),mime:texture.mime};
+        }
+        published = await modelStore.publish(await createModelGLB(generated), { ...provenance, source:'agent-generated' });
+      }
+      toolSignal.throwIfAborted();
+      assets[published.id] = published.asset;
+      await atomicWrite(assetsPath, JSON.stringify(assets));
+      return {id:published.id, ...published.asset.metadata};
+      });
+      publication = work.catch(() => undefined);
+      return work;
+    };
     const fingerprint = createHash("sha256").update(JSON.stringify({ owner, request })).digest("hex");
     const prior = await saved(join(directory, "request.sha256"));
     if (prior && prior !== fingerprint) throw new AgentError("CONTEXT", "Saved generation belongs to a different request.");
@@ -90,7 +123,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     // Cached sources are already self-contained; only new model output needs assembly.
     const validateSource = async (output: string) => {
       try {
-        const { compiled, finalFrame } = await validateSceneAgainstNarration(sceneSource(output), pkg, scene.id, previousFrame);
+        const { compiled, finalFrame } = await validateSceneAgainstNarration(sceneSource(output), pkg, scene.id, previousFrame, modelMetadata());
         if (Math.abs(compiled.duration - scene.durationSec) > 1e-6) throw new Error(`The scene must last ${scene.durationSec} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
         if (plan) validateScenePlan(compiled, finalFrame, plan.scenes[index]);
       } catch (error) {
@@ -108,20 +141,21 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       const craft = await readFile(new URL('../../prompts/scene-craft.md', import.meta.url), 'utf8');
       const visualization = await scenegenPrompt('visualization');
       const task = {
+        publishModel,
         outputMode: options.outputMode ?? 'text',
-        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${reference}`,
-        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify({ ...input, planning })}`, validate, signal,
+        systemPrompt: `${"Use publish_model when imported or custom mesh assets help the explanation. Existing model assets are listed in the input. Geometry/image bytes belong in assets, never scene code.\n"}${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${reference}`,
+        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify({ ...input, planning, modelAssets: modelMetadata() })}`, validate, signal,
         logContext: { videoId, sceneIndex: index, stage: 'scene' as const },
       };
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
-      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning }));
+      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning, modelAssets: modelMetadata() }));
       source = assemble(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
       await validateSource(source);
       signal.throwIfAborted();
       await atomicWrite(path, source);
     } else { await validateSource(source); logEvent('scene.reused', { videoId, sceneIndex: index, cached: true }); }
     const audio = new Uint8Array(await readFile(await narration.audio(owner, job.id, scene.audio.id)));
-    return { audio, scene: { id: scene.id, index, source, duration: scene.durationSec,
+    return { audio, scene: { id: scene.id, index, source, assets: structuredClone(assets), duration: scene.durationSec,
       audio: { id: scene.audio.id },
       narration: scene.utterances.map(utterance => utterance.text).join(' '), visualDescription: scene.context,
       words: scene.utterances.flatMap(utterance => utterance.words.map(word => ({ id: word.id, text: word.text, start: word.startSec, end: word.endSec }))),

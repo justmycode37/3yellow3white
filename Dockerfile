@@ -40,7 +40,7 @@ COPY --from=build /app/scripts/ scripts/
 ARG APP_REVISION
 LABEL org.opencontainers.image.revision=$APP_REVISION
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080 APP_REVISION=$APP_REVISION \
-    VIDEO_DB_PATH=/data/videos/videos.sqlite NARRATION_DATA_DIR=/data/narration
+    VIDEO_DB_PATH=/data/videos/videos.sqlite NARRATION_DATA_DIR=/data/narration MODEL_ASSET_DIR=/data/videos/models
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=6 \

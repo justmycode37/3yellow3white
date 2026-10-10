@@ -12,6 +12,7 @@ export default defineConfig({
     lighting: fileURLToPath(new URL('./demo/lighting.html', import.meta.url)),
 
     explanatory: fileURLToPath(new URL('./demo/explanatory.html', import.meta.url)),
+    models: fileURLToPath(new URL('./demo/model-viewer.html', import.meta.url)),
     spatial: fileURLToPath(new URL('./demo/spatial.html', import.meta.url)),
   } } },
 });

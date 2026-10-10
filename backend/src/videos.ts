@@ -159,7 +159,9 @@ export class VideoService {
   }
   private async run(row: Row, abort: AbortController) {
     const manifest: VideoManifest = JSON.parse(row.manifest)
-    const sequence = new SceneSequence()
+    const models: import('animlib/core').CompileInput['models'] = Object.create(null)
+    for (const scene of manifest.scenes) for (const [id, asset] of Object.entries(scene.assets ?? {})) models![id] = asset.metadata
+    const sequence = new SceneSequence({ models })
     const signal = AbortSignal.any([this.abort.signal, abort.signal])
     const usage = new TokenUsageTracker(tokenUsage => {
       if (!this.row(row.id)) return
@@ -191,6 +193,7 @@ export class VideoService {
         }
         const scene: VideoScene = { ...next.scene, audio: { id: next.scene.audio?.id ?? `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
         if (scene.index !== manifest.scenes.length || !Number.isFinite(scene.duration) || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
+        for (const [id, asset] of Object.entries(scene.assets ?? {})) models![id] = asset.metadata
         const result = await sequence.submit({ type: 'insert', after: manifest.scenes.at(-1)?.id ?? null, scenes: [scene] })
         if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join('; '))
         if (Math.abs(sequence.compiled.at(-1)!.duration - scene.duration) > 1e-6) throw new Error('Scene timing does not match its declared duration')
