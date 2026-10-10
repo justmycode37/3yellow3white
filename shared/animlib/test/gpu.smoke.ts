@@ -1,3 +1,4 @@
+import {integrationCases} from './integration-cases.js';
 import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
@@ -87,10 +88,29 @@ describe('native Vulkan WebGPU rendering',()=> {
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
   function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  it.each(integrationCases)('cross-feature: $name',async entry=>{
+    renderer.resetInteraction();
+    await entry.run({sequence,draw:async(frame,options,reference=false)=>{
+      const bypass=reference?vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined):undefined;
+      const uploads=vi.spyOn(device!.queue,'writeBuffer');
+      const encoder=device!.createCommandEncoder.bind(device!);let indexed=0;
+      const encoding=vi.spyOn(device!,'createCommandEncoder').mockImplementation((...args)=>{
+        const e=encoder(...args),begin=e.beginRenderPass.bind(e);
+        e.beginRenderPass=(...args)=>{const p=begin(...args),draw=p.drawIndexed.bind(p);p.drawIndexed=(...args)=>{indexed++;return draw(...args);};return p;};return e;
+      });
+      try {
+        renderer.render(frame,options);
+        return {pixels:await pixels(),indexed,resources:(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes.size,
+          uploads:uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX)).length};
+      } finally {bypass?.mockRestore();uploads.mockRestore();encoding.mockRestore();}
+    }});
+    expect(errors).toEqual([]);
+  });
   it.each(lightingCases)('lighting: $name',async test=>{
     let imageIndex=0;
     await test.run(async(source,yaw=0,time=0)=>{
       renderer.resetInteraction();
+      (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
       const result=await sequence.submit({type:'load',scenes:[{id:'lighting',source}]});
       expect(result.ok,JSON.stringify(result)).toBe(true);
       renderer.setOrbit({yaw,pitch:0});

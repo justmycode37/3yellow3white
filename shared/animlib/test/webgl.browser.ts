@@ -1,3 +1,5 @@
+import {integrationPlayerRegression} from './integration-player.browser.js';
+import {integrationCases} from './integration-cases.js';
 import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
@@ -185,8 +187,24 @@ export async function runWebGLTests() {
       assert(at(draw(), canvas, 320, 240).join() === '255,0,0', 'Center must be pure red');
       assert(foreground(draw()) > 15000, 'Expected a filled rectangle');
     });
+    await test('combined production-player seek/control/end/append handoffs',async()=>{await integrationPlayerRegression(createPlayer);});
+    for(const entry of integrationCases)await test('cross-feature: '+entry.name,async()=>{
+      renderer.resetInteraction();
+      await entry.run({sequence,draw:async(frame,options,reference=false)=>{
+        const get=RetainedGeometry.prototype.get,gl=renderer.canvasElement.getContext('webgl2')!;
+        const allocate=gl.bufferData,upload=gl.bufferSubData,draw=gl.drawElementsInstanced;
+        let uploads=0,indexed=0;if(reference)RetainedGeometry.prototype.get=()=>undefined;
+        gl.bufferData=new Proxy(allocate,{apply(fn,self,args){uploads++;return Reflect.apply(fn,self,args);}});
+        gl.bufferSubData=new Proxy(upload,{apply(fn,self,args){uploads++;return Reflect.apply(fn,self,args);}});
+        gl.drawElementsInstanced=new Proxy(draw,{apply(fn,self,args){indexed++;return Reflect.apply(fn,self,args);}});
+        try {renderer.render(frame,options);return {pixels:pixels(renderer.canvasElement),indexed,uploads,
+          resources:(renderer as unknown as {gl:{meshes:Map<unknown,unknown>}}).gl.meshes.size};}
+        finally{RetainedGeometry.prototype.get=get;gl.bufferData=allocate;gl.bufferSubData=upload;gl.drawElementsInstanced=draw;}
+      }});
+    });
     for(const entry of lightingCases) await test('lighting: '+entry.name,async()=>{
       await entry.run(async(source,yaw=0,time=0)=>{
+        (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
         await load(source);renderer.setOrbit({yaw,pitch:0});
         const image=draw(time),flipped=new Uint8Array(image.length);
         for(let y=0;y<480;y++)flipped.set(image.subarray(y*640*4,(y+1)*640*4),(479-y)*640*4);
