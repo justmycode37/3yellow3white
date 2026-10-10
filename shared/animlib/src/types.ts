@@ -261,7 +261,11 @@ export interface Asset { kind: "audio"; url: string }
 export interface PlayerOptions {
   /** Defaults to THREE_BLUE_ONE_BROWN_PALETTE; applies to every scene. */
   palette?: ColorPalette;
+  /** Player owns the drawing surface until disposal. Mount it in an unmanaged host
+   * when using a UI framework: backend recovery may replace this element. */
   canvas: HTMLCanvasElement;
+  /** Called when recovery replaces a context-locked canvas with a fresh surface. */
+  onCanvasChange?: (canvas: HTMLCanvasElement) => void;
   /** Defaults to an overlay on the canvas parent. false leaves controls headless. */
   controlsRoot?: HTMLElement | false;
   assets?: Record<string, Asset>;

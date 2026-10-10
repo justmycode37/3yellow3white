@@ -55,7 +55,9 @@ Appending compiles/prepares only the new suffix and leaves the active clock runn
 Scene source is delivered, rather than only a compiled default timeline, because
 sliders and toggles can change scene geometry and downstream handoffs. The existing
 bounded QuickJS worker recompiles interactive changes locally; frame evaluation
-and WebGPU rendering remain client-side. Published source itself never changes.
+and GPU rendering remain client-side. WebGPU is preferred, with automatic WebGL2
+fallback when the API, adapter, device or initialization is unavailable. Both
+backends use the same evaluated frames and prepared geometry. Published source itself never changes.
 Providers should keep duration and narration meaningful across allowed controls.
 
 At the available edge, the adapter preserves play/pause intent and shows buffering.
@@ -74,3 +76,28 @@ Tests cover idempotency, ownership, atomic publication, snapshot reconnection,
 restart recovery, append continuity, control propagation, buffering, pause intent,
 duplicate delivery, and partial generation failure. No startup latency target has
 been set; fixture delays are not estimates of real generation performance.
+
+## Renderer fallback and verification
+
+WebGL2 preserves scene colors, triangulated text/LaTeX, 2D/3D geometry, lighting,
+transparency, regional cameras and orbit controls. Playback, source recompilation,
+handoffs, audio clocks and progressive append are shared above the rendering layer.
+A canvas context type is permanent: failed WebGPU surfaces are replaced, with
+controls and resize observation rebound. The React player mounts an imperative
+canvas inside a full-viewport host so replacement and disposal are safe.
+WebGPU device loss attempts WebGL2 recovery; WebGL context loss pauses playback
+and audio. Restoration rebuilds GPU resources, redraws, and permits explicit resume.
+
+`npm test` includes forced fallback/lifetime tests; these do not establish visual
+correctness. To run automated real-browser rendering checks, start
+`npm run dev -- --port 5178 --strictPort`, open
+`http://localhost:5178/webgl-test.html`, and click **Run browser tests**.
+The page forces WebGPU unavailable locally, compiles real GLSL, reads actual pixels,
+and reports every assertion. Automation can await `window.webglTests` and inspect
+`window.webglResult.failed`. It exercises all demos and six lesson themes, depth,
+transparency, viewport clipping, text/LaTeX morphs, orbit, portrait/DPR resizing,
+native sliders/toggles, seeking, append continuity, handoffs, real WAV audio-clock
+synchronization, context replacement, restoration and disposal.
+The separate `npm --workspace animlib run test:gpu` suite checks real native WebGPU.
+WebGL antialiasing depends on the browser/context; edge pixels can differ between
+backends. This does not change authored colors or scene/timeline semantics.

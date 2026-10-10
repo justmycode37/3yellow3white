@@ -16,6 +16,7 @@ export class Player {
   private time = 0;
   private status: PlayerState["status"] = "empty";
   private error?: string;
+  private rendererError?: Error;
   private raf?: number;
   private startedAt = 0;
   private offset = 0;
@@ -37,11 +38,22 @@ export class Player {
         await this.renderer.prepare(scenes);
       },
     });
+    this.renderer.onCanvasChange = canvas => { this.overlay?.setCanvas(canvas); options.onCanvasChange?.(canvas); };
+    this.renderer.onRecovered = () => {
+      if (this.disposed) return;
+      if (this.rendererError) {
+        this.rendererError = undefined;
+        this.error = undefined;
+        this.status = this.sceneId ? "paused" : "empty";
+      }
+      this.refresh();
+    };
     this.renderer.onOrbitChange = () => this.refresh();
     this.renderer.onError = error => {
       if (this.disposed) return;
       this.stopClock();
       this.status = "blocked";
+      this.rendererError = error;
       this.error = error.message;
       // A failed GPU must not be asked to render again while reporting its error.
       this.notify();
@@ -53,6 +65,10 @@ export class Player {
       }, options.canvas.ownerDocument ? options.canvas : undefined);
     }
   }
+
+  /** The active drawing surface can change when a failed WebGPU context is replaced. */
+  get canvas(): HTMLCanvasElement { return this.renderer.canvasElement; }
+  get backend(): "webgpu" | "webgl2" | undefined { return this.renderer.backend; }
 
   private assertAlive(): void {
     if (this.disposed) throw new Error("Player is disposed");
@@ -108,6 +124,7 @@ export class Player {
   }
 
   private notify(): void {
+    if (this.rendererError) { this.status = "blocked"; this.error = this.rendererError.message; }
     const state = this.getState();
     for (const listener of this.listeners) {
       try { listener(state); } catch (error) { console.error("animlib subscriber failed", error); }
@@ -152,6 +169,7 @@ export class Player {
 
   async play(): Promise<void> {
     this.assertAlive();
+    if (this.rendererError) throw this.rendererError;
     if (!this.sceneId || this.status === "playing") return;
     const scene = this.currentScene()!;
     if (this.time >= scene.duration && scene.duration > 0) this.time = 0;

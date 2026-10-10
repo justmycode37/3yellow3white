@@ -8,7 +8,7 @@ Aha! is a React and Vite prototype for turning course material into short visual
 frontend/app/      React source, styles, and plan tests
 frontend/site/     Built Aha! site served by Bun
 backend/src/       Bun HTTP API and frontend routes
-shared/animlib/     Shared scene compiler, evaluator, WebGPU player, and demo
+shared/animlib/     Shared scene compiler, evaluator, WebGPU/WebGL2 player, and demo
 ```
 
 The built frontend is checked in so the backend can serve it directly. Use Node.js
@@ -26,11 +26,13 @@ npm run app:build
 
 For a live frontend development server, run `npm run app:dev`. The source app's [README](frontend/app/README.md) describes its screens and current integration points.
 
-Lesson playback uses animlib's WebGPU canvas and clock. The app's controls drive
+Lesson playback uses animlib's GPU canvas and clock. The app's controls drive
 play, pause, seeking, and replay; opening navigation or a dialog pauses the
 animation. The six example lessons remain local demos. New previews receive server scenes
-and audio progressively, with buffering and reconnect support. Playback requires a WebGPU-capable browser on HTTPS or
-localhost. An unavailable GPU shows an error with a retry action.
+and audio progressively, with buffering and reconnect support. WebGPU is preferred on HTTPS or localhost. If it is unavailable or unusable,
+playback automatically uses WebGL2, including when Android Advanced Protection
+disables WebGPU. Keep browser security settings enabled. If neither backend works,
+the player shows both failure reasons and a retry action.
 
 ## Run the combined app
 

@@ -16,7 +16,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   lesson: Lesson; theme: 'light' | 'dark'; menuOpen: boolean; onMenu: () => void
   menuContent: ReactNode; onHome: () => void; overlayOpen: boolean
 }) {
-  const canvas = useRef<HTMLCanvasElement>(null)
+  const canvasHost = useRef<HTMLDivElement>(null)
   const screen = useRef<HTMLDivElement>(null)
   const suspended = useRef(menuOpen || overlayOpen)
   suspended.current = menuOpen || overlayOpen
@@ -38,13 +38,20 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   useEffect(() => {
     let active = true
     let controller: LessonPlayback | undefined
+    const host = canvasHost.current
     let disconnect: (() => void) | undefined
     setPlayback(undefined)
     setStartupError('')
     // Load the renderer only when opening a lesson, keeping the workspace light.
     void import('animlib').then(({ createPlayer, Color }) => {
-      if (!active || !canvas.current || !screen.current) return
-      controller = new LessonPlayback(createPlayer({ canvas: canvas.current }), !lesson.videoId)
+      if (!active || !host || !screen.current) return
+      // Own the canvas imperatively: renderer recovery can replace a context-locked surface.
+      const canvas = document.createElement('canvas')
+      canvas.className = 'lesson-canvas'
+      canvas.setAttribute('aria-label', `Animated preview: ${lesson.title}`)
+      canvas.setAttribute('role', 'img')
+      host.append(canvas)
+      controller = new LessonPlayback(createPlayer({ canvas, controlsRoot: host.parentElement! }), !lesson.videoId)
       void controller.setSuspended(suspended.current)
       setPlayback(controller)
       if (lesson.videoId) {
@@ -63,7 +70,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     }).catch(error => {
       if (active) setStartupError(error instanceof Error ? error.message : String(error))
     })
-    return () => { active = false; disconnect?.(); controller?.dispose() }
+    return () => { active = false; disconnect?.(); controller?.dispose(); host?.replaceChildren() }
   }, [lesson, theme, attempt])
 
   useEffect(() => { void playback?.setSuspended(menuOpen || overlayOpen) }, [playback, menuOpen, overlayOpen])
@@ -99,7 +106,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
       {manifest && state.generating && <p>Preparing more scenes. Your video is saved to your library.</p>}
     </div>
     <div className="player-stage">
-      <canvas ref={canvas} className="lesson-canvas" aria-label={`Animated preview: ${lesson.title}`} role="img"/>
+      <div ref={canvasHost} className="lesson-canvas-host"/>
       {!state.ready && !error && <p className="player-status" role="status">{state.generationError || 'Loading your lesson…'}</p>}
       {state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}
       {error && <div className="player-status player-error" role="alert"><strong>This lesson couldn’t play.</strong><p>{error}</p><button className="secondary-button" onClick={() => setAttempt(old => old + 1)}>Try again</button></div>}

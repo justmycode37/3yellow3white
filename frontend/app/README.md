@@ -19,7 +19,7 @@ npm test
 - Plan: `/plan`, PDF, DOCX, TXT, Markdown, or pasted-text input. Suggests chapters and topics from document headings and bounded text segments. A left chapter list scrolls through all topics shown in video-sized, title-only placeholders on the right. Hovering a topic shows a large "Explain" pill as a visual placeholder; it does not create a video yet. The latest plan is saved locally.
 - Settings: `/settings`, light and dark appearance cards. Dark mode uses a pure-black page background.
 - Navigation: a left drawer with workspace, library, Plan, and creation links at the top; Settings stays at the bottom.
-- Player: `/watch/:id`, animlib WebGPU lesson canvas, play/pause, scrubbing, keyboard shortcuts, replay, and fullscreen. Navigation and dialogs temporarily pause playback. The scrubber and timer follow animlib's timeline.
+- Player: `/watch/:id`, animlib WebGPU/WebGL2 lesson canvas, play/pause, scrubbing, keyboard shortcuts, replay, and fullscreen. Navigation and dialogs temporarily pause playback. The scrubber and timer follow animlib's timeline.
 - Light is the initial theme. Theme preference and bookmarks are stored locally; generated video jobs are saved on the server. Dark mode uses darker versions of each pastel.
 
 ## Integration points
@@ -27,7 +27,7 @@ npm test
 - `src/App.tsx` → `Studio`: reads document text and submits a video job through `src/videos.ts`. The player opens immediately while generation continues on the server. The Plan page's "Explain" pill remains UI only.
 - `src/plan.ts`: local, deterministic chapter and segment suggestions. It uses headings and source text, not an AI service. Long sections split at sentence boundaries where possible, targeting at most four minutes at 140 source words per minute. Actual video durations will depend on the explanation engine.
 - `src/documentReader.ts`: lazily loaded PDF.js and Mammoth readers. PDF/Word content is read on-device; scanned PDFs require a readable text layer. Files are limited to 50 MB and PDFs to 500 pages.
-- `src/LessonPlayer.tsx`: mounts and disposes animlib, subscribes to server manifests or loads local sample scenes, and connects the existing controls to `src/lessonPlayback.ts`. Animlib owns the playback clock. Compilation or WebGPU errors appear beside a retry action; playback requires a supported browser on HTTPS or localhost.
+- `src/LessonPlayer.tsx`: mounts and disposes animlib, subscribes to server manifests or loads local sample scenes, and connects the existing controls to `src/lessonPlayback.ts`. Animlib owns the playback clock. WebGPU is preferred with automatic WebGL2 fallback. Compilation or dual-backend failures appear beside a retry action. The canvas is mounted imperatively so backend recovery can replace a locked drawing surface without conflicting with React.
 - `src/lessonScenes.ts`: local sample `SceneSource[]` for the six example lessons; server previews use progressively delivered source and audio through the same player. The playback adapter supports multi-scene progress and seeking.
 - `src/data.ts`: the `Lesson` interface and example lessons. `videoId` links server-backed lessons to their manifests.
 - `src/Artwork.tsx` and `src/Icons.tsx`: bold, rounded icons and organic subject illustrations. Saved lesson titles select matching artwork through `artworkForTitle` in `src/data.ts`.

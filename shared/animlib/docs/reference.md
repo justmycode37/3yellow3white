@@ -2,7 +2,7 @@
 
 For the purpose and core requirements, see the [README](../README.md).
 
-A framework-free TypeScript library for code-authored, realtime WebGPU animations
+A framework-free TypeScript library for code-authored, realtime GPU animations
 on a canvas.
 Scenes are written in ordinary JavaScript. Each scene builds a local, seekable
 timeline using sequential animation instructions. A framework-free player handles
@@ -14,9 +14,11 @@ seeking, persistence, morphing, native controls, 2D/3D camera transitions, and
 per-scene audio are implemented. The API is new and may evolve. The document starts
 with the gist and examples, then specifies behavior and implementation limits.
 
-Rendering is **WebGPU only**, including 2D scenes. There is no WebGL or Canvas 2D
-fallback. A missing adapter/device produces a diagnostic. WebGPU requires a secure
-context, normally HTTPS or localhost. See the [WebGPU specification](https://gpuweb.github.io/gpuweb/).
+Rendering prefers **WebGPU**, with automatic **WebGL2** fallback for both 2D and
+3D scenes when WebGPU initialization is unavailable or fails. Both backends share
+tessellation, colors, draw ordering and camera evaluation. If neither works, the
+player reports both failure reasons. WebGPU requires a secure context, normally
+HTTPS or localhost; WebGL2 does not require disabling browser security settings. See the [WebGPU specification](https://gpuweb.github.io/gpuweb/).
 
 Use Node.js 22.16 or newer for development. From the repository root:
 
@@ -518,7 +520,7 @@ describe geometry; animate position, scale, rotation, and color with separate ac
 
 ### Named formula parts
 
-LaTeX uses bundled MathJax SVG glyph outlines, tessellated for WebGPU. A complete
+LaTeX uses bundled MathJax SVG glyph outlines, tessellated for both GPU backends. A complete
 formula is laid out together, preserving fractions, scripts, and normal spacing.
 The library-specific `\animpart{name}{TeX}` marker identifies a part without
 changing its visual content. It is consumed before MathJax typesetting.
@@ -811,7 +813,7 @@ The submission pipeline:
 2. Run each candidate scene builder in an isolated QuickJS VM.
 3. Validate bounded, plain compiled animation data.
 4. Reconstruct later scene dependencies using current inputs.
-5. Prepare formula geometry, audio assets, and the WebGPU renderer.
+5. Prepare formula geometry, audio assets, and the GPU renderer.
 6. Commit the complete candidate sequence atomically and update playback.
 
 In browsers, compilation runs in a module worker so JavaScript building does not
@@ -934,7 +936,7 @@ The main implementation files are:
 - [src/sequence.ts](../src/sequence.ts) and [src/timeline.ts](../src/timeline.ts):
   reconstruction, transactions, and deterministic time evaluation.
 - [src/renderer.ts](../src/renderer.ts), [src/geometry.ts](../src/geometry.ts), and
-  [src/latex.ts](../src/latex.ts): WebGPU drawing, outline matching, and vector formula layout.
+  [src/latex.ts](../src/latex.ts): GPU drawing, outline matching, and vector formula layout.
 - [src/player.ts](../src/player.ts), [src/audio.ts](../src/audio.ts), and
   [src/controls.ts](../src/controls.ts): transport, audio, and optional native widgets.
 - [demo/scenes.ts](../demo/scenes.ts): application-level demo helpers and scene sources.
