@@ -29,4 +29,8 @@ Reproduce from repository root:
 ```powershell
 node docs/demos/dna-protein/smooth-integrate.mjs
 node docs/demos/dna-protein/smooth-verify.mjs
-node shared/animlib/tools/
+node shared/animlib/tools/render-frames.mjs docs/demos/dna-protein/smooth-export-render-input.json
+node shared/animlib/tools/render-frames.mjs docs/demos/dna-protein/smooth-translation-render-input.json
+```
+
+The integration helper always rebuilds from preserved baseline sources, embeds native mesh geometry, and removes only the six obsolete large-subunit entries from export's precomputed table. Small-subunit and other entries remain. `smooth-placement.json` records the one demonstrated placement repair. This task made no library API, manifest, global palette, camera, timing, or commit changes.
