@@ -70,14 +70,14 @@
 }
 @media(prefers-reduced-motion: reduce) { .plan-subject-row, .new-video-tile { transition: none; } }
 
-.course-delete { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); }
-.delete-course-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 13px; color: #ab3934; font-size: 12px; }
-.delete-course-button:hover { background: var(--surface); }
+.course-delete { display: flex; justify-content: center; margin-top: 64px; padding-top: 24px; }
+.delete-course-button { display: flex; align-items: center; justify-content: center; gap: 10px; width: 200px; max-width: 100%; min-height: 60px; padding: 16px 24px; border: 0; border-radius: 18px; background: #f6d9d7; color: #7d302c; font-size: 13px; overflow-wrap: anywhere; transition: background .18s; }
+.delete-course-button:hover { background: #efc5c2; }
 .delete-course-button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-:root[data-theme=dark] .delete-course-button { color: #f89c97; }
+.course-delete-confirm { max-width: 100%; text-align: center; }
 .course-delete-confirm h3 { margin: 0; font-size: 17px; font-weight: 500; overflow-wrap: anywhere; }
 .course-delete-confirm p { margin: 10px 0 18px; font-size: 12px; line-height: 1.6; color: var(--muted); }
-.course-delete-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.course-delete-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
 /* A subject opens below the overview, with its own material and chapter outline. */
 .subject-plan { margin-top: 55px; padding-top: 31px; scroll-margin-top: 28px; }
