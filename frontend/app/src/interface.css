@@ -32,7 +32,10 @@
 }
 
 html, body, #root { min-height: 100%; background: var(--bg); transition: background-color .35s ease, color .35s ease; }
-:root[data-theme=dark] .player-page { background: #000; --art-bg: #000; }
+:root .player-page { --player-bg: #000; --player-ink: #fff; --art-bg: var(--player-bg); background: var(--player-bg); color: var(--player-ink); }
+.player-page.is-player-idle, .player-page.is-player-idle * { cursor: none !important; }
+.player-page .player-menu-anchor, .player-page .player-controls { opacity: 1; transition: opacity .25s ease; }
+.player-page.is-player-idle .player-menu-anchor, .player-page.is-player-idle .player-controls { opacity: 0; pointer-events: none; }
 
 .app-shell { max-width: 1220px; padding: 0 40px; }
 .settings-shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
@@ -64,7 +67,7 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .panel-heading p { color: var(--muted); font-size: 14px; margin: 9px 0 0; }
 .section-icon { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
 
-/* A full-height drawer. Only its contents scroll; Settings stays at the bottom. */
+/* A full-height drawer. Only its contents scroll; the theme control stays at the bottom. */
 .navigation-layer { position: fixed; inset: 0; z-index: 100; visibility: hidden; pointer-events: none; transition: visibility 0s .32s; }
 .navigation-layer.is-open { visibility: visible; pointer-events: auto; transition-delay: 0s; }
 .drawer-scrim { position: absolute; inset: 0; width: 100%; height: 100%; background: #24232b30; opacity: 0; cursor: default; transition: opacity .32s ease; backdrop-filter: blur(4px); }
@@ -80,11 +83,10 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .drawer-links > button { display: flex; align-items: center; gap: 13px; min-height: 67px; width: 100%; padding: 10px; flex-shrink: 0; border-radius: 22px; text-align: left; font-size: 15px; }
 .drawer-links > button:hover, .drawer-links > button.active { background: var(--soft); }
 .drawer-icon { display: grid; place-items: center; width: 43px; height: 43px; flex-shrink: 0; border-radius: 15px; }
-.drawer-links > button > svg:last-child, .drawer-settings > svg:last-child { margin-left: auto; color: var(--muted); }
+.drawer-links > button > svg:last-child { margin-left: auto; color: var(--muted); }
 .drawer-bottom { margin-top: auto; padding-top: 24px; flex-shrink: 0; }
-.drawer-settings { display: flex; align-items: center; gap: 15px; min-height: 63px; width: 100%; padding: 18px 20px; border: 1px solid var(--line); border-radius: 22px; font-size: 15px; text-align: left; background: var(--soft); }
-.drawer-settings:hover, .drawer-settings.active { background: var(--lavender); color: var(--card-ink); }
-.drawer-settings.active > svg:last-child { color: inherit; }
+.drawer-theme-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 15px; background: var(--sage); color: var(--card-ink); }
+.drawer-theme-toggle:hover { filter: brightness(.95); }
 
 .settings-page { max-width: 760px; margin: 0 auto; padding-bottom: 20px; }
 .settings-page .welcome { padding: 30px 8px; }
@@ -118,7 +120,7 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .thought-input textarea { border-radius: 24px; }
 
 /* The lesson canvas keeps only the subject, title, illustration, and playback. */
-.player-menu-anchor { top: 28px; left: 28px; }
+.player-menu-anchor { top: 28px; left: 28px; z-index: 20; }
 .player-menu-toggle { background: transparent; color: var(--ink); }
 .lesson-stage { padding: 100px 0 130px; }
 .lesson-text h1 { font-family: DynaPuff, sans-serif; font-size: clamp(42px, 5vw, 72px); font-weight: 600; letter-spacing: -2px; line-height: 1.15; }
@@ -128,12 +130,18 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .player-controls { width: min(640px, calc(100vw - 48px)); }
 .player-control-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; align-items: start; gap: 14px; }
 .player-control-row > .icon-button, .player-control-row > .icon-button:hover { width: 36px; height: 36px; border-radius: 8px; background: transparent; color: inherit; box-shadow: none; }
-.player-control-row > .icon-button { opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s; }
-.show-controls .player-control-row > .icon-button, .player-controls:focus-within .player-control-row > .icon-button, .player-controls:hover .player-control-row > .icon-button { opacity: 1; transform: none; }
+.player-control-row > .icon-button { opacity: 1; transform: none; }
 .player-timeline { min-width: 0; }
 .player-timeline .progress-wrap { height: 36px; }
 .player-timeline .progress-track { top: 50%; height: 8px; transform: translateY(-50%); }
 .player-timeline .progress-meta { margin-top: 4px; }
+.player-page .player-menu-toggle, .player-page .player-controls, .player-page .paused-indicator { background: transparent; color: var(--player-ink); border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; }
+.player-page .player-controls { padding: 0; }
+.player-page .paused-indicator svg { color: inherit; width: 32px; height: 32px; }
+.player-page .progress-track { height: 8px; background: color-mix(in srgb, currentColor 22%, var(--player-bg)); overflow: hidden; }
+.player-page .progress-fill { background: currentColor; }
+.player-page .progress-thumb { display: none; }
+.player-page .progress-wrap:focus-within { outline-color: var(--player-ink); }
 
 @media (max-width: 1000px) {
   .app-shell { padding: 0 28px; }
@@ -205,17 +213,11 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .player-stage { position: absolute; inset: 0; isolation: isolate; }
 .lesson-canvas-host { position: absolute; inset: 0; }
 .lesson-canvas-host > .lesson-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-.player-heading { position: absolute; z-index: 10; top: max(28px, env(safe-area-inset-top)); left: 90px; max-width: min(45vw, 560px); padding: 10px 16px; border-radius: 16px; background: var(--bg); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .25s; }
-.player-heading.show-controls, .player-page:focus-within .player-heading { opacity: .95; }
-.player-heading h1 { font-size: clamp(14px, 2vw, 20px); line-height: 1.35; margin: 0; font-weight: 500; }
-.player-heading p { font-size: 12px; line-height: 1.5; margin: 5px 0 0; }
-.player-page .player-menu-toggle { background: var(--bg); color: var(--ink); }
-.player-page .player-controls { padding: 12px 16px; border-radius: 20px; background: var(--bg); color: var(--ink); }
+.player-notice { position: absolute; z-index: 10; bottom: 104px; left: 24px; right: 24px; margin: 0; text-align: center; font-size: 12px; color: var(--player-ink); }
 .player-page .paused-indicator { z-index: 3; }
 .player-stage .player-status { border-radius: 0; z-index: 2; }
 @media (max-width: 650px) {
-  .player-heading { top: max(20px, env(safe-area-inset-top)); left: 76px; max-width: calc(100vw - 100px); padding: 8px 12px; }
-  .player-stage .animlib-controls { padding-top: 140px !important; }
+  .player-stage .animlib-controls { padding-top: 80px !important; }
 }
 .player-status { position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; background: var(--art-bg); border-radius: 24px; font-size: 14px; }
 .player-error p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }

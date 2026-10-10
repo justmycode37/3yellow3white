@@ -8,7 +8,7 @@ conversation and only a `validate_output` tool. Shell, file access, discovered
 extensions, skills, and local instructions are disabled. Scene validation uses
 the existing QuickJS compiler with memory and execution limits.
 
-One model runtime owns credentials. Pi persists subscription refreshes with file
+The scene and thumbnail runners share the configured login. Pi persists subscription refreshes with file
 locking. The host saves scripts, narration IDs, and validated scene sources per
 video under `AGENT_DATA_DIR`; completed stages are reused on restart. `lesson.json`
 is the authoritative versioned plan/script envelope; `script.md` is a readable
@@ -17,7 +17,56 @@ Each completed narration scene becomes available immediately; scene code generat
 overlaps later speech. Code agents run sequentially with the previous scene’s evaluated
 end-state. Scenes are published progressively with audio, word timings, and captions.
 
+## Scene generation speed
+
+Set `AGENT_SCENE_OUTPUT_MODE=validated-reference` to let a scene agent finish
+with the ID returned by a successful `validate_output` call. The host retrieves
+that exact source and validates it again. The model can still inspect validation
+results and revise its candidate before finishing; the planning and editorial
+review calls are unchanged. This avoids generating the same scene code again
+in the final response. The default is `text`; set it explicitly to roll back.
+
+The three-topic benchmark measured about 26% less scene-generation time across
+two rounds with Astra/high and unchanged narration, scene plans, and full API
+reference. This is a small empirical comparison, not a guarantee of identical
+generations or universal quality preservation. See [benchmark results](scene-speed-results.md)
+for variants, rejected outputs, saved animations, and limitations.
+
 ## Planning and scene quality
+
+### Generated thumbnails
+
+New Pi videos generate a thumbnail alongside script/scene work, using a separate
+Pi conversation with `THUMBNAIL_MODEL=gpt-6.1-sol` and low reasoning. It uses the
+same `AGENT_PROVIDER`, auth mode and credential directory as other backend AI.
+The task receives the title, bounded topic/document excerpts and uploaded images,
+plus `backend/prompts/thumbnail.md` and six actual SVG examples exported from
+`frontend/app/src/Artwork.tsx`. Keep those examples and the style guide aligned
+when the app's artwork changes.
+
+The validator accepts only bounded paths/groups, monochrome paints and simple
+transforms, then converts the SVG to typed path geometry. The manifest persists
+that geometry and thumbnail status in SQLite. React renders explicit path elements
+with the app's ink colors; it never injects model-authored markup. Existing artwork
+remains visible while generation runs or if it fails. Thumbnail failures do not
+fail the video. Scenes stream while the thumbnail is pending; the final video
+status waits for both. Deletion/shutdown cancels both tasks. An interrupted
+thumbnail resumes with its video; a saved thumbnail is reused. Completed older
+videos and simulated videos retain their existing artwork.
+
+To try six varied topics without generating narration, run:
+
+```sh
+npm run agents:thumbnails
+# Or one custom topic:
+npm run agents:thumbnails -- "Recursion" "A smaller version of the same problem, ending at a base case."
+```
+
+This uses the production Pi task and consumes model usage. Prompts, raw SVGs,
+normalized geometry and timings are saved privately under
+`AGENT_DATA_DIR/thumbnail-trials/TIMESTAMP/`. No videos are added to the library.
+
+### Lesson planning
 
 `backend/prompts/guidance.md` contains compact explanation guidance adapted from
 PR #19. Requested audience, scene count, duration, and pause preferences take
@@ -39,6 +88,26 @@ Each scene records its purpose, why it comes here, ordered key points, qualitati
 visuals, intended end picture, carry/cleanup IDs, source references, and up to two
 useful interactions. A complete outline and adjacent scene plans go to every
 scene agent, including while later narration is still being synthesized.
+
+For reusable objects, the planner describes later uses and lasting relationships
+in the shared entity `meaning`, with construction needs in the introducing
+scene's `visualDescription` and continuing structure in `endsWith`/`carry`.
+This uses the existing plan schema. The outline contains titles and purposes;
+only the current, previous, and next scene plans are sent in full. Recording
+later uses in the shared entity registry makes requirements several scenes away
+available when the object is first built. The planner states what must remain
+connected or constant; the scene author selects bindings, rigid groups, or joint
+rotations using the API reference's method-selection guidance. This prepares the
+representation without revealing later results early.
+
+Bindings are scene-local: the evaluated frame carries element geometry and
+transforms, not `connect`, `attach`, or behavior declarations. Scene authors must
+re-establish those relationships on the carried IDs. A connector keeps endpoints
+attached but does not constrain their distance. The planner and rendered-review
+guidance check these requirements; current compiler/plan validation does not
+automatically prove connectivity throughout motion or constant segment lengths.
+These prompt changes affect newly generated stages; saved scenes are reused and
+are not repaired automatically.
 
 The host validates scene/beat correspondence, source filenames, palette tokens,
 and consistent entity/control declarations before submitting paid speech. PDF
@@ -173,9 +242,23 @@ Agent tasks have no wall-clock timeout, so thinking, validation repairs, and
 final output can finish. The former `AGENT_TIMEOUT_MS` setting is ignored.
 Deleting a video or shutting down the server still cancels its active agent.
 The model must exist in the pinned catalog and be available to your account;
-`agents:check` verifies inference. Runs allow twelve agent turns and three
-final-output validation attempts. Provider retries and automatic compaction
-are disabled.
+`agents:check` verifies inference. Each conversation allows twelve agent turns
+and three final-output validation attempts. The host retries recognizable network
+failures, interrupted streams, temporary throttling, and transient provider errors
+up to twice, with exponential backoff and jitter (about one and two seconds).
+Each retry uses a fresh conversation with the same request and image attachments;
+partial failed output is discarded. Cancellation interrupts requests and backoff.
+Authentication, configuration, exhausted quota, output limits, invalid output,
+and unclassified failures are not retried. Pi's own provider retries and automatic
+compaction remain disabled so retry budgets do not multiply.
+
+Structured `agent.retrying`, `agent.recovered`, and `agent.failed` logs correlate
+each invocation with an `agentRunId`, video/stage/scene identifiers when available,
+the provider attempt, and safe failure category/HTTP status. Raw provider errors,
+headers, tokens, prompts, and lesson contents are excluded. Operator instructions
+remain in CLI errors; video manifests and events use fixed user-facing messages
+with a reminder that already published scenes remain watchable. Stored failures
+from older versions are sanitized on read too.
 
 ## Demo server
 

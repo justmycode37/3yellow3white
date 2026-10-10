@@ -59,3 +59,51 @@ test('cleanup recognizes hidden ancestor groups and controls must match planned 
   plan.interactions[0].type = 'slider';
   expect(() => validateScenePlan(compiled, evaluateScene(compiled, compiled.duration), plan)).toThrow('explore:slider');
 });
+
+
+test('planning round-trips explicit view choices and rejects malformed choices', () => {
+  for (const mode of ['2d', '3d'] as const) {
+    const planned = lesson();
+    planned.plan.scenes[0].view = { mode, rationale: 'Show the relevant geometry clearly.' };
+    expect(parsePlannedLesson(JSON.stringify(planned), request)).toEqual(planned);
+  }
+  for (const view of [{ mode: '4d', rationale: 'Depth' }, { mode: '3d', rationale: '' }, '3d', null]) {
+    const planned = lesson();
+    Object.assign(planned.plan.scenes[0], { view });
+    expect(() => parsePlannedLesson(JSON.stringify(planned), request)).toThrow('view');
+  }
+});
+
+test('3d plans inspect compiled cameras, including subviews, transitions, and inherited state', async () => {
+  const plan = { ...lesson().plan.scenes[0], carry: [], cleanup: [], view: { mode: '3d' as const, rationale: 'Compare spatial orientations.' } };
+  for (const source of [
+    `export default scene({mode:'3d'},s=>{s.sphere('model');s.wait(1);});`,
+    `export default scene({},s=>{s.view('model',{rect:[0,0,1,1]},v=>v.sphere('ball'));s.wait(1);});`,
+    `export default scene({},s=>{s.sphere('model');s.play(s.camera.to3D(),{duration:1});s.play(s.camera.to2D(),{duration:1});});`,
+    `export default scene({},s=>{s.sphere('model');s.play(s.camera.animate({yaw:0.4}),{duration:1});});`,
+  ]) {
+    const compiled = await compileSource(source);
+    expect(() => validateScenePlan(compiled, evaluateScene(compiled, compiled.duration), plan)).not.toThrow();
+  }
+  const flat = await compileSource(`export default scene({},s=>{s.text('claim',{text:'mode: 3d, s.camera.to3D()'});s.sphere('model');s.wait(1);});`);
+  expect(() => validateScenePlan(flat, evaluateScene(flat, 1), plan)).toThrow('planned 3d view');
+  const inheritedFlat = await compileSource(`export default scene({mode:'3d'},s=>{s.sphere('model');s.wait(1);});`, { previous: evaluateScene(flat, 1) });
+  expect(() => validateScenePlan(inheritedFlat, evaluateScene(inheritedFlat, 1), plan)).toThrow('planned 3d view');
+  const spatial = await compileSource(`export default scene({mode:'3d'},s=>{s.wait(1);});`);
+  const inheritedSpatial = await compileSource(`export default scene({},s=>{s.sphere('model');s.wait(1);});`, { previous: evaluateScene(spatial, 1) });
+  expect(() => validateScenePlan(inheritedSpatial, evaluateScene(inheritedSpatial, 1), plan)).not.toThrow();
+  // Legacy plans remain valid; 2d intentions do not prohibit transitional 3d views.
+  expect(() => validateScenePlan(flat, evaluateScene(flat, 1), { ...plan, view: undefined })).not.toThrow();
+  expect(() => validateScenePlan(spatial, evaluateScene(spatial, 1), { ...plan, view: { mode: '2d', rationale: 'Return to a flat diagram.' } })).not.toThrow();
+});
+
+test('original scenegen description markers drive view validation without the rewritten view schema', async () => {
+  for (const [description, mode] of [['3D: a rotatable molecule', '3d'], ['2D (because it is a graph): energy', '2d']] as const) {
+    const draft = lesson(); draft.plan.scenes[0].visualDescription = description;
+    const plan = parsePlannedLesson(JSON.stringify(draft), request).plan.scenes[0];
+    expect(plan.view).toEqual({ mode, rationale: description });
+    const flat = await compileSource(`export default scene({},s=>{const dot=s.circle('dot');s.keep(dot);s.wait(1);});`);
+    if (mode === '3d') expect(() => validateScenePlan(flat, evaluateScene(flat, flat.duration), plan)).toThrow('requires a camera');
+    else expect(() => validateScenePlan(flat, evaluateScene(flat, flat.duration), plan)).not.toThrow();
+  }
+});

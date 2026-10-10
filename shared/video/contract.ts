@@ -1,8 +1,12 @@
+export type VideoMode = 'classic' | 'interactive'
+
 /** Versioned delivery contract; source remains available for interactive recompilation. */
 export interface VideoRequest {
   title: string
   topic: string
   documents: { name: string; text: string }[]
+  /** Viewing preference supplied to the storyline planner; omitted means classic. */
+  videoMode?: VideoMode
   uploads?: { name: string; mimeType: string; size: number; sha256: string }[]
 }
 
@@ -27,5 +31,8 @@ export interface VideoManifest {
   provider: 'simulated' | 'pi'
   createdAt: string
   scenes: VideoScene[]
+  thumbnail?: import('./thumbnail').ThumbnailArtwork
+  thumbnailStatus?: 'generating' | 'complete' | 'failed'
   error?: string
+  errorCode?: string
 }

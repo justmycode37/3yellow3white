@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CompiledScene, Frame } from "../src/types.js";
+import type { ColorPalette, CompiledScene, Frame } from "../src/types.js";
 
-const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, options: undefined as CompiledScene['options'] | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
+const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, options: undefined as CompiledScene['options'] | undefined, palette: undefined as ColorPalette | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
 vi.mock("../src/renderer.js", () => ({
   CanvasRenderer: class {
     onOrbitChange?: () => void;
     get orbit() { return rendering.orbit; }
     setOrbit(value: { yaw: number; pitch: number }) { rendering.orbit = value; }
     setOrbitEnabled() {}
+    setPalette(palette: ColorPalette) { rendering.palette = palette; }
     syncInteraction() {}
     interactionSnapshot() { const frame=rendering.frame;return frame?{frame,camera:frame.camera,width:800,height:600,rect:[0,0,1,1]}:undefined; }
     resetInteraction() { rendering.orbit = { yaw: 0, pitch: 0 }; }
@@ -20,13 +21,14 @@ import { Canvas } from "./canvas-stub.js";
 import { createPlayer } from "../src/player.js";
 import { ControlOverlay } from "../src/controls.js";
 import { SceneSequence } from "../src/sequence.js";
+import { THREE_BLUE_ONE_BROWN_PALETTE } from "../src/palette.js";
 
 let now: number;
 let frameId: number;
 let frames: Map<number, FrameRequestCallback>;
 beforeEach(() => {
   now = 0; frameId = 0; frames = new Map();
-  rendering.frame = undefined; rendering.options = undefined; rendering.orbit = { yaw: 0, pitch: 0 }; rendering.disposed = false;
+  rendering.frame = undefined; rendering.options = undefined; rendering.palette = undefined; rendering.orbit = { yaw: 0, pitch: 0 }; rendering.disposed = false;
   vi.spyOn(performance, "now").mockImplementation(() => now);
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { const id = ++frameId; frames.set(id, callback); return id; });
   vi.stubGlobal("cancelAnimationFrame", (id: number) => { frames.delete(id); });
@@ -171,6 +173,31 @@ describe("player navigation and live source updates", () => {
       expect((await player.submit({ type: "load", scenes: [] })).ok).toBe(true);
       expect(rendering.frame?.elements).toEqual([]);
       expect(rendering.options?.background).toBe("WHITE");
+    } finally { player.dispose(); }
+  });
+
+  it("changes display colors while preserving playback position, controls, and authored scenes", async () => {
+    const player = createPlayer({ canvas: {} as HTMLCanvasElement });
+    try {
+      await player.submit({ type: 'load', scenes: [{ id: 'a', source: first }, { id: 'b', source: second }] });
+      await player.seek({ scene: 'a', time: 0.5 });
+      await player.setControl({ scene: 'a', id: 'scale', value: 2 });
+      const before = player.getState();
+      const frame = structuredClone(rendering.frame);
+      const light = { ...THREE_BLUE_ONE_BROWN_PALETTE, colors: { ...THREE_BLUE_ONE_BROWN_PALETTE.colors, BLACK: '#ffffff', WHITE: '#000000' } };
+      player.setDisplayPalette(light);
+      expect(player.getState()).toEqual(before);
+      expect(rendering.frame).toEqual(frame);
+      expect(rendering.palette?.colors.BLACK).toBe('#ffffff');
+      expect(rendering.palette?.colors.WHITE).toBe('#000000');
+      await player.play();
+      now += 250;
+      player.setDisplayPalette(THREE_BLUE_ONE_BROWN_PALETTE);
+      expect(player.getState()).toMatchObject({ scene: 'a', status: 'playing', time: 0.75 });
+      expect(player.getState().controls[0].value).toBe(2);
+      await player.seek({ scene: 'b', time: 1 });
+      expect(rendering.palette?.colors.BLACK).toBe('#000000');
+      expect(() => player.setDisplayPalette({ colors: { BLACK: '#fff', WHITE: '#000' }, background: 'BLACK', foreground: 'WHITE' })).toThrow('Display palette is missing');
     } finally { player.dispose(); }
   });
 

@@ -385,6 +385,41 @@ Basic creation methods are `circle`, `sphere`, `rectangle`, `line`, `arrow`,
 `path`, `text`, `latex`, `mesh`, and `group`. All take stable IDs and plain
 data. Groups supply parent transforms and operate on their children together.
 
+### Choosing how objects relate and move
+
+Choose the representation from the object's meaning and planned later uses,
+including when the current scene is still. Two coordinates that happen to match
+do not establish an attachment. Keep reusable parts under stable IDs so later
+scenes can retrieve them and preserve their relationships.
+
+| Need | Use | What it preserves or leaves to the author |
+| --- | --- | --- |
+| Independent geometry, such as an axis or reference mark | `s.line`, `s.arrow`, `s.path`; `line3D`/`arrow3D` for round shafts | Authored points. Creating a segment does not associate it with nearby objects. |
+| A bond, graph edge, or arrow joining two objects | Create a line/arrow, then `s.connect(segment, from, to)` | Endpoints follow both sources every frame, even during authored motion. Their distance may change. |
+| A label following an object's center | `s.attach(label, object, { offset })` | Position with a world-space offset. It does not inherit the source's rotation or scale. |
+| Parts moving as one rigid object | `s.group`, then group `moveTo`/`rotateTo` | Relative distances, while child positions and scale stay fixed. `scaleTo` deliberately changes size and distances. |
+| A chain bending while each link keeps its length | Nested groups with origins at joints and fixed local offsets; `rotateTo` on joints | Segment lengths throughout interpolation. The author supplies the hierarchy and joint angles. |
+| Independent translation or style changes | `moveTo` or `animate` | Interpolated properties, without inferring relationships to other objects. |
+| An intentional change of shape | `morphTo` | Object identity and supported geometric correspondence, not physical constraints such as length or rigidity. |
+| Viewer dragging or spring return | `s.behavior` with `drag` or `spring` | Live presentation behavior. A spring returns toward an authored target; it is not a distance constraint between objects. |
+
+For a semantic connection, prefer `connect` even if its sources are initially
+still. Animate the sources instead of independently moving or replacing the
+segment. Static points are sufficient inside a rigid assembly whose parts never
+move relative to one another. A label that must rotate and scale with an object
+belongs in its group; use `attach` when only its position should follow.
+Generic outline morphing may reverse a line's endpoint correspondence to reduce
+geometric travel; it does not know which endpoint belongs to which object.
+Use `connect` to preserve that relationship while the sources move.
+
+Connection and constant length are separate requirements. Independently
+interpolating two endpoint positions can stretch or collapse a segment even if
+its start and end lengths match. A fixed-length vector should rotate about its
+tail; a folding chain should rotate about its joints. Neither a geometry morph
+nor smoother easing enforces those constraints. Animlib has no built-in
+fixed-distance chain solver or generated per-frame callback API. See the
+[chain handoff example](#example-a-chain-that-folds-in-a-later-scene).
+
 ### Fading a composed object
 
 Use `s.group(id, children, { isolated: true })` when overlapping components belong
@@ -463,6 +498,15 @@ compiled tracks or outgoing scene handoffs. A seek, reset, successful recompilat
 or scene change clears live behavior state. Removing a target disposes its behaviors
 and cancels its held gesture. View pan/orbit is retained across control changes;
 `resetView()` clears pan/orbit and behavior state without changing scene time.
+
+Bindings and behavior declarations belong to the compiled scene, not to an
+element's persistent state. The handoff carries evaluated authored geometry,
+including resolved bindings, but no declarations or live interaction state.
+In each receiving scene, retrieve the existing objects and declare needed
+`connect`, `attach`, and behaviors again. Declare bindings before the
+first `play`/`wait` for clarity; they apply throughout the bound target's lifetime
+in that scene, rather than starting at the builder's current cursor. Matching
+incoming geometry and binding parameters prevents a snap at time zero.
 
 #### Custom behaviors
 
@@ -617,6 +661,73 @@ Lifetime details:
   state. Its siblings do not silently become persistent.
 - Removing a child detaches it from its group's membership, so later reuse of
   that local ID does not accidentally attach a new object to the old group.
+- Binding and behavior declarations do not cross the boundary. Re-declare them
+  on carried IDs; otherwise a carried connector retains its last evaluated
+  points when its sources move independently.
+
+### Example: a chain that folds in a later scene
+
+The first scene only shows a straight schematic chain. It already gives each
+residue and bond an ID, binds the bonds, and creates the joint needed later.
+`residue-c` is offset from `joint-b` in local coordinates; the joint's origin is
+placed at `residue-b`. Keeping the root group also keeps its descendants and
+their hierarchy.
+
+```js
+export default scene({ mode: "2d", end: "advance" }, s => {
+  const length = 1.5;
+  const a = s.circle("residue-a", { radius: 0.15 });
+  const b = s.circle("residue-b", { radius: 0.15, position: [length, 0] });
+  const c = s.circle("residue-c", { radius: 0.15, position: [length, 0] });
+  const joint = s.group("joint-b", [c]);
+  const ab = s.line("bond-ab", { strokeWidth: 0.04 });
+  const bc = s.line("bond-bc", { strokeWidth: 0.04 });
+  const chain = s.group("chain", [a, b, joint, ab, bc]);
+  s.connect(ab, a, b, { endpoints: "surface" });
+  s.connect(bc, b, c, { endpoints: "surface" });
+  // Initialize the pivot; c is now at [2 * length, 0] in world coordinates.
+  s.play(joint.moveTo([length, 0]), { duration: 0 });
+  s.keep(chain);
+  s.wait(1);
+});
+```
+
+The receiving scene reuses the root and joint, re-establishes the bindings, and
+animates angles. It does not create replacement residues or bonds. Both adjacent
+center-to-center distances remain 1.5 at every intermediate time; with unchanged
+radii, the visible surface-to-surface segments also retain their lengths.
+
+```js
+export default scene({ mode: "2d", end: "hold" }, s => {
+  const chain = s.previous.get("chain");
+  const joint = s.previous.get("joint-b");
+  const a = s.previous.get("residue-a");
+  const b = s.previous.get("residue-b");
+  const c = s.previous.get("residue-c");
+  s.connect(s.previous.get("bond-ab"), a, b, { endpoints: "surface" });
+  s.connect(s.previous.get("bond-bc"), b, c, { endpoints: "surface" });
+  s.play([
+    chain.rotateTo(-Math.PI / 6),
+    joint.rotateTo(Math.PI / 2),
+  ], { duration: 2, ease: "smooth" });
+  s.keep(chain);
+});
+```
+
+For longer chains, nest downstream joints with fixed offsets, and rotate the
+joint groups instead of independently translating the residues. Preserve the
+joint groups when carrying the chain; keeping only individual residues preserves
+their current poses but loses any departing parents needed for later articulation.
+In 3D, use the same principle with authored joint rotations and `line3D` bonds;
+fixed world-space lengths can change apparent length under projection. This
+constructs prescribed motion, without solving collisions, joint limits, or
+molecular dynamics.
+
+An incoming scene can also `connect` an existing unbound segment to its carried
+endpoints. It need not replace that segment. Match the incoming endpoint positions
+and clipping convention when establishing the binding so the handoff remains
+continuous. Building the intended hierarchy at introduction avoids needing to
+restructure already-parented parts later.
 
 ### Direct navigation and reconstruction
 
@@ -878,6 +989,12 @@ the last region receiving pointer input. Regions render transparently over the s
 have no automatic border. Empty space outside them uses the main scene camera.
 Screen-space geometry inside a view uses CSS pixels centered on that region;
 main-scene screen labels render above all regions. Groups cannot span views.
+The callback's `v` builder and its detached methods retain their view ownership
+when called later in the synchronous scene builder, including from another view's
+callback. Objects made with the outer `s` after a view callback remain in the main
+scene. Keep related model parts and attached labels in the same view; use `v.attach`
+for labels that must follow an object. Global screen headings may remain outside
+views.
 Kept objects retain their region and its outgoing authored camera in later scenes;
 redeclaring the same view ID can change its rectangle, camera, and orbit setting.
 `player.getState().views` reports each region's rectangle and whether orbit is enabled.
@@ -1062,6 +1179,113 @@ Browsers may require a user gesture to start audio. `play()` can reject and play
 state becomes `blocked`; pressing Play can retry. The host should handle that
 state alongside its transport. See the [browser autoplay guide](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay).
 
+## Overlap inspection
+
+`detectOverlaps(frame, options)` and `detectSceneOverlaps(compiled, options)` are
+host inspection APIs exported from both `animlib` and `animlib/core`. They work in
+Node/Bun and browsers without initializing a canvas, DOM, or GPU. They report
+**only intersections between glyphs belonging to distinct text or LaTeX
+elements**. Shapes may overlap other shapes or text without producing reports.
+These APIs do not change scene data, reposition objects, or run automatically
+during playback.
+
+```js
+import { evaluateScene, detectOverlaps, detectSceneOverlaps } from 'animlib/core';
+
+const frame = evaluateScene(compiled, 1.25);
+const overlaps = detectOverlaps(frame, {
+  width: 1280,
+  height: 720,
+  minOpacity: 0.01,
+  ignorePairs: [['outgoing-title', 'incoming-title']],
+});
+const samples = detectSceneOverlaps(compiled, {
+  width: 1280,
+  height: 720,
+  sampleRate: 10,
+});
+// Or inspect specific local times:
+const selected = detectSceneOverlaps(compiled, {
+  width: 1280, height: 720, times: [0, 1.25, compiled.duration],
+});
+```
+
+`width` and `height` must be positive finite **CSS pixel** dimensions of the
+intended canvas. Projection depends on these dimensions and aspect ratio.
+`minOpacity` defaults to `0.01` and must lie in `[0, 1]`; it includes paint alpha,
+ancestor/group opacity, and morph fades. Zero-alpha and degenerate geometry are
+always excluded. `palette` optionally supplies the host palette; scene inspection
+otherwise uses the compiled scene's palette.
+
+Each `OverlapDiagnostic` contains:
+
+- `elements`: two distinct text/LaTeX element IDs in lexical order. Groups apply
+  transforms and opacity; separate text elements within the same group are still
+  checked against each other.
+- `severity` and `kind`: always `unacceptable` / `text-overlap`.
+- `bounds`: `{ left, top, right, bottom }`, the bounding box of actual
+  intersections in canvas pixels, with origin at the top left. Multiple disjoint
+  intersections can share this bounding box.
+- `elementBounds`: the clipped glyph bounds for the two text elements.
+- `witness`: a point inside an actual glyph intersection.
+
+Reports are JSON-serializable and pair ordering is stable. One report aggregates
+all glyph intersections for a pair of distinct elements. Glyphs and named parts
+inside one formula or text element are never compared with each other, including
+old/new glyphs overlapping during a morph of that element. Only the text portion
+of a shape/text morph participates in detection.
+
+`ignorePairs` optionally excludes intentional text pairs in either order. A group ID matches
+all its descendants; `['labels', 'labels']` excludes internal text pairs in that
+group while preserving checks against other text. Group membership by itself
+does not imply an exclusion.
+
+The detector reuses the renderer's text tessellation, including MathJax glyph
+holes, LaTeX anchors/numeric slots, current morph geometry, nested transforms,
+billboards, and viewport offsets. Broad bounding-box checks are followed by
+positive-area glyph intersections. Overlapping text bounding boxes, empty glyph
+holes, and edge-only contact therefore do not by themselves trigger a report.
+Geometry is clipped at the camera's near/far planes, each view rectangle, and the
+canvas. View-local results are translated to common canvas coordinates, including
+collisions with screen labels. Non-text shapes are skipped during tessellation.
+
+This measures **projected text overlap**, including text at different depths.
+It does not remove glyphs hidden by another object's depth or by compositing.
+Text crossing a border and intersecting shapes are outside the detection scope.
+Bounds use logical viewport dimensions; device-pixel rounding and raster
+antialiasing can differ slightly at edges. No minimum-clearance/near-miss check
+or continuous collision solver is included.
+
+Scene inspection returns `{ time, overlaps }[]` for **only samples with
+collisions between settled text**. By default it samples at 10 Hz and includes scene endpoints,
+lifecycle events, and track start/end times. `times` replaces that schedule and
+must contain finite values within `[0, compiled.duration]`; values are sorted and
+deduplicated. Empty `times` inspects nothing. Each call supports up to 100,000
+samples; reduce `sampleRate` or split explicit times for larger jobs. Sampling
+can miss collisions between inspected frames. Reports use authored cameras and
+current compiled controls/bindings.
+
+`detectSceneOverlaps` excludes text affected by an active animation at each sample.
+That includes move/style, fade, morph, and numeric-value tracks on the text itself,
+tracks on its ancestors, and animations of binding sources (including chained
+attachments). This dependency rule is conservative: any active track on a binding
+source makes its dependent text ineligible until the track ends. Active camera
+tracks exclude world-space text only in the affected view; screen-space labels
+remain eligible. Other stationary text is still checked, even while unrelated
+elements animate.
+
+A track is active on `[start, start + duration)`. Its exact endpoint is eligible
+unless another animation affecting that text starts there. Zero-duration tracks
+apply immediately and do not suppress a check. Consequently, transient crossings
+and text crossfades are ignored by default, while an overlapping final placement
+is reported when the text settles. Explicit `times` use the same policy. Set
+`includeAnimating: true` to include text during its animations for debugging.
+
+`detectOverlaps(frame, options)` remains a pure geometry check: a single `Frame`
+has no per-element track history, so this lower-level API does not infer whether
+text is animating. This also applies to presentation frames supplied by a host
+during live interaction. Use the scene API for authored-animation filtering.
+
 ## 9. Engine structure and verification
 
 The public player composes three concerns:
@@ -1081,8 +1305,10 @@ The main implementation files are:
   execution, validation, and off-thread browser compilation.
 - [src/sequence.ts](../src/sequence.ts) and [src/timeline.ts](../src/timeline.ts):
   reconstruction, transactions, and deterministic time evaluation.
-- [src/renderer.ts](../src/renderer.ts), [src/geometry.ts](../src/geometry.ts), and
+- [src/renderer.ts](../src/renderer.ts), [src/render-geometry.ts](../src/render-geometry.ts), [src/geometry.ts](../src/geometry.ts), and
   [src/latex.ts](../src/latex.ts): GPU drawing, outline matching, and vector formula layout.
+- [src/overlap.ts](../src/overlap.ts): projected geometry intersections and sampled
+  animation diagnostics.
 - [src/player.ts](../src/player.ts), [src/audio.ts](../src/audio.ts), and
   [src/controls.ts](../src/controls.ts): transport, audio, and optional native widgets.
 - [demo/scenes.ts](../demo/scenes.ts): application-level demo helpers and scene sources.
@@ -1117,8 +1343,12 @@ in typed arrays. Vertex generation/upload and timeline evaluation still happen
 each frame. Selective reconstruction and GPU-side animation are possible
 improvements after measuring real scenes.
 
-Opaque meshes have depth testing. Intersecting transparent surfaces use approximate
-sorting and can render incorrectly. Default strokes are tessellated ribbons; opt-in round strokes use lit tubes
+Opaque meshes have depth testing. Translucent world geometry is sorted back to front
+per triangle, including sphere surfaces and round strokes, using the current camera
+for each view. This preserves front/back blending and lets other translucent surfaces
+sort between an object's faces. Intersecting triangles still use approximate sorting
+and can render incorrectly; isolated groups remain atomic compositing units.
+Default strokes are tessellated ribbons; opt-in round strokes use lit tubes
 and cones. The renderer does not provide a comprehensive material system. Shape matching cannot infer semantic
 part correspondence or arbitrary mesh topology.
 

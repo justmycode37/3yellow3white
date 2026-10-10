@@ -3,6 +3,7 @@ import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
+import { transparencyCases } from './transparency-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
 import { initialSources } from '../demo/scenes.js';
 import { interactionSource } from '../demo/interaction.js';
@@ -82,6 +83,12 @@ export async function runWebGLTests() {
         const image=draw(t);
         if(t===time)for(const [x,y,rgb] of samples){const actual=at(image,canvas,x,y);assert(rgb.every((v,c)=>Math.abs(actual[c]-v)<=2),`${name} at ${x},${y}: ${actual} expected ${rgb}`);}
       }
+    });
+    for (const {name,source,x,y,red} of transparencyCases) await test(name, async () => {
+      await load(source);
+      const rgb=at(draw(),canvas,x,y);
+      assert(Math.abs(rgb[0]-red)<=2, `${name}: red ${rgb[0]} expected ${red}`);
+      assert(rgb[2]>20, `${name}: missing blue surface`);
     });
     for (const [name, gpu] of [
       ['null adapter', { requestAdapter: async () => null }],

@@ -5,17 +5,24 @@ import { SceneSequence } from 'animlib/core'
 import type { Frame } from 'animlib/core'
 import type { VideoManifest, VideoRequest, VideoScene } from '../../shared/video/contract'
 import { AgentError } from './agents/config.js'
+import { videoFailureMessage } from './video-errors.js'
 import type { ImageContent } from '@earendil-works/pi-ai'
 import { extractUpload, MAX_FILE_BYTES, MAX_UPLOAD_BYTES, uploadMetadata, uploadType } from './uploads.js'
 import type { Upload } from './uploads.js'
 
 import { SHARED_OWNER } from './identity.js'
 import { logEvent, logStage } from './logging.js'
+import type { ThumbnailArtwork } from '../../shared/video/thumbnail.js'
 export { SHARED_OWNER } from './identity.js'
 
 type Row = { id: string; owner: string; request: string; manifest: string }
+// Apply the same policy to stored failures from older releases and live events.
+function publicManifest(manifest: VideoManifest): VideoManifest {
+  return manifest.status === 'failed' ? { ...manifest, error: videoFailureMessage(manifest.errorCode, manifest.scenes.length > 0) } : manifest
+}
 export interface GenerationContext { videoId: string; owner: string; previousFrame?: Frame; signal: AbortSignal; images?: ImageContent[] }
 export type Generator = (request: VideoRequest, index: number, context?: GenerationContext) => Promise<{ scene: Omit<VideoScene, 'audio'> & { audio?: { id: string } }; audio: Uint8Array } | null>
+export type ThumbnailGenerator = (request: VideoRequest, context: { signal: AbortSignal; images?: ImageContent[] }) => Promise<ThumbnailArtwork>
 
 // A deterministic fixture exercises audio delivery without claiming to generate narration.
 export const simulatedGenerator: Generator = async (_request, index) => {
@@ -54,7 +61,7 @@ export class VideoService {
   private abort = new AbortController()
   private active?: { id: string; abort: AbortController }
 
-  constructor(path: string, private generate: Generator = simulatedGenerator, private provider: VideoManifest['provider'] = 'simulated') {
+  constructor(path: string, private generate: Generator = simulatedGenerator, private provider: VideoManifest['provider'] = 'simulated', private generateThumbnail?: ThumbnailGenerator) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
     this.db = new Database(path, { create: true })
     this.db.exec(`PRAGMA journal_mode=WAL;
@@ -67,17 +74,17 @@ export class VideoService {
   private row(id: string) { return this.db.query('SELECT * FROM videos WHERE id = ?').get(id) as Row | null }
   get(id: string, owner: string): VideoManifest | undefined {
     const row = this.row(id)
-    return row?.owner === owner ? JSON.parse(row.manifest) : undefined
+    return row?.owner === owner ? publicManifest(JSON.parse(row.manifest)) : undefined
   }
   list(owner?: string): VideoManifest[] {
     const rows = owner === undefined ? this.db.query('SELECT manifest FROM videos ORDER BY rowid DESC').all() : this.db.query('SELECT manifest FROM videos WHERE owner = ? ORDER BY rowid DESC').all(owner)
-    return (rows as { manifest: string }[]).map(row => JSON.parse(row.manifest))
+    return (rows as { manifest: string }[]).map(row => publicManifest(JSON.parse(row.manifest)))
   }
   create(owner: string, key: string, request: VideoRequest, uploads: Upload[] = []): VideoManifest {
     const prior = this.db.query('SELECT * FROM videos WHERE owner = ? AND key = ?').get(owner, key) as Row | null
     if (prior) {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
-      return JSON.parse(prior.manifest)
+      return publicManifest(JSON.parse(prior.manifest))
     }
     const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [] }
     this.db.transaction(() => {
@@ -124,6 +131,20 @@ export class VideoService {
   private notify(manifest: VideoManifest) {
     for (const listener of this.listeners.get(manifest.id) ?? []) listener(manifest)
   }
+  private async thumbnail(manifest: VideoManifest, request: VideoRequest, context: { signal: AbortSignal; images: ImageContent[] }) {
+    if (!this.generateThumbnail || manifest.provider !== 'pi' || manifest.thumbnail || manifest.thumbnailStatus === 'failed') return
+    manifest.thumbnailStatus = 'generating'; this.save(manifest); this.notify(manifest)
+    try {
+      const artwork = await logStage({ videoId: manifest.id, stage: 'thumbnail' }, () => this.generateThumbnail!(request, context))
+      if (context.signal.aborted || !this.row(manifest.id)) return
+      manifest.thumbnail = artwork; manifest.thumbnailStatus = 'complete'
+    } catch (error) {
+      if (context.signal.aborted || !this.row(manifest.id)) return
+      manifest.thumbnailStatus = 'failed'
+      logEvent('thumbnail.failed', { videoId: manifest.id, code: error instanceof AgentError ? error.code : 'THUMBNAIL' }, 'warn')
+    }
+    this.save(manifest); this.notify(manifest)
+  }
   private kick() {
     if (this.running || this.stopped) return
     this.running = true
@@ -138,11 +159,13 @@ export class VideoService {
         this.active = { id: row.id, abort }
         const started = performance.now()
         logEvent('video.started', { videoId: manifest.id, sceneCount: manifest.scenes.length, resumed: manifest.status === 'generating' })
+        let thumbnailWork: Promise<void> | undefined
         try {
           if (manifest.provider === 'pi' && this.provider !== 'pi') throw new AgentError('CONFIG', 'This video requires VIDEO_GENERATOR=pi.')
           const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
           manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
           const { request: input, images } = await logStage({ videoId: manifest.id, stage: 'sources' }, () => this.sources(row, signal))
+          thumbnailWork = this.thumbnail(manifest, input, { signal, images })
           const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
           if (!initial.ok) throw new Error('Stored scenes could not be restored')
           while (!this.stopped) {
@@ -151,6 +174,8 @@ export class VideoService {
               previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal, images })
             if (this.stopped || !this.row(row.id)) break
             if (!next) {
+              await thumbnailWork
+              if (this.stopped || !this.row(row.id)) break
               manifest.status = 'complete'; this.save(manifest); this.notify(manifest)
               logEvent('video.completed', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
               break
@@ -170,11 +195,14 @@ export class VideoService {
             logEvent('video.scene_published', { videoId: manifest.id, sceneIndex: scene.index, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
           }
         } catch (error) {
+          await thumbnailWork
           if (this.stopped || !this.row(row.id)) continue
-          manifest.status = 'failed'; manifest.error = error instanceof AgentError ? error.message : 'Generation failed. Available scenes can still be played.'
+          manifest.status = 'failed'; manifest.errorCode = error instanceof AgentError ? error.code : 'GENERATION'
+          manifest.error = videoFailureMessage(manifest.errorCode, manifest.scenes.length > 0)
           logEvent('video.failed', { videoId: manifest.id, sceneCount: manifest.scenes.length, code: error instanceof AgentError ? error.code : 'GENERATION', elapsedMs: Math.round(performance.now() - started) }, 'error')
           this.save(manifest); this.notify(manifest)
         } finally {
+          await thumbnailWork
           if (this.stopped) logEvent('video.interrupted', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
           this.active = undefined; sequence.dispose()
         }
@@ -233,13 +261,15 @@ export class VideoService {
         } else body = JSON.parse(await blob.text())
       } catch { return json({ detail: 'Invalid request body' }, 400) }
       if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.length + uploads.length > 10 || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
+      if (body.videoMode !== undefined && body.videoMode !== 'classic' && body.videoMode !== 'interactive') return json({ detail: 'Choose classic or interactive video mode' }, 400)
       const normalized: VideoRequest = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })),
+        ...(body.videoMode !== undefined ? { videoMode: body.videoMode } : {}),
         ...(uploads.length ? { uploads: uploads.map(uploadMetadata) } : {}) }
       try { return json(this.create(owner, key, normalized, uploads), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }
     }
     // All visitors share the library, including jobs saved under earlier session identities.
     const row = this.row(parts[3])
-    const manifest: VideoManifest | undefined = row ? JSON.parse(row.manifest) : undefined
+    const manifest: VideoManifest | undefined = row ? publicManifest(JSON.parse(row.manifest)) : undefined
     if (!manifest) return json({ detail: 'Not Found' }, 404)
     if (parts.length === 4 && request.method === 'DELETE') { this.delete(manifest.id); return new Response(null, { status: 204, headers }) }
     if (request.method !== 'GET') return json({ detail: 'Method Not Allowed' }, 405)
@@ -269,6 +299,7 @@ export class VideoService {
         const send = (snapshot: VideoManifest | null) => {
           if (closed) return
           if (!snapshot) { controller.enqueue(encoder.encode('event: deleted\ndata: {}\n\n')); abort(); return }
+          snapshot = publicManifest(snapshot)
           controller.enqueue(encoder.encode(`id: ${snapshot.revision}\nevent: manifest\ndata: ${JSON.stringify(snapshot)}\n\n`))
           if (snapshot.status === 'complete' || snapshot.status === 'failed') abort()
         }

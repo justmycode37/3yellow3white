@@ -73,6 +73,34 @@ and agent-state bind mounts. Candidate images are tested before replacing produc
 restores the previous container or legacy systemd service. See
 [deployment setup, container commands, and recovery](docs/deployment.md).
 
+The Plan page can organize extracted course text into AI-suggested topics with
+learning goals, visual ideas, prerequisites, condensed source notes, and suggested
+source references. Review and edit topic titles and learning goals before saving;
+the original material is retained for comparison. Notes and references are
+model-authored, not verified quotations. The same Pi login used for video generation
+powers `POST /api/study-plans`; narration credentials are not needed for planning.
+Requests accept up to 200,000 source characters, run for at most three minutes, and
+are limited to two concurrent plans per server. Saved plans remain in browser
+storage. Turn off “Organize topics with AI” to use the local document-outline method;
+this is also available when AI planning fails or the server runs in simulated mode.
+
+Original scenegen prompts from PR #36 are preserved verbatim in
+`backend/prompts/scenegen/`, with source paths, commit, and SHA-256 checksums in
+`provenance.json`. The planning and visualization Markdown files are byte-for-byte
+copies; `topics-system.md` and `topics-format.md` contain the exact Python `SYSTEM`
+and `FORMAT` string values from `scenegen/distill.py`. Only the original
+`{max_topics}` substitution (default 8) and source-material insertion happen at
+runtime. `topicLessonText` uses the original `topic_notes` wording. The app adapts
+the original topic response to its chapter UI outside the prompt, using one chapter
+and a four-minute estimate. Existing saved plans remain readable.
+
+The full original visualization/planning rules are active, including 3D by default,
+interaction targets, fixed layout, and pacing. Existing host contracts still govern
+narration timing, API capabilities, and the user's classic/interactive choice.
+App-specific scene guidance remains separate in `backend/prompts/scene-craft.md`;
+it is not part of the copied source. The standalone Python pipeline and its
+storyboard/animation prompts are not imported.
+
 ## scenegen: course file → animlib scenes
 
 `scenegen/` is a Python pipeline that distills a lecture file into topics, plans how to

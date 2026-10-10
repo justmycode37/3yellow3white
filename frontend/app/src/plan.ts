@@ -1,38 +1,5 @@
-export interface DocumentLine {
-  text: string
-  heading?: number
-  page?: number
-}
-
-export interface PlanDocument {
-  name: string
-  lines: DocumentLine[]
-  pages?: number
-}
-
-export interface VideoSegment {
-  id: string
-  title: string
-  text: string
-  minutes: number
-  pageStart?: number
-  pageEnd?: number
-}
-
-export interface PlanChapter {
-  id: string
-  title: string
-  segments: VideoSegment[]
-}
-
-export interface StudyPlan {
-  version: 1
-  title: string
-  sourceName: string
-  sourcePages?: number
-  chapters: PlanChapter[]
-  example?: boolean
-}
+import type { DocumentLine, PlanDocument, PlanChapter, StudyPlan } from '../../../shared/study-plan'
+export type { DocumentLine, PlanDocument, VideoSegment, PlanChapter, StudyPlan } from '../../../shared/study-plan'
 
 const words = (text: string) => text.trim().split(/\s+/).filter(Boolean)
 const titleFrom = (text: string) => text.replace(/^#+\s*|\s*#+$/g, '').replace(/^(?:(?:chapter|kapitel|chapitre)\s+)?(?:\d+(?:\.\d+)*|[IVX]+)[.:)]?\s*[:–—-]?\s+/i, '').trim()

@@ -300,3 +300,41 @@ it('compiles round 3D lines and arrows and retains their profile through geometr
   await expect(compileSource('export default scene({},s=>{s.line3D("bad",{points:[[0,0],[1,1]],space:"screen"});})')).rejects.toThrow('world space');
   await expect(compileSource('export default scene({},s=>{s.line("bad",{points:[[0,0],[1,1]],strokeProfile:"bad"});})')).rejects.toThrow('stroke profile');
 });
+
+
+it('retains escaped view builders, detached constructors, groups, and bindings in their owning view', async () => {
+  const compiled = await compileSource(`export default scene({}, s => {
+    let left, sphere;
+    s.text('heading', {text:'Global overlay',space:'screen'});
+    s.view('left', {rect:[0,0,0.5,1]}, v => { left=v; sphere=v.sphere; });
+    const a=sphere('a');
+    s.view('right', {rect:[0.5,0,0.5,1]}, v => {
+      const b=left.sphere('b');
+      left.group('pair',[a,b]);
+      v.sphere('right-ball');
+    });
+    const label=left.text('label',{text:'A',billboard:true});
+    left.attach(label,a,{offset:[0,1,0]});
+    s.sphere('global-ball');
+    left.keep(a);
+    s.wait(1);
+  });`);
+  const frame = evaluateScene(compiled, 1);
+  expect(frame.elements.map(e => [e.id,e.view])).toEqual([
+    ['heading',undefined], ['a','left'], ['b','left'], ['pair','left'],
+    ['right-ball','right'], ['label','left'], ['global-ball',undefined],
+  ]);
+  expect(frame.elements.find(e => e.id === 'a')?.persistent).toBe(true);
+  const next = await compileSource(`export default scene({},s=>{s.previous.get('a');s.wait(1);});`, {previous:frame});
+  expect(next.views?.map(v=>v.id)).toEqual(['left']);
+  expect(evaluateScene(next,0).elements[0].view).toBe('left');
+});
+
+it('still rejects grouping elements from different escaped view builders', async () => {
+  await expect(compileSource(`export default scene({},s=>{
+    let left;
+    s.view('left',{rect:[0,0,0.5,1]},v=>left=v);
+    const global=s.sphere('global');
+    left.group('mixed',[global]);s.wait(1);
+  });`)).rejects.toThrow('same view');
+});

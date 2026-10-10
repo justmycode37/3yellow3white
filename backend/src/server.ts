@@ -5,6 +5,7 @@ import { VideoService } from './videos.js';
 import { narrationRoutes } from "./narration/routes.js";
 import type { NarrationService } from "./narration/service.js";
 import { SHARED_OWNER } from './identity.js';
+import { studyPlanRoutes } from './study-plans.js';
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
 
@@ -23,6 +24,7 @@ export function createHandler(frontendDir = defaultFrontendDir, videoService?: V
   const root = resolve(frontendDir);
   let videos = videoService;
   const narration = narrationRoutes(narrationService);
+  const studyPlans = studyPlanRoutes();
 
   async function serveFile(path: string) {
     const candidate = resolve(root, path);
@@ -43,6 +45,7 @@ export function createHandler(frontendDir = defaultFrontendDir, videoService?: V
     try { path = decodeURIComponent(new URL(request.url).pathname); }
     catch { return Response.json({ detail: "Invalid URL" }, { status: 400 }); }
     if (path.includes("\0")) return Response.json({ detail: "Invalid URL" }, { status: 400 });
+    if (path === '/api/study-plans') return studyPlans(request);
     if (path === '/api/videos' || path.startsWith('/api/videos/')) {
       videos ??= new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite');
       return videos.handle(request);
@@ -50,7 +53,7 @@ export function createHandler(frontendDir = defaultFrontendDir, videoService?: V
     if (path === "/api/narrations" || path.startsWith("/api/narrations/")) return narration(request, path);
 
     const api = path === "/api/hello" || path === "/api/me" || path === "/healthz";
-    const page = path === "/" || path === "/plan" || /^\/plan\/[^/]+$/.test(path) || path === "/library" || path === "/settings" || /^\/watch\/[^/]+$/.test(path);
+    const page = path === "/" || path === "/plan" || path === "/courses" || /^\/(?:plan|courses)\/[^/]+$/.test(path) || path === "/library" || path === "/settings" || /^\/watch\/[^/]+$/.test(path);
     const asset = path.startsWith("/static/");
     if (!api && !page && !asset) return notFound();
     if (request.method !== "GET" && request.method !== "HEAD") {

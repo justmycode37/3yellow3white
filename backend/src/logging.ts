@@ -4,7 +4,7 @@ import { AgentError } from './agents/config.js';
 export interface LogFields {
   videoId?: string;
   narrationId?: string;
-  stage?: 'sources' | 'script' | 'draft' | 'review' | 'narration' | 'scene';
+  stage?: 'sources' | 'script' | 'draft' | 'review' | 'narration' | 'scene' | 'thumbnail';
   sceneIndex?: number;
   sceneCount?: number;
   attempt?: number;
@@ -14,6 +14,12 @@ export interface LogFields {
   cached?: boolean;
   resumed?: boolean;
   code?: string;
+  agentRunId?: string;
+  providerAttempt?: number;
+  retryDelayMs?: number;
+  retryable?: boolean;
+  reason?: AgentError['diagnostics']['reason'];
+  httpStatus?: number;
 }
 
 export function logEvent(event: string, fields: LogFields = {}, level: 'info' | 'warn' | 'error' = 'info') {
@@ -35,7 +41,7 @@ export async function logStage<T>(fields: LogFields, operation: () => Promise<T>
     return result;
   } catch (error) {
     const code = error instanceof AgentError ? error.code : 'STAGE';
-    logEvent('stage.failed', { ...progress(), code }, 'error');
+    logEvent('stage.failed', { ...progress(), code, ...(error instanceof AgentError ? error.diagnostics : {}) }, 'error');
     throw error;
   } finally { clearInterval(heartbeat); }
 }

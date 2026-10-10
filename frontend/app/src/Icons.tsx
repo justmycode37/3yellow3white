@@ -17,6 +17,7 @@ export const ArrowUpRight = icon('ArrowUpRight', <path d="M6 18 17 7M7 6h8q3 0 3
 export const ChevronDown = icon('ChevronDown', <path d="m6 9 4.5 4.5q1.5 1.5 3 0L18 9"/>)
 export const Plus = icon('Plus', <path d="M5 12h14M12 5v14"/>)
 export const X = icon('X', <path d="m6 6 12 12M18 6 6 18"/>)
+export const Trash = icon('Trash', <><path d="M4 6h16M9 6V4q0-1 1-1h4q1 0 1 1v2M6 6l1 13q.2 2 2 2h6q1.8 0 2-2l1-13M10 10v7m4-7v7" strokeWidth="2.5"/></>)
 export const Check = icon('Check', <path d="m5 12 3 3.5q1.5 1.8 3-.2L19 7"/>)
 export const Search = icon('Search', <><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></>)
 export const Bookmark = icon('Bookmark', <path d="M8 4h8q3 0 3 3v11q0 3-2.5 1.5l-3-1.8q-1.5-.9-3 0l-3 1.8Q5 21 5 18V7q0-3 3-3Z"/>)
