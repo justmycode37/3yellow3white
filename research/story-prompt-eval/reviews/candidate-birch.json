@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "verdict": "pass",
+  "summary": "The narration and evidence comparison distinguish source reports from justified inference and reach an appropriately qualified interpretation.",
+  "issues": [],
+  "checks": [
+    "The notice date, announced start date, diary quotation and manager attribution match the supplied fictional packet; no additional events, counts or sources are invented.",
+    "The script explains why the rent concern and chronology support a possible financial motive without establishing everyone's motives or a sole cause.",
+    "The manager's unnamed-agitator attribution remains a reported claim; absence of corroboration is not treated as proof that it is false.",
+    "The visual comparison maintains source ownership and distinguishes the green interpretation from excerpts, without turning temporal sequence into a proven causal arrow.",
+    "Exactly two scenes contain no equations, pauses or interactions. 193 spoken words estimate approximately 85-102 seconds at 150-125 words per minute with the prescribed allowance, consistent with roughly 90 seconds; audio timing was not measured.",
+    "Carried source entities keep their identities and dates when the timeline scaffold exits; the final visual qualification agrees with the spoken conclusion."
+  ]
+}

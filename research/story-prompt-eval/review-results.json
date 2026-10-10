@@ -1,0 +1,243 @@
+[
+  {
+    "file": "baseline-amber.json",
+    "valid": true,
+    "verdict": "pass",
+    "expected": "pass",
+    "matches": true,
+    "issues": []
+  },
+  {
+    "file": "baseline-birch.json",
+    "valid": true,
+    "verdict": "pass",
+    "expected": "pass",
+    "matches": true,
+    "issues": []
+  },
+  {
+    "file": "baseline-cobalt.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The spoken explanation only restates carbon in and water out. It never connects carbon dioxide uptake to photosynthesis or explains how one open passage permits both exchanges, why moist interior versus drier outside air matters, or that the directions are net movements rather than one-way filtering. Supply the essential causal reasoning in age-appropriate speech and an observable shared-passage model; the richer keyPoints and entity descriptions cannot substitute for missing speech."
+      },
+      {
+        "severity": "error",
+        "sceneId": null,
+        "detail": "All three visualDescription fields explicitly prohibit paths, the shared passage, and mechanism, leaving a still leaf and conclusion sentence. That fails the request to show the causal tradeoff and conflicts with the entities, purposes, whyNow, keyPoints, and carry lists, which presume an introduced pore, guard cells, gases, and changing width. Align the scene plans and handoffs around a feasible schematic that shows both exchanges through the same opening and their restriction as it narrows, preserving particle meaning and attachment."
+      },
+      {
+        "severity": "error",
+        "sceneId": null,
+        "detail": "Only 72 spoken words and no pauses produce roughly 32-38 seconds using the supplied pacing range and allowance, far below the requested roughly two minutes. Develop the missing causal explanation within the existing three scenes to support the requested scope; do not fill the gap with unannounced silence or repeated conclusions."
+      }
+    ]
+  },
+  {
+    "file": "baseline-dune.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The reveal says 'Nine out of a hundred eight: ninety percent.' In fact 9/108=1/12, approximately 8.3%; 90% is 9/10, the sensitivity. Correct the spoken result to approximately 8.3% and keep it aligned with the correct planned fraction and subsequent comparison. The current sentence teaches precisely the denominator confusion the lesson is meant to resolve."
+      }
+    ]
+  },
+  {
+    "file": "baseline-elm.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-4",
+        "detail": "The visualDescription requires highlighting the maximum at x=a and showing maximum error a^n before the prediction question and throughout its pause. This reveals the exact answer being requested and contradicts the script context, cutoff-a entity meaning, and keyPoints. Withhold both answer labels and maximum-specific highlighting until the Reveal block; during the pause retain only the established domain and information needed for the inference."
+      }
+    ]
+  },
+  {
+    "file": "baseline-flint.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The reveal asserts that the wage cut was the sole cause and every worker stopped for that reason. The packet provides only an announced cut, one diarist's rent concern and reported stoppage, and an uncorroborated manager attribution; it cannot establish either exclusivity or all workers' motives. Restore a qualified interpretation that the cut may have contributed and explicitly retain the evidence limits. Align the spoken conclusion with the plan's 'Cut may have contributed' visual and its rejection of a definitive cause."
+      }
+    ]
+  },
+  {
+    "file": "candidate-amber.json",
+    "valid": true,
+    "verdict": "pass",
+    "expected": "pass",
+    "matches": true,
+    "issues": []
+  },
+  {
+    "file": "candidate-birch.json",
+    "valid": true,
+    "verdict": "pass",
+    "expected": "pass",
+    "matches": true,
+    "issues": []
+  },
+  {
+    "file": "candidate-cobalt.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "Speech says 'Carbon goes in and water goes out' and claims the diagram makes the tradeoff clear, while the visualDescription explicitly forbids paths, a shared passage and humidity differences and supplies only a conclusion label. The viewer receives no bridge from an open pore to the two exchanges, nor any explanation of carbon dioxide's role in photosynthesis. Establish and depict the shared pore, carbon dioxide use inside and the moist-interior/drier-exterior conditions, with speech explaining why these produce the overall movements. Carry this mechanism into beat-3 so narrowing the same passage visibly explains both restrictions; distinguish overall movement from a one-way valve. The richer keyPoints and entity descriptions do not supply the missing viewer-facing reasoning."
+      },
+      {
+        "severity": "error",
+        "sceneId": null,
+        "detail": "The complete script has only 72 spoken words and no pauses, estimating about 32-38 seconds at 150-125 words per minute including the prescribed 10% allowance, substantially below roughly two minutes. Use the available duration to develop the missing causal explanation and its dry-condition application across the three scenes, rather than padding the repeated conclusion."
+      }
+    ]
+  },
+  {
+    "file": "candidate-dune.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The Reveal says 'Nine out of a hundred eight: ninety percent.' Recalculation gives 9/108 = 1/12, approximately 8.3%, not 90%. This is the central requested result and contradicts the visual fraction and the subsequent distinction from sensitivity. Correct the spoken result to approximately 8.3% while preserving the explanation that all 108 positives form the denominator; regenerate any dependent audio/timing after editing speech."
+      }
+    ]
+  },
+  {
+    "file": "candidate-elm.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-4",
+        "detail": "The visualDescription orders the maximum at x=a and the value a^n to be prominently labeled before the prediction and highlighted throughout the pause. This gives away exactly what the viewer is asked to predict and contradicts the context's instruction to withhold both until Reveal. Keep the restricted graph and established order relation available, but introduce the maximum identification and a^n answer label only with the Reveal."
+      }
+    ]
+  },
+  {
+    "file": "candidate-flint.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The final Reveal asserts that the wage cut 'was the sole cause' and 'every worker stopped for that reason.' The packet supplies an announced cut, a reported stoppage and one diarist's rent concern, without other workers' accounts or evidence ruling out other causes. These do not justify either universal claim. Replace the definitive assertion with a qualified interpretation that the cut may have contributed and explicitly preserve uncertainty about a single cause and everyone's motives; align speech with the already-qualified visual plan."
+      }
+    ]
+  },
+  {
+    "file": "final-amber.json",
+    "valid": true,
+    "verdict": "pass",
+    "expected": "pass",
+    "matches": true,
+    "issues": []
+  },
+  {
+    "file": "final-birch.json",
+    "valid": true,
+    "verdict": "pass",
+    "expected": "pass",
+    "matches": true,
+    "issues": []
+  },
+  {
+    "file": "final-cobalt.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The speech says 'Opening is good for carbon and bad for conserving water' and claims the diagram makes this clear, but the visualDescription explicitly forbids gas paths, the shared passage and humidity differences. Neither speech nor visuals establishes carbon dioxide use in photosynthesis, the moist interior supplying water vapor, or how the shared opening permits both exchanges. Supply those causal links in audience-appropriate narration and observable visual relationships, including two-way gas movement with different net directions, so the restriction in beat-3 follows from the model rather than another assertion. The richer keyPoints and entity notes do not supply an explanation the viewer receives."
+      },
+      {
+        "severity": "error",
+        "sceneId": "beat-1",
+        "detail": "The carry list includes guard-cells, and later scenes carry carbon-dioxide and water, but the introducing visual descriptions only construct a still leaf and conclusion text. Establish the pore and its surrounding cells before carrying them, and introduce the gas representations before reuse; synchronize these constructions and end states with the causal explanation and later narrowing."
+      },
+      {
+        "severity": "error",
+        "sceneId": null,
+        "detail": "The entire lesson contains only 72 spoken words and no pauses, estimating about 32-38 seconds at 125-150 words per minute with the supplied 10% allowance, far below roughly two minutes. Use the missing explanatory content and its observation time to meet the requested scope; do not merely stretch the three repeated slogans with silence."
+      }
+    ]
+  },
+  {
+    "file": "final-dune.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The Reveal says 'Nine out of a hundred eight: ninety percent.' Recalculation gives 9/108=1/12, approximately 8.3%, not 90%. This is the central answer and contradicts both the displayed fraction/result and the following distinction between sensitivity and the probability after a positive. Correct the spoken percentage to approximately 8.3% and keep narration and visuals aligned; retain 90% only for the different denominator, 9/10."
+      }
+    ]
+  },
+  {
+    "file": "final-elm.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-4",
+        "detail": "The visualDescription requires prominently labeling the maximum at x=a and maximum error a^n before the prediction, then highlighting both throughout the pause. This gives away the exact answer to 'Where is the largest error?' and conflicts with the script's Content needed guard and cutoff-a entity meaning. Withhold maximum identification, a^n labels and answer highlights until Reveal; during the announced five-second pause retain only the already established restricted graph and order-preservation information."
+      }
+    ]
+  },
+  {
+    "file": "final-flint.json",
+    "valid": true,
+    "verdict": "revise",
+    "expected": "revise",
+    "matches": true,
+    "issues": [
+      {
+        "severity": "error",
+        "sceneId": "beat-2",
+        "detail": "The Reveal states 'The wage cut was the sole cause of the stoppage, and every worker stopped for that reason.' The supplied notice establishes an announced cut, the diary reports several workers stopped and records only its writer's rent concern, and the manager offers an uncorroborated attribution. None establishes a sole cause or every worker's motive. Restore a qualified interpretation that the cut may have contributed and explicitly preserve uncertainty about other motives; align the speech with the planned 'Cut may have contributed' conclusion and the earlier narration's limits."
+      }
+    ]
+  }
+]

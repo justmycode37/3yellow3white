@@ -1,0 +1,40 @@
+[00:02–00:08] In a moment, I'll point you to a separate website hosting a short sequence of what we're calling explorable videos.
+[00:09–00:14] It was done in collaboration with Ben Eater, who some of you may know as that guy who runs the excellent computer engineering channel.
+[00:15–00:20] And if you don't know who he is, viewers of this channel would certainly enjoy the content of his, so do check it out.
+[00:21–00:29] This collaboration was something a little different though, for both of us, and all of the web development that made these explorable videos possible is completely thanks to Ben.
+[00:29–00:37] I don't want to say too much about it here, it's really something you have to experience for yourself, certainly one of the coolest projects I've had the pleasure of working on.
+[00:38–00:45] Before that though, if you can contain your excitement, I want to use this video as a chance to tee things up with a little bit of surrounding context.
+[00:46–00:58] So to set the stage, last video I described quaternions, a certain 4-dimensional number system that the 19th century versions of Wolverine and the old man from Home Alone called evil for how convoluted it seemed at the time.
+[00:59–01:04] And perhaps you too are wondering why on earth anyone would bother with such an alien-seeming number system.
+[01:05–01:15] One of the big reasons, especially for programmers, is that they give a really nice way for describing 3D orientation, which is not susceptible to the bugs and edge cases of other methods.
+[01:15–01:26] I mean they're interesting mathematically for a lot of reasons, but this application for computer graphics and robotics and virtual reality and anything involving 3D orientation is probably the biggest use case for quaternions.
+[01:26–01:39] To take one example, a friend of mine who used to work at Apple, Andy Matuszczak, delighted in telling me about shipping code to hundreds of millions of devices that uses quaternions to track the phone's model for how it's oriented in space.
+[01:39–01:45] That's right, your phone almost certainly has software running somewhere inside of it that relies on quaternions.
+[01:46–01:52] The thing is, there are other ways to think about computing rotations, many of which are way simpler to think about than quaternions.
+[01:53–02:00] For example, any of you familiar with linear algebra will know that 3x3 matrices can really nicely describe 3D transformations.
+[02:01–02:15] And a common way that many programmers think about constructing a rotation matrix for a desired orientation is to imagine rotating an object around three easy-to-think-about axes, where the relevant angles for these rotations are commonly called Euler angles.
+[02:16–02:26] And this mostly works, but one big problem is that it's vulnerable to something called gimbal lock, where when two of your axes of rotation get lined up, you lose a degree of freedom.
+[02:26–02:32] And it can also cause difficulties and ambiguities when trying to interpolate between two separate orientations.
+[02:32–02:40] If you're curious for more of the details, there are many great sources online for learning about Euler angles and gimbal lock, and I've left links in the description to a few of them.
+[02:41–02:57] Not only do quaternions avoid issues like gimbal lock, they give a really seamless way to interpolate between two three-dimensional orientations, one which lacks the ambiguities of Euler angles, and which avoids the issues of numerical precision and normalization that arise in trying to interpolate between two rotation matrices.
+[02:58–03:10] To warm up to the idea of how multiplication in some higher-dimensional number system might be used to compute rotations, take a moment to remember how it is that complex numbers give a slick method for computing 2D rotations.
+[03:11–03:21] Specifically, let's say you have some point in two-dimensional space, like 4, 1, and you want to know the new coordinates you'd get if you rotate this point 30 degrees around the origin.
+[03:22–03:24] Complex numbers give a sort of snazzy way to do this.
+[03:25–03:36] You take the complex number that's 30 degrees off the horizontal with magnitude 1, cos 30 degrees plus sin 30 degrees times i, and then you just multiply this by your point, represented as a complex number.
+[03:37–03:42] The only rule you need to know to carry out this computation is that i2 equals negative 1.
+[03:42–03:53] Then in what might feel like a bit of black magic to those first learning it, carrying out this product from that one simple rule gives the coordinates of a new point, the point rotated 30 degrees from the original.
+[03:55–04:00] Using quaternions to describe 3D rotations is similar, though the look and feel is slightly different.
+[04:01–04:03] Let's say you want to rotate some angle about some axis.
+[04:04–04:14] You first define that axis with a unit vector, which we'll write as having i, j, and k components, normalized so that the sum of the squares of those components is 1.
+[04:15–04:31] Similar to the case of complex numbers, you use the angle to construct a quaternion by taking cosine of that angle as the real part, plus sin of that angle times an imaginary part, except this time the imaginary part has three components, the coordinates of our axis of rotation.
+[04:32–04:39] Well, actually you take half of the angle, which might feel totally arbitrary, but hopefully that makes sense by the end of this whole experience.
+[04:40–04:51] Let's say you have some 3D point, which we'll write with i, j, and k components, and you want to know the coordinates you'd get when you rotate this point by your specified angle around your specified axis.
+[04:52–05:01] What you do is not just a single quaternion product, but a sort of quaternion sandwich, where you multiply by q from the left and the inverse of q from the right.
+[05:02–05:12] If you know the rules for how i, j, and k multiply amongst themselves, you can carry out these two products by expanding everything out, or more realistically by having a computer do it for you.
+[05:13–05:20] And in what might feel like a bit of black magic, this big computation will return for you the rotated version of the point.
+[05:21–05:25] Our goal is to break this down and visualize what's happening with each of these two products.
+[05:26–05:35] I'll review the method for thinking about quaternion multiplication described last video, and explain why half the angle is used, and why you would multiply from the right by the inverse.
+[05:35–05:46] On the screen now and at the top of the description you'll find a link to eater.net slash quaternions, which is where Ben set up the explorable video tutorial, where I explain what's going on with this rotation computation.
+[05:47–05:49] It's just really cool.
+[05:49–05:50] Eater did something awesome here.
+[05:50–05:54] So at the very least just take a couple minutes to go look at it, but I'd love it if you went through the full experience.

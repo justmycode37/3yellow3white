@@ -1,0 +1,31 @@
+[00:11–00:12] Hey everyone!
+[00:13–00:16] So I'm pretty excited about the next sequence of videos that I'm doing.
+[00:16–00:29] They'll be about linear algebra, which, as a lot of you know, is one of those subjects that's required knowledge for just about any technical discipline, but it's also, I've noticed, generally poorly understood by students taking it for the first time.
+[00:30–00:52] A student might go through a class and learn how to compute lots of things, like matrix multiplication, or the determinant, or cross products, which use the determinant, or eigenvalues, but they might come out without really understanding why matrix multiplication is defined the way that it is, why the cross product has anything to do with the determinant, or what an eigenvalue really represents.
+[00:53–01:01] Oftentimes, students end up well practiced in the numerical operations of matrices, but are only vaguely aware of the geometric intuitions underlying it all.
+[01:01–01:07] But there's a fundamental difference between understanding linear algebra on a numeric level and understanding it on a geometric level.
+[01:08–01:24] Each has its place, but, roughly speaking, the geometric understanding is what lets you judge what tools to use to solve specific problems, feel why they work, and know how to interpret the results, and the numeric understanding is what lets you actually carry through the application of those tools.
+[01:25–01:41] Now, if you learn linear algebra without getting a solid foundation in that geometric understanding, the problems can go unnoticed for a while until you've gone deeper into whatever field you happen to pursue, whether that's computer science, engineering, statistics, economics, or even math itself.
+[01:42–01:52] Once you're in a class, or a job for that matter, that assumes fluency with linear algebra, the way that your professors or your co-workers apply that field could seem like utter magic.
+[01:52–02:03] They'll very quickly know what the right tool to use is and what the answer roughly looks like in a way that would seem like computational wizardry if you assume that they're actually crunching all the numbers in their head.
+[02:04–02:11] Here, as an analogy, imagine that when you first learned about the sine function in trigonometry, you were shown this infinite polynomial.
+[02:12–02:15] This, by the way, is how your calculator evaluates the sine function.
+[02:16–02:24] For homework, you might be asked to practice computing approximations of the sine function by plugging in various numbers to the formula and cutting it off at a reasonable point.
+[02:25–02:34] And in fairness, let's say you had a vague idea that this was supposed to be related to triangles, but exactly how had never really been clear and was just not the focus of the course.
+[02:34–02:47] Later on, if you took a physics course where sines and cosines are thrown around left and right and people are able to tell pretty immediately how to apply them and roughly what the sign of a certain value will be, it would be pretty intimidating, wouldn't it?
+[02:47–02:56] It would make it seem like the only people who are cut out for physics are those with computers for brains, and you would feel unduly slow or dumb for taking so long on each problem.
+[02:57–03:06] It's not that different with linear algebra, and luckily, just as with trigonometry, there are a handful of intuitions, visual intuitions, underlying much of the subject.
+[03:07–03:13] And unlike the trig example, the connection between the computation and these visual intuitions is typically pretty straightforward.
+[03:14–03:24] And when you digest these and really understand the relationship between the geometry and the numbers, the details of the subject, as well as how it's used in practice, start to feel a lot more reasonable.
+[03:25–03:29] In fairness, most professors do make an effort to convey that geometric understanding.
+[03:29–03:31] The sine example is a little extreme.
+[03:31–03:45] But I do think that a lot of courses have students spending a disproportionate amount of time on the numerical side of things, especially given that in this day and age, we almost always get computers to handle that half, while in practice, humans worry about the conceptual half.
+[03:46–03:48] So this brings me to the upcoming videos.
+[03:48–03:57] The goal is to create a short, binge-watchable series animating those intuitions from the basics of vectors up through the core topics that make up the essence of linear algebra.
+[03:58–04:03] I'll put out one video per day for the next five days, then after that put out a new chapter every one to two weeks.
+[04:04–04:10] I think it should go without saying that you cannot learn a full subject with a short series of videos, and that's just not the goal here.
+[04:11–04:21] But what you can do, especially with this subject, is lay down all the right intuitions so the learning that you do moving forward is as productive and fruitful as it can be.
+[04:21–04:29] I also hope this can be a resource for educators who are teaching courses that assume fluency with linear algebra, giving them a place to direct students that need a quick brush up.
+[04:30–04:41] I'll do what I can to keep things well paced throughout, but it's hard to simultaneously account for different people's different backgrounds and levels of comfort, so I do encourage you to readily pause and ponder if you feel that it's necessary.
+[04:42–04:51] Actually, I'd give that same advice for watching any math video, even if it doesn't feel too quick, since the thinking that you do on your own time is where all the learning really happens, don't you think?
+[04:52–04:54] So with that as an introduction, I'll see you next video.

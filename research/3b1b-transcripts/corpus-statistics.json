@@ -1,0 +1,122 @@
+{
+  "all": {
+    "videos": 153,
+    "words": 513551,
+    "caption_span_hours": 47.35,
+    "median_last_caption_minutes": 15.58,
+    "lexical_markers": {
+      "explicit_pause": {
+        "videos_with_match": 51,
+        "total_matches": 85
+      },
+      "imagine": {
+        "videos_with_match": 86,
+        "total_matches": 229
+      },
+      "notice": {
+        "videos_with_match": 87,
+        "total_matches": 230
+      },
+      "think_of": {
+        "videos_with_match": 101,
+        "total_matches": 412
+      },
+      "zoom": {
+        "videos_with_match": 31,
+        "total_matches": 79
+      },
+      "color_word": {
+        "videos_with_match": 46,
+        "total_matches": 298
+      },
+      "question_mark": {
+        "videos_with_match": 137,
+        "total_matches": 1546
+      },
+      "you_your": {
+        "videos_with_match": 149,
+        "total_matches": 11517
+      }
+    }
+  },
+  "main_explainers": {
+    "videos": 117,
+    "words": 355560,
+    "caption_span_hours": 32.4,
+    "median_last_caption_minutes": 15.8,
+    "lexical_markers": {
+      "explicit_pause": {
+        "videos_with_match": 42,
+        "total_matches": 63
+      },
+      "imagine": {
+        "videos_with_match": 73,
+        "total_matches": 189
+      },
+      "notice": {
+        "videos_with_match": 78,
+        "total_matches": 212
+      },
+      "think_of": {
+        "videos_with_match": 86,
+        "total_matches": 303
+      },
+      "zoom": {
+        "videos_with_match": 28,
+        "total_matches": 73
+      },
+      "color_word": {
+        "videos_with_match": 32,
+        "total_matches": 235
+      },
+      "question_mark": {
+        "videos_with_match": 110,
+        "total_matches": 824
+      },
+      "you_your": {
+        "videos_with_match": 117,
+        "total_matches": 7366
+      }
+    }
+  },
+  "other_formats": {
+    "videos": 33,
+    "words": 157991,
+    "caption_span_hours": 14.95,
+    "median_last_caption_minutes": 12.31,
+    "lexical_markers": {
+      "explicit_pause": {
+        "videos_with_match": 9,
+        "total_matches": 22
+      },
+      "imagine": {
+        "videos_with_match": 13,
+        "total_matches": 40
+      },
+      "notice": {
+        "videos_with_match": 9,
+        "total_matches": 18
+      },
+      "think_of": {
+        "videos_with_match": 15,
+        "total_matches": 109
+      },
+      "zoom": {
+        "videos_with_match": 3,
+        "total_matches": 6
+      },
+      "color_word": {
+        "videos_with_match": 14,
+        "total_matches": 63
+      },
+      "question_mark": {
+        "videos_with_match": 27,
+        "total_matches": 722
+      },
+      "you_your": {
+        "videos_with_match": 32,
+        "total_matches": 4151
+      }
+    }
+  }
+}

@@ -1,0 +1,246 @@
+bun test v1.4.2 (744846f84)
+
+backend\test\editorial.test.ts:
+{"timestamp":"2026-10-10T21:42:54.975Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:54.975Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:54.982Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:54.982Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:54.983Z","level":"info","event":"script.revision_requested","attempt":1,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:54.985Z","level":"info","event":"stage.started","stage":"draft","attempt":2}
+{"timestamp":"2026-10-10T21:42:54.985Z","level":"info","event":"stage.completed","stage":"draft","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:54.989Z","level":"info","event":"stage.started","stage":"review","attempt":2}
+{"timestamp":"2026-10-10T21:42:54.989Z","level":"info","event":"stage.completed","stage":"review","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:54.990Z","level":"info","event":"script.approved","attempt":2,"sceneCount":1}
+(pass) viewing preference classic reaches authoring, review and repair [20.69ms]
+{"timestamp":"2026-10-10T21:42:54.994Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:54.994Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:54.997Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:54.997Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:54.998Z","level":"info","event":"script.revision_requested","attempt":1,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:54.999Z","level":"info","event":"stage.started","stage":"draft","attempt":2}
+{"timestamp":"2026-10-10T21:42:54.999Z","level":"info","event":"stage.completed","stage":"draft","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.002Z","level":"info","event":"stage.started","stage":"review","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.002Z","level":"info","event":"stage.completed","stage":"review","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.003Z","level":"info","event":"script.approved","attempt":2,"sceneCount":1}
+(pass) viewing preference interactive reaches authoring, review and repair [13.21ms]
+{"timestamp":"2026-10-10T21:42:55.008Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.008Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.011Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.011Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.012Z","level":"info","event":"script.revision_requested","attempt":1,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:55.013Z","level":"info","event":"stage.started","stage":"draft","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.013Z","level":"info","event":"stage.completed","stage":"draft","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.016Z","level":"info","event":"stage.started","stage":"review","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.016Z","level":"info","event":"stage.completed","stage":"review","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.017Z","level":"info","event":"script.approved","attempt":2,"sceneCount":1}
+(pass) viewing preference %s reaches authoring, review and repair [13.90ms]
+(pass) review verdicts agree with material findings and identify actual scenes [0.23ms]
+{"timestamp":"2026-10-10T21:42:55.022Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.022Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.025Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.025Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.026Z","level":"info","event":"script.revision_requested","attempt":1,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:55.027Z","level":"info","event":"stage.started","stage":"draft","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.028Z","level":"info","event":"stage.completed","stage":"draft","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.030Z","level":"info","event":"stage.started","stage":"review","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.030Z","level":"info","event":"stage.completed","stage":"review","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.031Z","level":"info","event":"script.approved","attempt":2,"sceneCount":1}
+(pass) editorial repairs update speech and plan together, forward sources, and preserve the review trail [14.69ms]
+{"timestamp":"2026-10-10T21:42:55.036Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.036Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.039Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.039Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.040Z","level":"info","event":"script.approved","attempt":1,"sceneCount":1}
+(pass) warnings do not trigger a rewrite [7.36ms]
+{"timestamp":"2026-10-10T21:42:55.044Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.044Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.046Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.046Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.047Z","level":"info","event":"script.revision_requested","attempt":1,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:55.048Z","level":"info","event":"stage.started","stage":"draft","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.048Z","level":"info","event":"stage.completed","stage":"draft","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.051Z","level":"info","event":"stage.started","stage":"review","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.051Z","level":"error","event":"stage.failed","stage":"review","attempt":2,"elapsedMs":0,"code":"STAGE"}
+{"timestamp":"2026-10-10T21:42:55.057Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.057Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.062Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.062Z","level":"error","event":"stage.failed","stage":"review","attempt":1,"elapsedMs":0,"code":"STAGE"}
+{"timestamp":"2026-10-10T21:42:55.064Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.064Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.067Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.067Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.068Z","level":"info","event":"script.approved","attempt":1,"sceneCount":1}
+(pass) restarts isolate partial audit pairs and link approval to the exact saved draft [30.50ms]
+{"timestamp":"2026-10-10T21:42:55.074Z","level":"info","event":"stage.started","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"script"}
+{"timestamp":"2026-10-10T21:42:55.077Z","level":"info","event":"stage.started","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.077Z","level":"info","event":"stage.completed","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.080Z","level":"info","event":"stage.started","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.080Z","level":"info","event":"stage.completed","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.080Z","level":"info","event":"script.revision_requested","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","attempt":1,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:55.082Z","level":"info","event":"stage.started","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"draft","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.082Z","level":"info","event":"stage.completed","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"draft","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.084Z","level":"info","event":"stage.started","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"review","attempt":2}
+{"timestamp":"2026-10-10T21:42:55.084Z","level":"info","event":"stage.completed","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"review","attempt":2,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.085Z","level":"info","event":"script.revision_requested","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","attempt":2,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:55.086Z","level":"info","event":"stage.started","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"draft","attempt":3}
+{"timestamp":"2026-10-10T21:42:55.086Z","level":"info","event":"stage.completed","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"draft","attempt":3,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.089Z","level":"info","event":"stage.started","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"review","attempt":3}
+{"timestamp":"2026-10-10T21:42:55.089Z","level":"info","event":"stage.completed","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"review","attempt":3,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.090Z","level":"info","event":"script.revision_requested","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","attempt":3,"sceneCount":1}
+{"timestamp":"2026-10-10T21:42:55.090Z","level":"error","event":"stage.failed","videoId":"cedb55ba-883e-4155-89b1-fb063cd9487c","stage":"script","elapsedMs":16,"code":"EDITORIAL"}
+(pass) three rejected drafts fail before submitting paid speech or publishing a lesson [21.14ms]
+{"timestamp":"2026-10-10T21:42:55.096Z","level":"info","event":"stage.started","videoId":"314b5006-4ba1-445e-bc05-af028abe2e61","stage":"script"}
+{"timestamp":"2026-10-10T21:42:55.098Z","level":"info","event":"stage.started","videoId":"314b5006-4ba1-445e-bc05-af028abe2e61","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.098Z","level":"info","event":"stage.completed","videoId":"314b5006-4ba1-445e-bc05-af028abe2e61","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.101Z","level":"info","event":"stage.started","videoId":"314b5006-4ba1-445e-bc05-af028abe2e61","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.102Z","level":"info","event":"stage.completed","videoId":"314b5006-4ba1-445e-bc05-af028abe2e61","stage":"review","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.102Z","level":"error","event":"stage.failed","videoId":"314b5006-4ba1-445e-bc05-af028abe2e61","stage":"script","elapsedMs":6,"code":"STAGE"}
+(pass) cancellation during review cannot publish an approved lesson or start speech [13.69ms]
+{"timestamp":"2026-10-10T21:42:55.110Z","level":"info","event":"stage.started","stage":"draft","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.110Z","level":"info","event":"stage.completed","stage":"draft","attempt":1,"elapsedMs":0}
+{"timestamp":"2026-10-10T21:42:55.113Z","level":"info","event":"stage.started","stage":"review","attempt":1}
+{"timestamp":"2026-10-10T21:42:55.113Z","level":"info","event":"stage.completed","stage":"review","attempt":1,"elapsedMs":0}
+(pass) malformed review cannot unlock speech even if a runner skips the validation tool [7.44ms]
+
+backend\test\narration.test.ts:
+{"timestamp":"2026-10-10T21:42:55.120Z","level":"info","event":"narration.queued","narrationId":"9bf69de80e0636d36ac4056bff19fb9d2cd3262bbd6750f5e06394ae2b6fca12","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.121Z","level":"info","event":"narration.started","narrationId":"9bf69de80e0636d36ac4056bff19fb9d2cd3262bbd6750f5e06394ae2b6fca12","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.122Z","level":"info","event":"narration.speech_started","narrationId":"9bf69de80e0636d36ac4056bff19fb9d2cd3262bbd6750f5e06394ae2b6fca12","completedChunks":0,"totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.123Z","level":"info","event":"narration.queued","narrationId":"c1a669b95cdf5a169fcbc726a32fb3519bd4edb17565c1415b9715c825ff1639","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.123Z","level":"info","event":"narration.started","narrationId":"c1a669b95cdf5a169fcbc726a32fb3519bd4edb17565c1415b9715c825ff1639","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.125Z","level":"info","event":"narration.speech_started","narrationId":"c1a669b95cdf5a169fcbc726a32fb3519bd4edb17565c1415b9715c825ff1639","completedChunks":0,"totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.126Z","level":"info","event":"narration.queued","narrationId":"f4d5741136bf8126594759dd75f99be68e97b34ad4d74fb58c21007e738a8890","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.126Z","level":"info","event":"narration.started","narrationId":"f4d5741136bf8126594759dd75f99be68e97b34ad4d74fb58c21007e738a8890","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.127Z","level":"info","event":"narration.speech_started","narrationId":"f4d5741136bf8126594759dd75f99be68e97b34ad4d74fb58c21007e738a8890","completedChunks":0,"totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.150Z","level":"info","event":"narration.speech_completed","narrationId":"f4d5741136bf8126594759dd75f99be68e97b34ad4d74fb58c21007e738a8890","completedChunks":1,"totalChunks":1,"elapsedMs":22}
+{"timestamp":"2026-10-10T21:42:55.150Z","level":"info","event":"narration.speech_completed","narrationId":"c1a669b95cdf5a169fcbc726a32fb3519bd4edb17565c1415b9715c825ff1639","completedChunks":1,"totalChunks":1,"elapsedMs":26}
+{"timestamp":"2026-10-10T21:42:55.150Z","level":"info","event":"narration.speech_completed","narrationId":"9bf69de80e0636d36ac4056bff19fb9d2cd3262bbd6750f5e06394ae2b6fca12","completedChunks":1,"totalChunks":1,"elapsedMs":28}
+{"timestamp":"2026-10-10T21:42:55.154Z","level":"info","event":"narration.scene_ready","narrationId":"f4d5741136bf8126594759dd75f99be68e97b34ad4d74fb58c21007e738a8890","sceneIndex":0,"completedChunks":1,"totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.154Z","level":"info","event":"narration.scene_ready","narrationId":"9bf69de80e0636d36ac4056bff19fb9d2cd3262bbd6750f5e06394ae2b6fca12","sceneIndex":0,"completedChunks":1,"totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.154Z","level":"info","event":"narration.scene_ready","narrationId":"c1a669b95cdf5a169fcbc726a32fb3519bd4edb17565c1415b9715c825ff1639","sceneIndex":0,"completedChunks":1,"totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.160Z","level":"info","event":"narration.completed","narrationId":"9bf69de80e0636d36ac4056bff19fb9d2cd3262bbd6750f5e06394ae2b6fca12","sceneCount":1,"completedChunks":1,"totalChunks":1,"elapsedMs":40}
+{"timestamp":"2026-10-10T21:42:55.160Z","level":"info","event":"narration.completed","narrationId":"c1a669b95cdf5a169fcbc726a32fb3519bd4edb17565c1415b9715c825ff1639","sceneCount":1,"completedChunks":1,"totalChunks":1,"elapsedMs":37}
+{"timestamp":"2026-10-10T21:42:55.160Z","level":"info","event":"narration.completed","narrationId":"f4d5741136bf8126594759dd75f99be68e97b34ad4d74fb58c21007e738a8890","sceneCount":1,"completedChunks":1,"totalChunks":1,"elapsedMs":35}
+(pass) independent narration jobs synthesize concurrently and identical submissions are deduplicated [52.38ms]
+(pass) parses labelled Markdown without speaking context, preserving order and roles [1.33ms]
+(pass) supports bold labels, labelled headings, soft breaks, Unicode and pause aliases [1.63ms]
+(pass) rejects ambiguity, empty labels, duplicate scenes, stage directions and pause ranges [1.17ms]
+(pass) guidance production example is accepted by the actual parser [1.50ms]
+(pass) oversized passages split without losing or duplicating words [2.74ms]
+(pass) word timing follows normalized characters, including Unicode and repeated words [0.34ms]
+(pass) alignment validation fails on missing data, array mismatch, reversal and out-of-audio values [0.09ms]
+(pass) WAV headers and scripted silence use exact samples [1.99ms]
+(pass) allows provider millisecond rounding at the PCM boundary without extending the audio [0.08ms]
+{"timestamp":"2026-10-10T21:42:55.182Z","level":"info","event":"narration.queued","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.182Z","level":"info","event":"narration.started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.196Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":0,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.197Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.199Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.199Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":2,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.202Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":0,"completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.203Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.204Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":3,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.207Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":1,"completedChunks":3,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.211Z","level":"info","event":"narration.completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneCount":2,"completedChunks":3,"totalChunks":3,"elapsedMs":29}
+(pass) coalesces submissions and measures offsets from full audio including trailing silence [38.66ms]
+{"timestamp":"2026-10-10T21:42:55.221Z","level":"info","event":"narration.queued","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.221Z","level":"info","event":"narration.started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.222Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":0,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.223Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.224Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.224Z","level":"error","event":"narration.failed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","code":"PROVIDER_OUTCOME_UNKNOWN","completedChunks":1,"totalChunks":3,"elapsedMs":4}
+{"timestamp":"2026-10-10T21:42:55.231Z","level":"info","event":"narration.queued","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.231Z","level":"info","event":"narration.started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.232Z","level":"info","event":"narration.chunk_reused","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":0,"cached":true}
+{"timestamp":"2026-10-10T21:42:55.233Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.234Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":2,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.238Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":0,"completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.238Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.239Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":3,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.242Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":1,"completedChunks":3,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.247Z","level":"info","event":"narration.completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneCount":2,"completedChunks":3,"totalChunks":3,"elapsedMs":16}
+(pass) failure retries reuse completed chunks, and repeated submission does not auto-retry [33.69ms]
+{"timestamp":"2026-10-10T21:42:55.255Z","level":"info","event":"narration.queued","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.255Z","level":"info","event":"narration.started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.256Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":0,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.258Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"totalChunks":3,"elapsedMs":2}
+{"timestamp":"2026-10-10T21:42:55.260Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.261Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":2,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.264Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":0,"completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.264Z","level":"info","event":"narration.speech_started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.265Z","level":"info","event":"narration.speech_completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":3,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.268Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":1,"completedChunks":3,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.273Z","level":"info","event":"narration.completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneCount":2,"completedChunks":3,"totalChunks":3,"elapsedMs":19}
+{"timestamp":"2026-10-10T21:42:55.276Z","level":"warn","event":"narration.interrupted","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":0,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.280Z","level":"info","event":"narration.queued","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.280Z","level":"info","event":"narration.started","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.292Z","level":"info","event":"narration.chunk_reused","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":0,"cached":true}
+{"timestamp":"2026-10-10T21:42:55.293Z","level":"info","event":"narration.chunk_reused","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":1,"cached":true}
+{"timestamp":"2026-10-10T21:42:55.296Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":0,"completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.297Z","level":"info","event":"narration.chunk_reused","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","completedChunks":2,"cached":true}
+{"timestamp":"2026-10-10T21:42:55.299Z","level":"info","event":"narration.scene_ready","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneIndex":1,"completedChunks":3,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.304Z","level":"info","event":"narration.completed","narrationId":"db42e280434a93031225969dac7790cd8b20a6b5367f226df1d8fb37dbb3634b","sceneCount":2,"completedChunks":3,"totalChunks":3,"elapsedMs":24}
+(pass) restart marks unfinished jobs interrupted and retains the chunk cache [57.23ms]
+{"timestamp":"2026-10-10T21:42:55.312Z","level":"info","event":"narration.queued","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.312Z","level":"info","event":"narration.started","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.313Z","level":"info","event":"narration.speech_started","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","completedChunks":0,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.314Z","level":"info","event":"narration.speech_completed","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","completedChunks":1,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.315Z","level":"info","event":"narration.speech_started","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","completedChunks":1,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.316Z","level":"info","event":"narration.speech_completed","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","completedChunks":2,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.320Z","level":"info","event":"narration.scene_ready","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","sceneIndex":0,"completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.320Z","level":"info","event":"narration.speech_started","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.321Z","level":"info","event":"narration.speech_completed","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","completedChunks":3,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.324Z","level":"info","event":"narration.scene_ready","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","sceneIndex":1,"completedChunks":3,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.329Z","level":"info","event":"narration.completed","narrationId":"560fa8e0fbeab0ac4fa2d1b556e208028c3a88d9b946b8def0597981061ff24e","sceneCount":2,"completedChunks":3,"totalChunks":3,"elapsedMs":17}
+(pass) packages preserve original notes and compile synchronized demo scenes [65.73ms]
+{"timestamp":"2026-10-10T21:42:55.379Z","level":"info","event":"narration.queued","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.379Z","level":"info","event":"narration.started","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.393Z","level":"info","event":"narration.speech_started","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","completedChunks":0,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.394Z","level":"info","event":"narration.speech_completed","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","completedChunks":1,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.396Z","level":"info","event":"narration.speech_started","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","completedChunks":1,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.397Z","level":"info","event":"narration.speech_completed","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","completedChunks":2,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.400Z","level":"info","event":"narration.scene_ready","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","sceneIndex":0,"completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.400Z","level":"info","event":"narration.speech_started","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","completedChunks":2,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.401Z","level":"info","event":"narration.speech_completed","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","completedChunks":3,"totalChunks":3,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.404Z","level":"info","event":"narration.scene_ready","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","sceneIndex":1,"completedChunks":3,"totalChunks":3}
+{"timestamp":"2026-10-10T21:42:55.409Z","level":"info","event":"narration.completed","narrationId":"bbbd65f9ec5e295b6809ce9f2d6bc87200b57f87f37cb3db2da5ff9062b73fe3","sceneCount":2,"completedChunks":3,"totalChunks":3,"elapsedMs":30}
+(pass) HTTP interfaces share one user, validate input and serve committed assets [43.47ms]
+(pass) ElevenLabs uses normalized speech, masks provider messages, and only retries explicit temporary rejection [0.76ms]
+{"timestamp":"2026-10-10T21:42:55.424Z","level":"info","event":"narration.queued","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.424Z","level":"info","event":"narration.started","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.425Z","level":"info","event":"narration.speech_started","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":0,"totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.426Z","level":"info","event":"narration.speech_completed","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":1,"totalChunks":4,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.427Z","level":"info","event":"narration.speech_started","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":1,"totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.428Z","level":"info","event":"narration.speech_completed","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":2,"totalChunks":4,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.430Z","level":"info","event":"narration.speech_started","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":2,"totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.431Z","level":"info","event":"narration.speech_completed","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":3,"totalChunks":4,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.434Z","level":"info","event":"narration.scene_ready","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","sceneIndex":0,"completedChunks":3,"totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.434Z","level":"info","event":"narration.speech_started","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":3,"totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.435Z","level":"info","event":"narration.speech_completed","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","completedChunks":4,"totalChunks":4,"elapsedMs":1}
+{"timestamp":"2026-10-10T21:42:55.438Z","level":"info","event":"narration.scene_ready","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","sceneIndex":1,"completedChunks":4,"totalChunks":4}
+{"timestamp":"2026-10-10T21:42:55.443Z","level":"info","event":"narration.completed","narrationId":"08f149caac5ccba33d64f76c311cdbc1aba6946c80a48b017dc076ec1361cec8","sceneCount":2,"completedChunks":4,"totalChunks":4,"elapsedMs":20}
+(pass) variable Markdown travels through HTTP, the ElevenLabs provider and animlib with notes excluded [40.01ms]
+{"timestamp":"2026-10-10T21:42:55.462Z","level":"info","event":"narration.queued","narrationId":"d855254f57f8e33bc8e96bca31cbfe535eb345b067b962a253001b0cfdbeca02","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.462Z","level":"info","event":"narration.started","narrationId":"d855254f57f8e33bc8e96bca31cbfe535eb345b067b962a253001b0cfdbeca02","totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.463Z","level":"info","event":"narration.speech_started","narrationId":"d855254f57f8e33bc8e96bca31cbfe535eb345b067b962a253001b0cfdbeca02","completedChunks":0,"totalChunks":1}
+{"timestamp":"2026-10-10T21:42:55.463Z","level":"error","event":"narration.failed","narrationId":"d855254f57f8e33bc8e96bca31cbfe535eb345b067b962a253001b0cfdbeca02","code":"PROVIDER_REJECTED","completedChunks":0,"totalChunks":1,"elapsedMs":1}
+(pass) ambiguous scripts fail before provider calls, and failed retry parsing cannot strand a job as queued [11.15ms]
+
+backend\test\planning.test.ts:
+(pass) planning validates source names and ordered scene identity before accepting speech [1.52ms]
+(pass) planning rejects contradictory ownership and unsupported palette/control declarations [1.21ms]
+(pass) compiled scene plan checks enforce real persistence and cleanup [8.08ms]
+(pass) cleanup recognizes hidden ancestor groups and controls must match planned types [4.31ms]
+(pass) planned sliders accept both reactive geometry and ordinary formula-driven scenes [8.14ms]
+(pass) planning round-trips explicit view choices and rejects malformed choices [1.40ms]
+(pass) 3d plans inspect compiled cameras, including subviews, transitions, and inherited state [27.32ms]
+(pass) original scenegen description markers drive view validation without the rewritten view schema [7.61ms]
+
+backend\test\scenegen-prompts.test.ts:
+(pass) active prompt assets match their reviewed revision bytes [1.65ms]
+(pass) the procedural finish example compiles with the installed scene API [4.08ms]
+
+ 38 pass
+ 0 fail
+ 275 expect() calls
+Ran 38 tests across 4 files. [1072.00ms]

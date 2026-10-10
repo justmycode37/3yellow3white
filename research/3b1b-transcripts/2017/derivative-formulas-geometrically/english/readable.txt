@@ -1,0 +1,113 @@
+[00:12–00:19] Now that we've seen what a derivative means and what it has to do with rates of change, our next step is to learn how to actually compute these guys.
+[00:19–00:26] As in, if I give you some kind of function with an explicit formula, you'd want to be able to find what the formula for its derivative is.
+[00:26–00:41] Maybe it's obvious, but I think it's worth stating explicitly why this is an important thing to be able to do, why much of a calculus student's time ends up going towards grappling with derivatives of abstract functions rather than thinking about concrete rate of change problems.
+[00:42–00:53] It's because a lot of real-world phenomena, the sort of things that we want to use calculus to analyze, are modeled using polynomials, trigonometric functions, exponentials, and other pure functions like that.
+[00:53–01:07] So if you build up some fluency with the ideas of rates of change for those kinds of pure abstract functions, it gives you a language to more readily talk about the rates at which things change in concrete situations that you might be using calculus to model.
+[01:07–01:24] But it is way too easy for this process to feel like just memorizing a list of rules, and if that happens, if you get that feeling, it's also easy to lose sight of the fact that derivatives are fundamentally about just looking at tiny changes to some quantity and how that relates to a resulting tiny change in another quantity.
+[01:24–01:36] So in this video and in the next one, my aim is to show you how you can think about a few of these rules intuitively and geometrically, and I really want to encourage you to never forget that tiny nudges are at the heart of derivatives.
+[01:37–01:41] Let's start with a simple function like f of x equals x squared.
+[01:41–01:42] What if I asked you its derivative?
+[01:43–01:53] That is, if you were to look at some value x, like x equals 2, and compare it to a value slightly bigger, just dx bigger, what's the corresponding change in the value of the function?
+[01:54–01:54] dF.
+[01:55–02:01] And in particular, what's dF divided by dx, the rate at which this function is changing per unit change in x.
+[02:03–02:15] As a first step for intuition, we know that you can think of this ratio dF dx as the slope of a tangent line to the graph of x squared, and from that you can see that the slope generally increases as x increases.
+[02:15–02:18] At zero, the tangent line is flat, and the slope is zero.
+[02:19–02:21] At x equals 1, it's something a bit steeper.
+[02:22–02:24] At x equals 2, it's steeper still.
+[02:25–02:30] But looking at graphs isn't generally the best way to understand the precise formula for a derivative.
+[02:30–02:38] For that, it's best to take a more literal look at what x squared actually means, and in this case let's go ahead and picture a square whose side length is x.
+[02:39–02:46] If you increase x by some tiny nudge, some little dx, what's the resulting change in the area of that square?
+[02:47–02:51] That slight change in area is what dF means in this context.
+[02:52–02:58] It's the tiny increase to the value of f of x equals x squared, caused by increasing x by that tiny nudge dx.
+[02:59–03:05] Now you can see that there's three new bits of area in this diagram, two thin rectangles and a minuscule square.
+[03:06–03:13] The two thin rectangles each have side lengths of x and dx, so they account for 2 times x times dx units of new area.
+[03:18–03:28] For example, let's say x was 3 and dx was 0.01, then that new area from these two thin rectangles would be 2 times 3 times 0.01, which is 0.06, about 6 times the size of dx.
+[03:29–03:36] That little square there has an area of dx squared, but you should think of that as being really tiny, negligibly tiny.
+[03:37–04:01] For example, if dx was 0.01, that would be only 0.0001, and keep in mind I'm drawing dx with a fair bit of width here just so we can actually see it, but always remember in principle, dx should be thought of as a truly tiny amount, and for those truly tiny amounts, a good rule of thumb is that you can ignore anything that includes a dx raised to a power greater than 1.
+[04:02–04:05] That is, a tiny change squared is a negligible change.
+[04:07–04:18] What this leaves us with is that dF is just some multiple of dx, and that multiple 2x, which you could also write as dF divided by dx, is the derivative of x squared.
+[04:19–04:38] For example, if you were starting at x equals 3, then as you slightly increase x, the rate of change in the area per unit change in length added, dx squared over dx, would be 2 times 3, or 6, and if instead you were starting at x equals 5, then the rate of change would be 10 units of area per unit change in x.
+[04:41–04:45] Let's go ahead and try a different simple function, f of x equals x cubed.
+[04:45–04:50] This is going to be the geometric view of the stuff that I went through algebraically in the last video.
+[04:51–05:04] What's nice here is that we can think of x cubed as the volume of an actual cube whose side lengths are x, and when you increase x by a tiny nudge, a tiny dx, the resulting increase in volume is what I have here in yellow.
+[05:04–05:12] That represents all the volume in a cube with side lengths x plus dx that's not already in the original cube, the one with side length x.
+[05:13–05:31] It's nice to think of this new volume as broken up into multiple components, but almost all of it comes from these three square faces, or said a little more precisely, as dx approaches 0, those three squares comprise a portion closer and closer to 100% of that new yellow volume.
+[05:33–05:41] Each of those thin squares has a volume of x squared times dx, the area of the face times that little thickness dx.
+[05:42–05:46] So in total this gives us 3x squared dx of volume change.
+[05:47–05:58] And to be sure there are other slivers of volume here along the edges and that tiny one in the corner, but all of that volume is going to be proportional to dx squared, or dx cubed, so we can safely ignore them.
+[05:59–06:10] Again this is ultimately because they're going to be divided by dx, and if there's still any dx remaining then those terms aren't going to survive the process of letting dx approach 0.
+[06:11–06:19] What this means is that the derivative of x cubed, the rate at which x cubed changes per unit change of x, is 3 times x squared.
+[06:20–06:29] What that means in terms of graphical intuition is that the slope of the graph of x cubed at every single point x is exactly 3x squared.
+[06:34–06:48] And reasoning about that slope, it should make sense that this derivative is high on the left and then 0 at the origin and then high again as you move to the right, but just thinking in terms of the graph would never have landed us on the precise quantity 3x squared.
+[06:48–06:53] For that we had to take a much more direct look at what x cubed actually means.
+[06:54–07:04] Now in practice you wouldn't necessarily think of the square every time you're taking the derivative of x squared, nor would you necessarily think of this cube whenever you're taking the derivative of x cubed.
+[07:04–07:08] Both of them fall under a pretty recognizable pattern for polynomial terms.
+[07:09–07:17] The derivative of x to the fourth turns out to be 4x cubed, the derivative of x to the fifth is 5x to the fourth, and so on.
+[07:18–07:26] Abstractly you'd write this as the derivative of x to the n for any power n is n times x to the n minus 1.
+[07:27–07:30] This right here is what's known in the business as the power rule.
+[07:31–07:44] In practice we all quickly just get jaded and think about this symbolically as the exponent hopping down in front, leaving behind one less than itself, rarely pausing to think about the geometric delights that underlie these derivatives.
+[07:45–07:49] That's the kind of thing that happens when these tend to fall in the middle of much longer computations.
+[07:50–07:57] But rather than tracking it all off to symbolic patterns, let's just take a moment and think about why this works for powers beyond just 2 and 3.
+[07:58–08:10] When you nudge that input x, increasing it slightly to x plus dx, working out the exact value of that nudged output would involve multiplying together these n separate x plus dx terms.
+[08:11–08:18] The full expansion would be really complicated, but part of the point of derivatives is that most of that complication can be ignored.
+[08:19–08:22] The first term in your expansion is x to the n.
+[08:22–08:28] This is analogous to the area of the original square, or the volume of the original cube from our previous examples.
+[08:30–08:36] For the next terms in the expansion you can choose mostly x's with a single dx.
+[08:41–08:56] Since there are n different parentheticals from which you could have chosen that single dx, this gives us n separate terms, all of which include n minus 1 x's times a dx, giving a value of x to the power n minus 1 times dx.
+[08:57–09:13] This is analogous to how the majority of the new area in the square came from those two bars, each with area x times dx, or how the bulk of the new volume in the cube came from those three thin squares, each of which had a volume of x squared times dx.
+[09:14–09:31] There will be many other terms of this expansion, but all of them are just going to be some multiple of dx squared, so we can safely ignore them, and what that means is that all but a negligible portion of the increase in the output comes from n copies of this x to the n minus 1 times dx.
+[09:31–09:37] That's what it means for the derivative of x to the n to be n times x to the n minus 1.
+[09:38–09:52] And even though, like I said in practice, you'll find yourself performing this derivative quickly and symbolically, imagining the exponent hopping down to the front, every now and then it's nice to just step back and remember why these rules work.
+[09:52–10:05] Not just because it's pretty, and not just because it helps remind us that math actually makes sense and isn't just a pile of formulas to memorize, but because it flexes that very important muscle of thinking about derivatives in terms of tiny nudges.
+[10:07–10:11] As another example, think of the function f of x equals 1 divided by x.
+[10:12–10:20] Now on the hand you could just blindly try applying the power rule, since 1 divided by x is the same as writing x to the negative 1.
+[10:21–10:27] That would involve letting the negative 1 hop down in front, leaving behind 1 less than itself, which is negative 2.
+[10:28–10:33] But let's have some fun and see if we can reason about this geometrically, rather than just plugging it through some formula.
+[10:34–10:40] The value 1 over x is asking what number multiplied by x equals 1.
+[10:40–10:42] So here's how I'd like to visualize it.
+[10:42–10:48] Imagine a little rectangular puddle of water sitting in two dimensions whose area is 1.
+[10:48–10:55] And let's say that its width is x, which means that the height has to be 1 over x, since the total area of it is 1.
+[10:56–11:01] So if x was stretched out to 2, then that height is forced down to 1 half.
+[11:01–11:05] And if you increased x up to 3, then the other side has to be squished down to 1 third.
+[11:07–11:10] This is a nice way to think about the graph of 1 over x, by the way.
+[11:11–11:24] If you think of this width x of the puddle as being in the xy-plane, then that corresponding output 1 divided by x, the height of the graph above that point, is whatever the height of your puddle has to be to maintain an area of 1.
+[11:26–11:33] So with this visual in mind, for the derivative, imagine nudging up that value of x by some tiny amount, some tiny dx.
+[11:34–11:40] How must the height of this rectangle change so that the area of the puddle remains constant at 1?
+[11:41–11:46] That is, increasing the width by dx adds some new area to the right here.
+[11:46–11:54] So the puddle has to decrease in height by some d 1 over x, so that the area lost off of that top cancels out the area gained.
+[11:56–12:02] You should think of that d 1 over x as being a negative amount, by the way, since it's decreasing the height of the rectangle.
+[12:03–12:04] And you know what?
+[12:04–12:09] I'm going to leave the last few steps here for you, for you to pause and ponder and work out an ultimate expression.
+[12:10–12:21] And once you reason out what d of 1 over x divided by dx should be, I want you to compare it to what you would have gotten if you had just blindly applied the power rule, purely symbolically, to x to the negative 1.
+[12:23–12:28] And while I'm encouraging you to pause and ponder, here's another fun challenge if you're feeling up to it.
+[12:29–12:33] See if you can reason through what the derivative of the square root of x should be.
+[12:36–12:44] To finish things off, I want to tackle one more type of function, trigonometric functions, and in particular let's focus on the sine function.
+[12:45–12:54] So for this section I'm going to assume that you're already familiar with how to think about trig functions using the unit circle, the circle with a radius 1 centered at the origin.
+[12:55–13:06] For a given value of theta, like say 0.8, you imagine yourself walking around the circle starting from the rightmost point until you've traversed that distance of 0.8 in arc length.
+[13:06–13:13] This is the same thing as saying that the angle right here is exactly theta radians, since the circle has a radius of 1.
+[13:14–13:28] Then what sine of theta means is the height of that point above the x-axis, and as your theta value increases and you walk around the circle your height bobs up and down between negative 1 and 1.
+[13:29–13:35] So when you graph sine of theta versus theta you get this wave pattern, the quintessential wave pattern.
+[13:37–13:43] And just from looking at this graph we can start to get a feel for the shape of the derivative of the sine.
+[13:44–13:54] The slope at 0 is something positive since sine of theta is increasing there, and as we move to the right and sine of theta approaches its peak that slope goes down to 0.
+[13:55–14:03] Then the slope is negative for a little while, while the sine is decreasing before coming back up to 0 as the sine graph levels out.
+[14:04–14:19] And as you continue thinking this through and drawing it out, if you're familiar with the graph of trig functions you might guess that this derivative graph should be exactly cosine of theta, since all the peaks and valleys line up perfectly with where the peaks and valleys for the cosine function should be.
+[14:20–14:27] And spoiler alert, the derivative is in fact the cosine of theta, but aren't you a little curious about why it's precisely cosine of theta?
+[14:28–14:40] I mean you could have all sorts of functions with peaks and valleys at the same points that have roughly the same shape, but who knows, maybe the derivative of sine could have turned out to be some entirely new type of function that just happens to have a similar shape.
+[14:41–14:51] Well just like the previous examples, a more exact understanding of the derivative requires looking at what the function actually represents, rather than looking at the graph of the function.
+[14:52–15:00] So think back to that walk around the unit circle, having traversed an arc with length theta and thinking about sine of theta as the height of that point.
+[15:01–15:10] Now zoom into that point on the circle and consider a slight nudge of d theta along their circumference, a tiny step in your walk around the unit circle.
+[15:11–15:14] How much does that tiny step change the sine of theta?
+[15:15–15:20] How much does this increase d theta of arc length increase the height above the x-axis?
+[15:21–15:39] Well zoomed in close enough, the circle basically looks like a straight line in this neighborhood, so let's go ahead and think of this right triangle where the hypotenuse of that right triangle represents the nudge d theta along the circumference, and that left side here represents the change in height, the resulting d sine of theta.
+[15:40–15:49] Now this tiny triangle is actually similar to this larger triangle here, with the defining angle theta and whose hypotenuse is the radius of the circle with length 1.
+[15:50–15:55] Specifically this little angle right here is precisely equal to theta radians.
+[15:57–16:00] Now think about what the derivative of sine is supposed to mean.
+[16:01–16:09] It's the ratio between that d sine of theta, the tiny change to the height, divided by d theta, the tiny change to the input of the function.
+[16:10–16:17] And from the picture we can see that that's the ratio between the length of the side adjacent to the angle theta divided by the hypotenuse.
+[16:18–16:26] Well let's see, adjacent divided by hypotenuse, that's exactly what the cosine of theta means, that's the definition of the cosine.
+[16:27–16:32] So this gives us two different really nice ways of thinking about how the derivative of sine is cosine.
+[16:33–16:40] One of them is looking at the graph and getting a loose feel for the shape of things based on thinking about the slope of the sine graph at every single point.
+[16:41–16:45] And the other is a more precise line of reasoning looking at the unit circle itself.
+[16:47–16:54] For those of you that like to pause and ponder, see if you can try a similar line of reasoning to find what the derivative of the cosine of theta should be.
+[16:56–17:06] In the next video I'll talk about how you can take derivatives of functions who combine simple functions like these ones, either as sums or products or function compositions, things like that.
+[17:06–17:13] And similar to this video the goal is going to be to understand each one geometrically in a way that makes it intuitively reasonable and somewhat more memorable.

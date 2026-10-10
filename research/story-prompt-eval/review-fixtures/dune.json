@@ -1,0 +1,277 @@
+{
+  "request": {
+    "title": "Why a positive screen is not a diagnosis",
+    "topic": "Write a roughly 3-minute lesson in exactly 3 scenes for adults who know percentages but not conditional probability. Explain why a positive test need not mean the condition is likely. Use a hypothetical population of 1,000: 10 have the condition; the test is positive for 9 of them and for 99 of the 990 without it. Derive the positive-test probability of actually having the condition, then explain how changing prevalence while keeping sensitivity and false-positive rate fixed changes the result. Include one brief thinking pause. This is a toy probability example, not medical guidance.",
+    "videoMode": "classic",
+    "documents": []
+  },
+  "draft": {
+    "schemaVersion": 1,
+    "markdown": "# Why a positive screen is not a diagnosis\n\n## Beat 1 — Two ways to test positive\n\nContent needed: A hypothetical population of 1,000, partitioned into 10 with the condition and 990 without it. Of these groups, respectively 9 and 99 test positive. Preserve condition membership when marking test results. Show 9/10 = 90% and 99/990 = 10% only alongside their spoken explanations. Do not yet show the combined positive total or the answer.\n\nNarration: A test detects ninety percent of people who have a condition. If your result is positive, does that mean you have a ninety percent chance?\n\nNarration: Let's count people in a toy example, not a medical recommendation. Among a thousand people, ten have the condition and nine hundred ninety do not. The test is positive for nine of those ten. That ninety percent detection rate is called sensitivity.\n\nNarration: But it also gives a positive result to ninety-nine people without the condition. Ninety-nine out of nine hundred ninety is ten percent: the false-positive rate. So a positive result can come from either group. The test catches most people with the condition, but the group without it is much larger.\n\n## Beat 2 — Change the group we count\n\nContent needed: Retain the same people and result marks. Gather the 9 positives with the condition and 99 positives without it into one positive-only group. Reveal its total of 108 as narrated. During the thinking pause retain the two counts and total, but withhold the fraction and probability. At Reveal show 9/(9+99) = 9/108 = 1/12, approximately 8.3%.\n\nNarration: Our question starts with a positive result, so we must now look only at people who tested positive. Bring together the nine who have the condition and the ninety-nine who do not. That makes a hundred eight positive results.\n\nInvitation (spoken): Of those hundred eight people, what fraction actually have the condition? Take a moment to choose the numerator and denominator.\n\nPause: 6s\n\nReveal (spoken): Nine out of a hundred eight: ninety percent. We divide by all positive results because that is the group we know we belong to. Ninety percent answered a different question: among people with the condition, how many test positive? Reversing the question changes which group goes underneath the fraction.\n\n## Beat 3 — Same test, different population\n\nContent needed: Keep the first result as a compact comparison, then explicitly introduce a different hypothetical population of 1,000 with 100 having the condition and 900 without it. Keep sensitivity 90% and false-positive rate 10% fixed. Show 90 true positives and 90 false positives, then 90/(90+90) = 50%. Compare prevalence 1% versus 10%, and resulting probabilities approximately 8.3% versus 50%.\n\nNarration: Now imagine a different thousand people: a hundred have the condition, and nine hundred do not. The condition's prevalence, its share of the population, has risen from one percent to ten percent. Keep the test's two rates unchanged.\n\nNarration: Ninety percent of a hundred gives ninety positive results from people with the condition. Ten percent of nine hundred gives ninety from people without it. Now half of the hundred eighty positive results come from people with the condition.\n\nNarration: The test has not improved. The mixture entering it has changed. Higher prevalence supplies more true positives and fewer false positives; lower prevalence does the reverse, with these rates fixed. To interpret a positive result in this model, count both routes to positive, then ask what share came from the condition. A positive result alone does not tell you that share.\n",
+    "plan": {
+      "audience": "Adults who know percentages but have not studied conditional probability.",
+      "prerequisites": [
+        "Percentages describe a share of a specified group.",
+        "Adding counts and interpreting a fraction."
+      ],
+      "learningGoal": "Calculate the probability of having the condition among positive results by counting both sources of positives, and explain why prevalence changes that probability even with fixed test rates.",
+      "centralQuestion": "Why can a test that detects 90% of people with a condition still yield a positive result whose chance of indicating the condition is only about 8.3%?",
+      "keyInsight": "The denominator for interpreting a positive result contains positives from both populations; when the condition is rare, a modest false-positive rate applied to a large unaffected population can dominate that denominator.",
+      "runningExample": "Toy population: 1,000 people, 10 with the condition and 990 without; 9 true positives and 99 false positives. Sensitivity 9/10 = 90%; false-positive rate 99/990 = 10%; probability of condition given positive 9/108 = 1/12, approximately 8.3%. A deliberately changed hypothetical population has 100 with the condition and 900 without, with the same rates: 90 true positives and 90 false positives, yielding 50%. These are exact illustrative counts, not clinical evidence or a guarantee of counts in a random sample.",
+      "misconceptions": [
+        "Sensitivity is the probability of having the condition after a positive result.",
+        "The false-positive rate uses all positives as its denominator.",
+        "An unchanged test must give the same probability after a positive result in every population."
+      ],
+      "entities": [
+        {
+          "id": "cohort",
+          "meaning": "The hypothetical population of 1,000, introduced in beat-1. Person marks have equal visual weight. The first population's memberships and counts remain unchanged through beat-2; filtering changes attention, not membership. Beat-3 explicitly substitutes a second hypothetical population of the same size rather than suggesting the original individuals become ill.",
+          "color": "WHITE"
+        },
+        {
+          "id": "condition-group",
+          "meaning": "People who have the condition: 10 in beat-1, of whom the same 9 positives are selected in beat-2. Beat-3's different population has 100, of whom 90 are positive. Blue always indicates condition membership, independently of the test result.",
+          "color": "BLUE"
+        },
+        {
+          "id": "without-group",
+          "meaning": "People without the condition: 990 in beat-1, with 99 selected in beat-2; 900 in the explicitly changed population in beat-3, with 90 selected. Grey always indicates absence of the condition.",
+          "color": "GREY"
+        },
+        {
+          "id": "positive-selection",
+          "meaning": "Yellow outlines mark a positive result without replacing the underlying condition color. In beat-1 mark 9 blue and 99 grey people; in beat-2 combine those same marked people into the denominator of 108. In beat-3 the corresponding selection comprises 90 blue and 90 grey people.",
+          "color": "YELLOW"
+        },
+        {
+          "id": "test-rates",
+          "meaning": "The two within-group selection rates, sensitivity 90% and false-positive rate 10%. Introduced beside their proper denominators in beat-1, retained as a concise reference through beat-2, and held fixed while prevalence changes in beat-3.",
+          "color": "TEAL"
+        },
+        {
+          "id": "positive-share",
+          "meaning": "The fraction of the positive-selection group that belongs to condition-group. Hidden until the beat-2 reveal. Its first value 9/108 remains as a comparison in beat-3, where the corresponding calculation is 90/180.",
+          "color": "GOLD"
+        }
+      ],
+      "scenes": [
+        {
+          "id": "beat-1",
+          "purpose": "Separate condition membership from test result and establish the two sources of positive results.",
+          "whyNow": "Opens with the apparent inference from detection rate to a positive result, then supplies the exact counts needed to answer it in beat-2.",
+          "keyPoints": [
+            "A 90% detection rate describes people already known to have the condition.",
+            "The population contains 10 people with and 990 without the condition.",
+            "The test selects 9 from the first group and 99 from the second.",
+            "The false-positive rate acts on a much larger starting group."
+          ],
+          "visualDescription": "2D (because the reasoning concerns counts and membership, not spatial shape): Construct a schematic set of 1,000 equal small person marks, grouped so 10 BLUE marks and 990 GREY marks can be counted by visible rows and concise totals. These are count units, not physical positions or a realistic population. BLACK background, WHITE scaffold, restrained serif labels. Marks may be batched as geometry to keep the scene modest. Introduce condition labels before test-result marks. Apply YELLOW outlines to exactly 9 blue and 99 grey marks, preserving their fill and group identity. Pair TEAL rate labels 9/10 = 90% and 99/990 = 10% with their respective source groups, synchronized with speech. Do not show a combined total, probability, or positive-only rearrangement yet. Build marks so the selected members can be regrouped in beat-2 while retaining their fills and outlines; all nonselected people remain accounted for. No textures, decorative motion, or viewer controls. Keep essential labels within the player's safe central area, with enough room for both aspect ratios.",
+          "endsWith": "The full cohort remains in two membership groups, with 9 blue and 99 grey marks outlined as positive. Both original denominators and fixed test rates are visible. The positive-conditioned probability remains unanswered.",
+          "carry": [
+            "cohort",
+            "condition-group",
+            "without-group",
+            "positive-selection",
+            "test-rates"
+          ],
+          "cleanup": [],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Audience, toy-population caveat, 1,000 total, 10 with condition, 9 true positives, 990 without condition, and 99 false positives. Rates are arithmetic consequences of these supplied counts."
+            }
+          ],
+          "interactions": []
+        },
+        {
+          "id": "beat-2",
+          "purpose": "Derive the probability after a positive result by changing the denominator to all positives.",
+          "whyNow": "The previous scene has established both positive counts and their original groups; now those exact people can be regrouped to answer the opening question.",
+          "keyPoints": [
+            "Knowing the test is positive restricts attention to positive results.",
+            "Both 9 true positives and 99 false positives belong to the new group, totaling 108.",
+            "The desired numerator is 9, while the denominator is 108.",
+            "9/108 is about 8.3%; 90% answered the reverse question."
+          ],
+          "visualDescription": "2D (because regrouping finite sets makes the denominator change visible): Begin with the actual carried two-group cohort. Gather the 9 marked BLUE people and 99 marked GREY people into one YELLOW-bracketed selection, retaining equal mark sizes and membership colors. Dim the unselected people and remove their detailed annotations once exclusion is clear; the original population remains a quiet context. Reveal the total 108 when spoken. During the single six-second thinking pause show only the known 9, 99, and 108, with no fraction or shaded answer cue. At Reveal introduce GOLD positive-share, 9/(9+99) = 9/108 = 1/12, approximately 8.3%, identifying the blue subset as numerator and the entire outlined set as denominator. Use a meaningful count-to-fraction correspondence, not a free-floating answer counter. Briefly contrast the original denominator 10 with 108 as the narration explains the reversal; leave fixed rate labels as compact context. Finish motion before the reading hold. The selected blue and grey marks retain the same identities throughout this scene.",
+          "endsWith": "The positive-only group visibly contains 9 blue and 99 grey people, bracketed as 108, with the derived 8.3% result and compact fixed-rate reference. The excluded cohort is subdued but recoverable as context for a different population.",
+          "carry": [
+            "cohort",
+            "condition-group",
+            "without-group",
+            "positive-selection",
+            "test-rates",
+            "positive-share"
+          ],
+          "cleanup": [],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Requested derivation of the positive-test probability and one brief thinking pause. The 108 total and 9/108 probability are derived from the supplied 9 and 99 counts."
+            }
+          ],
+          "interactions": []
+        },
+        {
+          "id": "beat-3",
+          "purpose": "Explain how prevalence changes the mixture of positives while test sensitivity and false-positive rate stay fixed.",
+          "whyNow": "Having derived the positive-only denominator, the viewer can reuse the same counting operation with a changed population and explain the changed answer; this concludes the lesson.",
+          "keyPoints": [
+            "Change the hypothetical population from 10 to 100 with the condition, holding its total at 1,000.",
+            "Keep sensitivity 90% and false-positive rate 10% fixed.",
+            "Select 90 of 100 and 90 of 900, then combine them into 180 positives.",
+            "90/180 = 50%; prevalence changes the two sources feeding the denominator.",
+            "Interpreting a positive requires the share of true positives among all positives."
+          ],
+          "visualDescription": "2D (because matched count constructions isolate the effect of prevalence): Start from the actual carried positive-only group and derived fraction. Reduce the first calculation to a compact reference labeled prevalence 1%, retaining its blue-versus-grey membership cue and 8.3% value. Explicitly introduce a different hypothetical cohort of 1,000, with BLUE 100 and GREY 900; this substitution must not read as changes in the health of original individuals. Keep the TEAL 90% and 10% test-rate labels unchanged. Apply the same selection operation to obtain 90 outlined BLUE marks and 90 outlined GREY marks, then gather these into 180 positives. Equal person-mark scale and cohort total are retained between examples; any reframing moves the whole construction consistently. Reveal GOLD 90/(90+90) = 50% only after both inputs have been explained. Compare the visibly unequal 9:99 mixture to the equal 90:90 mixture; use concise local labels for prevalence 1% and 10%. This second population is an authored illustrative extension of the supplied rates, not sourced clinical data. End on the two mixtures and their fractions, with no added formula abstraction, generic recap card, controls, or idle animation.",
+          "endsWith": "A clean comparison of the original 9 true plus 99 false positives and the changed 90 true plus 90 false positives, their resulting 8.3% and 50% shares, and the unchanged 90%/10% test rates. Membership colors and positive outlines still explain every count.",
+          "carry": [],
+          "cleanup": [],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Requested explanation of changing prevalence with sensitivity and false-positive rate fixed. The 10% prevalence comparison and its counts are a constructed extension calculated from those fixed supplied-example rates."
+            }
+          ],
+          "interactions": []
+        }
+      ]
+    }
+  },
+  "parsedScenes": [
+    {
+      "id": "beat-1",
+      "title": "Two ways to test positive",
+      "context": "Content needed: A hypothetical population of 1,000, partitioned into 10 with the condition and 990 without it. Of these groups, respectively 9 and 99 test positive. Preserve condition membership when marking test results. Show 9/10 = 90% and 99/990 = 10% only alongside their spoken explanations. Do not yet show the combined positive total or the answer.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-1.u1",
+          "role": "narration",
+          "text": "A test detects ninety percent of people who have a condition. If your result is positive, does that mean you have a ninety percent chance?",
+          "source": {
+            "start": 440,
+            "end": 589,
+            "line": 7
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-1.u2",
+          "role": "narration",
+          "text": "Let's count people in a toy example, not a medical recommendation. Among a thousand people, ten have the condition and nine hundred ninety do not. The test is positive for nine of those ten. That ninety percent detection rate is called sensitivity.",
+          "source": {
+            "start": 591,
+            "end": 850,
+            "line": 9
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-1.u3",
+          "role": "narration",
+          "text": "But it also gives a positive result to ninety-nine people without the condition. Ninety-nine out of nine hundred ninety is ten percent: the false-positive rate. So a positive result can come from either group. The test catches most people with the condition, but the group without it is much larger.",
+          "source": {
+            "start": 852,
+            "end": 1162,
+            "line": 11
+          }
+        }
+      ]
+    },
+    {
+      "id": "beat-2",
+      "title": "Change the group we count",
+      "context": "Content needed: Retain the same people and result marks. Gather the 9 positives with the condition and 99 positives without it into one positive-only group. Reveal its total of 108 as narrated. During the thinking pause retain the two counts and total, but withhold the fraction and probability. At Reveal show 9/(9+99) = 9/108 = 1/12, approximately 8.3%.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-2.u1",
+          "role": "narration",
+          "text": "Our question starts with a positive result, so we must now look only at people who tested positive. Bring together the nine who have the condition and the ninety-nine who do not. That makes a hundred eight positive results.",
+          "source": {
+            "start": 1560,
+            "end": 1794,
+            "line": 17
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-2.u2",
+          "role": "invitation",
+          "text": "Of those hundred eight people, what fraction actually have the condition? Take a moment to choose the numerator and denominator.",
+          "source": {
+            "start": 1796,
+            "end": 1945,
+            "line": 19
+          }
+        },
+        {
+          "kind": "pause",
+          "id": "beat-2.p3",
+          "durationSec": 6,
+          "source": {
+            "start": 1947,
+            "end": 1956,
+            "line": 21
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-2.u4",
+          "role": "reveal",
+          "text": "Nine out of a hundred eight: ninety percent. We divide by all positive results because that is the group we know we belong to. Ninety percent answered a different question: among people with the condition, how many test positive? Reversing the question changes which group goes underneath the fraction.",
+          "source": {
+            "start": 1958,
+            "end": 2277,
+            "line": 23
+          }
+        }
+      ]
+    },
+    {
+      "id": "beat-3",
+      "title": "Same test, different population",
+      "context": "Content needed: Keep the first result as a compact comparison, then explicitly introduce a different hypothetical population of 1,000 with 100 having the condition and 900 without it. Keep sensitivity 90% and false-positive rate 10% fixed. Show 90 true positives and 90 false positives, then 90/(90+90) = 50%. Compare prevalence 1% versus 10%, and resulting probabilities approximately 8.3% versus 50%.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-3.u1",
+          "role": "narration",
+          "text": "Now imagine a different thousand people: a hundred have the condition, and nine hundred do not. The condition's prevalence, its share of the population, has risen from one percent to ten percent. Keep the test's two rates unchanged.",
+          "source": {
+            "start": 2728,
+            "end": 2971,
+            "line": 29
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-3.u2",
+          "role": "narration",
+          "text": "Ninety percent of a hundred gives ninety positive results from people with the condition. Ten percent of nine hundred gives ninety from people without it. Now half of the hundred eighty positive results come from people with the condition.",
+          "source": {
+            "start": 2973,
+            "end": 3223,
+            "line": 31
+          }
+        },
+        {
+          "kind": "speech",
+          "id": "beat-3.u3",
+          "role": "narration",
+          "text": "The test has not improved. The mixture entering it has changed. Higher prevalence supplies more true positives and fewer false positives; lower prevalence does the reverse, with these rates fixed. To interpret a positive result in this model, count both routes to positive, then ask what share came from the condition. A positive result alone does not tell you that share.",
+          "source": {
+            "start": 3225,
+            "end": 3608,
+            "line": 33
+          }
+        }
+      ]
+    }
+  ]
+}

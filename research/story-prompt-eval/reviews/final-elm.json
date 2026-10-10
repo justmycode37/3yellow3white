@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The mathematics and spoken reasoning are sound, but the final scene visually reveals the requested prediction's answer before the question and throughout the thinking pause.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-4",
+      "detail": "The visualDescription requires prominently labeling the maximum at x=a and maximum error a^n before the prediction, then highlighting both throughout the pause. This gives away the exact answer to 'Where is the largest error?' and conflicts with the script's Content needed guard and cutoff-a entity meaning. Withhold maximum identification, a^n labels and answer highlights until Reveal; during the announced five-second pause retain only the already established restricted graph and order-preservation information."
+    }
+  ],
+  "checks": [
+    "The definitions correctly distinguish N depending on x from one threshold for all points, retaining all n>=N.",
+    "The moving witness x_n=(1/2)^(1/n) has error 1/2 at every n, exceeding the fixed tolerance 1/4 and correctly defeating every proposed threshold.",
+    "Endpoint limit one and endpoint error zero are preserved; supremum error one on [0,1] is correctly distinguished from an attained maximum.",
+    "The restricted-domain bound x^n<=a^n<=a^N<epsilon for fixed 0<a<1 correctly gives a threshold independent of x, and the narration explains it.",
+    "The sole pause is explicitly invited and its question is mathematically reachable, but its visual reveal order fails the requested participation design.",
+    "Four classic scenes and 470 spoken words plus five seconds of silence estimate approximately 212-254 seconds at 125-150 words per minute with the supplied 10% allowance; this is consistent with roughly four minutes and is not measured audio timing."
+  ]
+}

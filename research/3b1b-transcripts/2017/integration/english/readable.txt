@@ -1,0 +1,148 @@
+[00:12–00:17] This guy, Grothendieck, is somewhat of a mathematical idol to me, and I just love this quote, don't you?
+[00:18–00:30] Too often in math, we dive into showing that a certain fact is true with a long series of formulas before stepping back and making sure it feels reasonable, and preferably obvious, at least at an intuitive level.
+[00:31–00:38] In this video, I want to talk about integrals, and the thing that I want to become almost obvious is that they are an inverse of derivatives.
+[00:39–00:48] Here we're just going to focus on one example, which is a kind of dual to the example of a moving car that I talked about in chapter 2 of the series, introducing derivatives.
+[00:49–00:54] Then in the next video we're going to see how this same idea generalizes, but to a couple other contexts.
+[00:55–01:00] Imagine you're sitting in a car, and you can't see out the window, all you see is the speedometer.
+[01:02–01:10] At some point the car starts moving, speeds up, and then slows back down to a stop, all over the course of 8 seconds.
+[01:11–01:18] The question is, is there a nice way to figure out how far you've travelled during that time based only on your view of the speedometer?
+[01:19–01:29] Or better yet, can you find a distance function, s of t, that tells you how far you've travelled after a given amount of time, t, somewhere between 0 and 8 seconds?
+[01:30–01:37] Let's say you take note of the velocity at every second, and make a plot over time that looks something like this.
+[01:38–01:47] And maybe you find that a nice function to model that velocity over time in meters per second is v of t equals t times 8 minus t.
+[01:48–01:58] You might remember, in chapter 2 of this series we were looking at the opposite situation, where you knew what a distance function was, s of t, and you wanted to figure out the velocity function from that.
+[01:59–02:02] There I showed how the derivative of a distance vs.
+[02:02–02:04] time function gives you a velocity vs.
+[02:04–02:05] time function.
+[02:06–02:12] So in our current situation, where all we know is velocity, it should make sense that finding a distance vs.
+[02:12–02:18] time function is going to come down to asking what function has a derivative of t times 8 minus t.
+[02:19–02:27] This is often described as finding the antiderivative of a function, and indeed, that's what we'll end up doing, and you could even pause right now and try that.
+[02:27–02:42] But first, I want to spend the bulk of this video showing how this question is related to finding the area bounded by the velocity graph, because that helps to build an intuition for a whole class of problems, things called integral problems in math and science.
+[02:42–02:48] To start off, notice that this question would be a lot easier if the car was just moving at a constant velocity, right?
+[02:49–02:58] In that case, you could just multiply the velocity in meters per second times the amount of time that has passed in seconds, and that would give you the number of meters traveled.
+[03:00–03:04] And notice, you can visualize that product, that distance, as an area.
+[03:05–03:08] And if visualizing distance as area seems kind of weird, I'm right there with you.
+[03:08–03:20] It's just that on this plot, where the horizontal direction has units of seconds, and the vertical direction has units of meters per second, units of area just very naturally correspond to meters.
+[03:22–03:28] But what makes our situation hard is that velocity is not constant, it's incessantly changing at every single instant.
+[03:30–03:47] It would even be a lot easier if it only ever changed at a handful of points, maybe staying static for the first second, and then suddenly discontinuously jumping to a constant 7 meters per second for the next second, and so on, with discontinuous jumps to portions of constant velocity.
+[03:48–03:56] That would make it uncomfortable for the driver, in fact it's actually physically impossible, but it would make your calculations a lot more straightforward.
+[03:57–04:07] You could just compute the distance traveled on each interval by multiplying the constant velocity on that interval by the change in time, and then just add all of those up.
+[04:09–04:21] So what we're going to do is approximate the velocity function as if it was constant on a bunch of intervals, and then, as is common in calculus, we'll see how refining that approximation leads us to something more precise.
+[04:24–04:27] Here, let's make this a little more concrete by throwing in some numbers.
+[04:28–04:38] Chop up the time axis between 0 and 8 seconds into many small intervals, each with some little width dt, something like 0.25 seconds.
+[04:38–04:43] Consider one of those intervals, like the one between t equals 1 and 1.25.
+[04:45–04:58] In reality, the car speeds up from 7 m per second to about 8.4 m per second during that time, and you could find those numbers just by plugging in t equals 1 and t equals 1.25 to the equation for velocity.
+[04:59–05:04] What we want to do is approximate the car's motion as if its velocity was constant on that interval.
+[05:05–05:11] Again, the reason for doing that is we don't really know how to handle situations other than constant velocity ones.
+[05:13–05:17] You could choose this constant to be anything between 7 and 8.4.
+[05:18–05:19] It actually doesn't matter.
+[05:20–05:28] All that matters is that our sequence of approximations, whatever they are, gets better and better as dt gets smaller and smaller.
+[05:28–05:39] That treating this car's journey as a bunch of discontinuous jumps in speed between portions of constant velocity becomes a less-wrong reflection of reality as we decrease the time between those jumps.
+[05:42–05:54] So for convenience, on an interval like this, let's just approximate the speed with whatever the true car's velocity is at the start of that interval, the height of the graph above the left side, which in this case is 7.
+[05:55–06:03] In this example interval, according to our approximation, the car moves 7 m per second times 0.25 seconds.
+[06:04–06:09] That's 1.75 meters, and it's nicely visualized as the area of this thin rectangle.
+[06:10–06:14] In truth, that's a little under the real distance traveled, but not by much.
+[06:14–06:16] The same goes for every other interval.
+[06:17–06:27] The approximated distance is v of t times dt, it's just that you'd be plugging in a different value for t at each one of these, giving a different height for each rectangle.
+[06:29–06:35] I'm going to write out an expression for the sum of the areas of all those rectangles in kind of a funny way.
+[06:36–06:48] Take this symbol here, which looks like a stretched s for sum, and put a 0 at its bottom and an 8 at its top, to indicate that we'll be ranging over time steps between 0 and 8 seconds.
+[06:48–06:54] And as I said, the amount we're adding up at each time step is v of t times dt.
+[06:55–06:57] Two things are implicit in this notation.
+[06:58–07:01] First of all, that value dt plays two separate roles.
+[07:01–07:08] Not only is it a factor in each quantity we're adding up, it also indicates the spacing between each sampled time step.
+[07:09–07:21] So when you make dt smaller and smaller, even though it decreases the area of each rectangle, it increases the total number of rectangles whose areas we're adding up, because if they're thinner, it takes more of them to fill that space.
+[07:22–07:33] And second, the reason we don't use the usual sigma notation to indicate a sum is that this expression is technically not any particular sum for any particular choice of dt.
+[07:33–07:38] It's meant to express whatever that sum approaches as dt approaches 0.
+[07:39–07:45] And as you can see, what that approaches is the area bounded by this curve and the horizontal axis.
+[07:46–07:53] Remember, smaller choices of dt indicate closer approximations for the original question, how far does the car actually go?
+[07:54–08:03] So this limiting value for the sum, the area under this curve, gives us the precise answer to the question in full unapproximated precision.
+[08:04–08:05] Now tell me that's not surprising.
+[08:06–08:12] We had this pretty complicated idea of approximations that can involve adding up a huge number of very tiny things.
+[08:13–08:20] And yet, the value that those approximations approach can be described so simply, it's just the area underneath this curve.
+[08:22–08:28] This expression is called an integral of v of t, since it brings all of its values together, it integrates them.
+[08:30–08:32] Now at this point, you could say, how does this help?
+[08:33–08:42] You've just reframed one hard question, finding how far the car has traveled, into an equally hard problem, finding the area between this graph and the horizontal axis.
+[08:43–08:44] And you'd be right.
+[08:45–08:54] If the velocity-distance duo was the only thing we cared about, most of this video, with all the area under a curve nonsense, would be a waste of time.
+[08:54–08:57] We could just skip straight ahead to finding an antiderivative.
+[08:58–09:11] But finding the area between a function's graph and the horizontal axis is somewhat of a common language for many disparate problems that can be broken down and approximated as the sum of a large number of small things.
+[09:12–09:22] You'll see more in the next video, but for now I'll just say in the abstract that understanding how to interpret and how to compute the area under a graph is a very general problem-solving tool.
+[09:23–09:33] In fact, the first video of this series already covered the basics of how this works, but now that we have more of a background with derivatives, we can take this idea to its completion.
+[09:34–09:39] For a velocity example, think of this right endpoint as a variable, capital T.
+[09:41–09:51] So we're thinking of this integral of the velocity function between 0 and T, the area under this curve between those inputs, as a function where the upper bound is the variable.
+[09:52–09:56] That area represents the distance the car has travelled after T seconds, right?
+[09:57–09:59] So in reality, this is a distance vs.
+[09:59–10:01] time function, s of t.
+[10:01–10:04] Now ask yourself, what is the derivative of that function?
+[10:07–10:14] On the one hand, a tiny change in distance over a tiny change in time is velocity, that is what velocity means.
+[10:14–10:22] But there's another way to see this, purely in terms of this graph and this area, which generalizes a lot better to other integral problems.
+[10:23–10:31] A slight nudge of dt to the input causes that area to increase, some little ds represented by the area of this sliver.
+[10:32–10:38] The height of that sliver is the height of the graph at that point, v of t, and its width is dt.
+[10:39–10:50] And for small enough dt, we can basically consider that sliver to be a rectangle, so this little bit of added area, ds, is approximately equal to v of t times dt.
+[10:51–11:06] And because that's an approximation that gets better and better for smaller dt, the derivative of that area function, ds, dt, at this point equals vt, the value of the velocity function at whatever time we started on.
+[11:06–11:09] And that right there is a super general argument.
+[11:09–11:16] The derivative of any function giving the area under a graph like this is equal to the function for the graph itself.
+[11:18–11:24] So, if our velocity function is t times 8-t, what should s be?
+[11:25–11:28] What function of t has a derivative of t times 8-t?
+[11:30–11:37] It's easier to see if we expand this out, writing it as 8t minus t squared, and then we can just take each part one at a time.
+[11:37–11:40] What function has a derivative of 8t?
+[11:42–11:52] We know that the derivative of t squared is 2t, so if we just scale that up by a factor of 4, we can see that the derivative of 4t squared is 8t.
+[11:53–11:58] And for that second part, what kind of function do you think might have negative t squared as a derivative?
+[12:00–12:07] Using the power rule again, we know that the derivative of a cubic term, t cubed, gives us a square term, 3t squared.
+[12:08–12:14] So if we just scale that down by a third, the derivative of 1 third t cubed is exactly t squared.
+[12:14–12:21] And then making that negative, we'd see that negative 1 third t cubed has a derivative of negative t squared.
+[12:22–12:30] Therefore, the antiderivative of our function, 8t minus t squared, is 4t squared minus 1 third t cubed.
+[12:32–12:34] But there's a slight issue here.
+[12:34–12:41] We could add any constant we want to this function, and its derivative is still 8t minus t squared.
+[12:41–12:44] The derivative of a constant always goes to zero.
+[12:45–12:53] And if you were to graph s of t, you could think of this in the sense that moving a graph of a distance function up and down does nothing to affect its slope at every input.
+[12:54–13:07] So in reality, there's actually infinitely many different possible antiderivative functions, and every one of them looks like 4t squared minus 1 third t cubed plus c, for some constant c.
+[13:08–13:17] But there is one piece of information we haven't used yet that will let us zero in on which antiderivative to use, the lower bound of the integral.
+[13:18–13:24] This integral has to be zero when we drag that right endpoint all the way to the left endpoint, right?
+[13:24–13:30] The distance travelled by the car between 0 seconds and 0 seconds is… well, zero.
+[13:31–13:37] So as we found, the area as a function of capital T is an antiderivative for the stuff inside.
+[13:38–13:47] And to choose what constant to add to this expression, you subtract off the value of that antiderivative function at the lower bound.
+[13:48–13:55] If you think about it for a moment, that ensures that the integral from the lower bound to itself will indeed be zero.
+[13:57–14:03] As it so happens, when you evaluate the function we have here at t equals zero, you get zero.
+[14:03–14:07] So in this specific case, you don't need to subtract anything off.
+[14:07–14:18] For example, the total distance travelled during the full 8 seconds is this expression evaluated at t equals 8, which is 85.33 minus 0.
+[14:18–14:22] So the answer as a whole is 85.33.
+[14:23–14:27] But a more typical example would be something like the integral between 1 and 7.
+[14:28–14:34] That's the area pictured here, and it represents the distance travelled between 1 second and 7 seconds.
+[14:36–14:44] What you do is evaluate the antiderivative we found at the top bound, 7, and subtract off its value at the bottom bound, 1.
+[14:45–14:50] Notice, by the way, it doesn't matter which antiderivative we chose here.
+[14:50–14:56] If for some reason it had a constant added to it, like 5, that constant would cancel out.
+[14:58–15:12] More generally, any time you want to integrate some function, and remember, you think of that as adding up values f of x times dx for inputs in a certain range, and then asking what is that sum approach as dx approaches 0.
+[15:13–15:23] The first step to evaluating that integral is to find an antiderivative, some other function, capital F, whose derivative is the thing inside the integral.
+[15:24–15:31] Then the integral equals this antiderivative evaluated at the top bound minus its value at the bottom bound.
+[15:32–15:37] And this fact right here that you're staring at is the fundamental theorem of calculus.
+[15:38–15:41] And I want you to appreciate something kind of crazy about this fact.
+[15:41–15:51] The integral, the limiting value for the sum of all these thin rectangles, takes into account every single input on the continuum, from the lower bound to the upper bound.
+[15:52–15:55] That's why we use the word integrate, it brings them all together.
+[15:56–16:04] And yet, to actually compute it using an antiderivative, you only look at two inputs, the top bound and the bottom bound.
+[16:05–16:06] It almost feels like cheating.
+[16:06–16:15] Finding the antiderivative implicitly accounts for all the information needed to add up the values between those two bounds.
+[16:15–16:17] That's just crazy to me.
+[16:18–16:25] This idea is deep, and there's a lot packed into this whole concept, so let's recap everything that just happened, shall we?
+[16:26–16:30] We wanted to figure out how far a car goes just by looking at the speedometer.
+[16:31–16:34] And what makes that hard is that velocity is always changing.
+[16:35–16:45] If you approximate velocity to be constant on multiple different intervals, you could figure out how far the car goes on each interval with multiplication, and then add all of those up.
+[16:46–16:58] Better and better approximations for the original problem correspond to collections of rectangles whose aggregate area is closer and closer to being the area under this curve between the start time and the end time.
+[16:58–17:07] So that area under the curve is actually the precise distance traveled for the true nowhere constant velocity function.
+[17:08–17:20] If you think of that area as a function itself, with a variable right endpoint, you can deduce that the derivative of that area function must equal the height of the graph at every point.
+[17:21–17:22] And that's really the key right there.
+[17:22–17:29] It means that to find a function giving this area, you ask, what function has v of t as a derivative?
+[17:30–17:45] There are actually infinitely many antiderivatives of a given function, since you can always just add some constant without affecting the derivative, so you account for that by subtracting off the value of whatever antiderivative function you choose at the bottom bound.
+[17:46–17:51] By the way, one important thing to bring up before we leave is the idea of negative area.
+[17:53–17:57] What if the velocity function was negative at some point, meaning the car goes backwards?
+[17:58–18:08] It's still true that a tiny distance traveled ds on a little time interval is about equal to the velocity at that time multiplied by the tiny change in time.
+[18:08–18:15] It's just that the number you'd plug in for velocity would be negative, so the tiny change in distance is negative.
+[18:16–18:34] In terms of our thin rectangles, if a rectangle goes below the horizontal axis, like this, its area represents a bit of distance traveled backwards, so if what you want in the end is to find a distance between the car's start point and its end point, this is something you'll want to subtract.
+[18:35–18:36] And that's generally true of integrals.
+[18:37–18:44] Whenever a graph dips below the horizontal axis, the area between that portion of the graph and the horizontal axis is counted as negative.
+[18:46–18:54] What you'll commonly hear is that integrals don't measure area per se, they measure the signed area between the graph and the horizontal axis.
+[18:55–19:04] Next up, I'm going to bring up more context where this idea of an integral and area under curves comes up, along with some other intuitions for this fundamental theorem of calculus.
+[19:06–19:21] Maybe you remember, chapter 2 of this series introducing the derivative was sponsored by The Art of Problem Solving, so I think there's something elegant to the fact that this video, which is kind of a duel to that one, was also supported in part by The Art of Problem Solving.
+[19:22–19:29] I really can't imagine a better sponsor for this channel, because it's a company whose books and courses I recommend to people anyway.
+[19:29–19:46] They were highly influential to me when I was a student developing a love for creative math, so if you're a parent looking to foster your own child's love for the subject, or if you're a student who wants to see what math has to offer beyond rote schoolwork, I cannot recommend The Art of Problem Solving enough.
+[19:46–20:08] Whether that's their newest development to build the right intuitions in elementary school kids, called Beast Academy, or their courses in higher-level topics and contest preparation, going to aops.com slash 3blue1brown, or clicking on the link in the description, lets them know you came from this channel, which may encourage them to support future projects like this one.
+[20:08–20:25] I consider these videos a success not when they teach people a particular bit of math, which can only ever be a drop in the ocean, but when they encourage people to go and explore that expanse for themselves, and The Art of Problem Solving is among the few great places to actually do that exploration.

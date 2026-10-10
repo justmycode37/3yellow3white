@@ -1,0 +1,58 @@
+[00:03–00:06] Usually, I don't think notation and math matters that much.
+[00:07–00:15] Don't get me wrong, I enjoy a bad notation rant as much as the next guy, and there are clearly a few simple changes to our conventions that could speed up learning for math students everywhere.
+[00:15–00:20] But at the end of the day, notation, good or bad, is just not the point of math.
+[00:20–00:33] Even the most carefully designed symbols and syntax will fail to capture the underlying visual that constitutes understanding, so I figure it's better to just spend time focusing on that underlying essence and let the symbols just be what they are in peace.
+[00:34–00:41] But that said, when unintuitive notation actively stalls the gears of learning, my disposition on the matter hardens up a little bit.
+[00:41–00:49] In particular, I'm thinking of one threesome of syntax which, when you stop and think about it, is an egregious source of friction in math education everywhere.
+[00:50–00:57] If you take the fact that 2 multiplied by itself 3 times equals 8, for example, we have three separate ways to explain that relationship.
+[00:58–01:00] 2 cubed equals 8, with a superscript.
+[01:01–01:04] The cube root of 8 is 2, with a squaggly radical symbol.
+[01:05–01:09] And the log base 2 of 8 equals 3, which we write using the word log itself.
+[01:10–01:13] What the hell do these three ways of writing the same fact have to do with each other?
+[01:13–01:22] Making up syntax for a concept is fine, but don't do it in three completely different ways for the same concept and force students to learn every rule about that concept three separate times.
+[01:22–01:24] It's like it's a different language.
+[01:24–01:37] This way of writing things isn't just counterintuitive, it's counter-mathematical, since rather than making seemingly different facts look the same, which is what math should do, it takes three facts which should obviously be the same and makes them look artificially different.
+[01:38–01:41] Just think about how confusing logarithms were the first time you learned about them.
+[01:43–01:50] This is, of course, a known issue, and the internet has no shortage of people raising the same concern with suggestions for a better notation.
+[01:50–01:59] But recently, I stumbled across a math exchange post with a suggestion so lovely, so symmetrical, so utterly reasonable, that I just have to share it.
+[02:00–02:08] For a relationship like 2 cubed equals 8, take a triangle and write 2 in the lower left, 3 on the top, and 8 on the lower right.
+[02:09–02:13] To express the operation 2 cubed, remove that bottom right corner.
+[02:13–02:17] The symbol as a whole represents the value that should go in the missing corner.
+[02:18–02:25] To express log base 2 of 8, which is asking the question 2 to the what equals 8, remove the top number.
+[02:26–02:29] The symbol as a whole represents the value that should go in the missing corner.
+[02:31–02:37] To express the cube root of 8, which is saying what number to the third power equals 8, remove the bottom left corner.
+[02:38–02:41] The symbol as a whole represents the value that should go in the missing corner.
+[02:41–02:45] In other words, all three operations are completely symmetrically represented.
+[02:46–02:51] This triangle deserves a name, and a friend of mine at Khan Academy decided that we should call it the triangle of power.
+[02:53–02:59] The definition alone is mildly pleasing, but where it gets fun is when you see how much smoother all of the different operations become.
+[03:00–03:05] In our current notation, there are 6 different ways to express the various inverse operations.
+[03:05–03:14] Most of these are memorized as separate entities, some are rarely even talked about, and there's no discernible pattern even though all of them describe the same basic idea.
+[03:15–03:27] But students still have to spend 6 times the effort to memorize each one, are 6 times more likely to make a mistake, and have 6 separate opportunities to decide math is dumb and boring and conducive to failure and why don't I just go study art instead?
+[03:28–03:31] With the triangle of power, all these operations follow the same pattern.
+[03:34–03:41] Our brains are really good at picking up on patterns like this, and you can much more easily imagine a smooth mental image associated with the property.
+[03:43–03:53] There's even kind of an aesthetic pleasure to this, and who knows, maybe more of the artistically inclined students would look favorably upon math long enough to see just how valuable their intuitions really are in the science.
+[03:54–04:00] Let's take another property, like the idea that a to the x times a to the y equals a to the x plus y.
+[04:01–04:08] The corresponding fact for logarithms is that log of x times y equals log of x plus log of y.
+[04:09–04:15] When you write this with the triangle of power, it's a little easier to see that both of these expressions are really saying the same thing.
+[04:16–04:27] Remember, the symbol as a whole represents the number at the missing corner, so the top expression is saying that when you multiply two numbers that belong on the bottom right of the triangle, it corresponds with adding the numbers that belong to the top.
+[04:27–04:34] But that's also what the lower expression is saying, when you multiply the numbers at the bottom right, it corresponds with adding numbers that belong to the top.
+[04:36–04:46] To help students with this, you could draw inside of the triangle, saying that when the lower left is constant, the numbers at the top like to add, while the bottom right numbers like to multiply.
+[04:47–04:50] What about when a different corner stays constant, like the top?
+[04:53–05:01] Well in this case, you'd write a multiplication sign in both the bottom corners, because with exponents and radicals, multiplication turns into multiplication.
+[05:05–05:12] The natural question that a student might ask from here is if there's an analogous rule for when the lower right stays constant.
+[05:18–05:19] There is!
+[05:20–05:29] You have to introduce a new operation, which for the sake of this video, I'll call O+, where A O plus B equals one over one over A plus one over B.
+[05:30–05:36] This is not actually a ridiculous thing to introduce, since it comes up in physics all the time, like when you're computing parallel resistance.
+[05:37–05:46] With that symbol, you could say that when the lower right number stays constant, the top numbers like to get O-plussed together, and the bottom left numbers like to get multiplied.
+[05:53–06:01] This is actually a really nice connection between logarithms and roots, and it never gets discussed, probably because the notation isn't really conducive to asking the question.
+[06:03–06:18] I could go on and on here, showing a lot of other properties, but honestly, I think the best case I can make here is to encourage you to explore it for yourself, and notice that just about everything involving exponents, logs, or radicals becomes nicer when you use the triangle of power.
+[06:19–06:26] By the way, I hope that it goes without saying that in this perfect world, students wouldn't learn these operations purely from the symbols.
+[06:26–06:30] They should still ask why it's true, and why it doesn't follow a different pattern.
+[06:30–06:40] But the point is that when the notation actually reflects the math, the questions that students are most naturally asking tend to be the ones that cut right into the essence of what's going on.
+[06:41–06:51] The asymmetries in the notation correspond with actual asymmetries in the numerical relationship a to the b equals c itself, not in the artificial asymmetries of squiggles and words.
+[06:52–07:05] When a student asks why the top likes to get added in one context but O-plussed in another, the teacher can point out the property that reflecting the triangle reciprocates the top, and then they can start addressing where that fact comes from.
+[07:06–07:12] My sincere hope is that students don't learn by symbolic patterns, but by substantive reasoning and re-derivation within their own heads.
+[07:12–07:21] But the fact is, most of us do first learn things by symbolic manipulation, so when there's an opportunity to significantly speed up that process, we should take it!
+[07:22–07:29] And if you agree with me that the triangle of power is clearly better than what we have already, start actually using it in your notes to see what it feels like.
+[07:30–07:30] Spread the word!
+[07:31–07:35] And, if you're a teacher, maybe start teaching this to your students so that we can get them hooked while they're young.

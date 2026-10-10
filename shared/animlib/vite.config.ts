@@ -11,7 +11,11 @@ export default defineConfig({
     quality: fileURLToPath(new URL('./demo/quality.html', import.meta.url)),
     plant: fileURLToPath(new URL('./demo/plant.html', import.meta.url)),
     spatial: fileURLToPath(new URL('./demo/spatial.html', import.meta.url)),
+    molecules: fileURLToPath(new URL('./demo/molecules.html', import.meta.url)),
+    molecularComparison: fileURLToPath(new URL('./demo/molecular-comparison.html', import.meta.url)),
+    dnaSmoothComparison: fileURLToPath(new URL('./demo/dna-smooth-comparison.html', import.meta.url)),
     proofs: fileURLToPath(new URL('./demo/proofs.html', import.meta.url)),
+    dnaProtein: fileURLToPath(new URL('./demo/dna-protein.html', import.meta.url)),
     showcases: fileURLToPath(new URL('./demo/showcases.html', import.meta.url)),
   } } },
 });

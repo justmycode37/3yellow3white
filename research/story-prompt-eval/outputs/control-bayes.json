@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Why a positive screen is not a diagnosis\n\n## Beat 1 — Follow a thousand people\n\nContent needed: Hypothetical cohort of 1,000: 10 with the condition, 990 without. The test is positive for 9 of the 10 and 99 of the 990. Show all four outcomes, including 1 negative with the condition and 891 negatives without it. Use count-proportional areas, with enlarged detail explicitly marked. Preserve condition status when adding positive-result outlines. Do not show the combined positive count or posterior fraction yet.\n\nNarration: Imagine a screening test comes back positive. How much does that tell us? We need more than a description of how well the test works. We also need to know how common the condition was before testing.\n\nNarration: Here is a made-up population of one thousand people. Ten have the condition, and nine hundred ninety do not. This is a toy probability example, not medical guidance.\n\nNarration: Among the ten with the condition, nine test positive and one tests negative. Among the nine hundred ninety without it, ninety-nine test positive and eight hundred ninety-one test negative.\n\nNarration: The test catches nine out of ten people who have the condition. That sounds reassuring. But a positive result can come from either group. We need to follow both routes.\n\n## Beat 2 — Change the group you count\n\nContent needed: Keep the four outcome groups from beat-1. Isolate the 9 true positives and 99 false positives while keeping status colors. Show 108 total positives only when narration combines them. During the thinking pause, show the two counts and total but withhold the fraction's value and percentage. At the reveal, show 9/108 = 1/12 ≈ 8.3%. Distinguish P(positive | condition) from P(condition | positive) using plain-language set labels before any notation.\n\nNarration: Now suppose all we know about one person is that their test was positive. Which group should we count? Only people with positive results. The negative results no longer belong in our comparison.\n\nNarration: Nine people with the condition tested positive. So did ninety-nine people without it. Together, that makes one hundred eight positive results.\n\nInvitation (spoken): Of these one hundred eight people, only nine have the condition. About what fraction is that? Take a few seconds to think.\n\nPause: 5s\n\nReveal (spoken): Nine out of one hundred eight is one in twelve, or about eight point three percent.\n\nNarration: The ninety percent we started with answers a different question: among people with the condition, how many test positive? We just answered: among people who test positive, how many have the condition?\n\nNarration: The test result raises the chance from one percent to about eight percent. It provides evidence, but in this population the condition is still unlikely.\n\n## Beat 3 — Keep the test, change the population\n\nContent needed: Preserve the positive-result comparison. Introduce a second hypothetical population of 1,000 with 100 having the condition and 900 without it. Hold sensitivity at 90% and false-positive rate at 10%. Derive 90 true positives and 90 false positives, then 90/180 = 50%. Compare with the original 9 versus 99 and 8.3% result. Counts or area lengths must share a stated linear scale within each comparison; do not suggest the same individuals acquire the condition. Finish with the two positive groups and the rate invariants, without a clinical recommendation.\n\nNarration: What if the condition is more common? Keep the test exactly the same: ninety percent of people with the condition test positive, and ten percent of people without it test positive.\n\nNarration: Consider a different population of one thousand, with one hundred who have the condition and nine hundred who do not. Now ninety people with the condition test positive. Ten percent of the other nine hundred gives ninety positive results without the condition.\n\nNarration: That is ninety people with the condition among one hundred eighty positive results: fifty percent. The test's two rates stayed fixed, but the meaning of a positive changed.\n\nNarration: Why? A more common condition supplies more true positives, while the smaller group without it supplies fewer false positives. When the condition is rare, even a modest false-positive rate can produce many more false positives than true ones.\n\nNarration: To interpret a positive result, count both ways it could occur, then ask what share came from people with the condition. The starting prevalence is part of that answer.\n",
+  "plan": {
+    "audience": "Adults who know percentages but not conditional probability.",
+    "prerequisites": [
+      "Percentages as parts of a whole",
+      "Adding counts and dividing a part by its total"
+    ],
+    "learningGoal": "Compute the probability of having a condition among positive tests and explain how prevalence changes that probability when test rates stay fixed.",
+    "centralQuestion": "Why can a positive test still leave the condition unlikely, and why does prevalence change the answer?",
+    "keyInsight": "The relevant denominator includes every positive result, including false positives from the often much larger population without the condition; fixed test rates operate on changing group sizes.",
+    "runningExample": "Hypothetical cohorts of 1,000. Original: 10 with condition, 990 without; positives 9 and 99; negatives 1 and 891; posterior 9/108 = 1/12 ≈ 8.3%. Comparison: 100 with condition, 900 without; fixed sensitivity 90% and false-positive rate 10%; positives 90 and 90; negatives 10 and 810; posterior 90/180 = 50%. Toy probability model, not medical guidance.",
+    "misconceptions": [
+      "Ninety percent sensitivity means a positive result has a ninety percent chance of being a true positive.",
+      "A positive test's interpretation is independent of how common the condition is.",
+      "A result can provide evidence only if it makes the condition more likely than not.",
+      "The two cohorts depict the same individuals changing condition status."
+    ],
+    "entities": [
+      {
+        "id": "original-cohort",
+        "meaning": "The original hypothetical cohort of 1,000, introduced in beat-1 with immutable condition-status subgroups 10 BLUE and 990 GREY and independently selectable positive subsets 9 and 99. In beat-2 only its positive subset remains visible; in beat-3 that subset is retained as the original comparison. Status, count, and proportional scale relationships must survive regrouping.",
+        "color": "WHITE"
+      },
+      {
+        "id": "condition-status",
+        "meaning": "Condition status is BLUE in both cohorts across beat-1 through beat-3. Testing and regrouping never change that status.",
+        "color": "BLUE"
+      },
+      {
+        "id": "no-condition-status",
+        "meaning": "Absence of the condition is GREY in both cohorts across beat-1 through beat-3. Positive results in this status are false positives.",
+        "color": "GREY"
+      },
+      {
+        "id": "positive-selection",
+        "meaning": "YELLOW outlines mark positive test outcomes independently of condition status. Introduced around both routes in beat-1, combined into the conditioning subset in beat-2, and applied consistently to both cohorts in beat-3; outline does not replace the status fills.",
+        "color": "YELLOW"
+      },
+      {
+        "id": "posterior-readout",
+        "meaning": "The share with the condition within the positive subset: first 9/108 in beat-2, then paired with 90/180 in beat-3. Numerators refer to BLUE positive areas and denominators to the entirety of their positive-only comparison.",
+        "color": "WHITE"
+      },
+      {
+        "id": "comparison-cohort",
+        "meaning": "A separate hypothetical population introduced in beat-3 with 100 having the condition and 900 without; fixed rates select 90 and 90 positives. Uses the same status and outcome color rules as the original; its members are not transformations of original individuals.",
+        "color": "WHITE"
+      },
+      {
+        "id": "fixed-rates",
+        "meaning": "Sensitivity 90% and false-positive rate 10%, derived from original counts and explicitly held constant in beat-3 while population composition changes.",
+        "color": "WHITE"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Separate condition status from test outcome and establish both sources of positives.",
+        "whyNow": "Opens with the question a positive result raises and builds the counts needed for the next scene's denominator.",
+        "keyPoints": [
+          "Only 10 of 1,000 have the condition.",
+          "Testing subdivides each status group without changing anyone's status.",
+          "Positive results arise from both groups."
+        ],
+        "visualDescription": "2D (because population subsets and conditional counts are planar relations): Construct an idealized frequency diagram with a common area scale of one unit per person. A whole-population area of 1,000 divides into condition area 10 in BLUE and no-condition area 990 in GREY. The small condition area may have a clearly labeled enlarged detail, connected to its original subset; do not imply equal areas for 10 and 990. Divide the condition area into positive 9 and negative 1, and the no-condition area into positive 99 and negative 891, retaining status fills and applying YELLOW outlines only to positive regions. All subdivisions sum to their parent counts. Introduce the two positive subregions as independently movable parts of the cohort because beat-2 will regroup them; their represented counts and status identities stay fixed during that motion. Use short count labels local to each region, black background and white scaffold. Reveal subdivisions with the corresponding narration; no posterior percentage or total-positive label appears.",
+        "endsWith": "The complete cohort is partitioned into 9, 1, 99, and 891, with the two positive regions outlined and independently identifiable. Counts and status colors remain intact for regrouping.",
+        "carry": [
+          "original-cohort",
+          "positive-selection"
+        ],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "bayes.request.json",
+            "location": "topic",
+            "supports": "Hypothetical population and supplied positive counts; negative counts follow by subtraction."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-2",
+        "purpose": "Derive the probability of the condition given a positive by selecting the correct denominator.",
+        "whyNow": "Uses the four outcomes just established to replace the entire cohort with the positive subset, then prepares comparison with a different prevalence.",
+        "keyPoints": [
+          "Conditioning on a positive retains both positive subgroups and excludes negatives.",
+          "The denominator is 9 + 99 = 108.",
+          "The fraction with the condition is 9/108 = 1/12, approximately 8.3%.",
+          "Sensitivity reverses the conditioning group and is not the requested probability."
+        ],
+        "visualDescription": "2D (because selecting and regrouping population subsets exposes the denominator): Begin from the exact four-group state left by beat-1. Move the 9 BLUE and 99 GREY positive regions into one outlined positive-only comparison, preserving their common area scale and counts; fade the negative regions as the narration excludes them. The original-cohort entity now represents only its selected positive subset, with the other counts no longer visible. The YELLOW positive-selection outline encloses both regions and receives the total 108 only at the spoken addition. Keep 9 and 99 visible during the invitation and five-second pause, with no displayed answer. At Reveal, introduce posterior-readout as 9/108 = 1/12 ≈ 8.3%, anchoring numerator ownership to the BLUE region and denominator ownership to the whole positive subset. Briefly show the plain-language distinction between 'positive among condition' and 'condition among positive'; do not crowd the frequency model with symbolic probability notation. Show starting prevalence 1% as a small comparison associated with the original population, separate from the posterior label. Hold the positive-only area comparison for beat-3.",
+        "endsWith": "Original positives remain as a proportional comparison of 9 BLUE and 99 GREY, enclosed as 108 positives, with the posterior 8.3% clearly attached to that comparison. Negatives and temporary question labels have exited.",
+        "carry": [
+          "original-cohort",
+          "positive-selection",
+          "posterior-readout"
+        ],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "bayes.request.json",
+            "location": "topic",
+            "supports": "Requested derivation from the 9 and 99 positive counts and one brief thinking pause."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-3",
+        "purpose": "Explain why prevalence changes the positive predictive probability when test rates remain fixed.",
+        "whyNow": "Builds on the positive-only denominator and concludes by varying the population while preserving the test's rates.",
+        "keyPoints": [
+          "Sensitivity remains 90% and the false-positive rate remains 10%.",
+          "A distinct population with prevalence 10% yields 90 true and 90 false positives.",
+          "90/180 gives 50%, compared with 8.3% at prevalence 1%.",
+          "Higher prevalence increases true positives and reduces false positives for a fixed total population and fixed rates."
+        ],
+        "visualDescription": "2D (because count comparisons and fixed conditional rates directly explain prevalence): Retain the original 9-versus-99 positive comparison from beat-2. Introduce fixed-rates as quiet labels: 90% positive among condition and 10% positive among no condition. Introduce comparison-cohort explicitly as a different population, using the same BLUE condition fill, GREY no-condition fill, and YELLOW positive outlines. Begin its count-proportional partition at 100 and 900, then select 90 and 90 with the same conditional-rate operations; the remaining 10 and 810 may appear briefly as unselected remainder areas and then exit. Never morph specific original people into people with a condition. After derivation, show the two positive-only comparisons on a common linear area scale so 9:99 and 90:90 are quantitatively meaningful; a stated area unit denotes one person. Keep each denominator locally attached, 108 for the original and 180 for the comparison. Extend posterior-readout to hold clearly owned values 8.3% and 50%, revealing 50% only when narration computes it. Emphasize the larger true-positive contribution and slightly smaller false-positive contribution using the actual regions, not merely changing counters. End with the paired count comparisons and the two fixed-rate labels.",
+        "endsWith": "Two clearly labeled hypothetical populations are compared through their positive subsets: prevalence 1%, counts 9 and 99, posterior 8.3%; prevalence 10%, counts 90 and 90, posterior 50%. The unchanged sensitivity and false-positive rate remain visible as the causal constraint.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "bayes.request.json",
+            "location": "topic",
+            "supports": "Requested explanation of prevalence changes with fixed sensitivity and false-positive rate; the second population is an authored hypothetical extension using the supplied rates."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

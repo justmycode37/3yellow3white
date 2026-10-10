@@ -1,0 +1,22 @@
+{
+  "files": [
+    {
+      "name": "guidance.md",
+      "before": 1715,
+      "after": 1093,
+      "beforeBytes": 11999,
+      "afterBytes": 7672
+    },
+    {
+      "name": "story-review.md",
+      "before": 590,
+      "after": 421,
+      "beforeBytes": 4237,
+      "afterBytes": 3205
+    }
+  ],
+  "totalBefore": 2305,
+  "totalAfter": 1514,
+  "reductionPercent": 34.31670281995661,
+  "method": "Whitespace-delimited words; not model-token counts."
+}

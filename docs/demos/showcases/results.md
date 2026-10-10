@@ -1,5 +1,28 @@
 # Production scene-stage results
 
+## User review follow-up — 2026-10-11
+
+The counts below describe the original sampled review, not current acceptance.
+The user's later playback review rejects additional clutter/motion in scenes 4
+and 10 and solid penetration in scene 24. Their earlier independent-ready verdicts
+are withdrawn pending a fresh generated proof. This leaves at most 15 of the 24
+topics without a recorded unresolved issue; it is not a new exhaustive approval.
+
+| Scene | Follow-up evidence | Instruction correction |
+| --- | --- | --- |
+| 4, SVD | Native frame 6 shows a full numeric factorization, underbraces and another active-operation expression competing with the geometry. | Start showcases without optional equations; use necessary local notation and plain factor labels; inspect rendered delimiters. |
+| 7, interference | Retry frame 6 shows coarse cells; its source splits positive/negative color layers before interpolation. | Choose resolution by projected feature size; interpolate signed values before color mapping and inspect zero crossings. |
+| 10, dipole | Source spends 9.6 seconds tracing 18 lines and 4 seconds turning a camera after the trace; the user rejects this extra motion. | Require a specific visible purpose for each motion; prefer an already-clear static field and reading hold. |
+| 24, excavator | Contact at 6.8 seconds places bucket-floor bounds at x=[2.2783,3.4383], y=[0.8481,0.9781], z=[-0.52,0.52]. Intact bank cell `bank-2-2-2` occupies x=[2.832,3.148], y=[0.642,0.958], z=[-0.158,0.158]. Positive overlap proves penetration at that axis-aligned pose. Removing separate `cut-soil` objects at 7.4 seconds does not remove this bank cell. | Check swept bodies against actual remaining occupancy; synchronize cutting, removal and carried material from one shared state. |
+
+Updated active `scene-craft`, `animation-quality`, `scene-verify` and `scene-repair`
+Markdown. The production loader reads these directly; no demo source was edited.
+The first-verification-before-repair sequence remains unchanged. Fifteen existing
+prompt/verification/patch tests pass. Guidance application probes cover these four
+subjects and a piston-wall transfer case; these are instruction checks, not fresh
+generated animations or proof that future model output cannot fail. Library-level
+sampling, collision and resource diagnostics remain necessary follow-up work.
+
 ## Baseline: 24 fixed topics
 
 The batch used the actual scene generator, configured `gpt-6-astra` / `high`,

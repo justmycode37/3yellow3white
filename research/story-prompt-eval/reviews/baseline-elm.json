@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The mathematics and spoken prediction sequence are sound, but the final visual plan reveals the prediction answer before and throughout the thinking pause.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-4",
+      "detail": "The visualDescription requires highlighting the maximum at x=a and showing maximum error a^n before the prediction question and throughout its pause. This reveals the exact answer being requested and contradicts the script context, cutoff-a entity meaning, and keyPoints. Withhold both answer labels and maximum-specific highlighting until the Reveal block; during the pause retain only the established domain and information needed for the inference."
+    }
+  ],
+  "checks": [
+    "Pointwise and uniform definitions correctly distinguish N(x,epsilon) from a threshold independent of x, while retaining the all-later-indices requirement.",
+    "The pointwise limit is zero below one and one at x=1; error at x=1 is correctly zero.",
+    "For every n, x_n=(1/2)^(1/n)<1 gives error 1/2>1/4, defeating any common threshold; the witness moves and does not refute convergence at a fixed point.",
+    "The supremum error on [0,1] is one but unattained; on fixed [0,a], the maximum a^n tends to zero and yields a common N independent of x.",
+    "The five-second pause is verbally invited and its question is reachable from order preservation, but the planned early visual answer invalidates its reveal order.",
+    "Four classic scenes, 470 spoken words, and five seconds of pause support a roughly four-minute estimate. Supported graph and label primitives suffice.",
+    "This is a model review of supplied material and mathematical reasoning; no external verification or unavailable validate_output run is claimed."
+  ]
+}

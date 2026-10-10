@@ -1,0 +1,539 @@
+[00:05–00:10] 🎵Music🎵 Presumably you can hear this.
+[00:11–00:27] There's some construction happening in the house next door, and for the last hour or maybe two hours or so, it seems like this is the ground-smashing portion of whatever construction they're doing, and just the whole house has been shaking, which you will be able to hear if they continue.
+[00:27–00:28] I think it's still going on now.
+[00:28–00:30] So if you're curious, that's what the sound is.
+[00:31–00:39] Now in one of the intro questions that you were just answering, you are actually going to have your mind primed to think about what we're going to talk about today.
+[00:39–00:42] This question just made me laugh so much to write it and try to think it through.
+[00:43–00:48] It's asking if x is the number that most people are going to enter into this box, what is 2 to the x going to be?
+[00:49–01:01] And it's just so mind-confuddling, because you think about, okay, if a lot of people are entering 1, I should enter 2, but everyone would think about that, so maybe I should enter 4, but everyone thinks about that, so I should do 2 to the 4, or maybe 2 to the that, or maybe 2 to the that.
+[01:02–01:13] And, you know, if it was a room full of perfect logicians, you'd blow up to infinity, but people aren't logicians, and there is some objectively correct answer, and we can take a look at what the objectively correct answer is in this context.
+[01:13–01:22] And it would appear most, okay, the largest number of people entered 2, which means anyone who entered 4 is absolutely correct.
+[01:22–01:58] But in the game where you imagine thinking through, you know, the perfect logicians, and you're taking 2 to the 2 to the 2 to the 2, you're starting to think about the topic for today's video, which is an operation that's not typically taught in school, probably because it doesn't have the same level of applications as certain other ones, but as you'll see, there's a couple puzzles that we can start to do with it that absolutely bring out some very important problem-solving skills, and ideas of just really thinking through what terms actually mean, and whether or not operations that you're doing that seem to make sense when you do it symbolically actually make sense when you think through what's really going on.
+[01:59–02:11] So this operation is called tetration, and a way you might think about it is, you know, we all learn about addition as one of the first things, the way that we can add two numbers, and multiplication, as we first see it, is repeated addition.
+[02:11–02:15] A times B is A plus A plus A plus A, B different times.
+[02:16–02:27] And if you say, well, what happens if we repeat multiplication, you know, taking A times A times A times A, B different times, we write it as A to the power B, and that's exponentiation.
+[02:27–02:34] Now if you were to go one step further in this process and say, what happens if we repeat exponentiation, this has a name, we call it tetration.
+[02:35–02:42] Tetra comes from the Greek for four, because it's sort of the fourth stage in this process of repeatedly applying the previous operation.
+[02:43–02:49] And of course, in the context of things like multiplication, we've extended the idea beyond just counting numbers.
+[02:50–02:59] So here this only makes sense if B was a counting number, but we do things like taking pi times E, or even complex values, where you can take the square root of two times one plus i.
+[03:00–03:07] So we've extended it beyond repeated addition, but that's sort of its origin, that's the way that we often start thinking about it.
+[03:07–03:16] Similarly, very famously, one thing we've been talking a fair about in this series is extending exponentiation with the classic Euler's formula example.
+[03:16–03:22] But for right now, we're just going to think of this tetration in terms of repeating an integer number of times.
+[03:23–03:24] Do you hear it?
+[03:24–03:31] I swear, we were so dreading the idea that the ground-smashing day would come during one of the streams, but here we are.
+[03:32–03:45] Now this is actually ambiguous if we don't define our terms a little bit more clearly, because exponentiation is not associative, meaning the order that we do these operations and start collapsing it matters.
+[03:46–03:58] Because if I was going from left to right, let's say I was writing this as two squared, and then I'm going to think of squaring that, and then squaring the result, that will get me a different number than if I think of going from the top to the bottom.
+[03:58–04:07] If the first thing I evaluate is the two to the power two at the top, and then I go to the next one, and we can think about why.
+[04:07–04:12] Here if I'm collapsing from the bottom, that bottom part is four, so then I square it, and I'll square that.
+[04:13–04:18] Four squared is sixteen, so I square that, and I end up getting 256.
+[04:18–04:23] But on the bottom, if I start by collapsing that top term, it becomes a four.
+[04:24–04:32] And then if I think of collapsing the current top term, that becomes two to the sixteen, and that's a much bigger number.
+[04:32–04:35] That is 65,536.
+[04:36–04:43] And in general, this process of repeatedly exponentiating, going from the top to the bottom, explodes very quickly.
+[04:44–04:49] And tetration in general refers to the top to the bottom part, so we start evaluating at the top, and we work down.
+[04:50–04:59] If you want to make that crystal clear, I think instead of drawing it as a power tower, one thing that you could do is define the iterative process very exactly.
+[04:59–05:08] You might say we have some value that we're going to start out at one, and then each successive value is going to be two to the power of the previous thing.
+[05:09–05:10] So a sub one would just be two.
+[05:11–05:17] a sub two is going to be two to the power of whatever a sub one was, which in this case is two squared.
+[05:18–05:25] a sub three is going to be two to the power of whatever a sub two was, which now is two to the two to the two.
+[05:25–05:33] And there's no more ambiguity for what the order of operations should be, because you see that it came from the a two term, so we should first be evaluating what's in the top.
+[05:34–05:53] And similarly, if you go on like this, and a sub n for any value n is equal to two to the previous term, a sub n minus one, when you unfold this expression and kind of go back in our recursive definition, what you're going to get is a power tower of two n different times.
+[05:54–05:58] Now another thing that's nice about writing it like this is we can become experimental.
+[05:58–06:03] And as you all know, I love to encourage people to be very playful when you come across a new operation like this.
+[06:04–06:07] And a lot in this series, we've just been pulling up some Python to do that.
+[06:07–06:08] So let's do that here.
+[06:08–06:11] Let's take this iterative process and see what it actually looks like.
+[06:12–06:25] So I will go over to my terminal, I will open up some Python, I will set an initial value of a to be one, and then what I want to do is take a look at two to the power of that, but I'm going to reassign that value into a.
+[06:25–06:29] So this double asterisk, that's how we take powers in Python.
+[06:29–06:36] And then in a lot of programming languages, a single equal sign, it's not a question, it's not asking if they're equal, it's an operation.
+[06:36–06:40] It's saying take whatever's sitting on that right side and shove it into the left value.
+[06:41–06:46] So when we do this, it reassigns the value of a to be two to whatever it was before.
+[06:46–06:53] This can be bizarre to people who haven't done programming because it seems like you have an equation that you're solving for something.
+[06:53–06:55] But in this case, the left-hand side is getting changed.
+[06:55–06:57] It's an operation on it.
+[06:57–07:16] So if I do that again, I take that same process of turning a into two to the power of whatever it was before, and then I'll just print it out in the same line so we can say it turns into four, that turns into 16, that is going to turn into, you can try to make a prediction here, it will turn into two to the 16, which we just saw was 65,536.
+[07:17–07:25] If I take one more step, which would be a power tower of height five, so just five twos stacked on top of each other, it totally explodes.
+[07:25–07:31] It's just this monstrous number, which I think it's awfully kind of Python to even do the work to find the number for us.
+[07:31–07:32] I'm impressed with it.
+[07:33–07:42] And if we wanted, we could say, okay, think of that number as a string, what's the length of that string, and it's telling us the number of digits that are in it.
+[07:42–07:48] So the number we have there is a 19,000-digit expression, just monstrously huge.
+[07:48–07:59] And if we were to try one more iteration of this, turning a into two to the power of that 19,000-digit monstrosity, you would not be able to store the information required for that number.
+[08:00–08:13] Any way that you were using matter to encode all the digits of whatever would come out, if that was within the confines of something like the radius of the Earth, you would absolutely create a black hole in any attempt to store that kind of information.
+[08:13–08:19] So just a power tower of height six, and it's well beyond what you can literally physically convey in any kind of way.
+[08:21–08:26] So you might ask, how quickly does this thing blow up for other numbers, if it's not two?
+[08:27–08:36] And one thing that I'm going to ask you, actually just in the live poll, let's go ahead and pull it up, is to predict what's going to happen here if instead of two we were dealing with 1.1.
+[08:37–08:56] So if you go to the link that's in the description and up on the screen to answer the live questions along with us, we are asked, let B equal 1.1, so just a little above one, and consider an expression of the form B to the B to the B to the B, this power tower, and its height is n, meaning you'll see n different copies of B.
+[08:57–08:58] How big does n have to be?
+[08:59–09:05] How many times do you have to repeat this operation before the value of the expression has more than ten digits?
+[09:06–09:10] So with two, we had to get to a tower of size five before that happened.
+[09:10–09:13] It jumped from being a five-digit number to a 19,000-digit number.
+[09:13–09:18] So how many times would you have to do it for a value of B equals 1.1?
+[09:19–09:24] And I'll give you a moment to answer that while we listen to the soothing tones of construction maybe slowing down.
+[09:28–09:41] And just to illustrate this process here, if we hop back over to Python, and let me just pop on over here, get back into my terminal, let's say I started A at a value of one.
+[09:41–09:42] Let's just do this in a for loop.
+[09:42–09:45] So for n in some kind of range like 50.
+[09:46–09:47] I'm going to reassign A.
+[09:48–09:53] What if instead of doing repeated exponentiation, I was just repeatedly multiplying it by 1.1?
+[09:53–09:57] So just repeated multiplication, which should be exponentiation.
+[09:57–09:59] You can get a sense of how quickly that grows.
+[09:59–10:12] And if we take a look here at the first 50 values, you know, it starts at 1.1, it goes to 1.21, and at each stage it's actually growing just by a little bit, by 10% with each jump, and you get classic exponential growth.
+[10:12–10:15] So with 50 steps it took us up to 117.
+[10:16–10:18] That's exponential growth.
+[10:18–10:21] So you might wonder what is tetrational growth?
+[10:21–10:23] What happens if we're repeatedly exponentiating this thing?
+[10:25–10:27] And before I answer that, let me see what you think.
+[10:27–10:33] What do you think is going to happen here if we repeatedly exponentiate this?
+[10:34–10:35] Okay.
+[10:36–10:42] So the correct answer is that it actually never grows past anything like that.
+[10:42–10:45] And, ah, interesting, that's the third placed answer.
+[10:45–10:50] So most of you thought that the height that you would need would be between 10 and 100.
+[10:50–10:53] Doing it between 10 and 100 times, that would blow you up past 10 digits.
+[10:54–10:59] The second most common answer was thinking it was between 1 and 10, which would be very analogous to how 2 was growing.
+[11:00–11:17] Third most common, and I'm wondering how many of those third most common people have seen this process before, because it's very weird the idea that repeatedly multiplying it by itself, that'll grow as much as you want, but that somehow doing what feels like a much more powerful operation, repeatedly exponentiating, that actually stays confined.
+[11:19–11:32] And we can see this bear out in practice if we hop back over to our Python, where now what I'm doing with each iteration, and I guess I should set a to b, 1 again, I'm going to repeatedly turn it into 1 to the power of itself.
+[11:32–11:41] And what we get is a little bit of initial growth, but it quickly slows down, and just within 20 iterations it actually stays fixed at this value.
+[11:42–11:44] You can see that this digit isn't changing.
+[11:44–12:01] And if you think through what's going on there, evidently when a is equal to that value, and you take 1.1 to the power of that value, so 1.1 to the power of this thing, that's 1.1117, ah, don't type it too many times, that actually stays fixed.
+[12:01–12:03] You get the same value that you had before.
+[12:04–12:16] So another way that we can phrase this is to say that the equation 1.1 to the power x equals x, something where when you plug it into the function you get itself, this has a solution.
+[12:17–12:19] This didn't hold when we were doing it with 2.
+[12:20–12:34] If we had 2 to the x equals x, if you try to think through different answers to this, it's a funky equation to think about, but if you just try out some values like 0 and 1 or anything in between, you'll find there's actually no answer here, whereas evidently we just saw an answer in this case.
+[12:34–12:46] And what that means for our iterative process, if instead of 2 at the base it was 1.1 at the base, you'd have this situation where the previous value, you raise 1.1 to that, it just stays fixed.
+[12:46–12:48] And now this starts raising a lot of interesting questions.
+[12:48–12:51] First of all, where's the switch?
+[12:51–12:57] What number between 1 and 2 is the point where it goes from staying finite to blowing up?
+[12:57–12:59] And blowing up incredibly quickly at that.
+[12:59–13:06] Remember with 2 it only took us 5 iterations before we had something that was, you know, beyond what the computer could handle.
+[13:07–13:18] And we could play around with this a little bit, but I think another interesting product of the fact that this can convert at all is we can start answering what look like very bizarre questions.
+[13:18–13:26] Where I can say, imagine I have an unknown value x, and I do not a power tower of some finite size, but of an infinite size.
+[13:26–13:31] I'm going to keep going forever in the same way that evidently I can do with a base of 1.1.
+[13:32–13:34] Can I find a value of x where this converges?
+[13:34–13:35] For example, to 4.
+[13:36–13:38] This is the question posed in the thumbnail of the video.
+[13:39–13:45] And what we just saw is that we could find a value that converges to 1.111782, on and on.
+[13:45–13:49] That's evidently a value you can converge to, and the solution would be 1.1.
+[13:49–13:51] But how do you go the other way around?
+[13:51–13:56] How can we actually solve for the idea that we can find a value of x that equals 4?
+[13:57–14:00] And there's a clever trick here that you might spot.
+[14:01–14:08] And this comes up in certain problem solving kinds of math where you have this infinite expression, and you say, hmm, there's some self-similarity I can leverage.
+[14:09–14:11] There's a copy of the entire power tower inside itself.
+[14:11–14:15] Because it's infinite, it's a genuine copy of itself.
+[14:15–14:19] It's not, it doesn't have a height of 1 minus whatever the previous height was,
+[14:19–14:20] Because the height is infinity.
+[14:22–14:30] And under the assumption that the whole power tower equals 4, I could replace that with a 4 and solve x to the fourth equals 4.
+[14:31–14:32] Let's see, what would that be?
+[14:32–14:35] If I take square roots, that's the same as saying x squared equals 2.
+[14:36–14:44] So it looks like, interesting, x equals square root of 2 gives me a power tower that should converge to 4.
+[14:45–14:45] Kind of funky.
+[14:46–14:54] The idea that anything converges at all is sort of weird, but the idea that, you know, square root of 2 would go to a clean value, like an integer, that's kind of surprising.
+[14:55–15:11] And let me actually ask you another question where I'm going to have you apply the same tactic that we just did, leveraging that self-similarity to solve another one of these situations, where you're looking for a power tower with an unknown base and seeing when it equals a pre-specified value.
+[15:12–15:17] So this time the question is going to ask us, if we give it just a little moment to pull up here.
+[15:19–15:21] Well, it's taking a little moment, which is fine.
+[15:22–15:22] Ah, great.
+[15:23–15:32] The question asks us, using the tactic just demonstrated, what I just did for 4, solve the equation x to the x to the x on and on up to infinity equals 2.
+[15:33–15:36] So I'll give you a moment to think that through.
+[15:57–15:59] The ground smasher is back.
+[16:00–16:05] Man, yesterday when we were doing it, we, uh, I wish I had the footage to show you.
+[16:05–16:07] Maybe I can try to pull it up on my phone or something.
+[16:07–16:16] But the things were shaking so much that just a pile of circuit boards was actively shaking.
+[16:17–16:18] Let me see if I can find this.
+[16:18–16:18] It's super funny.
+[16:20–16:28] Alright, this might not, this is probably the worst way to stream something, is to take an overhead camera shot of a phone.
+[16:28–16:30] But let me see if this works decently well.
+[16:31–16:32] So I was trying to get a view of the construction.
+[16:33–16:37] We move over and just the pile of circuit boards is just jittering like that.
+[16:37–16:38] And that's what we have to deal with.
+[16:39–16:40] So, hope you enjoy.
+[16:41–16:46] Now on the quiz, it looks like just about everybody is converging around the same answer.
+[16:47–16:52] And I'm going to assume you've landed on the correct answer, which is in fact the square root of 2.
+[16:52–17:13] Which is kind of a funny thing, because if we go and we do exactly the same logic that we were doing for solving for 4, where we have this infinite power tower and we're assuming that it equals 2 and we recognize the self-similarity, we're like, ah yes, the power tower, copy of it in itself, so that should mean x squared equals 2, that means x equals the square root of 2.
+[17:15–17:16] Well hang on a second, this can't be right.
+[17:16–17:23] Because on the one hand this seems to be suggesting that an infinite power tower converges to 2 when the base is root 2.
+[17:23–17:26] But on the other hand it converges to 4 when the base is root 2.
+[17:26–17:27] It can't be both.
+[17:28–17:31] We've got a very deterministic process up here for what it converges.
+[17:31–17:33] So it's got to be just one of them, if any.
+[17:33–17:35] Maybe the entire logic of the situation is false.
+[17:36–17:37] So let's get empirical.
+[17:37–17:41] Let's turn to our programming to see which one of these it actually ends up being.
+[17:42–17:48] So I'll hop back over, I will reassign my variable a to be 1, I'm going to make my little loop.
+[17:49–17:52] Actually let's import math because I'm going to need a square root here.
+[17:52–17:56] So I'm going to say for, I don't know, we'll just do 20 at a time.
+[17:56–18:04] I'm going to take a, turn it into the square root of 2, square root of 2 to the power of a, print out what it looks like.
+[18:04–18:06] Guess I don't need that semicolon but it doesn't really matter.
+[18:07–18:12] And it looks like for those first 20 iterations it does kind of slow down as it approaches 2.
+[18:12–18:17] And if I do another 20 iterations it's definitely slowing down as it gets to 2.
+[18:19–18:19] Definitely, alright.
+[18:20–18:27] And now it does something kind of bizarre where it seems like it lands exactly on 2 but then it jumps up to 2.0004.
+[18:27–18:31] Which if you think through what's going on here, at some point it equals 2.
+[18:31–18:32] So we're saying a equals 2.
+[18:33–18:36] And then we're taking the square root of 2 to the power of that.
+[18:37–18:40] But square root of 2 to the power of 2 by definition should be 2.
+[18:40–18:42] So that's going to be just some simple numerical error.
+[18:43–18:48] I guess, however, the math square root library is implementing square roots.
+[18:49–18:51] You know, there's always going to be a little bit of numerical error with floating points.
+[18:51–18:54] So when we square it we don't exactly get 2 back.
+[18:54–18:55] That's fine, not a problem.
+[18:55–19:04] But it does seem to suggest that the correct answer to our question of what happens when we have a power tower with root 2 is that it equals 2.
+[19:04–19:08] Or that the sequence of numbers that this represents approaches 2.
+[19:10–19:11] What's wrong with the other logic though?
+[19:12–19:15] What's wrong with the logic that seemed to imply that it should equal 4?
+[19:16–19:17] Well to answer that we should do two things.
+[19:18–19:27] First is to represent this thing a little bit more visually, a little bit graphically so we can try to understand what is going on with this iterative process.
+[19:27–19:33] And then from there understand which values will converge and which values will blow up.
+[19:33–19:40] And by answering that we can get back in the direction of what's wrong with the logic associated with having this thing approach 4.
+[19:41–19:44] So for that let's take a look over at our good friend Desmos.
+[19:45–19:47] So pop on over here, open up Chrome.
+[19:48–19:50] Not look at that yet, that is 4 later.
+[19:51–19:55] And we will just take a look at a graph here.
+[19:55–19:58] So what I have is the line y equals x.
+[19:58–20:01] I've got a function b to the power x and I've set b to be 2.
+[20:02–20:04] So we're just looking at the graph of 2 to the x.
+[20:04–20:11] And to think about the idea of repeatedly applying a function and kind of taking the output and then plugging it back into the input.
+[20:11–20:14] We can draw what's commonly known as a cobweb diagram.
+[20:15–20:24] The way this will work is I have an initial value of 1 as the input and then the next value is going to be whatever f of 1 is.
+[20:24–20:26] I'm going to plug in 1 to the function.
+[20:26–20:32] And what that means is I move vertically until I hit the graph and in this case 2 to the 1 is just 2.
+[20:32–20:35] So I'm going to hit it at a y value of 2.
+[20:35–20:40] But from there what I want is the output that I just got, that 2, to become an input to the function.
+[20:40–20:49] But if outputs are represented on the y axis and inputs are on the x axis, what I need is some point where the y value is the same as the x value.
+[20:50–20:57] So if I walk horizontally until the y value is the same as the x value, I'll get to a point where 2 is the x value.
+[20:57–20:59] Where I can now think of that 2 as being the input.
+[21:00–21:03] And to do that I walk until I hit the line y equals x.
+[21:03–21:06] Because once I hit that I'm looking at 2 comma 2.
+[21:07–21:11] So I can treat that 2 as an input by moving vertically until I hit the graph.
+[21:11–21:12] You can see how that works.
+[21:12–21:20] Meaning the next point in our iterative process is going to be 2 to the power of what we just had, which is 2 squared or 4.
+[21:20–21:28] And then I move over to the right, turning my output into an input, looking for what point on the plane has an x value that's also equal to 4.
+[21:28–21:36] Then once I hit that, I kind of think of bouncing off of this line, y equals x, and moving vertically until I hit the graph again.
+[21:36–21:38] And this time it's not until 16 that I hit the graph.
+[21:39–21:42] And then I move to the right until x also equals 16.
+[21:42–21:49] And then from there, I have to go quite a while, quite a while moving vertically, but it will happen quite a while.
+[21:49–21:52] And around 65,000 it intersects the graph again.
+[21:53–21:57] And then it's going to move to the right until we get to an x coordinate that's also 65,000.
+[21:57–22:01] And from there, Desmos just totally gives up on trying to draw the next vertical line.
+[22:01–22:09] Because as we saw, what it would have to get to is a height where the number describing that height is a 19,000 digit number.
+[22:09–22:10] So it just gives up on us there.
+[22:11–22:18] But when we think in terms of these cobweb diagrams, now if I start playing with what is that base, you can see what's going to happen.
+[22:20–22:20] What is that base?
+[22:20–22:22] The base is the ground-smashing activity.
+[22:23–22:26] At some point, the graphs actually cross each other.
+[22:27–22:33] So in particular, we were looking at 1.1 earlier, and that, yeah, they absolutely cross.
+[22:33–22:45] But even up to around 1.41, which is around the square root of 2, if you look at what happens with this process, we look at the output, turn the output into an input, look at the new output, output into an input, and bounce back and forth.
+[22:46–22:50] We're bouncing towards the value where these graphs intersect each other.
+[22:51–22:56] towards the value where b of x, b to the power x, excuse me, is equal to x.
+[22:57–23:13] And in particular, if that base was the square root of 2, and I say find a solution of square root of 2 to the power x equals x, you know, it's not easy to think about how you solve this systematically, but for this particular case, you would believe me if I told you that the solution is x equals 2.
+[23:13–23:15] You can just plug that in and solve it.
+[23:15–23:22] So if we look at our graph, if b, actually let's go ahead and make it precisely the square root of 2 rather than just an approximation here.
+[23:22–23:27] So b is going to be the square root, square root of 2, no, of 2.
+[23:28–23:32] The intersection point is exactly at 2, so you see your iterative process approaching that.
+[23:33–23:34] Okay, that's kind of interesting.
+[23:34–23:44] This also shows us how we're going to need to think about it if we want to be, if we want to understand where the switch happens between when things converge and when things don't converge.
+[23:46–23:58] Because what we want is knowing what value of b should I go to where things can escape, there is no intersection point, to where things don't escape, where there is an intersection point.
+[23:58–24:06] And by the way, I've left the link to this particular Desmos graph in the description, so if you want to hop down there and just play along, you're more than welcome to.
+[24:07–24:15] One thing I should specify, the fact that they intersect, that's actually not enough to ensure that this cobweb iterative process necessarily converges.
+[24:15–24:22] It's important that the graph of our function, which in this case is b to the x, intersects at a slope that's less than 1.
+[24:22–24:24] And we can think about why that's true.
+[24:25–24:34] If I turn a new leaf, let's say I wasn't dealing with exponential functions or curves like that, I was just dealing with any generic function.
+[24:34–24:44] So look at the line y equals x, and let's say I have some function which, you know, it squiggles along and it intersects it but with a slope greater than 1.
+[24:45–24:52] Then when we do our iterative process, we'll have some output and we say let's turn it into an input by walking horizontally until we hit y equals x.
+[24:53–24:55] Look at the new output by walking vertically.
+[24:56–24:57] Smash, smash, smash.
+[24:58–25:05] Look at the new input, or turn that output into an input by walking horizontally until we hit it.
+[25:06–25:07] And then repeat that process.
+[25:07–25:14] You can see that's what's happening because it intersected with a slope greater than 1, we're actually walking away from the intersection point.
+[25:14–25:22] So to make sure that it's not just a stable point, it's not just a common point between the graphs, but it's stable when you repeat this process.
+[25:22–25:23] That slope does need to be less than 1.
+[25:24–25:27] I have a whole video about another perspective on how to think about this kind of process.
+[25:27–25:38] I think I gave it an absurd title, like what they won't teach you in calculus, but if you want to see more examples of this and fun, infinite iterated objects, that's a place that you can turn to.
+[25:39–25:43] Now, in our case, it is the case that the slope is less than 1, so that works.
+[25:44–25:47] Although, on the second intersection point, that's actually a slope greater than 1.
+[25:47–26:03] So if I changed the iterative process where my first value wasn't 1, but in this case if I made it 4, then my iterative process would actually run away from the intersection point, like you can see, and it will indeed blow up to infinity.
+[26:03–26:05] So that's always fun.
+[26:06–26:07] I'll change that back to a 1.
+[26:08–26:18] You can take a look at my little note for being annoyed that you can't do four loops of recursion in Desmos definitions, and you can see what we need to solve.
+[26:18–26:33] One thing that's kind of fun here is at 1.45, which seems just above a point where they actually intersect, you have this bouncing and bouncing that just stays somewhat stable for such a long time before it eventually blows up.
+[26:33–26:38] And imagine trying to think about this not graphically, but if you were just playing around with it numerically.
+[26:39–26:49] So if we had taken the same process we did before, where A starts out at 1, we're going to do a bunch of iterative exponentiating, but we're going to make it 1.45 instead.
+[26:50–26:52] And let's give ourselves like 50 values for this one.
+[26:53–26:55] The process eventually blows up.
+[26:55–26:56] It gives us this overflow error.
+[26:57–27:02] But the processes would be very confusing if you didn't have any visual for what's going on.
+[27:02–27:11] It starts at 1.45, it grows, it stays kind of not stable, but it doesn't seem to be moving that much in the 2.71828 region.
+[27:11–27:15] For some reason around there it just seems awfully slow moving.
+[27:15–27:19] But as it starts to get a little bit bigger into the 3 region it stays there for a while.
+[27:19–27:21] The 4 region there's two values.
+[27:21–27:27] Then 6, and then 9, and then 39, and then it just blows up to 2 million after that.
+[27:27–27:29] And then from there it's bigger than what the computer can handle.
+[27:29–27:34] So that would be deeply confusing, except we have a nice understanding of what's going on.
+[27:35–27:37] The graphs almost touch, but they don't quite.
+[27:38–27:42] So somewhere between 1.44 and 1.45 is what we're looking for.
+[27:43–27:52] And you might think of this now in terms of calculus, where what we want is to know when the tangent of this graph is the same as the line y equals x.
+[27:52–27:57] When does the graph b to the x lie tangent to the line y equals x?
+[27:57–28:02] And rather than me setting up the equations that we need to solve for that, I'm going to have you do the same.
+[28:02–28:07] I'm going to have you take a look at this condition of looking for a value of b.
+[28:08–28:11] Well let's just read what the question asks us more specifically.
+[28:13–28:20] We want a value of b such that the graph of y equals b to the x sits tangent to the graph y equals x.
+[28:21–28:24] Which of the following represents the pair of equations that we need to solve?
+[28:25–28:27] Okay, so take a moment to think about this.
+[28:28–28:30] Which of the following is the pair of equations that we need to solve?
+[28:48–28:52] While you're thinking about that, I'll go ahead and take a couple questions from the audience.
+[28:54–28:54] We have...
+[28:54–28:58] So immediately I wondered, repeat-detectration is pentation.
+[28:58–29:00] Or is that even a useful idea?
+[29:01–29:06] Yeah, there's this whole notation that talks about the idea of repeating these processes.
+[29:07–29:08] It's called Knuth arrow notation.
+[29:09–29:11] And you can kind of have as many as you want.
+[29:11–29:20] So the way this works is that if I write something like a arrow b, that's the same thing as a to the power b.
+[29:20–29:26] But then a with two arrows is the repetition of that process.
+[29:27–29:28] You know, b times.
+[29:30–29:33] And, sorry, that's a two arrows and then a b.
+[29:33–29:41] If I had three arrows, three arrows and then a b, then what I'm repeating is the process of doing a double arrow.
+[29:41–29:45] Which is really mind-warpingly big as you start to think about it for numbers.
+[29:45–29:46] Even numbers like two and three.
+[29:46–29:52] The idea of repeating this process some number of times is just crazy.
+[29:52–29:54] And you could just keep going with more and more arrows.
+[29:54–30:01] And if any of you have not learned about Gram's constant, go over to that number file right now and see how Gram's constant is defined.
+[30:01–30:05] Because it involves these sort of arrow operations and it's genuinely crazy.
+[30:05–30:10] And it's one of the most mind-blowing moments you'll have in your mathematical life the first time you see Gram's constant.
+[30:10–30:11] So I would recommend.
+[30:12–30:19] Alright, so next we have for 1.1 to the power x equals x, Wolfram Alpha yields two real solutions.
+[30:19–30:20] Ooh, excellent question.
+[30:20–30:22] One of them is the one that we converge to.
+[30:22–30:25] The other is around 38.29.
+[30:26–30:26] Awesome.
+[30:26–30:27] What's the deal with that second solution?
+[30:28–30:30] We can take a look exactly in the graph that we have.
+[30:30–30:35] So if we take b and we make it 1.1.
+[30:36–30:36] Okay.
+[30:37–30:45] It's what I was talking about how at the place where it intersects with a slope greater than one, yeah, it's a fixed point for our iterative process.
+[30:45–30:47] But it's not a stable fixed point.
+[30:47–30:49] So up here is that 38 value that you were just referencing.
+[30:50–30:59] And because it intersects at a slope that's bigger than one, even if you were to seed the process with a value that's really near there, it would run away from that value.
+[30:59–31:06] So if you're seeding the process, if you're starting off at a value of a equals one, this is the intersection point that it'll end up finding.
+[31:06–31:07] That's an outstanding question.
+[31:08–31:12] And third, are there practical use cases for such an operation as tetration?
+[31:13–31:16] I've studied very scientific branch and have never come across this operator.
+[31:16–31:17] I'm very curious.
+[31:17–31:19] Okay, so that is a spot on question.
+[31:21–31:31] So I will talk a little bit about a role with chaos and fractals at the end, which is tenuous at best because it's saying it's related to other things which themselves are useful.
+[31:32–31:37] I can't personally think of a place where you're out in the wild doing science and then boom, tetration pops up.
+[31:37–31:45] I can think of a puzzle, like a sort of brainteaser type puzzle where you would not at all think this operation comes up, but it does.
+[31:46–31:48] Which, if we have time at the end, I think I might share with you.
+[31:48–32:08] I would say the motivation for learning this kind of thing right now is, pardon the scene switching chaos there, is just that the process for actually solving the puzzles that are sitting in front of us, understanding what was up with the repeated tower equaling four, and understanding what we're about to find, and where is the switching point between things converging and things not converging.
+[32:08–32:14] Those are problem solving tactics that carry over into other things you might do that involve more practical iterative processes.
+[32:14–32:17] And iterative processes absolutely do come up all throughout science.
+[32:17–32:19] I mean, chaos theory is like the big one there.
+[32:20–32:30] So with all of that as the answering people's question side, and I'll take more through Twitter as we go and probably do more of that at the end, let's see how you've done on our problem.
+[32:30–32:50] So we're looking for a system of equations here, and the correct answer, which 1777 of you got, I think that's not quite French Revolution territory, but American Revolution territory of you, we got b to the x equals x, so we need them to intersect, and then moreover what we want is the slope to be the same where they do intersect.
+[32:51–33:01] And the derivative of b to the x is itself, but scaled by the natural log of b, and we want that slope to equal one, because it's got to be the same as the slope of the graph we're just looking at.
+[33:01–33:17] And if ever you don't remember what the derivatives of your exponential functions are, if you do remember that e to the x is its own derivative, which if there's any one thing you remember in calculus with respect to e to the x, it should be that e to the x is its own derivative.
+[33:18–33:49] Note that we can write b as e to the natural log of b, so then all of that to the x, so this is the same as expressing e to the natural log of b times x, we talked about this I think last lecture, so then if you want to take the derivative of this, take its derivative, on the one hand it should be the derivative of this, which by the chain rule is that constant sitting in the exponent, natural log of b times itself, e to the ln b times x.
+[33:50–33:56] So what we're looking at is, okay it should be itself, but scaled by something, and that something was the natural log of b.
+[33:56–34:10] Now for our puzzle of understanding when is it that our graph is going to nicely lie tangent to y equals x, let's solve this equation, this system of equations actually.
+[34:10–34:25] Because we're looking for the value x where that solution happens, we know that the curve b to the x equals x at that point, and we know that its slope, the natural log of b times itself, is equal to one.
+[34:26–34:40] Now to solve this, the first thing I might do is note that I can simplify b to the x as being x, so I would apply that over here, and I can write the natural log of b times x is equal to one.
+[34:41–34:53] And what that gives me is that b is the same as one divided by x, all very nice, no no no, it doesn't give me that, it gives me that the natural log of b is one over x.
+[34:54–35:01] That is the same statement as saying e to the one over x is equal to b.
+[35:02–35:04] Alright, now what does that buy us?
+[35:05–35:12] Well it gives us an expression for b entirely in terms of x, so I can go to this top part and I can get an equation that has nothing but x's in it.
+[35:12–35:22] It'll be e to the one over x, all to the power x, I'm just replacing the b with what we found it to be, and that is supposed to equal x.
+[35:22–35:34] But on the other hand, e to the one over x to the power x simplifies down to simply being e, and what we found is that x is equal to e.
+[35:35–35:47] And by the way, so I was doing like a sort of a dry run of this lesson last night where sometimes I'll put out like a link to a stream on Twitter that's an unlisted link, and just say like as soon as a hundred of you hop on here I'm deleting the tweet and we're just going to do a dry run.
+[35:48–36:01] And when I was solving this, for some reason I was just confuddled for like ten minutes where I got to this point and I'm like that can't be right, because we're looking for a value that's between 1.44 and 1.45, so x can't be e, that's way too big, that's like 2.718.
+[36:01–36:06] So I went back and I was trying to think through like what have I done wrong, what on earth has gone wrong here?
+[36:06–36:25] It was mildly embarrassing because it took so long, and then I ultimately realized no, you idiot, it's not that we're looking for a value of x that's between 1.44 and 1.45, that was the condition for b, for the base of our exponential when we were playing around over here.
+[36:26–36:43] So x is just wherever they intersect, so it's fine for that to be around e, in fact that looks consistent that around where this point of tangency is, is e, which incidentally is also the output because this is happening with the line y equals x, so the point of tangency has coordinates e comma e, evidently.
+[36:43–36:46] And what does that mean for the value of b itself once we solve?
+[36:47–37:01] Well we have an exact expression for x, we have an expression for b in terms of x, so this would seem to imply that b is e to the power of 1 divided by e, which is such a delightfully bizarre answer, e to the power of 1 divided by e.
+[37:01–37:11] And we can check with our calculator that that makes some sense, so if we hop on over here and I say, hey Desmos, what is e to the 1 over e?
+[37:12–37:13] Not 1 over 3, 1 over e.
+[37:13–37:23] Yeah, checks out, it is between 1.44 and 1.45, which is exactly what we were looking for, for the point when it goes from converging to exploding.
+[37:24–37:28] Very satisfying, I think, finding that solution, that it's e to the 1 over e.
+[37:29–37:37] As a challenge puzzle for you, if you want a little bit of homework today, I want you to find a lower bound on where this converges.
+[37:37–37:59] So we found the highest value that will make this converge, but we can also start playing with values of b that are less than 1, and if we do that, I'll just kind of get rid of our cobweb here, if we do that there will be some value, I guess I should keep the cobwebbing, where it's no longer going to zero in on some exact value, and it instead becomes an unstable point.
+[37:59–38:01] And the question for you is, when does that happen?
+[38:02–38:09] When does it go from approaching the point where the two graphs intersect to no longer approaching it because it's unstable?
+[38:10–38:19] And if you want a hint, think about the fact that the slope, in this case it's not a matter of when it's equal to 1, it's a matter of when it's less than negative 1.
+[38:19–38:25] And if you want another hint, it should be an expression that also involves two e's inside of it.
+[38:25–38:27] So, very fun puzzle if you want to get to it.
+[38:27–38:35] And that will give you kind of a range of convergence for what values could we have as the base in our titration such that the power tower actually converges to something.
+[38:35–38:43] And one thing that's noteworthy here is that it goes from converging to a value of e to just blowing up to infinity.
+[38:44–38:58] It never converges to values between e and infinity, which maybe runs against intuition because you would think that it somehow smoothly blows up, that rather than going, oh it converges to 1, it converges to 2, it converges to e, and then discontinuously jumping to infinity.
+[38:59–39:00] But that is apparently the behavior.
+[39:00–39:04] And it happens just because the graphs were once tangent and then that's where they separate.
+[39:04–39:06] They're kissing and then they stop kissing.
+[39:06–39:10] And this answers for us what's going on in the case of the power tower with 4.
+[39:12–39:16] So if you think back to the logic, where did we have it?
+[39:18–39:18] Great.
+[39:20–39:30] So if we have our power tower and I was saying solve for the value where this equals 4, well this assumes that such a value even exists, that this process will ever converge to be 4.
+[39:30–39:33] But we just saw that it'll never converge to be anything that's bigger than e.
+[39:34–39:40] So in particular the very first step where we make the substitution that's leveraging the assumption that a solution even exists, that's invalid.
+[39:41–39:47] And the reason that it worked for 2 is because there does exist a value where this converges to 2.
+[39:47–39:50] So when we make that initial substitution, that's a valid thing to do.
+[39:51–39:56] And before we even solved it, you could have seen that there exists a value where it converges to 2 by looking at the graphs.
+[39:57–40:07] What you would look for, even if you didn't know it was going to be square root of 2, what you would look for is when does this intersection point between the graphs happen at a y value of 2?
+[40:07–40:11] I guess it's also an x value of 2 because it's on the line y equals x.
+[40:11–40:13] But what we care about is that the y value should be 2.
+[40:13–40:19] And you would be able to empirically start seeing that hmm, it's somewhere between 1.41 and 1.42.
+[40:19–40:23] And you could binary search your way on down even a little bit further.
+[40:24–40:25] So I think that's delightful.
+[40:26–40:34] That you can take a look at this absolutely crazy singing process of a repeated power tower, that it converges at any points at all, which is counterintuitive.
+[40:34–40:39] And that we can actually make very substantive statements about when it converges, thinking through iterative processes like this.
+[40:40–40:41] And that's actually it for today.
+[40:41–40:42] This is going to be a shorter lesson.
+[40:43–40:48] That is the end of what I wanted to say about the power tower puzzle and leaving you with that little bit of homework.
+[40:49–40:53] So for the very end here, I just want to take a couple more questions from Twitter.
+[40:53–40:57] If you ask them with the hashtag locked down math, they might get forwarded to me.
+[40:57–41:03] And anything about tetration and this process is exactly what we should talk about.
+[41:03–41:03] Great.
+[41:04–41:08] So, he says, if there's a triangle of exponents, is there a square of tetration?
+[41:09–41:12] What uses are there for the inverses of tetration?
+[41:13–41:17] Well, I mean, in either case, we'd be dealing with three different variables.
+[41:17–41:22] There's the idea of what's the base, what's the height, and then what's the output.
+[41:23–41:25] So in either case, we'd just be having three of them.
+[41:26–41:34] The four in tetration, like what makes it four, is not the fact that there's three relevant numbers, you know, the base, the exponent, and then whatever the output.
+[41:35–41:37] And then some new fourth thing.
+[41:37–41:43] It's that in this process of addition, multiplication, exponentiation, it's kind of the fourth of our like repeating the process before.
+[41:45–41:46] Next question from ML.
+[41:46–41:51] Will you show us part of the fractal set of complex numbers x for which the power tower x to the x to the x to the x converges?
+[41:51–41:53] I'm so happy that you asked, ML.
+[41:53–42:08] Yes, you might wonder what happens if instead of our base equaling two, or instead of our base equaling square root of two, or 1.4, or all the values we were just looking at, what if you have some complex number like z that you're raising to a repeated power?
+[42:09–42:14] Now there's a little bit of nuance there for what exactly it means to raise complex values to other complex values.
+[42:15–42:16] And I think I'm going to talk about that.
+[42:16–42:17] Don't hold me to it.
+[42:17–42:19] I think I'll talk about that in the next lecture.
+[42:20–42:30] It's very similar to what we see with real values where you can re-express it in terms of e, and then because we know how to think about e with complex numbers, you'll be able to do it.
+[42:30–42:41] But if you are willing to grant the fact that there does exist a way that you can extend exponentiation to complex numbers, you could certainly repeat it.
+[42:41–42:44] And when you repeat it, you can start asking about does this converge?
+[42:44–42:55] And if you ask about when it converges, and if you go and you write a shader or whatever your favorite kind of program is to color all the pixels on the plane based on whether or not it converges, this is what you get.
+[42:56–43:04] So what you're looking at right now, the axes aren't labeled, but the real axis is running across the middle of the screen from around negative 4.5 up to I think 3.
+[43:05–43:09] And then the imaginary axis that's going from I think like negative 2i up to 2i.
+[43:09–43:21] So this horizontal part of blackness corresponds to all the values that converge that we just found, where the upper bound was e to the 1 over e, and the lower bound is what you can find for homework if you want.
+[43:22–43:28] But the other values above that diverge, and the coloring tells you how quickly they diverge.
+[43:28–43:34] So yellow means that it explodes very quickly, blue means that it explodes less quickly, and so on.
+[43:34–43:52] And so evidently what happens is as you allow for complex numbers, even if their real part is greater than e to the 1 over e, that imaginary part can conspire in just such a way that it makes it converge, and you get this totally intricate pattern, very analogous to the Mandelbrot set, which is also defined in terms of a certain repeated operation.
+[43:53–44:00] And what this indicates is there's actually a lot more intricacy than you might expect associated with these power towers and this titration operation.
+[44:00–44:19] And you get this a lot where repeated applications of something can yield chaos, and that chaos is often pictorially reflected in the fact that a fractal emerges, and it's kind of like the intricacy of the image is paralleled in the difficulty of predicting what the outputs are going to be.
+[44:19–44:26] And just to illustrate the fact that the outputs can be difficult to predict, you want to know what an unsolved problem is, what no one in the world actually knows?
+[44:27–44:34] Is if you can ever take a power tower with pis, so pi to the power pi to the power pi to the power pi, you do that.
+[44:35–44:38] At any point, is this ever equal to an integer?
+[44:39–44:47] Almost certainly not, it would seem highly unlikely because it's an irrational number and if you're thinking of it kind of probabilistically, but it's not probabilistic, it's a deterministic process.
+[44:47–44:53] In fact, we don't even know for a power tower of height 4 if there's just 4 pis here.
+[44:53–45:01] You take pi to the power pi, pi to the power of that, pi to the power of that, it ends up being a monstrous number, bigger than we can compute exactly.
+[45:02–45:05] We don't have a way to prove whether or not this is an integer.
+[45:06–45:11] And if you can prove that, you know, you will be contributing to the forefront of math.
+[45:12–45:16] That's the level of what we actually don't know about these power towers, which I think is kind of interesting.
+[45:18–45:20] Can I share the brainteaser where the arrow operator shows up?
+[45:21–45:21] Yeah, fantastic.
+[45:22–45:24] Let me, I can draw it out for you.
+[45:25–45:27] I think this came from an IMO.
+[45:27–45:40] This is something that Po-Shan-Lo was sharing with me at one point and I'm sure he has a talk about it somewhere that will be more illustrative than what I can talk about on the fly here.
+[45:40–45:48] But the way this will work is that we have 6 different cups and each cup is going to start out with a single coin in it.
+[45:50–45:53] And you have two different operations available to you.
+[45:53–46:04] One of those operations is that you can remove the coin from one cup, so we'll remove it from one cup, but then two more coins will drop into the cup to its right.
+[46:04–46:07] So there's a certain directionality to this.
+[46:07–46:09] Two more will drop into the one to its right.
+[46:09–46:15] So you can imagine from here we can then eliminate all three coins and then there would be six that just magically drop in.
+[46:16–46:19] Five, six, magically drop into the next cup beside it.
+[46:20–46:29] And if that was the only ability that you had, kind of a warm-up teaser is to understand that the maximum number of coins you can have ends up being 63.
+[46:29–46:35] If you just sort of keep doing this process of taking out coins, doubling it, but shifted one over, you can get up to 63.
+[46:36–46:49] Now if I introduce the second magical operation, which is that I can eliminate one of the coins in a cup, and instead of magically dropping two into the next one, I swap the two that are sitting right after it.
+[46:49–46:50] I swap their positions.
+[46:50–46:56] That's the second power that you have, which seems less magical because it doesn't require bringing about coins from the ether.
+[46:57–47:11] I think the way that this was originally framed is, is the maximum amount of money that you can have after doing this process bigger or smaller than 2010 to the power 2010 to the power 2010?
+[47:12–47:13] That was the question.
+[47:14–47:25] When you have these two abilities and you start with six cups that each have one coin in them, will it be bigger, the maximum amount of money that you can get if you're clever enough, be bigger or smaller than that power tower of height three?
+[47:26–47:36] And it's just, again, kind of absurd that that second operation would get you anywhere near that level of number because this is, I mean, this is just so huge.
+[47:36–47:38] It's way bigger than anything you'll find in physics.
+[47:39–47:42] Unless you're doing statistical mechanics or something like that.
+[47:42–47:44] So, yeah, excellent question.
+[47:45–47:56] And with that, unless there's anything more that people want to ask and which also ends up getting forwarded to me, I think I'm going to go ahead and call it a day on this one.
+[47:57–47:58] And thank you for joining.
+[47:58–48:04] I think I will ultimately probably have ten episodes in this lockdown series is what I'm thinking at the moment.
+[48:04–48:08] So if you want to join for the next two, those will be the last two.
+[48:08–48:09] Oh, great.
+[48:09–48:10] We have another question.
+[48:12–48:18] When you solved x to the x to the x on and on equals two and got x squared equals two, you ignored the negative square root of two.
+[48:19–48:19] Awesome.
+[48:19–48:19] Yeah.
+[48:20–48:20] Yeah.
+[48:20–48:21] A solution to x squared equals two.
+[48:21–48:22] Can I explain why?
+[48:23–48:24] Ah, yeah, that's absolutely outstanding.
+[48:25–48:32] Let's so if we think about this graphically again, where that helps us be a little bit more concrete when it comes to what's going on with the iterative process.
+[48:32–48:36] When I said B equal to around one point four one.
+[48:38–48:43] OK, it seems like nothing's really happening around the negative square root of two.
+[48:43–48:46] OK, so let's try to understand why that's happening.
+[48:46–48:49] There's not even necessarily a an intersection at that point.
+[48:49–48:57] So the reason we were taking square roots of two when we were looking at our power tower operations, if we remind ourselves.
+[49:01–49:03] We had the assumption that there even exists an answer.
+[49:04–49:05] This whole thing.
+[49:05–49:06] No, not with an x at the top.
+[49:06–49:08] It just goes up to infinity equals two.
+[49:08–49:10] We saw the reflection of itself.
+[49:10–49:12] X squared equals two.
+[49:13–49:15] Let's think about what this would mean.
+[49:15–49:17] What do we mean to have a negative square root here?
+[49:17–49:23] Well, I guess what you'd be assuming is that you you're taking negative powers.
+[49:24–49:25] Now that I think about it.
+[49:25–49:28] If we said x equal to the negative square root of two.
+[49:29–49:32] Then you'd be raising it in the next process.
+[49:32–49:34] You would take negative square root of two.
+[49:34–49:36] You would raise it to a negative power.
+[49:37–49:38] OK, so raising to a negative power.
+[49:39–49:44] We're already in the realm of thinking about negative square root of two to the one over.
+[49:45–49:50] No, negative one over square root of two to the square root of two.
+[49:52–49:56] Why doesn't that end up popping up in the intersection or anything like that?
+[49:56–50:02] Actually, the more I think about it, there might be a very obvious answer to what's going on that I'm missing.
+[50:03–50:06] Other than I mean, we can talk about.
+[50:08–50:12] We can talk about the fact that negative numbers don't sit in the range of convergence.
+[50:12–50:24] Like if you solve the homework problem, the assumption that there exists an x that's negative that converges like this would be false because you'll find that the the bound ends up.
+[50:25–50:26] I think it ends up being e to the negative e.
+[50:26–50:30] So in the same way that it failed, our logic failed in the case of four.
+[50:30–50:33] Our logic fails if we just plug in square root of negative two.
+[50:33–50:36] I'm kind of curious if that breaks down numerically.
+[50:36–50:43] So if we do try this over in our python where let's again set equal to one.
+[50:44–50:45] Let's find our for loop.
+[50:45–50:50] We're now we're going to do the negative square root of two and repeat the process.
+[50:52–50:53] Yeah, what do we get?
+[50:54–50:56] We do get a stable point.
+[50:57–50:58] Interesting.
+[51:00–51:00] Negative square root of two.
+[51:02–51:03] You look like you're a very stable point.
+[51:03–51:06] You're not a stable point that's equal to two at all.
+[51:07–51:09] What is that number?
+[51:09–51:10] What's going on there?
+[51:12–51:13] You know what?
+[51:15–51:17] I'm not entirely positive.
+[51:18–51:20] Now that now I have it now I have a decision to make it.
+[51:20–51:26] Do I try to think about what exactly is going on on screen live rather than just calling it into the stream?
+[51:27–51:33] Or do I do I think about it and then like pin that to a comment at the end?
+[51:36–51:38] Let's see. What's going on with our logic exactly?
+[51:40–51:43] We're saying assume that there equals a value that converges to two.
+[51:43–51:45] If there does it's going to satisfy this property.
+[51:46–51:51] I mean because I guess what you can say is it's like x equals plus or minus square root of two.
+[51:52–51:53] You try them both.
+[51:53–51:55] One of them equals one of them doesn't.
+[51:55–51:55] End of story.
+[51:56–51:58] I mean this happens a lot when you're doing something algebraic.
+[51:58–52:00] You have a manipulation like this.
+[52:00–52:05] You have multiple possibilities but you just kind of plug them into check and one of them just doesn't work.
+[52:05–52:10] But that's always very unsatisfying because what you want is some sort of answer to why it looked like it was going to work but didn't.
+[52:11–52:15] So in the case of a power tower that equals four you could very clearly see why it didn't.
+[52:15–52:18] The assumption that it even converged was false.
+[52:22–52:31] And I guess in this case our assumption would be if we had negative root two, if we have a negative value, that what's sitting up here is still equal to two.
+[52:33–52:35] I don't know.
+[52:35–52:36] We saw that it doesn't.
+[52:37–52:41] We can say when you're doing this you try them both and if one of them doesn't that's all it is.
+[52:41–52:45] But that just doesn't feel satisfying to me so I'll think about that a little bit.
+[52:45–52:48] If anyone has deeper thoughts share them in the comments of course.
+[52:48–52:53] I would love to hear what you have to say as sort of a like what's going on with the square root of negative two.
+[52:53–53:08] What does it converge to and why does it have any relation to this process which as we already saw is a faulty line of reasoning and like a little bit shaky to just replace what's inside your infinite power tower with the assumptions you've already made.
+[53:10–53:11] Yeah I'll think on that.
+[53:11–53:13] Excellent question and I think that's a great place to end it.
+[53:13–53:25] Also I couldn't help but notice the Twitter handle for who was asking that because this is someone who's created these super beautiful notes for all of the lockdown series so far.
+[53:25–53:31] Which I've been throwing in the video descriptions just because I'm like yeah this is, boy do I wish my handwriting looked anything like that.
+[53:31–53:35] So if anyone wants to check them out she's done a beautiful job.
+[53:35–53:37] And with that I will actually call it an end to today's lesson.
+[53:38–53:42] I'll see you at Friday at the same time for our second to last in the lockdown math series.

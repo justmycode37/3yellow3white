@@ -1,0 +1,37 @@
+{
+  "backend": "native-webgpu",
+  "frames": [
+    {
+      "time": 26,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-before-export-frames\\1280x720-0.png"
+    },
+    {
+      "time": 26,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-before-export-frames\\960x720-0.png"
+    }
+  ],
+  "sheets": [
+    {
+      "path": "docs\\demos\\dna-protein\\smooth-before-export-frames\\1280x720-sheet-0.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        26
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\smooth-before-export-frames\\960x720-sheet-0.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        26
+      ],
+      "columns": 2
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { PLANNING_CONTRACT } from '../../backend/src/agents/planning.ts';
+const base = import.meta.dir;
+const tag = process.argv[2] ?? 'candidate';
+if (!/^[a-z]+$/.test(tag)) throw new Error('Use a simple lowercase snapshot name.');
+await mkdir(`${base}/${tag}`, { recursive: true });
+const read = (p: string) => readFile(new URL(`../../${p}`, import.meta.url), 'utf8');
+const guidance = await read('backend/prompts/guidance.md');
+const review = await read('backend/prompts/story-review.md');
+const capabilities = await read('shared/animlib/docs/capabilities.md');
+const planning = await read('backend/prompts/scenegen/planning.md');
+const quality = await read('backend/prompts/animation-quality.md');
+await writeFile(`${base}/${tag}/guidance.md`, guidance);
+await writeFile(`${base}/${tag}/story-review.md`, review);
+await writeFile(`${base}/${tag}-system.txt`, `${guidance}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${planning}\n\n${quality}`);
+await writeFile(`${base}/${tag}-review-system.txt`, `${review}\n\nExplanation guidance:\n${guidance}\n\n${capabilities}\n\n${quality}\n\nReturn only the editorial review JSON, not the authoring format.`);
+console.log(`Saved ${tag} author and reviewer prompt snapshots.`);

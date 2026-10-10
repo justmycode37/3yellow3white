@@ -1,6 +1,8 @@
 import type { Color, PaletteColor } from "./palette.js";
 import type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
 import type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
+import type { MoleculeProps } from './molecule-types.js';
+export type * from './molecule-types.js';
 export type { Color, PaletteColor } from "./palette.js";
 export type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
 export type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
@@ -354,6 +356,7 @@ export interface SceneContext {
   cone(id: string, props?: ConeProps): ElementHandle;
   torus(id: string, props?: TorusProps): ElementHandle;
   tube(id: string, props: TubeProps): ElementHandle;
+  molecule(id: string, props: MoleculeProps): ElementHandle;
   group(id: string, children: ElementHandle[], options?: { isolated?: boolean }): ElementHandle;
   behavior(target: ElementHandle, behavior: BehaviorSpec): void;
   attach(target: ElementHandle, source: ElementHandle, options?: { offset?: Position }): void;

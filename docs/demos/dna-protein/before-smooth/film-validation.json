@@ -1,0 +1,172 @@
+{
+  "executionLimit": "default 200 ms per scene VM",
+  "silent": true,
+  "captions": 19,
+  "runs": [
+    {
+      "total": 161,
+      "scenes": [
+        {
+          "id": "cell-chromatin",
+          "duration": 24,
+          "sourceSha256": "b019b208f6cfe5045f67409bdda11dbadfa4cbb8907598296751b89b2e524fa9",
+          "compiledSha256": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+          "wallMs": 322,
+          "initialElements": 131,
+          "finalElements": 87,
+          "end": "advance"
+        },
+        {
+          "id": "packaging",
+          "duration": 20,
+          "sourceSha256": "1f217f8008e8e6621364cf24c64b1cb67adf661030d35a7303bd86be00256365",
+          "compiledSha256": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f",
+          "wallMs": 154,
+          "initialElements": 89,
+          "finalElements": 87,
+          "end": "advance"
+        },
+        {
+          "id": "transcription",
+          "duration": 32,
+          "sourceSha256": "7277432ac9b2da37abb53a95c1e78d3f31835ee8c290c5eccc9a6f006609fa5e",
+          "compiledSha256": "a885559be9b865b4a94f0e9c837a98e86f18efed4fc066ae4acd3545db87f9b7",
+          "wallMs": 393,
+          "initialElements": 96,
+          "finalElements": 136,
+          "end": "advance"
+        },
+        {
+          "id": "rna-export",
+          "duration": 26,
+          "sourceSha256": "7989892ca29335ed323d097dde824416da8d372e97abe6f1c534356929eb4c90",
+          "compiledSha256": "33b56a2a89dcb4c33802af57fd683d5c8b9b2ecbc7be6380ce2f276b6d60dc1d",
+          "wallMs": 319,
+          "initialElements": 128,
+          "finalElements": 134,
+          "end": "advance"
+        },
+        {
+          "id": "translation",
+          "duration": 59,
+          "sourceSha256": "b01bf9357e128b005a8bef4c251a0af182a8d91ea77394ad96f77fba2313b795",
+          "compiledSha256": "de57add99e434cac9bfd11967fa4cc4218d88affa15a180ae47cdfcb670e4132",
+          "wallMs": 359,
+          "initialElements": 266,
+          "finalElements": 275,
+          "end": "hold"
+        }
+      ]
+    },
+    {
+      "total": 161,
+      "scenes": [
+        {
+          "id": "cell-chromatin",
+          "duration": 24,
+          "sourceSha256": "b019b208f6cfe5045f67409bdda11dbadfa4cbb8907598296751b89b2e524fa9",
+          "compiledSha256": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+          "wallMs": 256,
+          "initialElements": 131,
+          "finalElements": 87,
+          "end": "advance"
+        },
+        {
+          "id": "packaging",
+          "duration": 20,
+          "sourceSha256": "1f217f8008e8e6621364cf24c64b1cb67adf661030d35a7303bd86be00256365",
+          "compiledSha256": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f",
+          "wallMs": 147,
+          "initialElements": 89,
+          "finalElements": 87,
+          "end": "advance"
+        },
+        {
+          "id": "transcription",
+          "duration": 32,
+          "sourceSha256": "7277432ac9b2da37abb53a95c1e78d3f31835ee8c290c5eccc9a6f006609fa5e",
+          "compiledSha256": "a885559be9b865b4a94f0e9c837a98e86f18efed4fc066ae4acd3545db87f9b7",
+          "wallMs": 353,
+          "initialElements": 96,
+          "finalElements": 136,
+          "end": "advance"
+        },
+        {
+          "id": "rna-export",
+          "duration": 26,
+          "sourceSha256": "7989892ca29335ed323d097dde824416da8d372e97abe6f1c534356929eb4c90",
+          "compiledSha256": "33b56a2a89dcb4c33802af57fd683d5c8b9b2ecbc7be6380ce2f276b6d60dc1d",
+          "wallMs": 312,
+          "initialElements": 128,
+          "finalElements": 134,
+          "end": "advance"
+        },
+        {
+          "id": "translation",
+          "duration": 59,
+          "sourceSha256": "b01bf9357e128b005a8bef4c251a0af182a8d91ea77394ad96f77fba2313b795",
+          "compiledSha256": "de57add99e434cac9bfd11967fa4cc4218d88affa15a180ae47cdfcb670e4132",
+          "wallMs": 347,
+          "initialElements": 266,
+          "finalElements": 275,
+          "end": "hold"
+        }
+      ]
+    },
+    {
+      "total": 161,
+      "scenes": [
+        {
+          "id": "cell-chromatin",
+          "duration": 24,
+          "sourceSha256": "b019b208f6cfe5045f67409bdda11dbadfa4cbb8907598296751b89b2e524fa9",
+          "compiledSha256": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+          "wallMs": 273,
+          "initialElements": 131,
+          "finalElements": 87,
+          "end": "advance"
+        },
+        {
+          "id": "packaging",
+          "duration": 20,
+          "sourceSha256": "1f217f8008e8e6621364cf24c64b1cb67adf661030d35a7303bd86be00256365",
+          "compiledSha256": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f",
+          "wallMs": 144,
+          "initialElements": 89,
+          "finalElements": 87,
+          "end": "advance"
+        },
+        {
+          "id": "transcription",
+          "duration": 32,
+          "sourceSha256": "7277432ac9b2da37abb53a95c1e78d3f31835ee8c290c5eccc9a6f006609fa5e",
+          "compiledSha256": "a885559be9b865b4a94f0e9c837a98e86f18efed4fc066ae4acd3545db87f9b7",
+          "wallMs": 351,
+          "initialElements": 96,
+          "finalElements": 136,
+          "end": "advance"
+        },
+        {
+          "id": "rna-export",
+          "duration": 26,
+          "sourceSha256": "7989892ca29335ed323d097dde824416da8d372e97abe6f1c534356929eb4c90",
+          "compiledSha256": "33b56a2a89dcb4c33802af57fd683d5c8b9b2ecbc7be6380ce2f276b6d60dc1d",
+          "wallMs": 289,
+          "initialElements": 128,
+          "finalElements": 134,
+          "end": "advance"
+        },
+        {
+          "id": "translation",
+          "duration": 59,
+          "sourceSha256": "b01bf9357e128b005a8bef4c251a0af182a8d91ea77394ad96f77fba2313b795",
+          "compiledSha256": "de57add99e434cac9bfd11967fa4cc4218d88affa15a180ae47cdfcb670e4132",
+          "wallMs": 340,
+          "initialElements": 266,
+          "finalElements": 275,
+          "end": "hold"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+[00:03–00:06] There's two things here, the main topic and the meta topic.
+[00:06–00:16] The main topic is going to be this really neat algorithm for solving two-dimensional equations, things that have two unknown real numbers, or also those involving a single unknown which is a complex number.
+[00:17–00:26] So for example, if you wanted to find the complex roots of a polynomial, or maybe some of those million dollar zeros of the Riemann zeta function, this algorithm would do it for you.
+[00:26–00:30] And this method is super pretty, since a lot of colors are involved.
+[00:30–00:40] And more importantly, the core underlying idea applies to all sorts of math well beyond this algorithm for solving equations, including a bit of topology, which I'll talk about afterwards.
+[00:40–00:51] But what really makes this worth 20 minutes or so of your time is that it illustrates a lesson much more generally useful throughout math, which is try to define constructs that compose nicely with each other.
+[00:52–00:54] You'll see what I mean by that as the story progresses.
+[00:55–01:03] To motivate the case with functions that have 2D inputs and 2D outputs, let's start off simpler with functions that just take in a real number and spit out a real number.
+[01:05–01:14] If you want to know when a function f of x equals some other function g of x, you might think of this as searching for when the graphs of those functions intersect, right?
+[01:15–01:18] I mean that gives you an input where both functions have the same output.
+[01:18–01:25] To take a very simple example, imagine f of x is x squared, and g of x is the constant function 2.
+[01:25–01:28] In other words, you want to find the square root of 2.
+[01:29–01:41] Even if you know almost nothing about finding square roots, you can probably see that 1 squared is less than 2, and 2 squared is bigger than 2, so you realize, ah, there's going to be some solution in between those two values.
+[01:42–01:47] And then if you wanted to narrow it down further, maybe you try squaring the halfway point, 1.5.
+[01:47–01:53] This comes out to be 2.25, a little too high, so you'd focus on the region between 1 and 1.5.
+[01:54–02:00] And so on, you can probably see how this would keep going, you'd keep computing at the midpoint and then chopping your search space in half.
+[02:05–02:15] Another way to think about this, which is going to make it easier for us once we get up to higher dimensions, is to instead focus on the equivalent question for when the difference between these two functions is zero.
+[02:16–02:23] In those terms, we found a region of inputs where that difference was negative on one end, and it was positive on another end.
+[02:23–02:30] And then we split it into two, and the half that we narrowed our attention to was the one where the outermost points had varying signs.
+[02:31–02:44] And like this, we were able to keep going forever, taking each region with varying signs on the border, finding a smaller such region among its halves, knowing that ultimately we have to be narrowing in on a point which is going to be exactly zero.
+[02:45–03:03] In short, solving equations can always be framed as finding when a certain function is equal to zero, and to do that, we have this heuristic, if f is positive at one point and negative at another point, you can find someplace in between where it's zero, at least if everything changes smoothly with no sudden jumps.
+[03:03–03:14] Now the amazing thing I want to show you is that you can extend this kind of thinking into two-dimensional equations, equations between functions whose inputs and outputs are both two-dimensional.
+[03:14–03:21] For example, complex numbers are 2D, and this tool we're developing is perfect for finding solutions to complex equations.
+[03:22–03:28] Now since we're going to be talking about these 2D functions so much, let's take a brief side step and consider how we illustrate these.
+[03:29–03:40] Graphing a function with a 2D input and a 2D output would require four dimensions, and that's not going to work so well in our 3D world on our 2D screens, but we still have a couple good options.
+[03:40–03:45] One is to just look at both the input space and the output space side by side.
+[03:45–03:56] Each point in the input space moves to a particular point in the output space, and I can show how moving around that input point corresponds to certain movements in the output space.
+[03:56–04:06] All of the functions we consider will be continuous, in the sense that small little changes to the input only correspond to small little changes in the output, there's no sudden jumps.
+[04:06–04:16] Another option we have is to imagine the arrow from the origin of the output space to that output point, and to attach a miniature version of that arrow to the input point.
+[04:17–04:25] This can give us a sense, at a glance, for where a given input point goes, or where many different input points go by drawing the full vector field.
+[04:27–04:37] And unfortunately when you do this at a lot of points it can get pretty cluttered, so here let me make all of the arrows the same size, and what this means is we can get a sense of the direction of each output point.
+[04:37–04:46] But perhaps the prettiest way to illustrate two-dimensional functions, and the one we'll be using most this video, is to associate each point in that output space with a color.
+[04:47–04:59] Here we've used hues, that is where the color falls along a rainbow or a color wheel, to correspond to the direction away from the origin, and we're using darkness or brightness to correspond to the distance from the origin.
+[04:59–05:09] For example, focusing just on this array of outputs, all of these points are red, but the ones closer to the origin are a little darker, and the ones farther away are a little brighter.
+[05:10–05:17] And focusing just on this array of outputs, all of the points are green, and again, closer to the origin means darker, farther away means lighter.
+[05:18–05:24] And so on, all we're doing here is assigning a specific color to each direction, all changing continuously.
+[05:25–05:34] You might notice the darkness and brightness differences here are pretty subtle, but for this video, all we care about is the direction of outputs, not the magnitudes, the hues, not the brightness.
+[05:35–05:43] The one important thing about brightness for you to notice is that near the origin, which has no particular direction, all of the colors fade to black.
+[05:44–05:57] So for thinking about functions, now that we've decided on a color for each output, we can visualize 2D functions by coloring each point in the input space based on the color of the point where it lands in the output space.
+[05:57–06:10] I like to imagine many different points from that input space hopping over to their corresponding outputs in the output space, then getting painted based on the color of the point where they land, and then hopping back to where they came from in the input space.
+[06:11–06:18] Doing this for every point in the input space, you can get a sense just by looking at that input space for roughly where the function takes each point.
+[06:19–06:28] For example, this stripe of pink points on the left tells us that all of those points get mapped somewhere in the pink direction, that lower left of the output space.
+[06:29–06:34] Also those three points which are black with lots of colors around them are the ones that go to zero.
+[06:39–06:48] Alright, so just like the 1D case, solving equations of 2D functions can always be reframed by asking when a certain function is equal to zero.
+[06:49–06:57] So that's our challenge right now, create an algorithm that finds which input points of a given 2D function go to zero.
+[07:00–07:08] Now you might point out that if you're looking at a color map like this by seeing those black dots, you already know where the zeros of the function are.
+[07:08–07:10] So does that count?
+[07:10–07:27] Well keep in mind that to create a diagram like this, we've had the computer compute the function at all of the pixels on the plane, but our goal is to find a more efficient algorithm that only requires computing the function at as few points as possible, only having a limited view of the colors, so to speak.
+[07:29–07:37] And also from a more theoretical standpoint, it'd be nice to have a general construct that tells us the conditions for whether or not a zero exists inside a given region.
+[07:39–07:47] Now remember, in one dimension the main insight was that if a continuous function is positive at one point and negative at another, then somewhere in between it must be zero.
+[07:48–07:50] So how do we extend that into two dimensions?
+[07:50–07:53] We need some sort of analog of talking about signs.
+[07:54–07:58] One way to think about what signs even are is directions.
+[07:58–08:03] Positive means you're pointing to the right along the number line, and negative means you're pointing to the left.
+[08:04–08:11] Two dimensional quantities also have direction, but for them the options are much wider, they can point anywhere along a whole circle of possibilities.
+[08:12–08:30] So the same way that in one dimension we were asking whether a given function is positive or negative on the boundary of a range, which is just two points, for 2D functions we're going to be looking at the boundary of a region, which is a loop, and ask about the direction of the function's output along that boundary.
+[08:33–08:45] For example, we see that along this loop around this zero, the output goes through every possible direction, all the colors of the rainbow, red, yellow, green, blue, back to red, and everything in between along the way.
+[08:45–08:54] But along this loop over here, with no zeros inside of it, the output doesn't go through every color, it goes through some of the orangish ones, but never, say, green or blue.
+[08:55–08:58] And this is promising, it looks a lot like how things worked in one dimension.
+[08:59–09:19] Maybe in the same way that if a 1D function takes both possible signs on the boundary of a 1D region, there was a zero somewhere inside, we might hypothesize that if a 2D function hits outputs of all possible directions, all possible colors, along the boundary of a 2D region, then somewhere inside that region it must go to zero.
+[09:20–09:26] So that's our guess, and take a moment to think about if this should be true, and if so, why?
+[09:27–09:36] If we start thinking about a tiny loop around some input point, we know that since everything is continuous, our function takes it to some tiny loop near the corresponding output.
+[09:37–09:40] But look, for most tiny loops, the output varies in color.
+[09:40–09:49] If you pick any output point other than zero, and draw a sufficiently tight loop near it, the loop's colors are all going to be about the same color as that point.
+[09:49–09:57] A tight loop over here is all bluish, a tight loop over here is all yellowish, you certainly aren't going to get every color of the rainbow.
+[09:58–10:06] The only point where you can tighten loops around it while still getting all the colors is the colorless origin, zero itself.
+[10:07–10:16] So it is indeed the case that if you have loops going through every color of the rainbow, tightening and tightening, narrowing in on a point, then that point must in fact be a zero.
+[10:17–10:21] And so, let's set up a 2D equation solver just like our one-dimensional equation solver.
+[10:22–10:29] When we find a large region whose border goes through every color, split it into two, and then look at the colors on the boundary of each half.
+[10:30–10:38] In the example shown here, the border on the left half doesn't go through all colors, there are no points that map to the orangish-yellowish directions, for example.
+[10:39–10:42] So I'll grey out this area as a way of saying we don't want to search it any further.
+[10:43–10:50] The right half does go through all the colors, spends a lot of time in the green direction, then passes through yellow-orange-red, as well as blue-violet-pink.
+[10:51–10:57] Now remember, what that means is that points of this boundary get mapped to outputs of all possible directions.
+[10:57–11:01] So we'll explore it further, subdividing again and checking the boundary for each region.
+[11:02–11:06] The boundary of the top is all green, so we'll stop searching there.
+[11:06–11:09] But the bottom is colorful enough to deserve a subdivision.
+[11:10–11:12] And just continue like this.
+[11:12–11:27] Check which subregion has a boundary covering all possible colors, meaning points of that boundary get mapped to all possible directions, and keep chopping those regions in half like we did for the one-dimensional case, eventually leading us to a zero over the func- Well, hang on a second.
+[11:28–11:29] What happened here?
+[11:30–11:39] Neither of those last subdivisions on the bottom right passed through all the colors, so our algorithm stopped because it didn't want to search through either of those, but it also didn't find a zero.
+[11:41–11:43] Okay, clearly something's wrong here.
+[11:43–11:46] And that's okay, being wrong is a regular part of doing math.
+[11:46–11:52] If we look back, we had this hypothesis, and it led us to this proposed algorithm, so we were mistaken somewhere.
+[11:53–12:01] And being good at math isn't about being right the first time, it's about having the resilience to carefully look back and understand the mistakes, and understand how to fix them.
+[12:02–12:14] Now the problem here is that we had a region whose border went through every color, but when we split it in the middle, neither subregion's border went through every color, we had no options for where to keep searching next, and that broke the zero finder.
+[12:14–12:17] Now in one dimension, this sort of thing never happened.
+[12:17–12:28] Any time you had an interval whose endpoints have different signs, if you split it up, you know that you're guaranteed to get some subinterval whose endpoints also have different signs.
+[12:29–12:38] Or, put another way, any time you have two intervals whose endpoints don't change signs, if you combine them, you'll get a bigger interval whose endpoints also don't change sign.
+[12:39–12:49] But in two dimensions, it's possible to find two regions whose borders don't go through every color, but whose boundaries combine to give a region whose border does go through every color.
+[12:49–12:53] And in just this way, our proposed zero-finding algorithm broke.
+[12:54–13:02] In fact, if you think about it, you can find a big loop whose border goes through every possible color without there being a zero inside of it.
+[13:03–13:12] Now that's not to say that we were wrong in our claims about tiny loops when we said that a forever narrowing loop going through every color has to be narrowing in on a zero.
+[13:12–13:22] But what made a mess of things for us is that this does-my-border-go-through-every-color-or-not property doesn't combine in a nice, predictable way when you combine regions.
+[13:23–13:30] But don't worry, it turns out we can modify this slightly to a more sophisticated property that does combine to give us what we want.
+[13:38–13:47] The idea is that instead of simply asking whether we can find a color at some point along the loop, let's keep more careful track of how these colors change as we walk around that loop.
+[13:48–13:49] Let me show you what I mean with an example.
+[13:50–13:53] I'll keep a little color wheel up here in the corner to help us keep track.
+[13:53–14:04] When the colors along a path of inputs move through the rainbow in a specific direction, from red to yellow, yellow to green, green to blue, or blue to red, the output is swinging clockwise.
+[14:05–14:16] But on the other hand, if the colors move the other way through the rainbow, from blue to green, green to yellow, yellow to red, or red to blue, the output is swinging counterclockwise.
+[14:17–14:23] So walking along this short path here, the colors wind a fifth of the way clockwise through the color wheel.
+[14:24–14:30] And walking along this path here, the colors wind another fifth of the way clockwise through the color wheel.
+[14:31–14:38] And of course that means that if you go through both paths, one after the other, the colors wind a total of two-fifths of a full turn clockwise.
+[14:39–14:46] The total amount of winding just adds up, and this is going to be key, this is the kind of straightforward combining that will be useful to us.
+[14:46–14:57] Now when I say total amount of winding, I want you to imagine an old-fashioned odometer that ticks forward as the arrow spins clockwise, but backwards as the arrow spins counterclockwise.
+[14:58–15:02] So counterclockwise winding counts as negative clockwise winding.
+[15:03–15:08] The outputs may turn a lot, but if some of that turning is in the opposite direction, it cancels out.
+[15:08–15:16] For example, if you move forward along this path, and then move backwards along that same path, the total amount of winding ends up being zero.
+[15:16–15:25] The backwards movement literally rewinds through the previously seen colors, reversing all the previous winding, and returning the odometer back to where it started.
+[15:26–15:29] For our purposes, we'll care most about looking at the winding along loops.
+[15:30–15:33] For example, let's say we walk around this entire loop clockwise.
+[15:34–15:38] The outputs that we come across wind around a total of three full clockwise turns.
+[15:39–15:46] The colors swung through the rainbow, ROYGBIV, in order, from red to red again, and then again, and again.
+[15:46–15:52] In the jargon mathematicians use, we say that along this loop, the total winding number is three.
+[15:53–16:14] Now for other loops, it could be any other whole number, maybe a larger one if the output swings around many times as the input walks around a single loop, or it could be a smaller number if the output only swings around once or twice, or that winding number could even be a negative integer if the output was swinging counterclockwise as we walk clockwise around the loop.
+[16:15–16:18] But along any loop, this total amount of winding has to be a whole number.
+[16:20–16:25] I mean, by the time you get back to where you started, you'll have the same output that you started with.
+[16:26–16:36] Incidentally, if a path actually contains a point where the output is precisely zero, then technically you can't define a winding number along that, since the output has no particular direction.
+[16:37–16:44] Now this isn't going to be a problem for us, because our whole goal is to find zeros, so if this ever comes up, we just lucked out early.
+[16:44–16:50] Alright, so the main thing to notice about these winding numbers is that they add up nicely when you combine paths into bigger paths.
+[16:54–17:02] But what we really want is for the winding numbers along the borders of regions to add up nicely when we combine regions to make bigger regions.
+[17:02–17:04] So do we have that property?
+[17:07–17:09] Well, take a look.
+[17:09–17:24] The winding number as we go clockwise around this region on the left is the sum of the winding numbers from these four paths, and the winding as we go clockwise around this region on the right is the sum of the winding numbers from these four paths.
+[17:25–17:32] And when we combine those two regions into a bigger one, most of those paths become part of the clockwise border of the bigger region.
+[17:33–17:35] And as for those two paths that don't?
+[17:35–17:37] Well, they cancel out perfectly.
+[17:37–17:41] One of them is just the reverse, the rewinding of the other one, like we saw before.
+[17:42–17:47] So the winding numbers along borders of regions add up in just the way we want them to.
+[17:48–17:56] Also side note, this reasoning about oriented borders adding up nicely like this comes up a lot in mathematics, and it often goes under the name Stokes' theorem.
+[17:57–18:01] Those of you who've studied multivariable calculus might recognize it from that context.
+[18:02–18:07] So now, finally, with winding numbers in hand, we can get back to our equation solving goals.
+[18:08–18:15] The problem with the region we saw earlier is that even though its border passed through all possible colors, the winding number was actually zero.
+[18:16–18:30] The outputs wound around halfway, through yellow to red, and then started going counterclockwise back the other direction, then continued going through blue and hitting red from the other way, all in such a way that the total winding netted out to be zero.
+[18:31–18:48] But if you find a loop which not only hits every color, but has the stronger condition of a non-zero winding number, then if you were to split it in half, you're guaranteed that at least one of those halves has a non-zero winding number as well, since things add up nicely in the way we want them to.
+[18:48–18:53] So in this way, you can keep going, narrowing in further and further onto one point.
+[18:54–19:06] And as you narrow in onto a point, you'll be doing so with tiny loops that have non-zero winding numbers, which implies they go through all possible colors, and therefore, like I said before, the point they're narrowing in on must be a zero.
+[19:07–19:08] And that's it!
+[19:08–19:13] We have now created a two-dimensional equation solver, and this time, I promise, there are no bugs.
+[19:14–19:17] Winding numbers are precisely the tool we need to make this work.
+[19:18–19:26] We can now solve equations that look like where does f of x equal g of x in two dimensions just by considering how the difference between f and g winds around.
+[19:27–19:35] Whenever we have a loop whose winding number isn't zero, we can run this algorithm on it and we're guaranteed to find a solution somewhere within it.
+[19:35–19:39] And what's more, just like in one dimension, this algorithm is incredibly efficient.
+[19:40–19:54] We keep narrowing in on half the size of our region each round, thus quickly narrowing in on the zeros, and all the while, we only have to check the value of the function along points of these loops, rather than checking it on the many points of the interior.
+[19:55–20:03] So in some sense, the overall work done is proportional only to the search space's perimeter, not the full area, which is amazing.
+[20:04–20:12] Now once you understand what's going on, it's weirdly mesmerizing to just watch this in action, giving it some function and letting it search for zeros.
+[20:13–20:19] Like I said before, complex numbers are two-dimensional, so let's apply it to some equation with complex numbers.
+[20:20–20:28] For example, here's the algorithm finding the zeros of the function x to the fifth minus x minus one over the complex plane.
+[20:28–20:34] It started by considering a very large region around the origin, which ended up having a winding number of five.
+[20:35–20:42] Each time you find a loop with a non-zero winding number, you split it in half and figure out the winding number of the two smaller loops.
+[20:42–20:53] Either one or both of them is guaranteed to have a non-zero winding number, and when you see this, you know there's a zero somewhere inside that smaller loop, so you keep going in the same way, searching the smaller space.
+[20:54–21:02] We also stop exploring a region if the path we're computing along happens to stumble across a zero, which actually happened once for this example on the right half here.
+[21:03–21:08] Those rare occurrences interfere with our ability to compute winding numbers, but hey, we got a zero.
+[21:09–21:12] And as for loops whose winding number is zero, you just don't explore those further.
+[21:12–21:16] Maybe they have a solution inside, maybe they don't, we have no guarantees.
+[21:18–21:24] And letting our equation solver continue in the same way, it eventually converges to lots of zeros for this polynomial.
+[21:25–21:31] By the way, it is no coincidence that the total winding number in this example happened to be five.
+[21:31–21:42] With complex numbers, the operation x to the n directly corresponds to walking around the output's origin n times as you walk around the input's origin once.
+[21:44–21:51] So with the polynomial, for large enough inputs, every term other than the leading term becomes insignificant in comparison.
+[21:52–21:59] So any complex polynomial whose leading term is x to the n has a winding number of n around a large enough loop.
+[22:00–22:06] And in that way, our winding number technology actually guarantees that every complex polynomial has a zero.
+[22:07–22:12] This is such an important fact that mathematicians call it the fundamental theorem of algebra.
+[22:13–22:33] Having an algorithm for finding numerical solutions to equations like this is extremely practical, but the fundamental theorem of algebra is a good example of how these winding numbers are also quite useful on a theoretical level, guaranteeing the existence of a solution to a broad class of equations for suitable conditions, which is much more the kind of thing mathematicians like thinking about.
+[22:33–22:43] I'll show you a couple more amazing applications of this in the context of topology in a follow-up video, which includes correcting a mistake from an old 3blue1brown video.
+[22:44–22:44] Which one?
+[22:44–22:49] Well, watch all of the videos, everything on this channel, and see if you can spot the error first.
+[22:51–22:56] The primary author of this video is one of the newest 3blue1brown team members, Sridhar Ramesh.
+[23:03–23:10] Thank you for watching.

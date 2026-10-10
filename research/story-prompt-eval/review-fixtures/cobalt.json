@@ -1,0 +1,199 @@
+{
+  "request": {
+    "title": "A leaf trades water for carbon",
+    "topic": "Write a roughly 2-minute lesson in exactly 3 scenes for a curious 12-year-old. Explain how opening stomata lets carbon dioxide enter for photosynthesis while water vapor escapes, and why closing them in dry conditions protects water but restricts carbon uptake. Show the causal tradeoff rather than list plant parts. No equations and no scripted pauses. Do not imply plants consciously decide, that stomata are one-way valves, or that closing instantly stops all water loss.",
+    "videoMode": "classic",
+    "documents": []
+  },
+  "draft": {
+    "schemaVersion": 1,
+    "markdown": "# A leaf trades water for carbon\n\n## Beat 1 — Open\nContent needed: Label a leaf with carbon in and water out.\nNarration: A leaf has tiny pores called stomata. Opening them helps the leaf gain carbon dioxide, but it loses water.\n\n## Beat 2 — Tradeoff\nContent needed: Display the sentence Opening trades water for carbon. Do not depict paths, conditions, or mechanisms.\nNarration: This is the tradeoff. Carbon goes in and water goes out. Opening is good for carbon and bad for conserving water. The diagram makes the tradeoff clear.\n\n## Beat 3 — Close\nContent needed: Show the label Closing conserves water but restricts carbon.\nNarration: In dry conditions the pores narrow. This conserves water but restricts carbon uptake. Some water loss continues. Opening trades water for carbon; closing reverses that tradeoff.",
+    "plan": {
+      "audience": "A curious 12-year-old; a roughly two-minute classic lesson in exactly three scenes, with no scripted pauses.",
+      "prerequisites": [
+        "Air contains gases.",
+        "Plants need water and light."
+      ],
+      "learningGoal": "Explain why an open stoma supports carbon dioxide uptake while allowing water-vapor loss, and predict why narrowing it in dry conditions conserves water while restricting carbon uptake.",
+      "centralQuestion": "Why does the same opening that gives a leaf carbon dioxide also cost it water?",
+      "keyInsight": "An open pore connects the moist interior with outside air and permits gases to move both ways. Photosynthesis uses carbon dioxide inside while evaporation supplies water vapor; their different inside-outside conditions produce opposite overall movements. Narrowing the shared passage restricts both exchanges.",
+      "runningExample": "One idealized broad leaf with a selected lower-surface stoma, first open in air drier than the leaf interior and then narrowing as conditions become much drier. Particle sizes, spacing, and counts are qualitative, with no measured rates or anatomical dimensions implied.",
+      "misconceptions": [
+        "Stomata are one-way valves or sort gases by usefulness.",
+        "Plants consciously decide when to open or close stomata.",
+        "Closing stomata instantly eliminates every route of water loss.",
+        "Closing stomata conserves water without affecting carbon dioxide supply."
+      ],
+      "entities": [
+        {
+          "id": "leaf",
+          "meaning": "The same schematic broad leaf throughout beat-1 through beat-3. Its selected lower-surface patch remains identifiable during enlargement and cutaway; the pore opens into connected interior air spaces beside moist photosynthetic cells. In beat-3 the surrounding surface also provides the small remaining route of water loss. Thickness and microscopic scale are exaggerated and not measured.",
+          "color": "GREEN"
+        },
+        {
+          "id": "guard-cells",
+          "meaning": "A paired guard-cell assembly around one pore, introduced open in beat-1, retained in beat-2, and narrowed by coordinated cell-shape change in beat-3. Both cells remain part of the same leaf surface; the central opening, not the entire surface, changes width. This is an idealized cellular response, not a hinge or valve mechanism.",
+          "color": "TEAL"
+        },
+        {
+          "id": "carbon-dioxide",
+          "meaning": "Yellow illustrative gas particles and matching overall-movement arrows introduced in beat-2 and retained in beat-3. Particles can cross the opening either way; greater inward movement supports the narrated photosynthesis example. Narrowing limits crossing opportunities without changing particle identity or introducing a one-way barrier.",
+          "color": "YELLOW"
+        },
+        {
+          "id": "water",
+          "meaning": "Blue water at moist interior surfaces and blue water-vapor particles introduced in beat-2, retained into beat-3. Separate spatial context distinguishes liquid water at surfaces from vapor in air. Vapor moves both ways through the pore, with net outward movement in the narrated conditions. Small surface leakage remains after narrowing; particles are schematic and not a flux measurement.",
+          "color": "BLUE"
+        },
+        {
+          "id": "light",
+          "meaning": "A restrained white light cue reaching photosynthetic tissue in beat-2 to ground sugar production. Remove after that dependency has been established, before the end of beat-2.",
+          "color": "WHITE"
+        }
+      ],
+      "scenes": [
+        {
+          "id": "beat-1",
+          "purpose": "Establish the concrete question at one pore on one leaf.",
+          "whyNow": "Opens with the leaf's need for carbon dioxide and the water cost; selects the shared passage that the next scene will explain.",
+          "keyPoints": [
+            "A leaf needs carbon dioxide to make sugar.",
+            "A small surface opening is the location of the question.",
+            "The same pore and surrounding tissue will carry the explanation."
+          ],
+          "visualDescription": "2D (because this is a labeled schematic): A still leaf with a sentence stating carbon in; water out. Do not show gas paths, shared passage, humidity difference, or other mechanism. No controls.",
+          "endsWith": "Same still leaf and current conclusion label.",
+          "carry": [
+            "leaf",
+            "guard-cells"
+          ],
+          "cleanup": [],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Requested leaf-stomata subject, curious 12-year-old audience, exactly three scenes, roughly two minutes, and causal tradeoff focus."
+            }
+          ],
+          "interactions": []
+        },
+        {
+          "id": "beat-2",
+          "purpose": "Show why a single open pore produces overall carbon dioxide uptake and water-vapor loss at the same time.",
+          "whyNow": "Uses the pore selected in beat-1 to answer how both exchanges occur; establishes the shared passage whose restriction will explain the dry-condition tradeoff in beat-3.",
+          "keyPoints": [
+            "The open stoma joins outside air to interior air spaces.",
+            "Photosynthesis uses light, carbon dioxide, and water to make sugars.",
+            "Carbon dioxide use supports overall inward movement.",
+            "Evaporation supplies water vapor to the moist interior, and drier outside air supports overall outward movement.",
+            "Both gases cross in both directions; the arrows summarize the overall exchanges."
+          ],
+          "visualDescription": "2D (because this is a labeled schematic): A still leaf with a sentence stating opening trades water for carbon. Do not show gas paths, shared passage, humidity difference, or other mechanism. No controls.",
+          "endsWith": "Same still leaf and current conclusion label.",
+          "carry": [
+            "leaf",
+            "guard-cells",
+            "carbon-dioxide",
+            "water"
+          ],
+          "cleanup": [
+            "light"
+          ],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Opening stomata lets carbon dioxide enter for photosynthesis while water vapor escapes; the lesson must not imply one-way valves."
+            }
+          ],
+          "interactions": []
+        },
+        {
+          "id": "beat-3",
+          "purpose": "Derive why narrowing the shared passage protects water while limiting carbon dioxide uptake.",
+          "whyNow": "Changes dryness and then pore width in the established model, so the two consequences follow from the shared passage already explained. Concludes by answering the opening question.",
+          "keyPoints": [
+            "Drier outside air increases the tendency for water loss through the still-open pore.",
+            "Dry-condition signals can change guard-cell water content and shape, narrowing the gap without a conscious decision.",
+            "Narrowing restricts water-vapor escape and fresh carbon dioxide entry together.",
+            "Photosynthesis can slow, and a small amount of water loss remains through the outer surface.",
+            "The opening trades easier carbon access for a water cost."
+          ],
+          "visualDescription": "2D (because this is a labeled schematic): A still leaf with a sentence stating closing restricts both. Do not show gas paths, shared passage, humidity difference, or other mechanism. No controls.",
+          "endsWith": "Same still leaf and current conclusion label.",
+          "carry": [
+            "leaf",
+            "guard-cells",
+            "carbon-dioxide",
+            "water"
+          ],
+          "cleanup": [],
+          "sourceRefs": [
+            {
+              "document": "request",
+              "location": "topic",
+              "supports": "Closing in dry conditions protects water but restricts carbon uptake; avoid conscious decision-making and the claim that closing instantly stops all water loss."
+            }
+          ],
+          "interactions": []
+        }
+      ]
+    }
+  },
+  "parsedScenes": [
+    {
+      "id": "beat-1",
+      "title": "Open",
+      "context": "Content needed: Label a leaf with carbon in and water out.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-1.u1",
+          "role": "narration",
+          "text": "A leaf has tiny pores called stomata. Opening them helps the leaf gain carbon dioxide, but it loses water.",
+          "source": {
+            "start": 110,
+            "end": 227,
+            "line": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "beat-2",
+      "title": "Tradeoff",
+      "context": "Content needed: Display the sentence Opening trades water for carbon. Do not depict paths, conditions, or mechanisms.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-2.u1",
+          "role": "narration",
+          "text": "This is the tradeoff. Carbon goes in and water goes out. Opening is good for carbon and bad for conserving water. The diagram makes the tradeoff clear.",
+          "source": {
+            "start": 368,
+            "end": 530,
+            "line": 9
+          }
+        }
+      ]
+    },
+    {
+      "id": "beat-3",
+      "title": "Close",
+      "context": "Content needed: Show the label Closing conserves water but restricts carbon.\n",
+      "blocks": [
+        {
+          "kind": "speech",
+          "id": "beat-3.u1",
+          "role": "narration",
+          "text": "In dry conditions the pores narrow. This conserves water but restricts carbon uptake. Some water loss continues. Opening trades water for carbon; closing reverses that tradeoff.",
+          "source": {
+            "start": 627,
+            "end": 815,
+            "line": 13
+          }
+        }
+      ]
+    }
+  ]
+}

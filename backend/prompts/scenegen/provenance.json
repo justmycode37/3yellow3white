@@ -5,9 +5,9 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md",
-      "sha256": "e7378c4958fd4a47d65b0062b5f298161f8cf2c542f140d26635b41b2569dd56",
+      "sha256": "119bad49226025feffd3b6e1258adc7d35c7f24791ef59dad65ad11f0d174e04",
       "importedSha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3",
-      "revision": "2026-10-10: spatial authoring plus procedural textures, bump and stylized materials reviewed against animlib 076f017; scale/frequency-aware bump refined from initial proof frames; user molecular display preference: space filling for context, bonds for structural explanation",
+      "revision": "2026-10-10: spatial authoring plus procedural textures, bump and stylized materials reviewed against animlib 076f017; scale/frequency-aware bump refined from initial proof frames; user molecular display preference: space filling for context, bonds for structural explanation; reference reconstruction v3: observed shot specification, organic mass/cleft topology, projected proportions, joined tangents and rendered normal orientation; v4: asymmetric framing and projected domain scale; v5: geometry-preserving compilation optimization and normal-player gate; 2026-10-11: deposited-coordinate batched molecule API, offline PDB preprocessing and scientific/compile limits; smooth molecular envelopes: host density mesh, preserved rigid geometry and representation limits",
       "upstreamRevisions": [
         {
           "reason": "Update spatial authoring guidance for mesh shading, function and parametric surfaces, basic solids, and swept tubes.",

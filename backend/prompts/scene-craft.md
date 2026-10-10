@@ -1,6 +1,6 @@
 # Scene craft
 
-Make the scene's purpose visible. Show a concrete change before naming its rule; every causal claim needs a visible reason, such as a correspondence, comparison, or quantity changing together with its geometry. Use the running example and exact values established in the script. Do not choose new values that contradict the speech.
+Make the scene's purpose visible. Follow the script's explanatory order: a definition or known rule may orient the viewer before its demonstration. Make the relevant evidence inspectable through a correspondence, comparison, or meaningful change; a conclusion label alone is insufficient. Use the running example and exact values established in the script. Do not choose new values that contradict the speech.
 
 Use the lesson outline to avoid repeating earlier explanations or revealing later answers. Set up the next scene's needs. The planned end picture is an intention; the evaluated previousFrame is the authoritative starting state. Retrieve carried objects with s.previous.get(id), animate the same object, and keep the declared carry IDs. Do not recreate a lookalike under a different ID. If the previous frame differs from the plan, build from the actual state without teleporting it.
 
@@ -14,7 +14,7 @@ Re-establish s.connect and s.attach in each receiving scene using the carried en
 
 Keep the objects needed to explain the idea at the requested fidelity. A complex model may require many parts; minimize competing annotations and irrelevant detail, not scientifically or mechanically necessary structure. Use a selected region, cutaway or close-up when detail needs room. Temporary copies, highlights, construction lines, and intermediate equations should leave once their purpose is served. Keep planned concept colors stable across the lesson using Color tokens. Neutral labels may use WHITE. Color alone should not be the only way to distinguish concepts.
 
-Use motion to explain instead of filling the canvas with the narration. Prefer geometry, short labels, formulas, and meaningful numbers; use brief explanatory text when the topic needs it. Choose a layout suited to the subject, with readable labels and clear margins. A fixed formula area is useful when geometry would otherwise collide with equations, but is not required for every lesson. Labels should move with the thing they name. Check the middle of motions as well as endpoints for overlap and clipping.
+Use geometry to explain instead of filling the canvas with the narration. Add short labels, a local relation or meaningful numbers only when the active operation needs them; a showcase does not need a formula panel. Keep exact numerical parameters in the model without automatically displaying all of them. Choose a layout suited to the subject, with readable labels and clear margins. Labels should move with the thing they name. Apply the quality policy's attention, field-sampling, motion-purpose and solid-contact checks during initial construction. Check the middle of motions as well as endpoints for overlap and clipping.
 
 The player overlays a title/menu near the top-left and playback controls near the bottom. Keep essential labels and the main inference clear of those areas. Do not assume an empty fullscreen canvas when choosing framing.
 

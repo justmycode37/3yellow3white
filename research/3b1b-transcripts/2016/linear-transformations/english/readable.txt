@@ -1,0 +1,85 @@
+[00:12–00:12] Hey everyone!
+[00:13–00:22] If I had to choose just one topic that makes all of the others in linear algebra start to click, and which too often goes unlearned the first time a student takes linear algebra, it would be this one.
+[00:22–00:26] The idea of a linear transformation and its relation to matrices.
+[00:26–00:35] For this video, I'm just going to focus on what these transformations look like in the case of two dimensions, and how they relate to the idea of matrix vector multiplication.
+[00:35–00:42] In particular, I want to show you a way to think about matrix vector multiplication that doesn't rely on memorization.
+[00:43–00:46] To start, let's just parse this term, linear transformation.
+[00:47–00:49] Transformation is essentially a fancy word for function.
+[00:50–00:53] It's something that takes in inputs and spits out an output for each one.
+[00:53–01:01] Specifically, in the context of linear algebra, we like to think about transformations that take in some vector and spit out another vector.
+[01:02–01:06] So why use the word transformation instead of function if they mean the same thing?
+[01:07–01:11] Well, it's to be suggestive of a certain way to visualize this input-output relation.
+[01:11–01:15] You see, a great way to understand functions of vectors is to use movement.
+[01:16–01:24] If a transformation takes some input vector to some output vector, we imagine that input vector moving over to the output vector.
+[01:25–01:34] Then to understand the transformation as a whole, we might imagine watching every possible input vector move over to its corresponding output vector.
+[01:34–01:39] It gets really crowded to think about all of the vectors all at once, each one as an arrow.
+[01:39–01:47] So as I mentioned last video, a nice trick is to conceptualize each vector not as an arrow, but as a single point, the point where its tip sits.
+[01:48–01:56] That way, to think about a transformation taking every possible input vector to some output vector, we watch every point in space moving to some other point.
+[01:57–02:05] In the case of transformations in two dimensions, to get a better feel for the whole shape of the transformation, I like to do this with all of the points on an infinite grid.
+[02:06–02:12] I also sometimes like to keep a copy of the grid in the background, just to help keep track of where everything ends up relative to where it starts.
+[02:14–02:21] The effect for various transformations moving around all of the points in space is, you've got to admit, beautiful.
+[02:21–02:24] It gives the feeling of squishing and morphing space itself.
+[02:25–02:29] As you can imagine though, arbitrary transformations can look pretty complicated.
+[02:30–02:38] But luckily, linear algebra limits itself to a special type of transformation, ones that are easier to understand, called linear transformations.
+[02:39–02:43] Visually speaking, a transformation is linear if it has two properties.
+[02:43–02:49] All lines must remain lines without getting curved, and the origin must remain fixed in place.
+[02:50–02:55] For example, this right here would not be a linear transformation, since the lines get all curvy.
+[02:56–03:01] And this one right here, although it keeps the lines straight, is not a linear transformation, because it moves the origin.
+[03:02–03:09] This one here fixes the origin, and it might look like it keeps lines straight, but that's just because I'm only showing the horizontal and vertical grid lines.
+[03:09–03:15] When you see what it does to a diagonal line, it becomes clear that it's not at all linear, since it turns that line all curvy.
+[03:16–03:22] In general, you should think of linear transformations as keeping grid lines parallel and evenly spaced.
+[03:23–03:27] Some linear transformations are simple to think about, like rotations about the origin.
+[03:28–03:30] Others are a little trickier to describe with words.
+[03:32–03:35] So, how do you think you could describe these transformations numerically?
+[03:35–03:47] If you were, say, programming some animations to make a video teaching the topic, what formula do you give the computer so that if you give it the coordinates of a vector, it can give you the coordinates of where that vector lands?
+[03:48–03:56] It turns out that you only need to record where the two basis vectors, i-hat and j-hat, each land, and everything else will follow from that.
+[03:57–04:05] For example, consider the vector v with coordinates negative 1, 2, meaning that it equals negative 1 times i-hat plus 2 times j-hat.
+[04:08–04:18] If we play some transformation and follow where all three of these vectors go, the property that grid lines remain parallel and evenly spaced has a really important consequence.
+[04:19–04:25] The place where v lands will be negative 1 times the vector where i-hat landed plus 2 times the vector where j-hat landed.
+[04:25–04:34] In other words, it started off as a certain linear combination of i-hat and j-hat, and it ends up as that same linear combination of where those two vectors landed.
+[04:35–04:40] This means you can deduce where v must go based only on where i-hat and j-hat each land.
+[04:41–04:44] This is why I like keeping a copy of the original grid in the background.
+[04:45–04:54] For the transformation shown here, we can read off that i-hat lands on the coordinates 1, negative 2, and j-hat lands on the x-axis over at the coordinates 3, 0.
+[04:55–05:06] This means that the vector represented by negative 1 i-hat plus 2 times j-hat ends up at negative 1 times the vector 1, negative 2 plus 2 times the vector 3, 0.
+[05:07–05:11] Adding that all together, you can deduce that it has to land on the vector 5, 2.
+[05:14–05:17] This is a good point to pause and ponder, because it's pretty important.
+[05:18–05:25] Now, given that I'm actually showing you the full transformation, you could have just looked to see that v has the coordinates 5, 2.
+[05:25–05:37] But the cool part here is that this gives us a technique to deduce where any vectors land so long as we have a record of where i-hat and j-hat each land without needing to watch the transformation itself.
+[05:38–05:50] Write the vector with more general coordinates, x and y, and it will land on x times the vector where i-hat lands, 1, negative 2, plus y times the vector where j-hat lands, 3, 0.
+[05:51–05:58] Carrying out that sum, you see that it lands at 1x plus 3y, negative 2x plus 0y.
+[05:58–06:03] I give you any vector, and you can tell me where that vector lands using this formula.
+[06:04–06:16] What all of this is saying is that a two-dimensional linear transformation is completely described by just four numbers, the two coordinates for where i-hat lands and the two coordinates for where j-hat lands.
+[06:17–06:17] Isn't that cool?
+[06:18–06:29] It's common to package these coordinates into a 2x2 grid of numbers called a 2x2 matrix, where you can interpret the columns as the two special vectors where i-hat and j-hat each land.
+[06:30–06:47] If you're given a 2x2 matrix describing a linear transformation and some specific vector, and you want to know where that linear transformation takes that vector, you can take the coordinates of the vector, multiply them by the corresponding columns of the matrix, then add together what you get.
+[06:48–06:52] This corresponds with the idea of adding the scaled versions of our new basis vectors.
+[06:54–07:00] Let's see what this looks like in the most general case, where your matrix has entries A, B, C, D.
+[07:01–07:06] And remember, this matrix is just a way of packaging the information needed to describe a linear transformation.
+[07:06–07:16] Always remember to interpret that first column, AC, as the place where the first basis vector lands, and that second column, BD, as the place where the second basis vector lands.
+[07:17–07:21] When we apply this transformation to some vector xy, what do you get?
+[07:22–07:26] Well, it'll be x times AC plus y times BD.
+[07:28–07:33] Putting this together, you get a vector Ax plus By, Cx plus Dy.
+[07:33–07:40] You could even define this as matrix vector multiplication, when you put the matrix on the left of the vector like it's a function.
+[07:41–07:46] Then, you could make high schoolers memorize this without showing them the crucial part that makes it feel intuitive.
+[07:48–07:57] But, isn't it more fun to think about these columns as the transformed versions of your basis vectors, and to think about the result as the appropriate linear combination of those vectors?
+[08:00–08:03] Let's practice describing a few linear transformations with matrices.
+[08:04–08:12] For example, if we rotate all of space 90 degrees counterclockwise, then i-hat lands on the coordinates 0, 1.
+[08:13–08:17] And j-hat lands on the coordinates negative 1, 0.
+[08:17–08:21] So the matrix we end up with has columns 0, 1, negative 1, 0.
+[08:22–08:29] To figure out what happens to any vector after a 90-degree rotation, you could just multiply its coordinates by this matrix.
+[08:31–08:34] Here's a fun transformation with a special name, called a shear.
+[08:35–08:39] In it, i-hat remains fixed, so the first column of the matrix is 1, 0.
+[08:39–08:45] But j-hat moves over to the coordinates 1, 1, which become the second column of the matrix.
+[08:45–08:54] And at the risk of being redundant here, figuring out how a shear transforms a given vector comes down to multiplying this matrix by that vector.
+[08:55–09:04] Let's say we want to go the other way around, starting with a matrix, say with columns 1, 2 and 3, 1, and we want to deduce what its transformation looks like.
+[09:04–09:07] Pause and take a moment to see if you can imagine it.
+[09:08–09:15] One way to do this is to first move i-hat to 1, 2, then move j-hat to 3, 1.
+[09:15–09:20] Always moving the rest of space in such a way that keeps gridlines parallel and evenly spaced.
+[09:21–09:42] If the vectors that i-hat and j-hat land on are linearly dependent, which, if you recall from last video, means that one is a scaled version of the other, it means that the linear transformation squishes all of 2D space onto the line where those two vectors sit, also known as the one-dimensional span of those two linearly dependent vectors.
+[09:44–09:53] To sum up, linear transformations are a way to move around space such that gridlines remain parallel and evenly spaced, and such that the origin remains fixed.
+[09:54–10:01] Delightfully, these transformations can be described using only a handful of numbers, the coordinates of where each basis vector lands.
+[10:02–10:14] Matrices give us a language to describe these transformations, where the columns represent those coordinates, and matrix-vector multiplication is just a way to compute what that transformation does to a given vector.
+[10:15–10:21] The important takeaway here is that every time you see a matrix, you can interpret it as a certain transformation of space.
+[10:22–10:27] Once you really digest this idea, you're in a great position to understand linear algebra deeply.
+[10:27–10:40] Almost all of the topics coming up, from matrix multiplication to determinants, change of basis, eigenvalues, all of these will become easier to understand once you start thinking about matrices as transformations of space.
+[10:41–10:46] Most immediately, in the next video, I'll be talking about multiplying two matrices together. See you then! Thank you for watching!

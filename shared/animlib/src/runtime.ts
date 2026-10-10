@@ -1,8 +1,9 @@
 import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, ElementStyle, Geometry, ReactiveProperties, ReactiveUpdate, SceneContext, SceneOptions, SliderHandle, SliderOptions, Vec2, Vec3, ViewState } from "./types.js";
 import type { createSurfaceBuilders } from "./surfaces.js";
 import type { createSolidBuilders } from "./solids.js";
+import type { createMoleculeBuilders } from './molecules.js';
 
-type MeshBuilders = ReturnType<typeof createSurfaceBuilders> & ReturnType<typeof createSolidBuilders>;
+type MeshBuilders = ReturnType<typeof createSurfaceBuilders> & ReturnType<typeof createSolidBuilders> & ReturnType<typeof createMoleculeBuilders>;
 
 /** Self-contained on purpose: the function is installed inside QuickJS, never eval'd by the host. */
 export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}, installReactive?: (update: (values: Record<string, ControlValue>, changed: string[]) => ReactiveUpdate[]) => void, meshBuilders?: MeshBuilders): CompiledScene {
@@ -215,6 +216,16 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     cone: (id, props = {}) => generatedMesh(id, meshBuilders!.cone(props), props),
     torus: (id, props = {}) => generatedMesh(id, meshBuilders!.torus(props), props),
     tube: (id, props) => generatedMesh(id, meshBuilders!.tube(props), props),
+    molecule: (id, props) => {
+      idCheck(id);
+      const meshes = meshBuilders!.molecule(props);
+      const children = meshes.map((geometry, i) => generatedMesh(`${id}/batch-${i}`, geometry, {
+        fill: props.fill, stroke: props.stroke, strokeWidth: props.strokeWidth, strokeProfile: props.strokeProfile, material: props.material, space: props.space,
+      }));
+      for (const child of children) groups.add(child.id);
+      return add('group', id, {children: children.map(child => child.id), position: props.position, rotation: props.rotation,
+        scale: props.scale, opacity: props.opacity, space: props.space, viewportOffset: props.viewportOffset});
+    },
     behavior: (target, behavior) => {
       descendants(target.id);
       behaviors.push({ target: target.id, behavior: clone(behavior) });

@@ -1,0 +1,13 @@
+# Can one source tell us why workers protested?
+
+## Beat 1 — What is actually reported?
+
+Content needed: Label the whole packet fictional. Show a date-ordered timeline: factory notice dated 4 May; wage cut scheduled for 10 May; worker diary dated 11 May. Keep the scheduled date visibly distinct from a confirmed event. Show the notice's 10% cut and the exact diary quotation, “My pay will not cover rent now.” Identify the stoppage as reported by the diary. Do not show a causal arrow.
+
+Narration: This fictional packet gives us a factory notice, a worker’s diary, and a manager’s letter. Can they tell us why workers stopped work? Start by separating what each source says from what we infer. The notice announces a ten percent wage cut, starting on the tenth of May. The diary, dated the eleventh, reports that several workers stopped work. Its author writes, “My pay will not cover rent now.” That directly records one worker’s concern about pay. It does not tell us what every worker thought, or establish that this concern caused the stoppage.
+
+## Beat 2 — How far can the interpretation go?
+
+Content needed: Retain the same notice and diary and add the manager letter dated 12 May. Compare each account with the reach of its evidence: diary—one worker's expressed concern; manager—outside-agitator attribution, nobody identified. Show that the announced cut precedes the reported stoppage without making sequence equal causation. Mark the missing evidence from the packet: other workers' interviews, attendance totals, earlier wage records. End with “Pay concerns may have contributed” visibly qualified by “Scale and other motives unknown.” Do not depict agitators as established people or assign motives to the unrepresented workers.
+
+Narration: The manager’s letter, dated the twelfth, blames outside agitators but names none. That records the manager’s explanation; it does not establish that agitators were responsible. Both writers offer limited viewpoints. However, the diary connects pay to a specific concern, rent, while the letter supplies no identified agitators. Together with the notice’s timing, this supports a cautious interpretation: pay concerns may have contributed to the stoppage. We cannot say how widely that motive was shared, or exclude other motives. Without other workers’ accounts, attendance totals, or earlier wage records, the cause remains only partly explained.

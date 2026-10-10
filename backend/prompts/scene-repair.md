@@ -9,6 +9,12 @@ Preserve requested geometric fidelity, topology, constraints and data provenance
 Do not solve occlusion by deleting necessary model detail or replacing a complex
 surface/assembly with a coarse icon. Prefer local annotation/framing corrections
 or the smallest correction to the shared geometry/kinematic model.
+For clutter findings, remove optional notation/helpers before compressing them.
+For unnecessary motion, replace that motion's duration with a hold while retaining
+required operation timing. For field defects, correct sampling and signed-value
+mapping within real resource limits; blur or layer crossfades cannot repair wrong
+values. For solid penetration, correct trajectory or contacted occupancy/transfer;
+a new camera angle, hidden wall or detached replacement cargo is not a repair.
 Preserve successful textures/materials and semantic color roles. For a demonstrated
 finish defect, prefer a local pattern scale/offset, contrast, bump, roughness or
 highlight correction. Do not regenerate working geometry, remove all texture, or

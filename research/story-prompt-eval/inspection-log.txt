@@ -1,0 +1,333 @@
+[
+  {
+    "file": "baseline-bayes.json",
+    "valid": false,
+    "error": "beat-1 references unavailable source bayes.request.json. Use an exact supplied filename or request.",
+    "scenes": 3,
+    "words": 370,
+    "wordsPerScene": [
+      117,
+      115,
+      138
+    ],
+    "pauseCount": 1,
+    "pauseSeconds": 6,
+    "estimateSecondsAt140": 181,
+    "estimateSecondsRange": [
+      169,
+      202
+    ]
+  },
+  {
+    "file": "baseline-history.json",
+    "valid": true,
+    "scenes": 2,
+    "words": 193,
+    "wordsPerScene": [
+      89,
+      104
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 91,
+    "estimateSecondsRange": [
+      85,
+      102
+    ]
+  },
+  {
+    "file": "baseline-leaf.json",
+    "valid": true,
+    "scenes": 3,
+    "words": 258,
+    "wordsPerScene": [
+      28,
+      110,
+      120
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 122,
+    "estimateSecondsRange": [
+      114,
+      136
+    ]
+  },
+  {
+    "file": "baseline-protocol.json",
+    "valid": true,
+    "scenes": 4,
+    "words": 375,
+    "wordsPerScene": [
+      27,
+      93,
+      152,
+      103
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 177,
+    "estimateSecondsRange": [
+      165,
+      198
+    ]
+  },
+  {
+    "file": "baseline-uniform.json",
+    "valid": true,
+    "scenes": 4,
+    "words": 470,
+    "wordsPerScene": [
+      110,
+      111,
+      130,
+      119
+    ],
+    "pauseCount": 1,
+    "pauseSeconds": 5,
+    "estimateSecondsAt140": 227,
+    "estimateSecondsRange": [
+      212,
+      254
+    ]
+  },
+  {
+    "file": "candidate-bayes.json",
+    "valid": true,
+    "scenes": 3,
+    "words": 363,
+    "wordsPerScene": [
+      100,
+      118,
+      145
+    ],
+    "pauseCount": 1,
+    "pauseSeconds": 5,
+    "estimateSecondsAt140": 177,
+    "estimateSecondsRange": [
+      165,
+      197
+    ]
+  },
+  {
+    "file": "candidate-history.json",
+    "valid": true,
+    "scenes": 2,
+    "words": 188,
+    "wordsPerScene": [
+      94,
+      94
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 89,
+    "estimateSecondsRange": [
+      83,
+      99
+    ]
+  },
+  {
+    "file": "candidate-leaf.json",
+    "valid": true,
+    "scenes": 3,
+    "words": 274,
+    "wordsPerScene": [
+      87,
+      88,
+      99
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 129,
+    "estimateSecondsRange": [
+      121,
+      145
+    ]
+  },
+  {
+    "file": "candidate-protocol.json",
+    "valid": true,
+    "scenes": 4,
+    "words": 345,
+    "wordsPerScene": [
+      76,
+      76,
+      108,
+      85
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 163,
+    "estimateSecondsRange": [
+      152,
+      182
+    ]
+  },
+  {
+    "file": "candidate-uniform.json",
+    "valid": true,
+    "scenes": 4,
+    "words": 487,
+    "wordsPerScene": [
+      105,
+      117,
+      128,
+      137
+    ],
+    "pauseCount": 1,
+    "pauseSeconds": 5,
+    "estimateSecondsAt140": 235,
+    "estimateSecondsRange": [
+      220,
+      263
+    ]
+  },
+  {
+    "file": "control-bayes.json",
+    "valid": false,
+    "error": "beat-1 references unavailable source bayes.request.json. Use an exact supplied filename or request.",
+    "scenes": 3,
+    "words": 441,
+    "wordsPerScene": [
+      124,
+      149,
+      168
+    ],
+    "pauseCount": 1,
+    "pauseSeconds": 5,
+    "estimateSecondsAt140": 213,
+    "estimateSecondsRange": [
+      200,
+      238
+    ]
+  },
+  {
+    "file": "control-history.json",
+    "valid": true,
+    "scenes": 2,
+    "words": 213,
+    "wordsPerScene": [
+      103,
+      110
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 100,
+    "estimateSecondsRange": [
+      94,
+      112
+    ]
+  },
+  {
+    "file": "control-leaf.json",
+    "valid": false,
+    "error": "beat-1 references unavailable source leaf.request.json. Use an exact supplied filename or request.",
+    "scenes": 3,
+    "words": 305,
+    "wordsPerScene": [
+      95,
+      99,
+      111
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 144,
+    "estimateSecondsRange": [
+      134,
+      161
+    ]
+  },
+  {
+    "file": "control-protocol.json",
+    "valid": false,
+    "error": "beat-1 references unavailable source protocol.request.json. Use an exact supplied filename or request.",
+    "scenes": 4,
+    "words": 461,
+    "wordsPerScene": [
+      96,
+      114,
+      128,
+      123
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 217,
+    "estimateSecondsRange": [
+      203,
+      243
+    ]
+  },
+  {
+    "file": "control-uniform.json",
+    "valid": false,
+    "error": "beat-1 references unavailable source uniform.request.json. Use an exact supplied filename or request.",
+    "scenes": 4,
+    "words": 555,
+    "wordsPerScene": [
+      129,
+      128,
+      141,
+      157
+    ],
+    "pauseCount": 1,
+    "pauseSeconds": 5,
+    "estimateSecondsAt140": 267,
+    "estimateSecondsRange": [
+      250,
+      299
+    ]
+  },
+  {
+    "file": "final-bayes.json",
+    "valid": true,
+    "scenes": 3,
+    "words": 379,
+    "wordsPerScene": [
+      120,
+      124,
+      135
+    ],
+    "pauseCount": 1,
+    "pauseSeconds": 4,
+    "estimateSecondsAt140": 183,
+    "estimateSecondsRange": [
+      171,
+      205
+    ]
+  },
+  {
+    "file": "final-history.json",
+    "valid": true,
+    "scenes": 2,
+    "words": 197,
+    "wordsPerScene": [
+      97,
+      100
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 93,
+    "estimateSecondsRange": [
+      87,
+      104
+    ]
+  },
+  {
+    "file": "final-interactive.json",
+    "valid": true,
+    "scenes": 3,
+    "words": 377,
+    "wordsPerScene": [
+      114,
+      135,
+      128
+    ],
+    "pauseCount": 0,
+    "pauseSeconds": 0,
+    "estimateSecondsAt140": 178,
+    "estimateSecondsRange": [
+      166,
+      199
+    ]
+  }
+]

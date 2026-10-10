@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The counting explanation and prevalence comparison are well supported, but the decisive spoken answer incorrectly equates 9/108 with 90% and contradicts the planned visual result.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The Reveal says 'Nine out of a hundred eight: ninety percent.' Recalculation gives 9/108=1/12, approximately 8.3%, not 90%. This is the central answer and contradicts both the displayed fraction/result and the following distinction between sensitivity and the probability after a positive. Correct the spoken percentage to approximately 8.3% and keep narration and visuals aligned; retain 90% only for the different denominator, 9/10."
+    }
+  ],
+  "checks": [
+    "The supplied counts give sensitivity 9/10=90%, false-positive rate 99/990=10%, 108 total positives and positive-conditioned share 9/108 approximately 8.3%.",
+    "The second hypothetical population correctly yields 90 positives from 100 with the condition and 90 from 900 without it, hence 90/180=50% with both test rates fixed.",
+    "Regrouping preserves original membership colors and positive outlines, visibly explaining why the denominator changes; the second population is explicitly substituted rather than depicting original people becoming ill.",
+    "The six-second pause follows a bounded spoken invitation with sufficient known counts, and the plan withholds the answer until Reveal.",
+    "Exactly three classic scenes and the explicit toy-example caveat match the request; the narrated default needs no interaction.",
+    "363 spoken words plus six seconds of silence estimate approximately 166-198 seconds at 125-150 words per minute with the supplied 10% allowance, consistent with roughly three minutes; no measured audio was supplied."
+  ]
+}

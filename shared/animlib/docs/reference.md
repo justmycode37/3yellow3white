@@ -2,6 +2,10 @@
 
 For the purpose and core requirements, see the [README](../README.md).
 
+For deposited coordinate import and `s.molecule` batched display beads, see
+[Molecular coordinates](molecules.md). Parsing and smooth density-envelope
+generation are host-side; scene source uses compact coordinates or finished meshes.
+
 A framework-free TypeScript library for code-authored, realtime GPU animations
 on a canvas.
 Scenes are written in ordinary JavaScript. Each scene builds a local, seekable
