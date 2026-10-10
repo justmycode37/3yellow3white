@@ -46,7 +46,8 @@ export function focusFrameProblems(compiled: CompiledScene): string[] {
         const area = (text.right - text.left) * (text.top - text.bottom);
         return w > 0 && h > 0 && area > 0 ? w * h / area : 0;
       };
-      const inside = texts.filter(text => share(text) >= 0.45);
+      const whole = texts.filter(text => share(text) >= 0.9);
+      const inside = whole.length ? whole : texts.filter(text => share(text) >= 0.45); // a frame half off its text is still aimed at it
       if (!inside.length) continue; // a frame around a shape, not around text
       const target = { left: Math.min(...inside.map(t => t.left)), right: Math.max(...inside.map(t => t.right)),
         bottom: Math.min(...inside.map(t => t.bottom)), top: Math.max(...inside.map(t => t.top)) };
