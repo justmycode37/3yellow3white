@@ -51,8 +51,9 @@ For viewer orbit, put the model in its own s.view and keep explanatory text in
 the main non-orbiting scene. Use orbit:true, orbitHitTest:"geometry" on that view
 so only pickable model surfaces start orbit (spheres, circles, rectangles, meshes).
 Standalone text and empty space do not start rotation. Labels belonging to model parts may use billboard
-text with stable anchors, but text is never a rotation handle. Do not enable
-whole-scene orbit when it would move explanatory text. Only offer manipulation
+text with stable anchors, but text is never a rotation handle. Set whole-scene
+orbit:false explicitly (mode:'3d' otherwise defaults to whole-scene orbit).
+Use targeted views for all viewer rotation. Only offer manipulation
 that supports the lesson and the requested interaction mode.
 
 When transitioning 3D to 2D, retain the selected meaningful parts, show how they

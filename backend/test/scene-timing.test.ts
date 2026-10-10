@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { compileSource, evaluateScene } from 'animlib/core';
 import { agentConfig } from '../src/agents/config.js';
-import { createPiGenerator } from '../src/agents/generator.js';
+import { createPiGenerator as createProductionGenerator } from '../src/agents/generator.js';
+import { reviewGeneratedScene } from '../src/agents/visual-gate.js';
 import type { AgentTask } from '../src/agents/runtime.js';
 import type { NarrationService } from '../src/narration/service.js';
 import type { NarrationScenePackage } from '../src/narration/types.js';
@@ -108,4 +109,35 @@ test('quality repairs reject new collisions but preserve cached legacy playback'
   expect(cached!.scene.source).toBe(overlap);
   const diagnostics = JSON.parse(await readFile(join(f.directory, 'scene-0.diagnostics.json'), 'utf8'));
   expect(diagnostics[0]).toContain('Text overlap');
+});
+
+// These tests isolate narration/timing contracts. visual-gate.test.ts covers rendered review.
+function createPiGenerator(...args: Parameters<typeof createProductionGenerator>) {
+  return createProductionGenerator(args[0], args[1], args[2], { ...args[3], visualGate: async ({ source }) => source });
+}
+
+test('production generator publishes only the re-rendered approved repair and its evaluated handoff', async () => {
+  const f = await fixture(), renders: string[] = [];
+  const repair = literal.replace('moveTo([1,0])', 'moveTo([2,0])');
+  let reviews = 0;
+  const generate = createProductionGenerator({ async run(task) {
+    if (task.logContext?.stage === 'scene') return literal;
+    // Neither the initial source nor a proposed repair may escape before approval.
+    await expect(readFile(join(f.directory, 'scene-0.js'))).rejects.toThrow();
+    const result = reviews++ === 0
+      ? { approved: false, findings: [{ timeSec: 1, objectIds: ['dot'], problem: 'Dot placement', fix: 'Move dot' }], source: repair }
+      : { approved: true, findings: [] };
+    await task.validate!(JSON.stringify(result)); return JSON.stringify(result);
+  } }, f.narration, f.root, { visualGate: options => reviewGeneratedScene({ ...options, renderFrames: async input => {
+    renders.push(input.source);
+    const path = join(input.directory, 'test.png'); await writeFile(path, 'Test renderer boundary');
+    return { backend: 'test', frames: [{ path, time: 1, width: 1280, height: 720 }],
+      sheets: [{ path, width: 1280, height: 720, times: [1], columns: 2 }] };
+  } }) });
+  const result = await generate(f.request, 0, f.context);
+  expect(renders).toEqual([literal, repair]); expect(result!.scene.source).toBe(repair);
+  expect(await readFile(join(f.directory, 'scene-0.js'), 'utf8')).toBe(repair);
+  expect(JSON.parse(await readFile(join(f.directory, 'scene-0.final-frame.json'), 'utf8')))
+    .toEqual(evaluateScene(await compileSource(repair), 1));
+  await generate(f.request, 0, f.context); expect(reviews).toBe(2);
 });

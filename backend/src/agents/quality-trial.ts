@@ -55,10 +55,12 @@ if (variant === 'serve') {
     },
   } as unknown as NarrationService;
   const pi = new PiAgentRunner(config);
+  let taskNumber = 0;
   const runner = { async run(task: import('./runtime.js').AgentTask) {
+    const number = taskNumber++;
     let metrics: unknown;
     try { return await pi.run({ ...task, onMetrics: value => { metrics = value; } }); }
-    finally { if (metrics) await atomicWrite(join(directory, `scene-${task.logContext?.sceneIndex}.metrics.json`), JSON.stringify(metrics, null, 2)); }
+    finally { if (metrics) await atomicWrite(join(directory, `scene-${task.logContext?.sceneIndex}.${task.logContext?.stage}-${number}.metrics.json`), JSON.stringify(metrics, null, 2)); }
   } };
   const generate = createPiGenerator(runner, narration, root, { outputMode: 'validated-reference', timingMode: 'host' });
   const request = { title: 'RNA transcription quality milestones', topic: QUALITY_DEMO_PROMPT, documents: [], videoMode: 'classic' as const };

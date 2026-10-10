@@ -2,6 +2,11 @@
 
 ## Watch
 
+**Automatic follow-up:** [m7-auto](http://127.0.0.1:5207/quality.html?run=m7-auto-0ff93eb1-5be1-4930-8511-242d517c7704)
+regenerates the same prompt without manual source edits. Production generation
+now renders, reviews and repairs before publishing. See
+[automatic review evidence](automatic-visual-review-results.md).
+
 [Open the local milestone player](http://127.0.0.1:5207/quality.html?run=m6-frame-reviewed).
 Use the Milestone selector to compare saved runs. `m6-frame-reviewed` is the final
 manually refined demo; earlier runs remain raw evidence. All new milestones use

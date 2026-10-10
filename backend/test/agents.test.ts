@@ -10,7 +10,7 @@ import { agentConfig, AgentError, agentFailure } from "../src/agents/config.js";
 import { authPath, createModelRuntime, deviceId, revokeSubscription } from "../src/agents/auth.js";
 import { PiAgentRunner } from "../src/agents/runtime.js";
 import type { AgentTask } from "../src/agents/runtime.js";
-import { createPiGenerator } from "../src/agents/generator.js";
+import { createPiGenerator as createProductionGenerator } from "../src/agents/generator.js";
 import { NarrationService } from "../src/narration/service.js";
 import { settingsFromEnv } from "../src/narration/elevenlabs.js";
 import { VideoService } from "../src/videos.js";
@@ -454,3 +454,8 @@ test('existing Pi subscription credentials use their selected provider without f
   expect(JSON.parse(await readFile(authPath(settings), 'utf8'))['openai-codex']).toEqual(legacy);
   expect(() => agentConfig({ AGENT_PROVIDER: 'openai-codex', AGENT_AUTH_MODE: 'api-key' })).toThrow('subscription mode');
 });
+
+// These tests isolate narration/timing contracts. visual-gate.test.ts covers rendered review.
+function createPiGenerator(...args: Parameters<typeof createProductionGenerator>) {
+  return createProductionGenerator(args[0], args[1], args[2], { ...args[3], visualGate: async ({ source }) => source });
+}

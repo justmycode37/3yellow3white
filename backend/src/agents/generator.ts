@@ -18,6 +18,7 @@ import { animationQualityPolicy } from './quality-policy.js';
 import { scenegenPrompt } from './scenegen-prompts.js';
 import { validationMessage } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
+import { reviewGeneratedScene } from './visual-gate.js';
 
 export function sceneSource(output: string): string {
   const fenced = /^```(?:js|javascript)?\s*\n([\s\S]*?)\n```$/.exec(output.trim());
@@ -30,7 +31,7 @@ async function saved(path: string): Promise<string | undefined> {
 }
 
 /** Host-owned stages. Script and narration identity survive restarts; model tools cannot access disk. */
-export function createPiGenerator(runner: AgentRunner, narration: NarrationService, root: string, options: { outputMode?: AgentTask['outputMode']; timingMode?: 'inline' | 'host' } = {}): Generator {
+export function createPiGenerator(runner: AgentRunner, narration: NarrationService, root: string, options: { outputMode?: AgentTask['outputMode']; timingMode?: 'inline' | 'host'; visualGate?: typeof reviewGeneratedScene } = {}): Generator {
   return async (request, index, context?: GenerationContext) => {
     if (!context) throw new AgentError("CONTEXT", "Pi generation requires a video job context.");
     const { videoId, owner, previousFrame, signal } = context;
@@ -123,6 +124,8 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
       await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify(sceneInput));
       source = assemble(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
+      source = await (options.visualGate ?? reviewGeneratedScene)({ runner, source, input: sceneInput, task,
+        directory, index, videoId, signal, validate: validateSource });
       const finalFrame = await validateSource(source);
       signal.throwIfAborted();
       await atomicWrite(path, source);

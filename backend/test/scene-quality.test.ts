@@ -2,6 +2,26 @@ import { expect, test } from 'bun:test';
 import { compileSource } from 'animlib/core';
 import { validateSceneQuality } from '../src/agents/scene-quality.js';
 
+test('source-dependent rendering errors reach author repair before GPU review', async () => {
+  const compiled = await compileSource(`export default scene({}, s => {
+    const x=s.latex('formula',{tex:'x'});
+    s.play(x.morphTo({kind:'latex',tex:'y'},{map:{missing:'alsoMissing'}}),{duration:1});
+  });`);
+  expect(() => validateSceneQuality(compiled)).toThrow(/Unknown source LaTeX part/);
+});
+
+test('new orbitable views require geometry-only interaction', async () => {
+  const make = (targeted: boolean) => compileSource(`export default scene({}, s => {
+    s.view('model',{rect:[0,0,1,1],orbit:true${targeted ? ',orbitHitTest:"geometry"' : ''}},v=>v.sphere('ball'));
+    s.wait(1);
+  });`);
+  const bad = await make(false), good = await make(true);
+  expect(() => validateSceneQuality(bad)).toThrow(/orbitHitTest/);
+  expect(() => validateSceneQuality(good)).not.toThrow();
+  const wholeCanvas = await compileSource(`export default scene({mode:'3d'},s=>{s.sphere('ball');s.text('label',{text:'DNA'});s.wait(1);});`);
+  expect(() => validateSceneQuality(wholeCanvas)).toThrow(/whole-scene orbit/);
+});
+
 test('settled glyph collisions return bounded, actionable library diagnostics', async () => {
   const compiled = await compileSource(`export default scene({}, s => {
     s.text('template-label', {text:'HH',fontSize:1});

@@ -2,15 +2,15 @@
 import { WebGLBackend } from './webgl.js';
 import { ViewInteraction } from './interaction.js';
 import { paletteResolver, parseColor } from './palette.js';
-import type { CameraState, ColorPalette, CompiledScene, ElementState, Frame, Geometry, InteractionSnapshot, Vec3 } from './types.js';
+import type { CameraState, ColorPalette, CompiledScene, Frame, InteractionSnapshot, Vec3 } from './types.js';
 import { add, sub, cameraRay, planePoint, pick } from './spatial.js';
 import { composeItems } from './composition.js';
 import type { DrawItem } from './composition.js';
 import { GPUCompositor } from './gpu-compositor.js';
 import { rotate } from './geometry.js';
-import { buildDrawItems, textTex } from './render-geometry.js';
+import { buildDrawItems } from './render-geometry.js';
 export { triangulateContours } from './render-geometry.js';
-import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
+import { validateRenderableScene } from './render-validation.js';
 
 const shader=`
 struct Camera { focus: vec4f, angles: vec4f, viewport: vec4f };
@@ -302,23 +302,7 @@ export class CanvasRenderer {
   }
   async prepare(scenes:CompiledScene[]):Promise<void> {
     if(this.disposed)throw new Error('Renderer is disposed.');
-    const prepareGeometry=(g:Geometry):void=>{if(g.kind==='latex')layoutLatexGeometry(g);if(g.kind==='text')layoutLatex(textTex(g.text??''));};
-    for(const scene of scenes) {
-      const palette=paletteResolver(this.hostPalette??scene.options.palette);
-      const prepareElement=(e:ElementState):void=>{prepareGeometry(e.geometry);palette.resolve(e.fill);palette.resolve(e.stroke);};
-      palette.resolve(scene.options.background);
-      for(const element of [...scene.initial,...scene.lifecycle.flatMap(event=>event.elements??[])])prepareElement(element);
-      for(const track of scene.tracks) {
-        if(track.action.geometry)prepareGeometry(track.action.geometry);
-        const properties=track.action.properties as Partial<ElementState>|undefined;
-        if(properties?.fill)palette.resolve(properties.fill);if(properties?.stroke)palette.resolve(properties.stroke);
-        for(const state of Object.values(track.from)) {
-          prepareElement(state);
-          if(track.action.type==='morph'&&track.action.geometry?.kind==='latex'&&state.geometry.kind==='latex')validateLatexMap(layoutLatexGeometry(state.geometry),layoutLatexGeometry(track.action.geometry),track.action.map);
-          else if(track.action.map&&Object.keys(track.action.map).length)throw new Error('Part mappings require a LaTeX-to-LaTeX morph.');
-        }
-      }
-    }
+    for(const scene of scenes)validateRenderableScene(scene,this.hostPalette);
     if(!this.initializing)this.initializing=this.initialize().catch(error=>{this.initializing=undefined;throw error;});
     await this.initializing;
   }
