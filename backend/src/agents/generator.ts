@@ -50,6 +50,8 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       const lesson = await authorReviewedLesson(runner, request, directory, signal, context.images);
       markdown = lesson.markdown; plan = lesson.plan;
       signal.throwIfAborted();
+      await atomicWrite(join(directory, 'storyline.prompt.md'), await readFile(join(directory, 'editorial', lesson.editorialReview.runId,
+        `lesson-draft-${lesson.editorialReview.attempt}.prompt.md`), 'utf8'));
       // The atomic envelope is authoritative; script.md is a readable export for local review.
       await atomicWrite(lessonPath, JSON.stringify(lesson, null, 2));
       await atomicWrite(join(directory, "script.md"), markdown);

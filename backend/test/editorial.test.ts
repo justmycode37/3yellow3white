@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from 'bun:test';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { authorReviewedLesson, parseEditorialReview } from '../src/agents/editorial.js';
@@ -46,22 +47,65 @@ test('editorial repairs update speech and plan together, forward sources, and pr
   const approved = await authorReviewedLesson({ async run(task) {
     tasks.push(task); const output = JSON.stringify(outputs.shift()); await task.validate!(output); return output;
   } }, request, root, new AbortController().signal, [image]);
-  expect(approved).toEqual(lesson()); expect(tasks).toHaveLength(4);
+  expect(approved).toMatchObject(lesson()); expect(tasks).toHaveLength(4);
   tasks.forEach(task => expect(task.images).toEqual([image]));
   expect(tasks[1].prompt).toContain('Sixteen, eight, four.');
   expect(tasks[1].prompt).toContain('parsedScenes');
   expect(tasks[1].systemPrompt).toContain('Visual plans and reveal guards belong in nonspoken context');
   expect(tasks[2].prompt).toContain('Correct speech and all plan values');
-  expect(JSON.parse(await readFile(join(root, 'lesson-review-0.json'), 'utf8')).verdict).toBe('revise');
-  expect(JSON.parse(await readFile(join(root, 'lesson-draft-1.json'), 'utf8')).markdown).toContain('four');
-  expect(JSON.parse(await readFile(join(root, 'lesson-review-1.json'), 'utf8')).verdict).toBe('pass');
+  const run = join(root, 'editorial', approved.editorialReview.runId);
+  expect(JSON.parse(await readFile(join(run, 'lesson-review-0.json'), 'utf8')).verdict).toBe('revise');
+  expect(JSON.parse(await readFile(join(run, 'lesson-draft-1.json'), 'utf8')).markdown).toContain('four');
+  expect(JSON.parse(await readFile(join(run, 'lesson-review-1.json'), 'utf8')).verdict).toBe('pass');
 });
 
 test('warnings do not trigger a rewrite', async () => {
   const root = await directory(); let calls = 0;
   const warning = review(); warning.issues.push({ severity: 'warning', sceneId: 'beat-1', detail: 'Optional alternative phrasing.' });
   const approved = await authorReviewedLesson({ async run() { return JSON.stringify(calls++ === 0 ? lesson() : warning); } }, request, root, new AbortController().signal);
-  expect(approved).toEqual(lesson()); expect(calls).toBe(2);
+  expect(approved).toMatchObject(lesson()); expect(calls).toBe(2);
+});
+
+test('restarts isolate partial audit pairs and link approval to the exact saved draft', async () => {
+  const root = await directory();
+  let calls = 0;
+  await expect(authorReviewedLesson({ async run() {
+    const outputs = [lesson('five'), review('revise'), lesson()];
+    if (calls === outputs.length) throw new Error('Interrupted before repair review');
+    return JSON.stringify(outputs[calls++]);
+  } }, request, root, new AbortController().signal)).rejects.toThrow('Interrupted before repair review');
+  const firstRun = (await readdir(join(root, 'editorial')))[0];
+  const firstDirectory = join(root, 'editorial', firstRun);
+  const evidence = await Promise.all((await readdir(firstDirectory)).map(async name => ({ name, bytes: await readFile(join(firstDirectory, name), 'utf8') })));
+  expect(JSON.parse(await readFile(join(firstDirectory, 'lesson-review-0.json'), 'utf8')).verdict).toBe('revise');
+  expect(await readdir(firstDirectory)).toContain('lesson-draft-1.json');
+  expect(await readdir(firstDirectory)).not.toContain('lesson-review-1.json');
+
+  // A replacement process writes a different draft, then stops before its verdict.
+  calls = 0;
+  await expect(authorReviewedLesson({ async run() {
+    if (calls++ === 0) return JSON.stringify(lesson('six'));
+    throw new Error('Interrupted before fresh review');
+  } }, request, root, new AbortController().signal)).rejects.toThrow('Interrupted before fresh review');
+  const secondRun = (await readdir(join(root, 'editorial'))).find(id => id !== firstRun)!;
+  const secondDirectory = join(root, 'editorial', secondRun);
+  const secondDraft = await readFile(join(secondDirectory, 'lesson-draft-0.json'), 'utf8');
+  expect(secondDraft).toContain('six');
+  expect(await readdir(secondDirectory)).not.toContain('lesson-review-0.json'); // No stale first-run verdict.
+
+  calls = 0;
+  const approved = await authorReviewedLesson({ async run() { return JSON.stringify(calls++ === 0 ? lesson() : review()); } }, request, root, new AbortController().signal);
+  const { runId, attempt, draftSha256 } = approved.editorialReview;
+  expect([firstRun, secondRun]).not.toContain(runId); expect(attempt).toBe(0);
+  const approvedDirectory = join(root, 'editorial', runId);
+  const draft = await readFile(join(approvedDirectory, `lesson-draft-${attempt}.json`), 'utf8');
+  expect(createHash('sha256').update(draft).digest('hex')).toBe(draftSha256);
+  const { editorialReview: _provenance, ...committedLesson } = approved;
+  expect(JSON.parse(draft)).toEqual(committedLesson);
+  expect(JSON.parse(await readFile(join(approvedDirectory, `lesson-review-${attempt}.json`), 'utf8')).verdict).toBe('pass');
+  expect(await readdir(approvedDirectory)).not.toContain('lesson-review-1.json');
+  for (const file of evidence) expect(await readFile(join(firstDirectory, file.name), 'utf8')).toBe(file.bytes);
+  expect(await readFile(join(secondDirectory, 'lesson-draft-0.json'), 'utf8')).toBe(secondDraft);
 });
 
 test('three rejected drafts fail before submitting paid speech or publishing a lesson', async () => {
@@ -74,7 +118,8 @@ test('three rejected drafts fail before submitting paid speech or publishing a l
   await expect(generate(request, 0, { owner: 'shared-user', videoId: id, signal: new AbortController().signal })).rejects.toMatchObject({ code: 'EDITORIAL' });
   expect(calls).toBe(6); expect(speechCalls).toBe(0);
   const files = await readdir(join(root, id));
-  expect(files).toContain('lesson-review-2.json'); expect(files).not.toContain('lesson.json'); expect(files).not.toContain('narration-id');
+  const runs = await readdir(join(root, id, 'editorial'));
+  expect(await readdir(join(root, id, 'editorial', runs[0]))).toContain('lesson-review-2.json'); expect(files).not.toContain('lesson.json'); expect(files).not.toContain('narration-id');
 });
 
 test('cancellation during review cannot publish an approved lesson or start speech', async () => {

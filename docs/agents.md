@@ -53,10 +53,15 @@ record concrete checks but do not constitute independent fact verification.
 This adds one model call before TTS for a passing first draft, plus calls for
 necessary repairs. It does not gate individual scene streaming once speech starts.
 
-Private `lesson-draft-N.json`, `lesson-draft-N.prompt.md`,
-`lesson-review-N.json`, and `lesson-review-N.prompt.md` preserve the trail (N starts
-at zero). Only a passing lesson is committed as `lesson.json`. Restarts reuse that
-envelope; a crash before its commit can repeat authoring/review calls. Existing
+Each invocation gets a unique private `editorial/RUN_UUID/` directory containing
+`lesson-draft-N.json`, `lesson-draft-N.prompt.md`, `lesson-review-N.json`, and
+`lesson-review-N.prompt.md` (N starts at zero). Restarts preserve earlier runs,
+including partial pairs, without overwriting or mixing their evidence. Only a
+passing lesson is committed as `lesson.json`; its host-owned `editorialReview`
+records the approved run UUID, pair number, and SHA-256 of the saved draft.
+`storyline.prompt.md` is a convenient export of that approved authoring prompt.
+Restarts reuse the committed envelope; a crash before its commit can repeat
+authoring/review calls in a new run directory. Existing
 saved lesson envelopes and legacy Markdown resume without editorial rewriting,
 preserving their speech and scene identities.
 

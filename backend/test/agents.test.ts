@@ -225,6 +225,9 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     expect(packet.planning.outline.map((scene: { id: string }) => scene.id)).toEqual(['beat-1', 'beat-2']);
     expect(packet.planning.next.id).toBe('beat-2');
     expect(JSON.parse(await readFile(join(settings.dataDir, video.id, 'lesson.json'), 'utf8')).plan.learningGoal).toBe('Count dots');
+    const approval = JSON.parse(await readFile(join(settings.dataDir, video.id, 'lesson.json'), 'utf8')).editorialReview;
+    expect(approval.attempt).toBe(0);
+    expect(JSON.parse(await readFile(join(settings.dataDir, video.id, 'editorial', approval.runId, 'lesson-review-0.json'), 'utf8')).verdict).toBe('pass');
     expect(await readFile(join(settings.dataDir, video.id, 'scene-0.prompt.md'), 'utf8')).toContain('Count dots');
     // Recreate the generator and request a previously completed stage, as after a crash before publication.
     const reopened = createPiGenerator(runner, narration, settings.dataDir);

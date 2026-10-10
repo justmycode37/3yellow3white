@@ -1,4 +1,5 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import type { VideoRequest } from '../../../shared/video/contract.js';
 import { parseStoryline } from '../narration/markdown.js';
@@ -13,6 +14,11 @@ export interface EditorialReview {
   schemaVersion: 1; verdict: 'pass' | 'revise'; summary: string;
   issues: { severity: 'error' | 'warning'; sceneId: string | null; detail: string }[];
   checks: string[];
+}
+
+export interface ReviewedLesson extends PlannedLesson {
+  /** Host-owned link to the immutable approved draft/review pair. */
+  editorialReview: { runId: string; attempt: number; draftSha256: string };
 }
 
 export function parseEditorialReview(output: string, lesson: PlannedLesson): EditorialReview {
@@ -32,7 +38,10 @@ export function parseEditorialReview(output: string, lesson: PlannedLesson): Edi
 
 /** Only newly authored lessons enter this bounded gate; no speech starts until it passes. */
 export async function authorReviewedLesson(runner: AgentRunner, request: VideoRequest, directory: string,
-  signal: AbortSignal, images?: AgentTask['images']): Promise<PlannedLesson> {
+  signal: AbortSignal, images?: AgentTask['images']): Promise<ReviewedLesson> {
+  signal.throwIfAborted();
+  const runId = randomUUID(), runDirectory = join(directory, 'editorial', runId);
+  await mkdir(runDirectory, { recursive: true, mode: 0o700 });
   const messages = await buildStorylineMessages(JSON.stringify(request));
   const guidance = await readFile(new URL('../../prompts/story-review.md', import.meta.url), 'utf8');
   let repair: { lesson: PlannedLesson; issues: EditorialReview['issues'] } | undefined;
@@ -45,21 +54,21 @@ export async function authorReviewedLesson(runner: AgentRunner, request: VideoRe
         : `Write a concise visual lesson and its plan from this request:\n${messages[1].content}`,
       signal, images, validate: async output => { parsePlannedLesson(output, request); },
     };
-    await atomicWrite(join(directory, `lesson-draft-${attempt}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
-    if (attempt === 0) await atomicWrite(join(directory, 'storyline.prompt.md'), `${task.systemPrompt}\n\n${task.prompt}`);
+    await atomicWrite(join(runDirectory, `lesson-draft-${attempt}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
     const lesson = parsePlannedLesson(await runner.run(task), request);
     signal.throwIfAborted();
-    await atomicWrite(join(directory, `lesson-draft-${attempt}.json`), JSON.stringify(lesson, null, 2));
+    const draft = JSON.stringify(lesson, null, 2);
+    await atomicWrite(join(runDirectory, `lesson-draft-${attempt}.json`), draft);
     const reviewTask: AgentTask = {
       systemPrompt: `${guidance}\n\nExplanation guidance:\n${messages[0].content}\n\nThe review response contract above takes priority over the guidance's authoring output format.`,
       prompt: `Review this complete lesson before speech synthesis. Source images are attached in the same order as the authoring call.\n${JSON.stringify({ request, draft: lesson, parsedScenes: parseStoryline(lesson.markdown).beats })}`,
       signal, images, validate: async output => { parseEditorialReview(output, lesson); },
     };
-    await atomicWrite(join(directory, `lesson-review-${attempt}.prompt.md`), `${reviewTask.systemPrompt}\n\n${reviewTask.prompt}`);
+    await atomicWrite(join(runDirectory, `lesson-review-${attempt}.prompt.md`), `${reviewTask.systemPrompt}\n\n${reviewTask.prompt}`);
     const review = parseEditorialReview(await runner.run(reviewTask), lesson);
     signal.throwIfAborted();
-    await atomicWrite(join(directory, `lesson-review-${attempt}.json`), JSON.stringify(review, null, 2));
-    if (review.verdict === 'pass') return lesson;
+    await atomicWrite(join(runDirectory, `lesson-review-${attempt}.json`), JSON.stringify(review, null, 2));
+    if (review.verdict === 'pass') return { ...lesson, editorialReview: { runId, attempt, draftSha256: createHash('sha256').update(draft).digest('hex') } };
     repair = { lesson, issues: review.issues.filter(issue => issue.severity === 'error') };
   }
   throw new AgentError('EDITORIAL', 'The lesson did not pass editorial review after three drafts. No speech was generated.');
