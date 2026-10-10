@@ -46,14 +46,16 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   const duration = state.duration || lesson.duration
   const progress = duration ? Math.min(1, state.time / duration) : 0
   const enabled = state.ready && !error && !menuOpen && !overlayOpen && !questionOpen
-  const playbackRequested = state.playing || state.buffering && state.wantsPlay
+  // Scene/audio handoffs briefly pause the renderer without pausing the lesson.
+  const playbackRequested = Boolean(state.wantsPlay) && !state.ended && !error
+  const autoHideControls = enabled && playbackRequested
   const revealCursor = useCallback(() => {
     clearTimeout(cursorTimer.current)
     setCursorHidden(false)
-    if (state.playing && !menuOpen && !overlayOpen && !questionOpen) {
+    if (autoHideControls) {
       cursorTimer.current = setTimeout(() => setCursorHidden(true), 3000)
     }
-  }, [state.playing, menuOpen, overlayOpen, questionOpen])
+  }, [autoHideControls])
 
   useEffect(() => {
     revealCursor()
@@ -128,7 +130,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     void action?.catch(() => {})
   }
 
-  return <div className={`player-page ${state.playing ? 'is-playing' : ''} ${cursorHidden && state.playing && !menuOpen && !overlayOpen && !questionOpen ? 'is-player-idle' : ''}`} ref={screen} tabIndex={-1} onContextMenu={openQuestion} onPointerMove={revealCursor} onPointerDown={revealCursor} onKeyDown={revealCursor} onFocusCapture={revealCursor}>
+  return <div className={`player-page ${state.playing ? 'is-playing' : ''} ${cursorHidden && autoHideControls ? 'is-player-idle' : ''}`} ref={screen} tabIndex={-1} onContextMenu={openQuestion} onPointerMove={revealCursor} onPointerDown={revealCursor} onKeyDown={revealCursor} onFocusCapture={revealCursor}>
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
     {(connection || (state.ready && state.generationError)) && <p className="player-notice" role="status">{state.generationError || connection}</p>}
     <div className="player-stage">
@@ -149,6 +151,6 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
       </div>
     </div>
     {state.ended && <div className="lesson-complete"><button onClick={onHome}>Back to your library <ArrowRight size={16}/></button></div>}
-    {enabled && !state.playing && !state.ended && !state.buffering && <button className="paused-indicator" onClick={() => { void playback?.toggle() }} aria-label="Resume lesson"><Play size={24} fill="currentColor"/></button>}
+    {enabled && !playbackRequested && !state.ended && !state.buffering && <button className="paused-indicator" onClick={() => { void playback?.toggle() }} aria-label="Resume lesson"><Play size={24} fill="currentColor"/></button>}
   </div>
 }
