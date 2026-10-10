@@ -54,7 +54,10 @@ test("guidance production example is accepted by the actual parser", async () =>
   expect(parsed.beats).toHaveLength(2);
   expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(2);
   const messages = await buildStorylineMessages("Explain binary search.");
-  expect(messages[0]).toEqual({ role: "system", content: guidance });
+  const capabilities = await readFile(new URL("../../shared/animlib/docs/capabilities.md", import.meta.url), "utf8");
+  expect(messages[0].role).toBe("system");
+  expect(messages[0].content).toContain(guidance);
+  expect(messages[0].content).toContain(capabilities);
   expect(messages[1]).toEqual({ role: "user", content: "Explain binary search." });
 });
 test("oversized passages split without losing or duplicating words", () => {
