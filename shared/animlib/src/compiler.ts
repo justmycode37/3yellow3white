@@ -48,6 +48,35 @@ function geometry(g: Geometry) {
   if (g.isolated !== undefined) check(g.kind === "group" && typeof g.isolated === "boolean", "Only groups support isolation");
   if (g.shading !== undefined) check(g.kind === "mesh" && ["unlit", "flat", "smooth"].includes(g.shading), "Invalid mesh shading");
   validateSurfaceAppearance(g);
+  if (g.clipPlanes !== undefined) {
+    check((g.kind === "mesh" || g.kind === "sphere") && Array.isArray(g.clipPlanes) && g.clipPlanes.length <= 4, "Clipping requires at most four planes on a mesh or sphere");
+    for (const p of g.clipPlanes) {
+      check(p && typeof p === "object", "Invalid clip plane");
+      vec(p.normal, "clip normal"); check(Math.hypot(...p.normal) > 1e-12, "Clip normal must be nonzero"); number(p.offset, "clip offset");
+      if (p.section !== undefined) {
+        check(p.section && typeof p.section === "object" && !Array.isArray(p.section), "Invalid section");
+        validateColor(p.section.color);
+        if (p.section.cap !== undefined) validateColor(p.section.cap);
+        if (p.section.width !== undefined) { number(p.section.width, "section width"); check(p.section.width > 0, "Section width must be positive"); }
+      }
+    }
+  }
+  if (g.outline !== undefined) {
+    const o = g.outline;
+    check((g.kind === "mesh" || g.kind === "sphere") && o && typeof o === "object" && !Array.isArray(o), "Outlines require mesh or sphere geometry");
+    validateColor(o.color);
+    if (o.width !== undefined) { number(o.width, "outline width"); check(o.width > 0, "Outline width must be positive"); }
+    if (o.creaseAngle !== undefined) { number(o.creaseAngle, "crease angle"); check(o.creaseAngle >= 0 && o.creaseAngle <= Math.PI, "Crease angle must be in [0, PI]"); }
+    if (o.silhouette !== undefined) check(typeof o.silhouette === "boolean", "Invalid silhouette flag");
+  }
+  if (g.scalarColors !== undefined) {
+    const c = g.scalarColors;
+    check(g.kind === "mesh" && c && typeof c === "object" && Array.isArray(c.values) && c.values.length === g.vertices?.length, "Scalar values must match mesh vertices");
+    c.values.forEach(v => number(v, "scalar value")); vec(c.domain, "scalar domain", 2); check(c.domain[0] < c.domain[1], "Scalar domain must increase");
+    check(Array.isArray(c.colors) && c.colors.length >= 2 && c.colors.length <= 16, "Scalar ramp requires 2–16 colors");
+    for (const color of c.colors) { check(typeof color === "string" && (color as string) !== "none", "Scalar ramp requires named palette colors"); validateColor(color); }
+  }
+  if (g.labelOcclusion !== undefined) check((g.kind === "text" || g.kind === "latex") && ["depth", "overlay", "hide", "fade"].includes(g.labelOcclusion), "Invalid label occlusion");
   if (g.normals !== undefined) {
     check(g.kind === "mesh" && Array.isArray(g.normals) && g.normals.length === g.vertices?.length, "Mesh normals must match vertices");
     for (const normal of g.normals) { vec(normal, "mesh normal"); check(Math.hypot(...normal) > 0, "Mesh normals must be nonzero"); }

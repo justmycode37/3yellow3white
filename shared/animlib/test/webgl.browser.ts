@@ -1,3 +1,4 @@
+import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
@@ -79,6 +80,37 @@ export async function runWebGLTests() {
     return pixels(renderer.canvasElement);
   };
   try {
+    await test('explanatory morph pixels after backwards seek',async()=>{
+      await load(explanatoryMorphSource);const a=draw(0),b=draw(1),c=draw(2),again=draw(1);
+      assert(different(a,b)&&different(b,c),'Scalar and clipping morph must change pixels');
+      assert(!different(b,again),'Backwards seek must reproduce identical pixels');
+    });
+    for(const fixture of labelProjectionCases) await test(`explanatory projection: ${fixture.name}`,async()=>{
+      const images:Uint8Array[]=[];
+      for(const source of fixture.sources){await load(source);images.push(draw());}
+      const issues=labelProjectionIssues(images.map(image=>(x,y)=>at(image,canvas,x,y)));
+      assert(issues.length===0,issues.join('; '));
+    });
+    for(const dpr of [1,2])for(const fixture of capClippingCases)await test(`explanatory DPR ${dpr}: ${fixture.name}`,async()=>{
+      Object.defineProperty(window,'devicePixelRatio',{value:dpr,configurable:true});
+      (renderer as unknown as {resize():void}).resize();
+      try {
+        const images:Uint8Array[]=[];
+        for(const source of fixture.sources){await load(source);images.push(draw());}
+        assert(canvas.width===640*dpr&&canvas.height===480*dpr,'Cap target must match requested DPR');
+        assert(renderer.backend==='webgl2','Cap checks must use WebGL2');
+        const issues=capClippingIssues(images.map(image=>(x,y)=>at(image,canvas,x*dpr,y*dpr)),fixture.laterCut);
+        assert(issues.length===0,issues.join('; '));artifact(canvas,`DPR ${dpr}: ${fixture.name}`);
+      } finally {
+        Object.defineProperty(window,'devicePixelRatio',{value:1,configurable:true});
+        (renderer as unknown as {resize():void}).resize();
+      }
+    });
+    for(const fixture of explanatoryCases) await test(`explanatory: ${fixture.name}`,async()=>{
+      await load(fixture.source);const image=draw();
+      const issues=fixture.check((x,y)=>at(image,canvas,x,y));
+      assert(issues.length===0,issues.join('; '));artifact(canvas,fixture.name);
+    });
     await test('missing WebGPU: real WebGL2 triangle colors', async () => {
       await load(`export default scene({},s=>{s.rectangle('r',{width:3,height:2,fill:'PURE_RED',stroke:'none'});s.wait(1)});`);
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');

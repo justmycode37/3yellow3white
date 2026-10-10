@@ -1,3 +1,4 @@
+import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {create,globals} from 'webgpu';
@@ -145,6 +146,51 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(images[2].filter((v,i)=>Math.abs(v-images[3][i])>5).length).toBeGreaterThan(1000);
     for(let i=0;i<images[0].length;i+=4)expect(images[2][i]>0).toBe(images[0][i]>0);
     expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('explanatory morph pixels are deterministic after backwards seeking',async()=>{
+    expect((await sequence.submit({type:'load',scenes:[{id:'explanatory',source:explanatoryMorphSource}]})).ok).toBe(true);
+    const captures:Uint8Array[]=[];
+    for(const time of [0,1,2,1]){renderer.render(sequence.frame(0,time),sequence.compiled[0].options);captures.push(await pixels());}
+    expect(captures[0]).not.toEqual(captures[1]);expect(captures[1]).not.toEqual(captures[2]);expect(captures[3]).toEqual(captures[1]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for (const fixture of labelProjectionCases) it(`explanatory projection: ${fixture.name}`,async()=>{
+    const images:Uint8Array[]=[];
+    for(const source of fixture.sources) {
+      expect((await sequence.submit({type:'load',scenes:[{id:'projection',source}]})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);images.push(await pixels());
+    }
+    expect(labelProjectionIssues(images.map(image=>(x,y)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3))))).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for(const dpr of [1,2])for(const fixture of capClippingCases)it(`explanatory DPR ${dpr}: ${fixture.name}`,async()=>{
+    vi.stubGlobal('devicePixelRatio',dpr);
+    (renderer as unknown as {resize():void}).resize();
+    try {
+      const images:Uint8Array[]=[];
+      for(const [i,source] of fixture.sources.entries()) {
+        expect((await sequence.submit({type:'load',scenes:[{id:'cap',source}]})).ok).toBe(true);
+        renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+        expect([texture!.width,texture!.height]).toEqual([width*dpr,height*dpr]);
+        const image=await pixels();images.push(image);
+        await artifact(`cap-DPR${dpr}-${fixture.name.replaceAll(' ','-')}-${i}`,image);
+      }
+      expect(capClippingIssues(images.map(image=>(x,y)=>{
+        const i=(y*dpr*width*dpr+x*dpr)*4;return Array.from(image.subarray(i,i+3));
+      }),fixture.laterCut)).toEqual([]);
+    } finally {
+      vi.stubGlobal('devicePixelRatio',1);(renderer as unknown as {resize():void}).resize();
+    }
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for (const fixture of explanatoryCases) it(`explanatory: ${fixture.name}`,async()=>{
+    expect((await sequence.submit({type:'load',scenes:[{id:'explanatory',source:fixture.source}]})).ok).toBe(true);
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+    const image=await pixels();
+    const at=(x:number,y:number)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3));
+    expect(fixture.check(at)).toEqual([]);
+    await artifact('explanatory-'+fixture.name.replaceAll(' ','-'),image);
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it('bump leaves unlit pixels unchanged',async()=>{

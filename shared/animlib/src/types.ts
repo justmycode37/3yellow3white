@@ -1,3 +1,5 @@
+import type { ExplanatoryGeometry, ScalarColors } from "./explanatory-types.js";
+export type { ClipPlane, MeshOutline, ScalarRamp, ScalarColors, SurfaceScalar, ExplanatoryGeometry } from "./explanatory-types.js";
 import type { Color, PaletteColor } from "./palette.js";
 import type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
 import type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
@@ -50,14 +52,9 @@ export interface Material {
   emissiveIntensity?: number;
 }
 
-/** Palette ramp over a fixed mesh vertex set (rendered by the explanatory geometry stage). */
-export interface ScalarColors {
-  values: number[];
-  domain: [number, number];
-  colors: PaletteColor[];
-}
-
-export interface Geometry {
+export interface Geometry extends ExplanatoryGeometry {
+  /** Text/LaTeX: default depth tests glyphs; other modes act on the whole label anchor. */
+  labelOcclusion?: "depth" | "overlay" | "hide" | "fade";
   kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
   radius?: number;
   width?: number;

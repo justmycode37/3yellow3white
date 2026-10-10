@@ -10,6 +10,8 @@ export default defineConfig({
     behaviors: fileURLToPath(new URL('./demo/behaviors.html', import.meta.url)),
     plant: fileURLToPath(new URL('./demo/plant.html', import.meta.url)),
     lighting: fileURLToPath(new URL('./demo/lighting.html', import.meta.url)),
+
+    explanatory: fileURLToPath(new URL('./demo/explanatory.html', import.meta.url)),
     spatial: fileURLToPath(new URL('./demo/spatial.html', import.meta.url)),
   } } },
 });
