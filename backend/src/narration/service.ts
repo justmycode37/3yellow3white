@@ -109,9 +109,10 @@ export class NarrationService {
       if (job.status === "complete" || job.status === "running" || job.status === "queued") return job;
       if (!this.available) throw new NarrationError("NOT_CONFIGURED", "Configure ElevenLabs before retrying.", 503);
       if (JSON.stringify(job.settings) !== JSON.stringify(this.provider.settings)) throw new NarrationError("SETTINGS_CHANGED", "Narration settings have changed; submit the script as a new job.", 409);
+      const story = chunkStoryline(parseStoryline(await readFile(join(this.dir(id), "script.md"), "utf8")));
       job.status = "queued"; delete job.error;
       await this.saveJob(job);
-      this.enqueue(job, chunkStoryline(parseStoryline(await readFile(join(this.dir(id), "script.md"), "utf8"))));
+      this.enqueue(job, story);
       return structuredClone(job);
     });
   }

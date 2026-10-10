@@ -1,6 +1,6 @@
 # Narration and scene timing
 
-The narration stage accepts labelled Markdown, synthesizes the requested Alexander voice through ElevenLabs, and produces WAV audio plus a versioned JSON timing package. It does not generate the storyline or animation with an LLM. The included preview is a timing diagnostic, not a generated lesson.
+The narration stage normalizes AI-written Markdown, synthesizes the requested Alexander voice through ElevenLabs, and produces WAV audio plus a versioned JSON timing package. It does not generate the storyline or animation with an LLM. The included preview is a timing diagnostic, not a generated lesson.
 
 ## Give the storyline writer its instructions
 
@@ -27,7 +27,24 @@ Reveal (spoken):
 If you guessed this result, you are right.
 ```
 
-`Hint (spoken):` and `Credit (spoken):` are also supported. Spoken headings, bold labels, and `## Ponder 1 — Title` work too. Nonspoken material must use `Notes:`, `Content needed:`, `Question:`, or the documented context fields. Place each pause before the hint or reveal it precedes. `pause_s: 5` and `[pause: 5s]` are accepted aliases. A spoken label applies until another label, heading, or pause; label speech again after each pause. A simple script without beat headings becomes one scene.
+`Hint (spoken):` and `Credit (spoken):` are also supported. Formatting is normalized through the Markdown syntax tree, with GFM table support; the parser does not ask another model to rewrite the script. Common variations are accepted:
+
+| AI output variation | Interpretation |
+| --- | --- |
+| `Voiceover`, `Voice-over`, `Narrator`, `Spoken text`, `VO` | Narration role |
+| `Invitation`, `Question (spoken)`, numbered `Hint`, `Confirmation`, `Viewer credit` | Their corresponding speech roles |
+| Bold/italic labels, headings, bullets, nested lists, quoted text, soft line breaks, colon/dash separators, different case | Same labelled speech and ordering |
+| `Scene 1`, `Beat 1`, `Ponder 1` at different heading levels, or numbered plain scene markers | Stable scene boundary; duplicate IDs still fail |
+| Entire script in a Markdown/text fence with a common short preface | Unwrapped without shifting original source offsets |
+| `Pause: 3 seconds`, `[pause for three seconds]`, `(pause 1500ms)`, `pause_s: 3` | Measured silence with the exact stated duration |
+| `One. [pause 3s] Two.` | Speech, three seconds of silence, then continued speech in the same role |
+| `Field`/`Type` and `Content`/`Text`/`Value` table | Ordered labelled fields |
+| Storyboard table with a `Narration`/`Voiceover` column | Rows in order; only spoken columns and explicit pauses enter audio; other columns remain scene context |
+| Prose-only document with title/section headings | Narration without requiring labels |
+
+The preferred paragraph format remains in the guidance. Spoken labels retain their role across a pause unless another label changes it. Table headers such as `Pause (s)` allow a number without a unit; otherwise pause units are required. Storyboard rows can continue the preceding scene by leaving its scene cell empty. A table without a scene column creates one scene per row. Reference tables belong under `Notes:`.
+
+`Question:` and `Answer:` remain nonspoken; use `Question (spoken):` or `Reveal:` to speak them. Notes, visual/animation fields, and explicitly nonspoken fields never become narration. Links contribute visible text, comments are masked, and the original Markdown is retained. A mixed document with unlabelled prose, an unknown marked field, an approximate/ranged pause, or a stage direction/equation inside speech fails with a line-numbered error before ElevenLabs is called. There is no heuristic that reads every leftover line or invents missing pause lengths. Normalized output retains the existing `Storyline` shape and timing package schema, so the provider, scene agent, audio routes, and animlib player use the same interfaces.
 
 Limits: 50,000 Markdown characters, 20,000 spoken characters, 100 scenes, 500 blocks, 30 seconds per pause, 600 total pause seconds, and 30 minutes of generated audio. Long speech blocks split at sentence/word boundaries below 8,000 characters per request. Words, equations, and numbers should already be written as spoken language; stage directions and LaTeX in speech are rejected with line numbers. Invalid scripts are rejected before paid speech requests.
 
@@ -117,4 +134,4 @@ npm test
 npm run demo:build
 ```
 
-Backend fixtures cover the guidance example, parser errors, Unicode/repeated-word alignment, provider rounding, exact silence and duration offsets, caching, explicit retry, restart recovery, owner isolation, API errors, and compilation of the timed demo. Ordinary tests never call ElevenLabs. The optional CLI smoke test uses real credits. CI additionally packages and smoke-tests a Linux production release, including the Markdown dependency and storyline guidance.
+Backend fixtures compare differently formatted AI responses against the same expected spoken sequence, including lists, headings, quotes, code fences, comments, line endings, synonyms, and tables. They cover source offsets, ambiguous inputs failing before provider calls, the guidance example, Unicode/repeated-word alignment, provider rounding, exact silence and duration offsets, caching, explicit retry, restart recovery, owner isolation, API errors, and compilation of the timed demo. An HTTP-to-provider-to-scene test checks that normalized narration reaches ElevenLabs without production notes and retains its pause/audio/word offsets. Ordinary tests never call ElevenLabs. The optional CLI smoke test uses real credits. CI additionally packages and smoke-tests a Linux production release, including the Markdown extensions and storyline guidance.

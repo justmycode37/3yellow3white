@@ -17,7 +17,7 @@ VOICE: original. Do not imitate, name, or reference any existing creator, channe
 - The examples in this file illustrate *mechanisms*. Do not reuse them unless the requested topic is the same; build fresh examples from the requested topic.
 - Do not imitate, name, or reference any existing creator, channel, or video. Never use signature catchphrases. Write in an original voice.
 - Video length in this product is typically 2–6 min per segment; §13 says how to compress.
-- **Production output:** return only the Markdown script described in §16. The pipeline worksheets and pseudocode below are internal planning aids, not the handoff format. The speech service reads only explicitly labelled spoken blocks.
+- **Production output:** prefer the Markdown script described in §16. The pipeline worksheets and pseudocode below are internal planning aids, not the handoff format. Spoken labels separate narration from production context; harmless Markdown formatting variations are normalized by the speech service.
 
 ---
 
@@ -427,19 +427,19 @@ Answer each YES before emitting the script:
 
 ## 16. PRODUCTION HANDOFF — Markdown for narration and scene generation
 
-Your output goes directly to a deterministic Markdown parser, then ElevenLabs, then the scene agent. Return **only the final Markdown script**, without an enclosing code fence, JSON, analysis, checklists, or the internal planning worksheets above. Do not output a single undifferentiated block containing both notes and dialogue.
+Your output goes directly to a deterministic Markdown parser, then ElevenLabs, then the scene agent. Prefer **only the final Markdown script**, without an enclosing code fence, JSON, analysis, checklists, or the internal planning worksheets above. The parser tolerates common presentation variations (§16.4), so exact punctuation and Markdown styling are not the contract. The essential contract is the distinction between spoken words, nonspoken context, and precisely positioned pauses. Do not mix notes and dialogue in an undifferentiated block.
 
 ### 16.1 Structure and labels (MUST)
 
 - Start with one `# Lesson title`, followed immediately by `## Beat 1 — Short title`.
 - Use a new `## Beat 2 — Short title` for each semantic beat. `## Ponder 1 — Short title` is also supported. Keep IDs unique and preserve them when revising. Each beat becomes one audio-backed animation scene; do not split a sentence across beats.
 - Nonspoken context goes under `Content needed:`, `Question:`, or `Notes:`. Describe facts, examples, quantities, established ingredients, and the reasoning goal, not visual design. No planning material before the first beat.
-- Spoken text goes under `Narration:`, `Invitation (spoken):`, `Hint (spoken):`, `Reveal (spoken):`, or `Credit (spoken):`. Use these exact English labels even when narration is in another language. Markdown bold labels or `### Narration` headings are supported, but plain labels are preferred.
-- A spoken block continues until the next labelled block, pause, or heading. Use ordinary prose paragraphs; do not embed notes, stage directions, lists, code, bracketed emotion tags, or pause instructions inside it.
+- Prefer the English labels `Narration:`, `Invitation (spoken):`, `Hint (spoken):`, `Reveal (spoken):`, and `Credit (spoken):`, even when narration is in another language. Common synonyms such as `Voiceover:`, `Narrator:`, `Spoken text:`, and `Question (spoken):` are accepted. Markdown emphasis, headings, quotes, and list wrappers do not change which words are spoken.
+- A spoken block continues until the next labelled block or heading. Prefer ordinary prose paragraphs. Do not embed production notes, code, or bracketed emotion tags inside speech. The parser can flatten a list inside an explicitly spoken block, but prose communicates the intended delivery more clearly.
 - Write each silent interval on its own line as `Pause: 5s`, at the exact point it occurs. Durations must be explicit positive numbers, at most thirty seconds. Follow §2.3 for pedagogical pause lengths. Never use ranges such as `3–5s`, `[beat]`, or a single unpositioned silence total.
-- After a pause, start a new spoken label. Use a separate labelled hint followed by its own pause for each rung of the hint ladder. Mark answer confirmation as `Reveal (spoken):` so the scene agent knows when it may reveal the answer.
+- After a pause, prefer a new spoken label. Unlabelled continuation retains the previous speech role, including after an explicit inline directive such as `[pause 3s]`. Use a separate labelled hint followed by its own pause for each rung of the hint ladder. Mark answer confirmation as `Reveal (spoken):` so the scene agent knows when it may reveal the answer.
 - Write numbers and mathematics naturally for speech: “sixteen”, “x squared”, “log base two of n”. Put symbolic notation and exact displayed quantities in nonspoken context. Do not put dollar-delimited LaTeX or equations in spoken text.
-- A beat may contain several spoken blocks and pauses. It must contain speech or an explicit pause; do not emit empty planning-only beats. The lesson must contain speech. Keep the lesson within one hundred beats and twenty thousand spoken characters.
+- A beat may contain several spoken blocks and pauses. It must contain speech or an explicit pause; do not emit empty planning-only beats. The lesson must contain speech. Keep the lesson within one hundred beats, twenty thousand spoken characters, five hundred speech/pause blocks, and six hundred seconds of explicit silence.
 
 ### 16.2 Timing ownership (MUST)
 
@@ -489,6 +489,18 @@ Just one more. The first question brings us back to sixteen, and we already know
 ```
 
 Before returning the script, check that every word intended for speech sits under a spoken label, every note sits under a context label, and every pause precedes the correct hint or reveal. Do not attach visual layout instructions or animation API calls.
+
+### 16.4 Reader compatibility and ambiguity
+
+The preferred example above is the easiest format to review, but the reader also accepts:
+
+- Different heading levels; `Beat`, `Scene`, or `Ponder` markers; bold/italic labels; bullets, numbered lists, and quoted narration; case differences; colons, full-width colons, or dash separators; soft line wraps and Windows line endings.
+- A whole script wrapped in a Markdown/text code fence, with a short “Here is the storyline” preface. Markdown links contribute their visible words, never their URLs. HTML comments are not narration.
+- Explicit pauses such as `Pause: 3 seconds`, `[pause for three seconds]`, `(pause 1500 ms)`, or inline `Think about it. [pause 3s] Now continue.` These become actual silence; the directive itself is never spoken. Each pause needs one exact duration, not “a bit”, “about five”, or “three to five”.
+- A standalone `Field | Content` table using the same labels, or a storyboard table with `Beat`/`Scene`, `Narration`/`Voiceover`, optional spoken-role columns, `Pause`, and separate context columns. Rows and spoken columns are processed in their written order. Use `Pause (s)` if that column contains numbers without units. Keep reference tables under `Notes:`. Prefer the paragraph format when the order is complex.
+- Plain prose with a title and section headings **only when the whole document is narration**, with optional explicit pauses. Once you include notes or other production fields, label all spoken passages. The reader does not guess whether an unlabelled paragraph in a mixed document is narration.
+
+`Question:` and `Answer:` are nonspoken context; `Question (spoken):`, `Invitation:`, `Answer (spoken):`, and `Reveal:` are spoken. `Notes:`, `Visuals:`, `Animation:`, and any field marked “not spoken” are context only. Preserve the distinction between the invitation, hints, and answer confirmation even if you vary their formatting. Unknown marked fields, unclear pause durations, and math/stage directions inside speech receive a line-numbered error before any paid synthesis. Correct the named ambiguity instead of rewriting or dropping the intended narration.
 
 ## APPENDIX A — Compressed exemplar storylines (pattern references, not templates to copy)
 

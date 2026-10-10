@@ -9,6 +9,7 @@ assert.equal(process.env.APP_REVISION, revision);
 const guidance = (await buildStorylineMessages("Release verification"))[0].content;
 assert(guidance.includes("PRODUCTION HANDOFF"), "Storyline guidance is missing from the release");
 assert.equal(parseStoryline("Narration: A working release.").beats.length, 1);
+assert.equal(parseStoryline("| Voiceover | Pause (s) |\n| --- | --- |\n| A working release. | 1 |").beats[0].blocks.length, 2);
 const scene = await compileSource(`export default scene({}, s => {
   const dot = s.circle('dot', { position: [2, 0] });
   s.keep(dot); s.wait(1);

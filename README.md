@@ -54,7 +54,8 @@ consumers can import scene compilation and state evaluation from `animlib/core`
 without loading the renderer. See the library's
 [shared evaluation example](shared/animlib/README.md#shared-scene-evaluation).
 LLM generation and a scene submission API are not connected yet. The backend now
-accepts labelled storyline Markdown through `/api/narrations`, generates
+normalizes AI-written storyline Markdown through `/api/narrations` (including
+common label, formatting, pause, and table variations), generates
 ElevenLabs narration with word timings and explicit pauses, and provides a
 validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
 The storyline writer should receive `backend/prompts/guidance.md`; its section 16
