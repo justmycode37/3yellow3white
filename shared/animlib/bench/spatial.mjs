@@ -88,7 +88,7 @@ const newCounters = () => ({ hits: 0, misses: 0, sets: 0, oversize: 0, vertexUpl
 
 globalThis.ResizeObserver = class { observe() {} disconnect() {} };
 globalThis.devicePixelRatio = 1;
-globalThis.GPUBufferUsage = { UNIFORM: 1, COPY_DST: 2, VERTEX: 4 };
+globalThis.GPUBufferUsage = { UNIFORM: 1, COPY_DST: 2, VERTEX: 4, INDEX: 8 };
 globalThis.GPUTextureUsage = { RENDER_ATTACHMENT: 1 };
 let validateUploads = false, renderError;
 const device = {
@@ -111,8 +111,8 @@ const device = {
     submit() {},
   },
   createCommandEncoder: () => ({
-    beginRenderPass: () => ({ setPipeline() {}, setBindGroup() {}, setVertexBuffer() {}, setViewport() {}, setScissorRect() {},
-      draw() { if (counters) counters.draws++; }, end() {} }),
+    beginRenderPass: () => ({ setPipeline() {}, setBindGroup() {}, setVertexBuffer() {}, setIndexBuffer() {}, setViewport() {}, setScissorRect() {},
+      draw() { if (counters) counters.draws++; }, drawIndexed() { if (counters) counters.draws++; }, end() {} }),
     finish: () => ({}),
   }),
 };

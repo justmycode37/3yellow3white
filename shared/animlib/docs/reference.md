@@ -320,6 +320,7 @@ interface Player {
   getPan(view?: string): Vec3;
   setPan(value: Vec3, view?: string): void;
   getInteractionSnapshot(view?: string): InteractionSnapshot | undefined;
+  /** Coalesced redraw on the next animation frame, also while paused. */
   invalidateFrame(): void;
   getState(): PlayerState;
   subscribe(listener: (state: PlayerState) => void): () => void;
@@ -1028,11 +1029,38 @@ rectangle, or undefined before rendering. `project(point, view?)` and
 `ray(x, y, view?)` use that same effective camera, including pan and viewer rotation.
 Ray coordinates are logical pixels from the selected view's top-left corner;
 omit the view ID for the main canvas. The internal controller also accounts for
-CSS canvas bounds and pixel density. Canvas replacement rebinds input automatically.
+CSS canvas bounds and pixel density. Input deltas update navigation immediately;
+`invalidateFrame()` coalesces pointer/orbit/pan requests into one redraw on the next
+animation frame, sharing the playback callback while playing. Explicit seek,
+pause, and committed control updates still draw their committed state immediately
+and consume any queued redraw. Canvas replacement rebinds input automatically.
 The player sets `touch-action: none`, makes an otherwise unfocusable canvas focusable,
 and restores those attributes/styles when it releases that canvas.
 
 ### Element animation and coordinates
+
+Opaque geometry is retained in indexed GPU buffers on both backends. Camera and
+object transforms update uniforms; matching spheres, round two-point bonds, and
+arrows can share geometry and instance consecutive compatible draws. Untextured
+spheres also share across radii. Round bonds/arrows share across translations and
+orientations when length, width, and style match. No author cache or invalidation
+API is required: effective geometry, normals, materials, textures, style and
+palette contents invalidate automatically, including fresh evaluated frames and
+in-place edits. Continuously changing geometry/style uses the CPU path until a
+stable sample can be retained again. Billboard orientation remains live. Transparent triangles, morphs,
+adaptive curves and stroked meshes use the CPU path to preserve ordering and
+projected stroke/tessellation behavior. Precision-sensitive local coordinates and
+transforms also use CPU world-space packing before float32 conversion, preserving
+small details when large authored coordinates cancel through object/group transforms.
+Geometry near uncertain depth clipping boundaries or with a float32-overflowing
+instance transform also uses that path. Subnormal local coordinates/transforms,
+values that would underflow to zero when packed, and unsafe intermediate underflow
+also opt out of retention. Large normal divisors whose reciprocals approach the
+subnormal range use the CPU path as well, preserving shading across backends.
+Ordinary normal-valued geometry remains eligible.
+GPU handles are rebuilt after recovery;
+geometry unused by the current frame is released. See [performance](performance.md)
+for measurements and remaining limits.
 
 Common animatable properties include position, rotation, scale, opacity, fill,
 stroke, stroke width, and geometry. Elements expose actions such as `moveTo`,

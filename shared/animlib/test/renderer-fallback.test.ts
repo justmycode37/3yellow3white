@@ -18,7 +18,7 @@ afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 function setup(failure = '') {
   vi.stubGlobal('isSecureContext', true);
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
-  vi.stubGlobal('GPUBufferUsage', { UNIFORM: 1, COPY_DST: 2, VERTEX: 4 });
+  vi.stubGlobal('GPUBufferUsage', { UNIFORM: 1, COPY_DST: 2, VERTEX: 4, INDEX: 8 });
   vi.stubGlobal('GPUTextureUsage', { RENDER_ATTACHMENT: 1 });
   let lose!: (info: { message: string }) => void;
   const buffer = () => ({ destroy: vi.fn() });
@@ -104,9 +104,10 @@ it('submits shared lit geometry, opacity ordering, and viewport offsets to WebGL
   await renderer.prepare([scene]); renderer.render(evaluateScene(scene, 0), scene.options);
   const [data, batches] = glState.render.mock.calls[0];
   expect(data).toBeInstanceOf(Float32Array);
-  expect(batches[0].opaqueVertices).toBeGreaterThan(100);
-  expect(data[11]).toBe(1); expect(data[13]).toBeCloseTo(0.2);
-  expect(data[batches[0].opaqueVertices * VERTEX_FLOATS + 6]).toBe(0.5);
+  const opaque=batches[0].commands.find((c:any)=>c.mesh);
+  expect(opaque.mesh.indices.length).toBeGreaterThan(100);
+  expect(opaque.mesh.vertices[11]).toBe(1); expect(opaque.instances[0][18]).toBeCloseTo(0.2);
+  expect(data[6]).toBe(0.5);
   renderer.dispose();
 });
 it('reports loss once, rebuilds WebGL resources on restore and detaches handlers on disposal', async () => {
@@ -164,7 +165,7 @@ it('does not recover a budget rejection when the retry instead fails both backen
 });
 
 function allowGPUFrames({device,context}:ReturnType<typeof setup>) {
-  const pass={setPipeline(){},setBindGroup(){},setVertexBuffer(){},draw(){},end(){}};
+  const pass={setPipeline(){},setBindGroup(){},setVertexBuffer(){},setIndexBuffer(){},drawIndexed(){},draw(){},end(){}};
   Object.assign(device,{queue:{writeBuffer(){},submit:vi.fn()},createCommandEncoder:()=>({beginRenderPass:()=>pass,finish:()=>({})})});
   Object.assign(context,{getCurrentTexture:()=>({createView:()=>({})})});
   for(const result of device.createTexture.mock.results)Object.assign(result.value,{createView:()=>({})});
