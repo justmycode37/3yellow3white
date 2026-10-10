@@ -18,6 +18,8 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
 }) {
   const canvasHost = useRef<HTMLDivElement>(null)
   const screen = useRef<HTMLDivElement>(null)
+  const latestLesson = useRef(lesson)
+  latestLesson.current = lesson
   const suspended = useRef(menuOpen || overlayOpen)
   suspended.current = menuOpen || overlayOpen
   const [playback, setPlayback] = useState<LessonPlayback>()
@@ -36,6 +38,9 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   const playbackRequested = state.playing || state.buffering && state.wantsPlay
 
   useEffect(() => {
+    // Library refreshes replace lesson metadata, including on window focus.
+    // Key playback to lesson/video identity, not the metadata object's reference.
+    const lesson = latestLesson.current
     let active = true
     let controller: LessonPlayback | undefined
     const host = canvasHost.current
@@ -71,7 +76,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
       if (active) setStartupError(error instanceof Error ? error.message : String(error))
     })
     return () => { active = false; disconnect?.(); controller?.dispose(); host?.replaceChildren() }
-  }, [lesson, theme, attempt])
+  }, [lesson.id, lesson.videoId, theme, attempt])
 
   useEffect(() => { void playback?.setSuspended(menuOpen || overlayOpen) }, [playback, menuOpen, overlayOpen])
   useEffect(() => {

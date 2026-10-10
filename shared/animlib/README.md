@@ -69,6 +69,11 @@ Both backends share scene evaluation and geometry preparation. The implementatio
 evolving; the API and current limits are described in the
 [reference](docs/reference.md).
 
+The [storyboard capability summary](docs/capabilities.md) describes feasible
+visuals, interaction, scene continuity, and current boundaries for a planning AI.
+The backend includes it in storyline authoring and editorial-review prompts;
+scene authors receive the full reference.
+
 The [demo scenes](demo/scenes.ts) exercise the three subject areas. The demo uses a
 fullscreen black canvas, mostly white drawing with selective color accents, and a
 bottom progress bar with play/pause controls and native scene controls. Open

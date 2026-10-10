@@ -54,7 +54,10 @@ test("guidance production example is accepted by the actual parser", async () =>
   expect(parsed.beats).toHaveLength(2);
   expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(2);
   const messages = await buildStorylineMessages("Explain binary search.");
-  expect(messages[0]).toEqual({ role: "system", content: guidance });
+  const capabilities = await readFile(new URL("../../shared/animlib/docs/capabilities.md", import.meta.url), "utf8");
+  expect(messages[0].role).toBe("system");
+  expect(messages[0].content).toContain(guidance);
+  expect(messages[0].content).toContain(capabilities);
   expect(messages[1]).toEqual({ role: "user", content: "Explain binary search." });
 });
 test("oversized passages split without losing or duplicating words", () => {
@@ -177,7 +180,8 @@ test("ElevenLabs uses normalized speech, masks provider messages, and only retri
   const provider = createElevenLabs(settings, "private-test-key", fakeFetch, async ms => { sleeps.push(ms); });
   const output = await provider.synthesize({ text: "64", previousText: "Before", nextText: "After" });
   expect(sent).toHaveLength(2); expect(sleeps).toEqual([1000]);
-  expect(sent[0].body).toMatchObject({ text: "64", previous_text: "Before", next_text: "After", model_id: "eleven_multilingual_v2" });
+  expect(sent[0].body).toMatchObject({ text: "64", previous_text: "Before", next_text: "After", model_id: "eleven_multilingual_v2",
+    voice_settings: { stability: 0.45, similarity_boost: 0.75, style: 0.2, use_speaker_boost: true, speed: 1 } });
   expect(alignWords(output.normalizedAlignment, "u", 0).words.map(w => w.text)).toEqual(["sixty", "four"]);
   const auth = createElevenLabs(settings, "secret", (async () => Response.json({ detail: "secret echo" }, { status: 401 })) as unknown as typeof fetch);
   await expect(auth.synthesize({ text: "Hi", previousText: "", nextText: "" })).rejects.toMatchObject({ code: "PROVIDER_AUTH" });

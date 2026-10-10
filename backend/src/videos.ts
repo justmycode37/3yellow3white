@@ -10,6 +10,7 @@ import { extractUpload, MAX_FILE_BYTES, MAX_UPLOAD_BYTES, uploadMetadata, upload
 import type { Upload } from './uploads.js'
 
 import { SHARED_OWNER } from './identity.js'
+import { logEvent, logStage } from './logging.js'
 export { SHARED_OWNER } from './identity.js'
 
 type Row = { id: string; owner: string; request: string; manifest: string }
@@ -83,6 +84,7 @@ export class VideoService {
       this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
       uploads.forEach((upload, index) => this.db.query('INSERT INTO video_uploads VALUES (?, ?, ?, ?, ?, NULL)').run(manifest.id, index, upload.name, upload.mimeType, upload.bytes))
     })()
+    logEvent('video.queued', { videoId: manifest.id })
     this.kick()
     return manifest
   }
@@ -95,6 +97,7 @@ export class VideoService {
       this.db.query('DELETE FROM videos WHERE id = ?').run(id)
     })()
     for (const listener of this.listeners.get(id) ?? []) listener(null)
+    logEvent('video.deleted', { videoId: id })
     return true
   }
   private async sources(row: Row, signal: AbortSignal) {
@@ -133,11 +136,13 @@ export class VideoService {
         const abort = new AbortController()
         const signal = AbortSignal.any([this.abort.signal, abort.signal])
         this.active = { id: row.id, abort }
+        const started = performance.now()
+        logEvent('video.started', { videoId: manifest.id, sceneCount: manifest.scenes.length, resumed: manifest.status === 'generating' })
         try {
           if (manifest.provider === 'pi' && this.provider !== 'pi') throw new AgentError('CONFIG', 'This video requires VIDEO_GENERATOR=pi.')
           const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
           manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
-          const { request: input, images } = await this.sources(row, signal)
+          const { request: input, images } = await logStage({ videoId: manifest.id, stage: 'sources' }, () => this.sources(row, signal))
           const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
           if (!initial.ok) throw new Error('Stored scenes could not be restored')
           while (!this.stopped) {
@@ -145,7 +150,11 @@ export class VideoService {
             const next = await generate(input, manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
               previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal, images })
             if (this.stopped || !this.row(row.id)) break
-            if (!next) { manifest.status = 'complete'; this.save(manifest); this.notify(manifest); break }
+            if (!next) {
+              manifest.status = 'complete'; this.save(manifest); this.notify(manifest)
+              logEvent('video.completed', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
+              break
+            }
             const scene: VideoScene = { ...next.scene, audio: { id: next.scene.audio?.id ?? `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
             if (scene.index !== manifest.scenes.length || !Number.isFinite(scene.duration) || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
             const result = await sequence.submit({ type: 'insert', after: manifest.scenes.at(-1)?.id ?? null, scenes: [scene] })
@@ -158,13 +167,17 @@ export class VideoService {
               manifest.scenes.push(scene); this.save(manifest)
             })()
             this.notify(manifest)
+            logEvent('video.scene_published', { videoId: manifest.id, sceneIndex: scene.index, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
           }
         } catch (error) {
           if (this.stopped || !this.row(row.id)) continue
           manifest.status = 'failed'; manifest.error = error instanceof AgentError ? error.message : 'Generation failed. Available scenes can still be played.'
-          console.error('Video generation failed', manifest.id, error instanceof AgentError ? error.code : 'GENERATION')
+          logEvent('video.failed', { videoId: manifest.id, sceneCount: manifest.scenes.length, code: error instanceof AgentError ? error.code : 'GENERATION', elapsedMs: Math.round(performance.now() - started) }, 'error')
           this.save(manifest); this.notify(manifest)
-        } finally { this.active = undefined; sequence.dispose() }
+        } finally {
+          if (this.stopped) logEvent('video.interrupted', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
+          this.active = undefined; sequence.dispose()
+        }
       }
     }).finally(() => { this.running = false })
   }

@@ -52,6 +52,8 @@ test('editorial repairs update speech and plan together, forward sources, and pr
   expect(tasks[1].prompt).toContain('Sixteen, eight, four.');
   expect(tasks[1].prompt).toContain('parsedScenes');
   expect(tasks[1].systemPrompt).toContain('Visual plans and reveal guards belong in nonspoken context');
+  const capabilities = await readFile(new URL('../../shared/animlib/docs/capabilities.md', import.meta.url), 'utf8');
+  tasks.forEach(task => expect(task.systemPrompt).toContain(capabilities));
   expect(tasks[2].prompt).toContain('Correct speech and all plan values');
   const run = join(root, 'editorial', approved.editorialReview.runId);
   expect(JSON.parse(await readFile(join(run, 'lesson-review-0.json'), 'utf8')).verdict).toBe('revise');

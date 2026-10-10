@@ -24,6 +24,14 @@ PR #19. Requested audience, scene count, duration, and pause preferences take
 priority over defaults. Explicit thinking pauses need natural spoken invitations;
 visual holds do not require scripted silence.
 
+`shared/animlib/docs/capabilities.md` is the compact visual-capability brief for
+the top-level storyboard planner and its editorial reviewer. It covers supported
+geometry, motion, math, 3D views, interaction, scene continuity, diagrams assembled
+from primitives, and current limitations. The host adds it to the system guidance
+on every draft and review, including repairs; the reviewer checks visual feasibility
+before speech synthesis. Scene authors continue to receive the full API reference.
+Keep the brief aligned with the public API and reference when capabilities change.
+
 Planning and scene craft adapt the useful parts of PR #21 into the existing calls.
 The plan records the audience/prerequisites, central question, learning goal,
 key insight, running example, misconceptions, and shared entity/color meanings.
@@ -160,11 +168,14 @@ API-key mode holds the key in memory and ignores saved OAuth credentials.
 Subscription mode requires OAuth and cannot fall back to an API key. Changing
 modes does not revoke the previous subscription registration.
 
-`AGENT_MODEL` defaults to `gpt-6-astra`, `AGENT_THINKING` to `high`, and
-`AGENT_TIMEOUT_MS` to 300000 per script/scene including repairs. The model must
-exist in the pinned catalog and be available to your account; `agents:check`
-verifies inference. Runs allow twelve agent turns and three final-output
-validation attempts. Provider retries and automatic compaction are disabled.
+`AGENT_MODEL` defaults to `gpt-6-astra` and `AGENT_THINKING` to `high`.
+Agent tasks have no wall-clock timeout, so thinking, validation repairs, and
+final output can finish. The former `AGENT_TIMEOUT_MS` setting is ignored.
+Deleting a video or shutting down the server still cancels its active agent.
+The model must exist in the pinned catalog and be available to your account;
+`agents:check` verifies inference. Runs allow twelve agent turns and three
+final-output validation attempts. Provider retries and automatic compaction
+are disabled.
 
 ## Demo server
 
@@ -213,6 +224,19 @@ sudo docker compose -p 3yellow3white --env-file compose.env run --rm --no-deps a
 Revocation does not erase documents, scripts, audio, or scenes on the VM.
 
 ## Failures and verification
+
+The server writes JSON lines to stdout (progress) and stderr (warnings/errors).
+Filter by `videoId` to follow a video from `video.queued` through source extraction,
+script drafting/review, narration waits, scene generation, and publication to
+`video.completed` or `video.failed`. Narration-stage records link `videoId` with
+`narrationId`; use that ID for speech chunk, cache reuse, and narration failures.
+Slow stages emit `stage.running` every 30 seconds with `elapsedMs`; this means
+the operation is still pending, not that its provider has confirmed progress.
+Scene indexes are zero-based; draft/review attempts are one-based. Resumed job
+elapsed times cover the current run only. Logs omit lesson text, uploaded file
+names, credentials, provider response bodies, and raw exception messages.
+Logging changes take effect when the backend restarts; they cannot add progress
+events to an already-running process.
 
 Authentication failures, limits, timeouts, and invalid output fail the video job
 with a safe message; completed scenes remain playable. Shutdown cancels the
