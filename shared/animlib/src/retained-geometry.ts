@@ -61,7 +61,11 @@ export function indexGeometry(items: GeometryDrawItem[]): RetainedMesh {
  * than walking every vertex on camera-only frames. Precision-sensitive elements
  * stream through the original world packing path, including authored texture UVs.
  */
-export function retainedPrecisionSafe(meshes: RetainedMesh[], origin: Vec3, basis: Vec3[], camera: CameraState, height: number, screen: boolean): boolean {
+export function retainedPrecisionSafe(meshes: RetainedMesh[], origin: Vec3, basis: Vec3[], instance: Float32Array, camera: CameraState, height: number, screen: boolean): boolean {
+  // A finite double-precision product does not imply a representable GPU
+  // transform: tiny local coordinates may compensate for a scale above FLT_MAX.
+  // Check the actual packed matrix AND metadata (including the normal divisor).
+  if (!instance.every(Number.isFinite) || instance[17] === 0) return false;
   const local: Vec3 = [0,0,0];
   for (const mesh of meshes) for (let axis=0;axis<3;axis++) local[axis]=Math.max(local[axis],mesh.magnitude[axis]);
   const extent=origin.map((_,axis)=>local.reduce((sum,v,i)=>sum+v*Math.abs(basis[i][axis]),0)) as Vec3;
@@ -73,9 +77,21 @@ export function retainedPrecisionSafe(meshes: RetainedMesh[], origin: Vec3, basi
     const sy=Math.sin(camera.yaw),cy=Math.cos(camera.yaw),sp=Math.sin(camera.pitch),cp=Math.cos(camera.pitch);
     const depthAxis: Vec3 = [-sy*cp,sp,-cy*cp];
     const delta=origin.map((v,i)=>v-camera.target[i]);
-    const nearestDepth=camera.distance+delta.reduce((sum,v,i)=>sum+v*depthAxis[i]-extent[i]*Math.abs(depthAxis[i]),0);
-    const perspective=Math.min(1,Math.max(0,camera.perspective));
-    const divisor=Math.max(0.01,1-perspective+perspective*nearestDepth/camera.distance);
+    const centerDepth=camera.distance+delta.reduce((sum,v,i)=>sum+v*depthAxis[i],0);
+    const depthRadius=extent.reduce((sum,v,i)=>sum+v*Math.abs(depthAxis[i]),0);
+    const far=camera.distance*100,range=far-0.01;
+    // Include camera/clip arithmetic roundoff, including GL's [0,w] -> [-w,w]
+    // conversion. A subpixel position bound alone cannot protect visibility at
+    // a clipping discontinuity. Layer bias moves both depth clipping planes.
+    const depthError=error+8*2**-24*(far+Math.hypot(...delta)+Math.hypot(...camera.target));
+    const nearestDepth=centerDepth-depthRadius-depthError,farthestDepth=centerDepth+depthRadius+depthError;
+    const layerBias=instance[16]*0.00000002*range;
+    if ([0.01+layerBias,far+layerBias].some(plane=>nearestDepth<=plane && farthestDepth>=plane)) return false;
+    // Match the shader's homogeneous w, without project()'s UI-only .01 floor.
+    // Nonpositive/uncertain w also uses CPU packing, even for clipped geometry.
+    const perspective=camera.perspective;
+    const divisor=1-perspective+perspective*nearestDepth/camera.distance;
+    if (!(divisor>0)) return false;
     // Perspective depth error also moves projected x/y; bound that amplification
     // over the whole local box, including near-plane intersections.
     const radius=Math.hypot(...delta.map((v,i)=>Math.abs(v)+extent[i]));

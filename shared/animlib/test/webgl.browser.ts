@@ -89,21 +89,21 @@ export async function runWebGLTests() {
         assert(optimized.filter((v,i)=>Math.abs(v-reference[i])>3).length<optimized.length*0.002,'Retained and CPU world geometry diverged');
       }
     });
-    for (const {name,source,retained} of retainedPrecisionCases) await test('retained precision/reference pixels: '+name,async()=>{
+    for (const {name,source,retained,orbit} of retainedPrecisionCases) await test('retained precision/reference pixels: '+name,async()=>{
       await load(source);
       for (const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
-        const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+        const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw:orbit===false?0:yaw,pitch:orbit===false?0:pitch};
         const gl=renderer.canvasElement.getContext('webgl2')!,indexed=gl.drawElementsInstanced;
         let indexedCalls=0;
         gl.drawElementsInstanced=new Proxy(indexed,{apply(target,receiver,args){indexedCalls++;return Reflect.apply(target,receiver,args);}});
         try {renderer.render(frame,sequence.compiled[0].options);} finally {gl.drawElementsInstanced=indexed;}
         const optimized=pixels(renderer.canvasElement);
-        assert((indexedCalls>0)===retained,'Unexpected precision fallback/indexed submission');
         const get=RetainedGeometry.prototype.get;RetainedGeometry.prototype.get=()=>undefined;
         try {renderer.render(frame,sequence.compiled[0].options);} finally {RetainedGeometry.prototype.get=get;}
         const reference=pixels(renderer.canvasElement);
         assert(foreground(reference)>200,'Precision reference scene was empty');
         assert(!optimized.some((v,i)=>Math.abs(v-reference[i])>3),'Precision-sensitive geometry diverged from CPU world packing');
+        assert((indexedCalls>0)===retained,'Unexpected precision fallback/indexed submission');
         renderer.render(frame,sequence.compiled[0].options);pixels(renderer.canvasElement);
       }
     });

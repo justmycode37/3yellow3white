@@ -241,7 +241,11 @@ and projection. Above a conservative 1/64-pixel budget, the element uses the
 original double-precision world transform before packing, preserving fine detail
 when large local coordinates cancel against object/group translations. This may
 stream otherwise static geometry at extreme coordinate magnitudes or zoom levels;
-unaffected elements keep retention. Authored texture coordinates are unchanged.
+unaffected elements keep retention. The guard uses the shader's unclamped
+homogeneous perspective divisor, streams bounds whose depth uncertainty crosses
+the near/far planes (including layer bias), and rejects nonfinite packed instance
+matrices/metadata or a zero normal divisor. Those checks also run after camera or
+transform changes. Authored texture coordinates are unchanged.
 The measurements below precede this precision guard; they are not a fresh timing
 claim for the review fix.
 

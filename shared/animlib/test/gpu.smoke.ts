@@ -95,11 +95,11 @@ describe('native Vulkan WebGPU rendering',()=> {
     }
     expect(errors).toEqual([]);
   });
-  it.each(retainedPrecisionCases)('retained precision/reference pixels: $name',async ({source,retained})=>{
+  it.each(retainedPrecisionCases)('retained precision/reference pixels: $name',async ({source,retained,orbit})=>{
     renderer.resetInteraction();
     expect((await sequence.submit({type:'load',scenes:[{id:'precision',source}]})).ok).toBe(true);
     for(const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
-      const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+      const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw:orbit===false?0:yaw,pitch:orbit===false?0:pitch};
       renderer.render(frame,sequence.compiled[0].options);const optimized=await pixels();
       const resources=(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes;
       const usedRetained=resources.size>0;

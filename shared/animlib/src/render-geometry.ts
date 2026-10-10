@@ -107,8 +107,8 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       const meshes=retained.get(key,()=>buildDrawItems({...frame,elements:[local]},camera,width,height,palette),element.geometry.kind==='arrow',JSON.stringify([view,element.id]));
       const instanceBasis=primitive.axes.map(p=>p.map((_,axis)=>p.reduce((sum,v,i)=>sum+v*basis[i][axis],0)) as Vec3);
       const instanceOrigin=origin.map((v,axis)=>v+primitive.origin.reduce((sum,p,i)=>sum+p*basis[i][axis],0)) as Vec3;
-      if(meshes && retainedPrecisionSafe(meshes,instanceOrigin,instanceBasis,camera,height,element.space==='screen')) {
-        const instance=new Float32Array([...instanceBasis[0],0,...instanceBasis[1],0,...instanceBasis[2],0,...instanceOrigin,1,elementIndex,scale*primitive.scale,...viewportOffset]);
+      const instance=new Float32Array([...instanceBasis[0],0,...instanceBasis[1],0,...instanceBasis[2],0,...instanceOrigin,1,elementIndex,scale*primitive.scale,...viewportOffset]);
+      if(meshes && retainedPrecisionSafe(meshes,instanceOrigin,instanceBasis,instance,camera,height,element.space==='screen')) {
         for(const mesh of meshes) {
           const depth=Math.min(...mesh.centers.map(center=>depthAt(...center.map((_,axis)=>instanceOrigin[axis]+center.reduce((sum,v,i)=>sum+v*instanceBasis[i][axis],0)) as Vec3)));
           items.push({depth:element.space==='screen'?-1e9:depth,vertices:new Float32Array(0),

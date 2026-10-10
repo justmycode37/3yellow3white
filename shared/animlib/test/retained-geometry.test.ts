@@ -98,10 +98,10 @@ describe('retained local geometry',()=>{
       delete label.morph;label.geometry=dependent;label.space='screen';expect(retentionForFrame(frame)).toBe(true);label.space='world';
     }
   });
-  it.each(retainedPrecisionCases)('preserves local detail before narrowing: $name',async({source,retained})=>{
+  it.each(retainedPrecisionCases)('preserves local detail before narrowing: $name',async({source,retained,orbit})=>{
     const scene=await compileSource(source),cache=new RetainedGeometry();
     for(const yaw of [0,0,0.3,0]) {
-      const frame=evaluateScene(scene,0);frame.camera.yaw=yaw;
+      const frame=evaluateScene(scene,0);frame.camera.yaw=orbit===false?0:yaw;
       const items=draw(cache,frame);
       expect(items.length).toBeGreaterThan(0);
       expect(items.every(item=>Boolean(item.mesh)===retained)).toBe(true);
@@ -119,6 +119,25 @@ describe('retained local geometry',()=>{
     frame.camera.height=1000000;expect(draw(cache,frame)[0].mesh).toBe(mesh);
     frame.elements[0].scale=1000000;expect(draw(cache,frame).every(item=>!item.mesh)).toBe(true);
     frame.elements[0].scale=1;expect(draw(cache,frame)[0].mesh).toBe(mesh);
+  });
+  it('rechecks clipping uncertainty on camera movement and preserves unrelated retention',async()=>{
+    const scene=await compileSource(retainedPrecisionCases.find(c=>c.name==='orthographic near clipping uncertainty')!.source);
+    const cache=new RetainedGeometry(),frame=evaluateScene(scene,0);
+    const safe={...frame.elements[0],id:'safe',position:[0,0,0] as [number,number,number]};
+    frame.elements.push(safe);
+    const first=draw(cache,frame);
+    expect(first[0].mesh).toBeUndefined();expect(first[1].mesh).toBeDefined();
+    frame.camera.distance=12;
+    const next=draw(cache,frame);expect(next.every(item=>item.mesh===first[1].mesh)).toBe(true);
+    frame.camera.distance=10;
+    const again=draw(cache,frame);expect(again[0].mesh).toBeUndefined();expect(again[1].mesh).toBe(first[1].mesh);
+  });
+  it('uses the same finite instance gate for screen-space geometry',async()=>{
+    const scene=await compileSource(retainedPrecisionCases.find(c=>c.name==='nested scales overflow float32 instance matrix')!.source);
+    const frame=evaluateScene(scene,0);frame.elements[0].space='screen';
+    const items=draw(new RetainedGeometry(),frame);
+    expect(items.every(item=>!item.mesh)).toBe(true);
+    expect(items.map(item=>item.vertices)).toEqual(buildDrawItems(frame,frame.camera,800,600,paletteResolver()).map(item=>item.vertices));
   });
   it('evicts geometry no longer present rather than retaining every seek/control sample',async()=>{
     const scene=await compileSource(source),cache=new RetainedGeometry(),frame=evaluateScene(scene,0);
