@@ -44,6 +44,16 @@ trap cleanup EXIT
 "${compose[@]}" run --rm --no-deps app scripts/smoke-release.ts
 "${compose[@]}" up --detach --wait --wait-timeout 60
 container=$("${compose[@]}" ps --quiet app)
+wait_healthy() {
+  local minimum_restarts=${1:-0} attempt running health restarts
+  for ((attempt=0; attempt<60; attempt++)); do
+    read -r running health restarts <<< "$("${engine[@]}" inspect --format '{{.State.Running}} {{.State.Health.Status}} {{.RestartCount}}' "$container")"
+    if [[ "$running" == true && "$health" == healthy ]] && (( restarts >= minimum_restarts )); then return 0; fi
+    sleep 1
+  done
+  echo 'Container did not reach the expected healthy state' >&2
+  return 1
+}
 url="http://$("${compose[@]}" port app 8080)"
 python3 "$root/scripts/check-container-http.py" "$url" "$revision" create "$work/job"
 # shellcheck disable=SC2016
@@ -54,20 +64,14 @@ python3 "$root/scripts/check-container-http.py" "$url" "$revision" create "$work
 python3 "$root/scripts/check-container-http.py" "$url" "$revision" interrupt "$work/job"
 "${compose[@]}" stop --timeout 30
 [[ $("${engine[@]}" inspect --format '{{.State.Status}} {{.State.ExitCode}}' "$container") == 'exited 0' ]]
-"${compose[@]}" start --wait --wait-timeout 60
+# Compose 2.30 supports raw env files, but start --wait requires a newer version.
+"${compose[@]}" start
+wait_healthy
 python3 "$root/scripts/check-container-http.py" "http://$("${compose[@]}" port app 8080)" "$revision" verify "$work/job"
 # Crash Bun from inside the container, without Docker marking it manually stopped.
 # shellcheck disable=SC2016
 "${compose[@]}" exec -T app bun -e 'import { readdirSync, readFileSync } from "node:fs"; const pid = readdirSync("/proc").filter(p => /^\d+$/.test(p)).find(p => { try { return readFileSync(`/proc/${p}/cmdline`, "utf8").split("\0")[1] === "backend/src/index.ts"; } catch { return false; } }); if (!pid) process.exit(1); process.kill(Number(pid), "SIGKILL");'
-recovered=false
-for ((attempt=0; attempt<30; attempt++)); do
-  if [[ $("${engine[@]}" inspect --format '{{.RestartCount}} {{.State.Health.Status}}' "$container") =~ ^[1-9][0-9]*\ healthy$ ]]; then
-    recovered=true
-    break
-  fi
-  sleep 1
-done
-[[ "$recovered" == true ]] || { echo 'Container did not recover after a process crash' >&2; exit 1; }
+wait_healthy 1
 python3 "$root/scripts/check-container-http.py" "http://$("${compose[@]}" port app 8080)" "$revision" verify "$work/job"
 "${compose[@]}" down --timeout 30
 "${compose[@]}" up --detach --wait --wait-timeout 60
