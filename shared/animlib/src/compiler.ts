@@ -3,6 +3,7 @@ import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
 import { createSurfaceBuilders } from "./surfaces.js";
 import { createSolidBuilders } from "./solids.js";
+import { validateLighting } from "./lighting.js";
 import { validatePath } from "./path.js";
 import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
 import type { CameraState, CompileInput, CompiledScene, ControlValue, Diagnostic, ElementState, Geometry, ReactiveUpdate } from "./types.js";
@@ -95,6 +96,7 @@ function element(e: ElementState) {
     check(e.strokeProfile === "flat" || e.strokeProfile === "round", "Invalid stroke profile");
     check(e.strokeProfile !== "round" || e.space === "world", "Round strokes require world space");
   }
+  if (e.castShadow !== undefined) check(typeof e.castShadow === "boolean", "Invalid castShadow flag");
   if (e.billboard !== undefined) check(typeof e.billboard === "boolean", "Invalid billboard flag");
   if (e.billboardOffset !== undefined) vec(e.billboardOffset,"billboard offset");
   if (e.viewportOffset !== undefined) vec(e.viewportOffset,"viewport offset",2);
@@ -115,6 +117,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
   check(scene.options && ["2d", "3d"].includes(scene.options.mode) && ["hold", "advance"].includes(scene.options.end), "Invalid scene options");
   check(typeof scene.options.orbit === "boolean" && typeof scene.options.background === "string" && scene.options.background.length <= 128, "Invalid scene display options");
   if (scene.options.audio !== undefined) check(typeof scene.options.audio === "string" && scene.options.audio.length <= 256, "Invalid audio asset ID");
+  validateLighting(scene.options.lighting);
   camera(scene.camera);
   check(scene.views === undefined || Array.isArray(scene.views) && scene.views.length <= 32, "Invalid or oversized views");
   const viewIds = new Set<string>();

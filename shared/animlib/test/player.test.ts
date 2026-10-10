@@ -17,6 +17,7 @@ vi.mock("../src/renderer.js", () => ({
     dispose() { rendering.disposed = true; }
   },
 }));
+import { CanvasRenderer } from "../src/renderer.js";
 import { Canvas } from "./canvas-stub.js";
 import { createPlayer } from "../src/player.js";
 import { ControlOverlay } from "../src/controls.js";
@@ -543,4 +544,19 @@ it('cancels capture before replacing the active compilation, even when a later s
     canvas.send('pointerdown');canvas.send('pointermove',375,200);
     expect(rendering.frame?.elements[0].position[0]).toBeCloseTo(2);
   } finally {player.dispose();}
+});
+
+it('keeps backend errors blocking even if another scene is submitted',async()=>{
+  const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+  const failure=new Error('Device failed and fallback unavailable');
+  vi.spyOn(CanvasRenderer.prototype,'render').mockImplementationOnce(function(this:CanvasRenderer){this.onError?.(failure);});
+  const scenes=[{id:'small',source:"export default scene({},s=>{s.rectangle('r');s.wait(1)});"}];
+  try{
+    expect((await player.submit({type:'load',scenes})).ok).toBe(true);
+    expect(player.getState()).toMatchObject({status:'blocked',error:failure.message});
+    expect((await player.submit({type:'load',scenes})).ok).toBe(true);
+    expect(player.getState()).toMatchObject({status:'blocked',error:failure.message});
+    await expect(player.play()).rejects.toBe(failure);
+    expect(frames.size).toBe(0);
+  }finally{player.dispose();}
 });

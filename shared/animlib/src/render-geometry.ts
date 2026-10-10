@@ -42,7 +42,7 @@ export function triangulateContours(contours:Vec3[][]):Vec3[] {
   return triangulations.set(key,result.map(p=>[...p] as Vec3),result.length*64);
 }
 type DrawComponent = 'content' | 'fill' | 'stroke';
-export interface GeometryDrawItem extends DrawItem { elementId: string; component: DrawComponent; }
+export interface GeometryDrawItem extends DrawItem { elementId: string; castShadow?: boolean; component: DrawComponent; }
 const isText = (geometry: Geometry): boolean => geometry.kind === 'text' || geometry.kind === 'latex';
 
 /** textOnly skips shape tessellation while retaining groups and the text portions of mixed morphs. */
@@ -61,6 +61,8 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
     while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
     const viewportOffset=[0,1].map(axis=>chain.reduce((sum,e)=>sum+(e.viewportOffset?.[axis]??0),0));
+    const castShadow=chain.every(e=>e.castShadow!==false)&&!element.billboard&&viewportOffset.every(v=>v===0)
+      &&["mesh","sphere"].includes(element.geometry.kind);
     const groups:{id:string;opacity:number}[]=[];
     let opacity=1;
     for(const e of [...chain].reverse()) {
@@ -134,11 +136,11 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
         for(let j=0;j<vertices.length;j+=3*VERTEX_FLOATS) {
           const depth=depthAt((vertices[j]+vertices[j+VERTEX_FLOATS]+vertices[j+2*VERTEX_FLOATS])/3,
             (vertices[j+1]+vertices[j+VERTEX_FLOATS+1]+vertices[j+2*VERTEX_FLOATS+1])/3,(vertices[j+2]+vertices[j+VERTEX_FLOATS+2]+vertices[j+2*VERTEX_FLOATS+2])/3);
-          items.push({depth,vertices:vertices.subarray(j,j+3*VERTEX_FLOATS),transparent,screen,groups,elementId:element.id,component});
+          items.push({depth,vertices:vertices.subarray(j,j+3*VERTEX_FLOATS),transparent,screen,groups,castShadow:castShadow&&component==='fill',elementId:element.id,component});
         }
       } else {
         const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
-        items.push({depth,vertices,transparent,screen,groups,elementId:element.id,component});
+        items.push({depth,vertices,transparent,screen,groups,castShadow:castShadow&&component==='fill',elementId:element.id,component});
       }
     };
     const contours=(paths:Vec3[][],alpha=1,color=element.fill,component:DrawComponent='fill'):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha,undefined,component);};
