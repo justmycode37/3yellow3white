@@ -1,5 +1,23 @@
 # DNA coordinate proof
 
+## Current revision: twelve base pairs, atoms only
+
+At the user's request, the live scene now includes all 486 deposited heavy atoms
+across the twelve-base-pair duplex, twice the original six-pair segment. Every
+atom uses its conventional van der Waals radius: neighboring volumes overlap
+and touch naturally without changing coordinates. Covalent sticks, dashed
+contacts and their controls were removed entirely. The optional central-two-pair
+view remains atom-only. Five color batches contain 20,412 vertices and 38,880
+triangles, with smooth normals and the existing satin texture/material.
+
+The 14-second groove inspection remains; camera framing expands to fit the full
+structure. Native samples at seven times in both 16:9 and 4:3 were inspected,
+including the turn and final zoom. Independent review found no blocker. Library
+typecheck and demo build pass. Browser playback and region switching are checked
+separately. The notes below preserve the earlier six-pair milestone's provenance.
+
+## Original six-pair milestone
+
 The scene shows six base pairs (A4–A9 and B16–B21) from RCSB PDB 1BNA, the
 Dickerson dodecamer determined by X-ray diffraction at 1.90 Å resolution.
 The displayed region contains 246 deposited heavy atoms, 274 covalent bonds and

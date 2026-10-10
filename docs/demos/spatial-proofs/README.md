@@ -6,7 +6,7 @@ Shift-drag to pan, and use Reset view to restore the authored camera.
 
 | Proof | Construction | Duration |
 | --- | --- | --- |
-| DNA | Six deposited base pairs, 246 heavy atoms, chemical bonds; selectable central pairs and space filling | 14 s |
+| DNA | Twelve deposited base pairs, 486 touching space-filling heavy atoms; no bond lines; selectable central pairs | 14 s |
 | Engine | Cutaway housing, constrained piston/rod/crank, flywheel and timed valves | 16 s |
 | Gradient descent | Genuine 25-parameter neural-network MSE on a two-dimensional affine slice; 33 Armijo steps | 16 s |
 | Minecraft | Articulated voxel Steve, detailed oak tree, three tool contacts, cracks and released inventory block | 16 s |
@@ -17,6 +17,11 @@ atoms and deposited solvent. Gradient optimization is restricted to the shown
 parameter slice. Minecraft uses original voxel geometry and an approximate
 character palette. Detailed fidelity notes accompany each proof in the gallery
 and in the adjacent `*-notes.md` files.
+
+Latest DNA revision doubles the displayed base-pair count and removes all bond
+sticks/contact dashes. See [current DNA frame](dna-long-frame.png) and
+[independent review](dna-long-review.md). Earlier images below document prior
+milestones and are retained for comparison.
 
 ## Texture update
 
