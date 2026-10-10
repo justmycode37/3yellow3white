@@ -1,6 +1,6 @@
 import type { PlanDocument, StudyPlan, VideoSegment } from '../../../shared/study-plan.js';
 import type { AgentRunner } from './runtime.js';
-import { scenegenPrompt } from './scenegen-prompts.js';
+import { loadPrompt } from './prompts.js';
 
 const record = (v: unknown): Record<string, unknown> => {
   if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error('Expected an object.');
@@ -89,7 +89,7 @@ export function sourceMaterial(document: PlanDocument): string {
 }
 
 export async function generateStudyPlan(runner: AgentRunner, document: PlanDocument, signal: AbortSignal): Promise<StudyPlan> {
-  const [system, format] = await Promise.all([scenegenPrompt('topics-system'), scenegenPrompt('topics-format')]);
+  const [system, format] = await Promise.all([loadPrompt('topics-system'), loadPrompt('topics-format')]);
   // Retain the source prompt and delimiter contract, adding course grouping requirements.
   const prompt = format.replace('{max_topics}', String(MAX_TOPICS)) + '\n\n' + COURSE_CLASSIFICATION + '\n\nSOURCE MATERIAL:\n<<<\n' + sourceMaterial(document) + '\n>>>';
   signal.throwIfAborted();

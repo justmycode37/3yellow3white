@@ -12,8 +12,9 @@ import type { AgentRunner, AgentTask } from "./runtime.js";
 import { parsePlannedLesson, scenePlanningContext, validateStory } from './planning.js';
 import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
-import { validateScenePlan } from './scene-plan.js';
-import { scenegenPrompt } from './scenegen-prompts.js';
+import { validateScenePlan, validateViewingMode } from './scene-plan.js';
+import { instructionSnapshot, loadPrompt } from './prompts.js';
+import { buildAuthoringReference } from './authoring-reference.js';
 import { validationMessage } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
 import { inspectInWorker, sampleInWorker } from './scene-inspection-client.js';
@@ -50,10 +51,15 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const cachedLesson = await saved(lessonPath);
     let plan: LessonPlan | undefined;
     let markdown: string | undefined;
+    let legacyPlan = false;
     if (cachedLesson) {
-      const lesson = parsePlannedLesson(cachedLesson, request);
+      legacyPlan = JSON.parse(cachedLesson).instructionVersion === undefined;
+      const lesson = parsePlannedLesson(cachedLesson, request, { legacy: legacyPlan });
       markdown = lesson.markdown; plan = lesson.plan;
-    } else markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
+    } else {
+      markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
+      legacyPlan = !!markdown;
+    }
     if (!markdown) {
       const lesson = await logStage({ videoId, stage: 'script' }, () => authorReviewedLesson(runner, request, directory, signal, context.images, videoId));
       markdown = lesson.markdown; plan = lesson.plan;
@@ -89,6 +95,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     if (!scene) return null;
     const { instructions, ...input } = buildSceneAgentInput(pkg, scene.id, previousFrame);
     const planning = scenePlanningContext(story, index, plan);
+    const packet = { ...input, planning, videoMode: request.videoMode ?? 'classic', legacyPlan };
     const assemble = (output: string) => options.timingMode === 'host'
       ? attachTimingPrelude(sceneSource(output), input) : sceneSource(output);
     const diagnostics: string[] = [];
@@ -101,6 +108,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
         if (cached) return cached;
         const { compiled, finalFrame } = await validateSceneAgainstNarration(source, pkg, scene.id, previousFrame);
         if (Math.abs(compiled.duration - scene.durationSec) > 1e-6) throw new Error(`The scene must last ${scene.durationSec} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
+        if (!legacyPlan) validateViewingMode(compiled, packet.videoMode);
         if (plan) validateScenePlan(compiled, finalFrame, plan.scenes[index]);
         const candidate = { source, compiled, previous: previousFrame };
         if (compiledCandidates.size >= 4) compiledCandidates.delete(compiledCandidates.keys().next().value!);
@@ -117,9 +125,10 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const path = join(directory, `scene-${index}.js`);
     let source = await saved(path);
     if (!source) {
-      const reference = await readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
-      const craft = await readFile(new URL('../../prompts/scene-craft.md', import.meta.url), 'utf8');
-      const visualization = await scenegenPrompt('visualization');
+      const [reference, craft, viewingMode] = await Promise.all([
+        readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8").then(buildAuthoringReference),
+        loadPrompt('scene-craft'), loadPrompt('viewing-mode'),
+      ]);
       const reviewDirectory = join(directory, 'scene-inspection', `${index}-${crypto.randomUUID()}`);
       let inspectionNumber = 0;
       const record = async (kind: string, candidate: SceneCandidate, report: unknown) => {
@@ -153,15 +162,16 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       };
       const task = {
         outputMode: options.outputMode ?? 'text',
-        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Validate your complete output using inspect_scene or validate_output before finishing.
+        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Validate your complete output using inspect_scene or validate_output before finishing. The host output/timing contract and viewing-mode policy take priority over illustrative API examples; implement the approved plan within those constraints.
 Before final submission, call inspect_scene on your complete candidate. Reuse the returned candidateId for later tool calls; send source again only when revising it. Inspect relevant reveal/settled timestamps and specific object bounds as needed. Reports are advisory: distinguish intentional entrances, exits and overlaps from defects. Four inspections are available.
 ${options.preview ? 'Then call preview_scene to see up to six actual rendered frames. Choose important reveals, settled layouts and at least one transition midpoint using local narration times. Two preview batches are available: review once, repair concrete defects if needed, and use the second to verify. Optional focusObjectId crops one object. Avoid cosmetic iteration. If rendering is unavailable, use analytical feedback and finish; never claim you saw unavailable frames.' : 'Visual preview is unavailable for this run; use analytical feedback.'}
-Still samples do not establish continuous motion, occlusion-free visibility, interactive-control correctness or acoustic sync. Preserve narration, timing, carry/cleanup and planned controls during repairs. Inspection and preview never submit the scene.\n\n${craft}\n\n${visualization}\n\n${reference}`,
-        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify({ ...input, planning })}`, validate, signal,
+Still samples do not establish continuous motion, occlusion-free visibility, interactive-control correctness or acoustic sync. Preserve narration, timing, carry/cleanup and planned controls during repairs. Inspection and preview never submit the scene.\n\n${viewingMode}\n\n${craft}\n\n${reference}`,
+        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify(packet)}`, validate, signal,
         logContext: { videoId, sceneIndex: index, stage: 'scene' as const }, sceneTools,
       };
+      await atomicWrite(join(directory, `scene-${index}.instructions.json`), JSON.stringify(instructionSnapshot(task.systemPrompt)));
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
-      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning }));
+      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify(packet));
       source = assemble(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
       await validateSource(source);
       signal.throwIfAborted();

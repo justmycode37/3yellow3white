@@ -3,11 +3,15 @@
 The backend uses pinned Pi 1.1.0 to write a lesson plan and storyline Markdown in
 one JSON response, reviews it in a separate editorial conversation, then writes animlib scene JavaScript. The host sends only the approved script
 to ElevenLabs, then gives each scene agent its narration timing, the lesson plan,
-and the animlib API reference. Each task gets a separate
+and the authoring sections extracted verbatim from the animlib API reference. Each task gets a separate
 conversation with host validation/submission tools and the pinned `pi-web-access`
 extension. Built-in shell/file tools, discovered extensions, skills, and local
 instructions are disabled. Scene validation uses
 the existing QuickJS compiler with memory and execution limits.
+
+Prompt ownership, shared policies, assembly order, validation boundaries, and saved-job
+compatibility are described in [instruction architecture](instruction-architecture.md).
+That map is the maintainer entry point; runtime prompts live in `backend/prompts/`.
 
 The scene and thumbnail runners share the configured login. Pi persists subscription refreshes with file
 locking. The host saves scripts, narration IDs, and validated scene sources per

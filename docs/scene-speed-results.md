@@ -1,5 +1,7 @@
 # Scene generation benchmark — 2026-10-10
 
+Historical experiment record. Its prompts, style criteria, and test counts describe that experiment; current production rules are in [instruction architecture](instruction-architecture.md).
+
 ## Result
 
 Keep **Astra/high, full authoring reference, and validated-reference completion**.
