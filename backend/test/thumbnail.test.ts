@@ -54,3 +54,10 @@ test('thumbnail runner uses a separate Sol setting, bounded sources, examples an
   expect(await generate(input, { signal })).toEqual(parseThumbnailSVG(svg(path)));
   await expect(createThumbnailGenerator({ async run() { return svg('<script/>'); } })(input, { signal })).rejects.toThrow();
 });
+
+test('thumbnail context includes documents after the tenth source', async () => {
+  const documents = Array.from({ length: 12 }, (_, i) => ({ name: `source-${i}.md`, text: `Source ${i}` }));
+  const task = await thumbnailTask({ title: 'Vectors', topic: '', documents }, new AbortController().signal);
+  const context = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
+  expect(context.documents).toEqual(documents.map(document => ({ name: document.name, excerpt: document.text })));
+});

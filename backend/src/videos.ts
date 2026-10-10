@@ -8,7 +8,7 @@ import type { VideoManifest, VideoRequest, VideoScene } from '../../shared/video
 import { AgentError } from './agents/config.js'
 import { videoFailureMessage } from './video-errors.js'
 import type { ImageContent } from '@earendil-works/pi-ai'
-import { extractUpload, MAX_FILE_BYTES, MAX_UPLOAD_BYTES, uploadMetadata, uploadType } from './uploads.js'
+import { extractUpload, uploadMetadata, uploadType } from './uploads.js'
 import type { Upload } from './uploads.js'
 
 import { SHARED_OWNER } from './identity.js'
@@ -120,7 +120,6 @@ export class VideoService {
         request.documents.push({ name: upload.name, text })
       }
     }
-    if (Buffer.byteLength(JSON.stringify(request)) > 1_000_000) throw new AgentError('DOCUMENT', 'Combined source text must be under 1 MB. Split your material into smaller videos.')
     return { request, images }
   }
   private save(manifest: VideoManifest) {
@@ -238,14 +237,10 @@ export class VideoService {
       if (request.method !== 'POST') return json({ detail: 'Method Not Allowed' }, 405)
       const key = request.headers.get('Idempotency-Key')
       if (!key || key.length > 128) return json({ detail: 'An Idempotency-Key is required' }, 400)
-      // Bound streamed bodies as well as Content-Length before JSON parsing.
       const multipart = request.headers.get('content-type')?.startsWith('multipart/form-data')
-      const limit = multipart ? MAX_UPLOAD_BYTES + 1_000_000 : 1_000_000
-      const reader = request.body?.getReader(); let size = 0; const chunks: Uint8Array[] = []
+      const reader = request.body?.getReader(); const chunks: Uint8Array[] = []
       if (reader) while (true) {
         const { value, done } = await reader.read(); if (done) break
-        size += value.length
-        if (size > limit) { await reader.cancel(); return json({ detail: multipart ? 'Uploads must total 100 MB or less' : 'Source text must be under 1 MB' }, 413) }
         chunks.push(value)
       }
       let body: VideoRequest
@@ -256,22 +251,18 @@ export class VideoService {
           const form = await new Response(blob, { headers: { 'Content-Type': request.headers.get('content-type')! } }).formData()
           const payload = form.get('request')
           if (typeof payload !== 'string') return json({ detail: 'Provide request JSON with your files' }, 400)
-          if (Buffer.byteLength(payload) > 1_000_000) return json({ detail: 'Source text must be under 1 MB' }, 413)
           body = JSON.parse(payload)
           const files = form.getAll('files')
-          if (files.length > 10) return json({ detail: 'Upload at most 10 files' }, 400)
-          let total = 0
           for (const file of files) {
             if (typeof file === 'string' || !file.name || file.name.length > 255) return json({ detail: 'Provide named files' }, 400)
             const mimeType = uploadType(file.name)
             if (!mimeType) return json({ detail: 'Choose PDF, DOCX, TXT, Markdown, PNG, JPEG, or WebP files' }, 415)
-            total += file.size
-            if (!file.size || file.size > MAX_FILE_BYTES || total > MAX_UPLOAD_BYTES) return json({ detail: 'Each file must be 1 byte–50 MB; total uploads must be at most 100 MB' }, 413)
+            if (!file.size) return json({ detail: 'Provide nonempty files' }, 400)
             uploads.push({ name: file.name, mimeType, bytes: new Uint8Array(await file.arrayBuffer()) })
           }
         } else body = JSON.parse(await blob.text())
       } catch { return json({ detail: 'Invalid request body' }, 400) }
-      if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.length + uploads.length > 10 || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
+      if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
       if (body.videoMode !== undefined && body.videoMode !== 'classic' && body.videoMode !== 'interactive') return json({ detail: 'Choose classic or interactive video mode' }, 400)
       const normalized: VideoRequest = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })),
         ...(body.videoMode !== undefined ? { videoMode: body.videoMode } : {}),

@@ -16,11 +16,11 @@ as image attachments. Scanned PDFs without selectable text need photos or pasted
 `shared/video/contract.ts` defines the versioned manifest and request types.
 `POST /api/videos` accepts `{title, topic, documents: [{name, text}]}` with an
 `Idempotency-Key` header, returning HTTP 202 and a stable manifest. Reusing the key
-with different input returns 409. JSON source bodies are limited to 1 MB.
+with different input returns 409.
 Alternatively send multipart form data: `request` contains that JSON and repeated
-`files` fields contain the original files. Each file is at most 50 MB, all uploads
-at most 100 MB, and a request contains at most ten source documents/files. Extracted
-source text is limited to 1 MB in total. File hashes are part of idempotency identity.
+`files` fields contain the original files. The app imposes no file-count, file-size,
+total-upload-size, source-text-size, or PDF page-count limits. File hashes are part
+of idempotency identity.
 
 POST and DELETE validate the browser's origin. Behind the production gateway, set
 `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` to the exact public browser
