@@ -10,6 +10,14 @@
         {
           "reason": "Update spatial authoring guidance for mesh shading, function and parametric surfaces, basic solids, and swept tubes.",
           "sha256": "730d0bb5ad7d79d4f0e830387dc65fe39b29ae29f51bc039aeca932b3f652c23"
+        },
+        {
+          "reason": "Document procedural mesh/sphere textures and configurable metallic, roughness, specular, and emissive materials.",
+          "sha256": "98037b20f8cd6a01aca8030e0cf547a22ddbaaff4b0ea25aa1905d233b1646f2"
+        },
+        {
+          "reason": "Document adjustable procedural bump mapping of lighting normals.",
+          "sha256": "804945b416bcb7fd5443b1d0cbd61962daa7873ea215db671d3938dbc96041f9"
         }
       ]
     },

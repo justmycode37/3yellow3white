@@ -54,6 +54,10 @@ command. The default bind address is `0.0.0.0:8080`; override it with `HOST` and
 `npm run backend:typecheck` to check the backend's TypeScript.
 
 The animation library remains a separate npm workspace. From the repository root, `npm ci` installs it, and the existing `npm run dev`, `npm test`, and `npm run build` scripts operate on that library. See its [README](shared/animlib/README.md).
+The library supports shaded solids, swept tubes, sampled function/parametric
+surfaces, procedural textures, and configurable metalness, roughness, highlights,
+and emission. The [capability brief](shared/animlib/docs/capabilities.md) and
+[API reference](shared/animlib/docs/reference.md) describe current behavior and limits.
 
 Browser code imports the player from `animlib`; the Bun backend and other Node
 consumers can import scene compilation and state evaluation from `animlib/core`

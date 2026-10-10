@@ -79,7 +79,32 @@ export const solidsSource: SceneSource = {
   });`,
 };
 
-export const spatialSources = [graphSource, flowerSource, solidsSource];
+export const texturesSource: SceneSource = {
+  id: 'procedural-textures',
+  source: `export default scene({mode:'3d',end:'hold',orbit:true,background:'BLACK'},s=>{
+    s.play(s.camera.to3D({height:7.8,distance:14,yaw:0.25,pitch:-0.25}),{duration:0});
+    const pattern=s.select('pattern',{label:'Pattern',default:'marble',options:['none','checker','stripes','noise','marble','wood']});
+    const scale=s.slider('scale',{label:'Pattern frequency',default:2,min:0.5,max:6,step:0.1});
+    const seed=s.slider('seed',{label:'Noise seed',default:17,min:0,max:100,step:1});
+    const bumpStrength=s.slider('bump',{label:'Bump strength',default:0,min:-0.3,max:0.3,step:0.01});
+    const metalness=s.slider('metalness',{label:'Metalness',default:0,min:0,max:1,step:0.05});
+    const roughness=s.slider('roughness',{label:'Roughness',default:0.35,min:0.05,max:1,step:0.05});
+    const specular=s.slider('specular',{label:'Highlight strength',default:0.5,min:0,max:1,step:0.05});
+    const emission=s.slider('emission',{label:'Emission',default:0,min:0,max:2,step:0.1});
+    const tone=s.select('tone',{label:'Color',default:'blue',options:['blue','gold','copper','silver']});
+    const colors={blue:['BLUE_A','BLUE_E'],gold:['GOLD_A','GOLD_E'],copper:['LIGHT_BROWN','DARK_BROWN'],silver:['GREY_A','GREY_D']};
+    const fill=colors[tone][0];
+    const texture=pattern==='none'?undefined:{pattern,color:colors[tone][1],scale,seed,bumpStrength,offset:[0.25,0.25,0.25]};
+    const material={metalness,roughness,specular,emissive:fill,emissiveIntensity:emission};
+    s.sphere('sphere',{radius:1.05,position:[-2,0.9,0],fill,texture,material});
+    s.box('box',{width:1.7,height:1.7,depth:1.7,position:[1.8,0.9,0],rotation:[0,0.4,0],fill,texture,material});
+    s.torus('torus',{radius:0.8,tubeRadius:0.32,position:[-1.8,-1.65,0],rotation:[0.9,0,0],fill,texture,material});
+    s.cylinder('cylinder',{radius:0.7,height:1.6,position:[1.8,-1.65,0],fill,texture,material});
+    s.wait(1);
+  });`,
+};
+
+export const spatialSources = [graphSource, flowerSource, solidsSource, texturesSource];
 
 export const spatialScenes = [
   { id: graphSource.id, number: '01', title: 'A function, in space.', category: 'Function surface',
@@ -94,4 +119,8 @@ export const spatialScenes = [
     description: 'A box, cone, cylinder and torus share the stage with a helix. Adjust the sweep to turn a slender spring into a sculptural coil.',
     formula: 'path(t) + circular cross-section',
     detail: 'The box has crisp, flat faces. The other solids use smooth shading, revealing their curvature as you orbit.' },
+  { id: texturesSource.id, number: '04', title: 'Pattern follows form.', category: 'Textures & materials',
+    description: 'Explore patterns, polished metal, matte surfaces and luminous color. Adjust the finish, then orbit to see it catch the light.',
+    formula: 'checker · stripes · noise · marble · wood',
+    detail: 'Try no pattern, gold color and full metalness for polished gold. Raise roughness for a softer finish. Emission brightens the surface without lighting its neighbors.' },
 ] as const;

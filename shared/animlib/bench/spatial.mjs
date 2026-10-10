@@ -28,6 +28,8 @@ const sceneSource = body => `export default scene({mode:'3d',orbit:true,end:'hol
 const helix = 'Array.from({length:25},(_,i)=>[Math.cos(i*Math.PI/12),i/12-1,Math.sin(i*Math.PI/12)])';
 const loop = 'Array.from({length:32},(_,i)=>[Math.cos(i*Math.PI/16),0.2*Math.sin(i*Math.PI/8),Math.sin(i*Math.PI/16)])';
 const workloads = [
+  ['textured-metal', "s.sphere('metal',{fill:'GOLD',material:{metalness:1,roughness:0.25},texture:{pattern:'noise',color:'GOLD_E',scale:3}});s.torus('ring',{position:[2,0,0],fill:'GREY_A',material:{metalness:1,roughness:0.1}});"],
+  ['textured-surface', "s.surface('graph',{fn:(x,y)=>0.3*Math.sin(x*2)*Math.cos(y*2),fill:'BLUE_A',texture:{pattern:'marble',color:'BLUE_E',scale:2,seed:17},material:{roughness:0.5}});"],
   ['surface-default', "s.surface('graph',{fn:(x,y)=>0.3*Math.sin(x*2)*Math.cos(y*2),fill:'BLUE'});"],
   ['parametric-default', "s.parametricSurface('map',{fn:(u,v)=>[2*u-1,2*v-1,0.4*Math.sin(u*6)*Math.cos(v*6)],fill:'BLUE'});"],
   ['box-default', "s.box('box',{fill:'BLUE'});"],

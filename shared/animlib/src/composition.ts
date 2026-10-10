@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from './texture-shader.js';
 /** Shared draw order for the two native graphics backends. */
 export type RenderCommand =
   | { first: number; count: number; opaque: boolean }
@@ -30,7 +31,7 @@ export function composeItems(items: DrawItem[], first: number): { commands: Rend
     units.sort((a,b) => Number(a.transparent)-Number(b.transparent) || b.depth-a.depth);
     const commands: RenderCommand[] = units.map(unit => {
       if (unit.children) return { children: build(unit.children), opacity: unit.opacity, opaque: !unit.transparent };
-      const item = unit.item!, count = item.vertices.length/15, command = { first, count, opaque: !item.transparent };
+      const item = unit.item!, count = item.vertices.length/VERTEX_FLOATS, command = { first, count, opaque: !item.transparent };
       ordered.push(item); first += count; return command;
     });
     const merged: RenderCommand[] = [];
