@@ -13,6 +13,7 @@ import { parsePlannedLesson, scenePlanningContext, validateStory } from './plann
 import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
 import { validateScenePlan } from './scene-plan.js';
+import { scenegenPrompt } from './scenegen-prompts.js';
 import { validationMessage } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
 
@@ -105,9 +106,10 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     if (!source) {
       const reference = await readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
       const craft = await readFile(new URL('../../prompts/scene-craft.md', import.meta.url), 'utf8');
+      const visualization = await scenegenPrompt('visualization');
       const task = {
         outputMode: options.outputMode ?? 'text',
-        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${reference}`,
+        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${reference}`,
         prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify({ ...input, planning })}`, validate, signal,
         logContext: { videoId, sceneIndex: index, stage: 'scene' as const },
       };

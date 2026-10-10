@@ -1,3 +1,4 @@
+import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 import { afterEach, expect, spyOn, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -360,6 +361,7 @@ test('scene one streams before later TTS finishes and scene two receives its eva
       return planned(script, base.plan);
     }
     const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
+    expect(task.systemPrompt).toContain(await scenegenPrompt('visualization'));
     expect(task.systemPrompt).toContain('s.previous');
     expect(input.scene.utterances[0].words[0].startSec).toBe(0);
     expect(input.planning.lesson.entities[0].id).toBe('dot');
