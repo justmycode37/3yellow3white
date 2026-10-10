@@ -162,3 +162,69 @@ it('does not recover a budget rejection when the retry instead fails both backen
   renderer.render(evaluateScene(scene,0),scene.options);
   expect(glState.render).toHaveBeenCalledOnce();expect(recovered).not.toHaveBeenCalled();renderer.dispose();
 });
+
+function allowGPUFrames({device,context}:ReturnType<typeof setup>) {
+  const pass={setPipeline(){},setBindGroup(){},setVertexBuffer(){},draw(){},end(){}};
+  Object.assign(device,{queue:{writeBuffer(){},submit:vi.fn()},createCommandEncoder:()=>({beginRenderPass:()=>pass,finish:()=>({})})});
+  Object.assign(context,{getCurrentTexture:()=>({createView:()=>({})})});
+  for(const result of device.createTexture.mock.results)Object.assign(result.value,{createView:()=>({})});
+}
+function uncaptured(device:ReturnType<typeof setup>['device'],message='GPU validation failed') {
+  device.addEventListener.mock.calls.find(([type])=>type==='uncapturederror')![1]({error:{message}});
+}
+it.each(['budget first','backend first','reentrant backend failure'])(
+  'preserves uncaptured backend errors across successful frames: %s',async order=>{
+    const state=setup(),{renderer,device}=state;await renderer.prepare([]);allowGPUFrames(state);
+    const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+    const errors:Error[]=[],recovered=vi.fn();renderer.onRecovered=recovered;
+    const render=()=>renderer.render(evaluateScene(scene,0),scene.options);
+    renderer.onError=error=>{
+      errors.push(error);
+      if(order==='reentrant backend failure'&&error.name==='VertexBufferLimitError'){
+        uncaptured(device);device.limits.maxBufferSize=268435456;render();
+      }
+    };
+    if(order==='backend first')uncaptured(device);
+    device.limits.maxBufferSize=256;render();
+    if(order==='budget first')uncaptured(device);
+    device.limits.maxBufferSize=268435456;render();render();
+    expect(errors.at(-1)?.message).toBe('GPU validation failed');
+    expect(recovered).not.toHaveBeenCalled();
+    renderer.dispose();
+  },
+);
+it('acknowledges a budget-only retry once before a reentrant refresh',async()=>{
+  const state=setup(),{renderer,device}=state;await renderer.prepare([]);allowGPUFrames(state);
+  const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+  const render=()=>renderer.render(evaluateScene(scene,0),scene.options);
+  const recovered=vi.fn(()=>render());renderer.onRecovered=recovered;
+  device.limits.maxBufferSize=256;render();device.limits.maxBufferSize=268435456;render();
+  expect(recovered).toHaveBeenCalledOnce();renderer.dispose();
+});
+it.each(['success','render failure','reentrant context loss'])(
+  'requires actual backend recovery after budget plus uncaptured errors: %s',async outcome=>{
+    const state=setup(),{renderer,device,canvas,lose}=state;await renderer.prepare([]);
+    const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+    const errors:Error[]=[],recovered=vi.fn();renderer.onError=e=>errors.push(e);renderer.onRecovered=recovered;
+    device.limits.maxBufferSize=256;renderer.render(evaluateScene(scene,0),scene.options);uncaptured(device);
+    if(outcome==='render failure')glState.render.mockImplementationOnce(()=>{throw new Error('GL render failed');});
+    if(outcome==='reentrant context loss')glState.render.mockImplementationOnce(()=>{
+      const replacement=canvas.cloneNode.mock.results[0].value;
+      replacement.addEventListener.mock.calls.find(([type]:[string])=>type==='webglcontextlost')[1](new Event('webglcontextlost',{cancelable:true}));
+    });
+    lose();await Promise.resolve();
+    if(outcome==='success')expect(recovered).toHaveBeenCalledOnce();
+    else{
+      expect(recovered).not.toHaveBeenCalled();
+      expect(errors.at(-1)?.message).toContain(outcome==='render failure'?'GL render failed':'WebGL2 context lost');
+    }
+    // Events from the released WebGPU device must not supersede GL's state.
+    const count=errors.length;uncaptured(device,'stale GPU error');expect(errors).toHaveLength(count);
+    if(outcome==='reentrant context loss'){
+      const replacement=canvas.cloneNode.mock.results[0].value;
+      replacement.addEventListener.mock.calls.find(([type]:[string])=>type==='webglcontextrestored')[1]();
+      expect(recovered).toHaveBeenCalledOnce();
+    }
+    renderer.dispose();
+  },
+);

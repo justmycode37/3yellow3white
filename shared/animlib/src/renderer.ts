@@ -71,7 +71,8 @@ export class CanvasRenderer {
   private gl:WebGLBackend|undefined;
   private contextLost=false;
   private ready=false;
-  private budgetRejected=false;
+  private errorKind:'budget'|'backend'|undefined;
+  private errorGeneration=0;
   private originalCanvas:HTMLCanvasElement;
   get backend():'webgpu'|'webgl2'|undefined {return this.gl?'webgl2':this.ready?'webgpu':undefined;}
   get canvasElement():HTMLCanvasElement {return this.canvas;}
@@ -156,16 +157,18 @@ export class CanvasRenderer {
     event.preventDefault();
     if(this.disposed)return;
     this.contextLost=true;
-    this.onError?.(new Error('WebGL2 context lost. Playback is paused while the graphics context recovers; retry if it does not recover.'));
+    this.reportError(new Error('WebGL2 context lost. Playback is paused while the graphics context recovers; retry if it does not recover.'));
   };
   private glRestored=():void=>{
     if(this.disposed||!this.gl)return;
+    const generation=this.errorGeneration;
+    this.errorKind='backend';
     try {
       // Restored contexts have already invalidated every old GL handle.
       const gl=this.gl.gl;this.gl=new WebGLBackend(gl);this.contextLost=false;this.ready=true;this.resize();
       if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);
-      if(this.ready)this.onRecovered?.();
-    } catch(error){this.onError?.(error instanceof Error?error:new Error(String(error)));}
+      this.backendRecovered(generation);
+    } catch(error){this.reportError(error instanceof Error?error:new Error(String(error)));}
   };
   private fallback(reason:unknown):void {
     const locked=Boolean(this.context);
@@ -282,12 +285,14 @@ export class CanvasRenderer {
     const device=await adapter.requestDevice();if(this.disposed){device.destroy();throw new Error('Renderer is disposed.');}
     this.device=device;
     let lost:string|undefined;
-    device.addEventListener('uncapturederror',event=>{if(!this.disposed&&this.device===device)this.onError?.(new Error(event.error.message));});
+    device.addEventListener('uncapturederror',event=>{if(!this.disposed&&this.device===device)this.reportError(new Error(event.error.message));});
     void device.lost.then(info=>{
       lost=`WebGPU device lost: ${info.message||info.reason}`;
       if(this.disposed||this.device!==device||!this.ready)return;
-      try {this.fallback(new Error(lost));if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);if(this.ready)this.onRecovered?.();}
-      catch(error){this.onError?.(error instanceof Error?error:new Error(String(error)));}
+      const generation=this.errorGeneration;
+      this.errorKind='backend';
+      try {this.fallback(new Error(lost));if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);this.backendRecovered(generation);}
+      catch(error){this.reportError(error instanceof Error?error:new Error(String(error)));}
     });
     const module=device.createShaderModule({code:shader});
     const compilation=await module.getCompilationInfo();
@@ -338,9 +343,27 @@ export class CanvasRenderer {
     if(!this.initializing)this.initializing=this.initialize().catch(error=>{this.initializing=undefined;throw error;});
     await this.initializing;
   }
+  private reportError(error:Error):void {
+    this.errorGeneration++;
+    if(error instanceof VertexBufferLimitError){
+      // A scene retry cannot replace an outstanding backend failure with a
+      // recoverable budget error, even if that retry is itself oversized.
+      if(this.errorKind==='backend')return;
+      this.errorKind='budget';
+    }else this.errorKind='backend';
+    this.onError?.(error);
+  }
+  private backendRecovered(generation:number):void {
+    // Resource recreation may report a new error or invoke host callbacks that
+    // reenter rendering. Only acknowledge the recovery attempt's own generation.
+    if(this.disposed||!this.ready||this.contextLost||generation!==this.errorGeneration)return;
+    this.errorKind=undefined;
+    this.onRecovered?.();
+  }
   private frameRendered():void {
-    // Clear before notifying: the public player refreshes synchronously on recovery.
-    if(this.budgetRejected){this.budgetRejected=false;this.onRecovered?.();}
+    // Successful submission resolves only a scene budget rejection. Uncaptured
+    // GPU errors require actual backend recovery. Clear before reentrant callbacks.
+    if(this.errorKind==='budget'){this.errorKind=undefined;this.onRecovered?.();}
   }
   render(frame:Frame,options:CompiledScene['options']):void {
     if(!this.ready||this.contextLost||this.disposed)return;
@@ -415,15 +438,16 @@ export class CanvasRenderer {
     device.queue.submit([encoder.finish()]);
     this.frameRendered();
     } catch(error) {
-      if(error instanceof VertexBufferLimitError){this.budgetRejected=true;this.onError?.(error);return;}
-      this.budgetRejected=false;
+      if(error instanceof VertexBufferLimitError){this.reportError(error);return;}
+      this.errorKind='backend';
       // Frame acquisition can fail before device.lost reaches the playback loop.
       if(this.device&&!this.disposed) {
-        try {this.fallback(error);this.render(frame,options);if(this.ready)this.onRecovered?.();return;}
+        const generation=this.errorGeneration;
+        try {this.fallback(error);this.render(frame,options);this.backendRecovered(generation);return;}
         catch(fallbackError){error=fallbackError;}
       }
       this.ready=false;
-      this.onError?.(error instanceof Error?error:new Error(String(error)));
+      this.reportError(error instanceof Error?error:new Error(String(error)));
     }
   }
   dispose():void {
