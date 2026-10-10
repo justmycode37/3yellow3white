@@ -4,8 +4,9 @@ The backend uses pinned Pi 1.1.0 to write a lesson plan and storyline Markdown i
 one JSON response, reviews it in a separate editorial conversation, then writes animlib scene JavaScript. The host sends only the approved script
 to ElevenLabs, then gives each scene agent its narration timing, the lesson plan,
 and the animlib API reference. Each task gets a separate
-conversation and only a `validate_output` tool. Shell, file access, discovered
-extensions, skills, and local instructions are disabled. Scene validation uses
+conversation with host validation/submission tools and the pinned `pi-web-access`
+extension. Built-in shell/file tools, discovered extensions, skills, and local
+instructions are disabled. Scene validation uses
 the existing QuickJS compiler with memory and execution limits.
 
 The scene and thumbnail runners share the configured login. Pi persists subscription refreshes with file
@@ -16,6 +17,31 @@ export. Videos with an older saved `script.md` resume without a new planning cal
 Each completed narration scene becomes available immediately; scene code generation
 overlaps later speech. Code agents run sequentially with the previous scene’s evaluated
 end-state. Scenes are published progressively with audio, word timings, and captions.
+
+## Web research
+
+`npm ci` installs `pi-web-access` 0.38.0. The backend loads that package explicitly
+for every Pi conversation; no separate CLI installation or extension discovery is
+needed. On models that support adding tools during a conversation, `web_enable`
+activates `web_search`, `fetch_content`, `get_search_content`, and `source_check`.
+Other models receive the research tools immediately. Web access also works in
+validated-reference and submission modes; `submit_output` must still be called
+alone when finishing a task.
+
+Search works without extra API keys through Exa MCP. The extension can also reuse
+the session's supported OpenAI/ChatGPT authentication or use configured search
+providers. Optional provider settings go in `web-search.json` under an explicitly
+set `PI_CODING_AGENT_DIR`; when unset, the extension uses Pi's own default config
+location (`~/.pi/agent`, with legacy/XDG fallbacks), independently of Aha's
+credential-directory default. For a headless backend, keep `workflow` at `none`
+(the package default) to return source-linked results without a curator browser
+or summary model call. Restart the backend after changing extension settings.
+
+Fetched pages and search results are reference material, and research failures
+are returned to the agent for handling. The extension can clone GitHub repositories
+and process local videos; it maintains its own private result cache. Its session
+shutdown hooks run after each conversation, including failures and cancellation,
+to release results and stop pending background fetches.
 
 ## Scene generation speed
 

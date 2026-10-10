@@ -196,7 +196,7 @@ test('output validation, truncation and aborts do not consume provider retries',
   }
 });
 
-test("real Pi sessions expose only validation and correct invalid final output", async () => {
+test("real Pi sessions expose validation and web access while ignoring local instructions", async () => {
   const { runner, contexts, settings } = await fakeRuntime([message("bad"), message("valid"), message("separate")]);
   await writeFile(join(settings.agentDir, "AGENTS.md"), "UNTRUSTED_LOCAL_INSTRUCTION");
   await writeFile(join(settings.agentDir, "APPEND_SYSTEM.md"), "UNTRUSTED_APPEND");
@@ -206,12 +206,42 @@ test("real Pi sessions expose only validation and correct invalid final output",
   expect(result).toBe("valid");
   expect(contexts).toHaveLength(2);
   const toolNames = (context: Context) => context.messages.flatMap(message => message.role === "system" ? (message.toolsAdded ?? []).map(tool => tool.name) : []);
-  expect(toolNames(contexts[0])).toEqual(["validate_output"]);
+  expect(toolNames(contexts[0])).toEqual(["validate_output", "web_enable"]);
   expect(JSON.stringify(contexts[0])).not.toContain("UNTRUSTED_");
   expect(JSON.stringify(contexts[1])).toContain("Use valid output");
   expect(await runner.run({ systemPrompt: "Other task", prompt: "New task" })).toBe("separate");
-  expect(toolNames(contexts[2])).toHaveLength(0);
+  expect(toolNames(contexts[2])).toEqual(["web_enable"]);
   expect(JSON.stringify(contexts[2])).not.toContain("Use valid output");
+});
+
+test('Pi activates web tools, searches through Exa, and returns sources to the model', async () => {
+  const enable = message('', 'toolUse');
+  enable.content = [{ type: 'toolCall', id: 'enable-1', name: 'web_enable', arguments: {} }];
+  const search = message('', 'toolUse');
+  search.content = [{ type: 'toolCall', id: 'search-1', name: 'web_search', arguments: {
+    query: 'Pi agent documentation', provider: 'exa', workflow: 'none',
+  } }];
+  const { runner, contexts } = await fakeRuntime([enable, search, message('Researched answer')]);
+  const fetcher = spyOn(globalThis, 'fetch').mockImplementation((async (url, options) => {
+    expect(String(url)).toStartWith('https://mcp.exa.ai/');
+    const request = JSON.parse(String(options?.body));
+    expect(request.method).toBe('tools/call');
+    expect(request.params.arguments.query).toBe('Pi agent documentation');
+    return Response.json({ jsonrpc: '2.0', id: 1, result: { content: [{ type: 'text', text: JSON.stringify({
+      results: [{ title: 'Pi documentation', url: 'https://pi.dev/docs', text: 'Pi supports extension tools.' }],
+    }) }] } });
+  }) as typeof fetch);
+  try {
+    expect(await runner.run({ systemPrompt: 'Research the topic', prompt: 'Find Pi documentation' })).toBe('Researched answer');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    const names = contexts[1].messages.flatMap(message => message.role === 'system' ? (message.toolsAdded ?? []).map(tool => tool.name) : []);
+    expect(names).toEqual(expect.arrayContaining(['web_search', 'fetch_content', 'get_search_content', 'source_check']));
+    for (const name of ['bash', 'read', 'write', 'edit']) expect(names).not.toContain(name);
+    const result = contexts[2].messages.find(message => message.role === 'toolResult' && message.toolName === 'web_search');
+    expect(result?.role === 'toolResult' && result.isError).toBe(false);
+    expect(JSON.stringify(result?.content)).toContain('https://pi.dev/docs');
+    expect(JSON.stringify(result?.content)).toContain('Pi supports extension tools.');
+  } finally { fetcher.mockRestore(); }
 });
 
 test("Pi executes the validation tool and returns its result to the model", async () => {
