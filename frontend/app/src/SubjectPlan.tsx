@@ -1,23 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, BookOpen, FileText, LoaderCircle, Plus, Upload, X } from './Icons'
+import { BookOpen, FileText, LoaderCircle, Plus, Upload, X } from './Icons'
+import LessonGrid from './LessonGrid'
 import type { CourseSubject } from './curriculum'
 import type { StudyPlan } from './plan'
-import { requestMaterialPlan, topicLessonText } from './studyPlanClient'
-import type { SavedMaterial, TopicVideoRequest } from './subjectPlans'
+import { requestMaterialPlan } from './studyPlanClient'
+import type { CourseLessonRef, SavedMaterial, TopicParent, TopicVideoRequest } from './subjectPlans'
 
-export default function SubjectPlan({ subject, materials, onAdd, onMakeVideo }: { subject: CourseSubject; materials: SavedMaterial[]; onAdd: (plans: StudyPlan[]) => void; onMakeVideo: (request: TopicVideoRequest) => void }) {
+export default function SubjectPlan({ subject, materials, onAdd, onAddLesson, onDeleteLesson, pendingLessons, onMakeVideo, uploadRequest = 0 }: { subject: CourseSubject; materials: SavedMaterial[]; onAdd: (plans: StudyPlan[]) => void; onAddLesson: (parent: TopicParent, title: string) => void; onDeleteLesson: (reference: CourseLessonRef) => void; pendingLessons: CourseLessonRef[]; onMakeVideo: (request: TopicVideoRequest) => void; uploadRequest?: number }) {
   const [adding, setAdding] = useState(false)
+  useEffect(() => { if (uploadRequest) setAdding(true) }, [uploadRequest])
   const chapters = materials.flatMap(material => material.plan.chapters.map(chapter => ({ ...chapter, material })))
-  const topicCount = chapters.reduce((total, chapter) => total + chapter.segments.length, 0)
   return <section id="subject-plan" className={`subject-plan subject-${subject.color}`} aria-labelledby="subject-plan-title">
-    <div className="subject-plan-heading"><div><h2 id="subject-plan-title">{subject.title}</h2>{chapters.length > 0 && <p>{chapters.length} topics · {topicCount} lessons</p>}</div>{materials.length > 0 && !adding && <button className="subject-add-material" onClick={() => setAdding(true)}><Plus size={16}/> Add material</button>}</div>
-    {!materials.length || adding ? <MaterialUpload subject={subject} nextNote={materials.length + 1} onCancel={materials.length ? () => setAdding(false) : undefined} onAdd={plans => { onAdd(plans); setAdding(false) }}/>
-    : <div className="subject-material-tags">{materials.map(material => <span key={material.id}><FileText size={13}/>{material.plan.sourceNames?.join(', ') || material.plan.sourceName}</span>)}</div>}
+    <div className="subject-plan-heading"><h2 id="subject-plan-title">{subject.title}</h2>{materials.length > 0 && !adding && <button className="subject-add-material" onClick={() => setAdding(true)}><Plus size={16}/> Add material</button>}</div>
+    {(!materials.length || adding) && <MaterialUpload subject={subject} nextNote={materials.length + 1} onCancel={materials.length ? () => setAdding(false) : undefined} onAdd={plans => { onAdd(plans); setAdding(false) }}/>}
     {chapters.length > 0 && <div className="subject-chapters">{chapters.map((chapter, index) => <section className="subject-chapter" key={`${chapter.material.id}-${chapter.id}`} aria-labelledby={`chapter-${chapter.material.id}-${chapter.id}`}>
-      <div className="subject-chapter-heading"><span className="chapter-number">{String(index + 1).padStart(2, '0')}</span><div><span className="subject-plan-kicker">Topic {index + 1}</span><h3 id={`chapter-${chapter.material.id}-${chapter.id}`}>{chapter.title}</h3></div></div>
-      <ol className="topic-widget-grid">{chapter.segments.map((topic, topicIndex) => <li key={topic.id}><button className="topic-video-widget" aria-label={`Make me a video: ${topic.title}`} onClick={() => onMakeVideo({ title: topic.title, text: topicLessonText(topic, chapter.material.plan) || `Explain the topic “${topic.title}” from the chapter “${chapter.title}” in ${subject.title}. Only a chapter outline was provided.`, subject: subject.title, color: subject.color, chapter: chapter.title, sourceName: chapter.material.plan.sourceName, minutes: topic.minutes })}>
-        <span className="topic-widget-number">{index + 1}.{topicIndex + 1}</span><span className="topic-widget-title">{topic.title}</span><span className="topic-widget-duration">~{topic.minutes} min lesson</span><span className="topic-widget-cta" aria-hidden="true"><span>Make me a video <ArrowRight size={15}/></span></span>
-      </button></li>)}</ol>
+      <div className="subject-chapter-heading"><span className="chapter-number">{String(index + 1).padStart(2, '0')}</span><div><span className="subject-plan-kicker">Topic {index + 1}</span><h3 tabIndex={-1} id={`chapter-${chapter.material.id}-${chapter.id}`}>{chapter.title}</h3></div></div>
+      <LessonGrid subject={subject} material={chapter.material} chapter={chapter} chapterIndex={index} pendingLessons={pendingLessons} onAdd={title => onAddLesson({ materialId: chapter.material.id, chapterId: chapter.id }, title)} onDelete={onDeleteLesson} onMakeVideo={onMakeVideo}/>
     </section>)}</div>}
   </section>
 }

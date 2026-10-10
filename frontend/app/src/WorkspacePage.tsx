@@ -97,7 +97,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
       const serialized = JSON.stringify({ ...body, files: files.map(file => ({ name: file.name, size: file.size, lastModified: file.lastModified })) })
       if (serialized !== requestBody.current) { requestBody.current = serialized; requestKey.current = crypto.randomUUID() }
       const lesson = videoLesson(await requestVideo(body, requestKey.current, files))
-      if (mounted.current) onCreate({ ...lesson, videoMode, subtitle: context?.chapter || lesson.subtitle, subject: context?.subject || lesson.subject, artwork: artworkForTitle(title, 'idea'), color: context?.color || lesson.color, source: context ? { text, chapter: context.chapter, name: context.sourceName } : undefined })
+      if (mounted.current) onCreate({ ...lesson, videoMode, subtitle: context?.chapter || lesson.subtitle, subject: context?.subject || lesson.subject, artwork: artworkForTitle(title, 'idea'), color: context?.color || lesson.color, source: context ? { text, chapter: context.chapter, name: context.sourceName } : undefined, courseLesson: context?.courseLesson })
     } catch (error) {
       if (mounted.current) setError(error instanceof Error ? error.message : 'Could not create your video.')
     } finally {
