@@ -13,9 +13,9 @@ import CanvasQuestion, { useCanvasQuestion } from './CanvasQuestion'
 const loadingState: LessonPlaybackState = { time: 0, duration: 0, playing: false, ended: false, ready: false, error: '' }
 const getLoadingState = () => loadingState
 const subscribeLoading = () => () => {}
-export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, onHome, overlayOpen }: {
+export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, onHome, onPlayed, overlayOpen }: {
   lesson: Lesson; menuOpen: boolean; onMenu: () => void
-  menuContent: ReactNode; onHome: () => void; overlayOpen: boolean
+  menuContent: ReactNode; onHome: () => void; onPlayed: (id: string) => void; overlayOpen: boolean
 }) {
   const canvasHost = useRef<HTMLDivElement>(null)
   const screen = useRef<HTMLDivElement>(null)
@@ -40,6 +40,13 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
       return { id: current.scene, time: current.time, frame: player.getInteractionSnapshot()?.frame }
     },
   })
+  const recorded = useRef(false)
+  useEffect(() => {
+    if (!recorded.current && state.ready && state.playing && state.time > 0 && !startupError && !state.error) {
+      recorded.current = true
+      onPlayed(lesson.id)
+    }
+  }, [state.ready, state.playing, state.time, state.error, startupError, lesson.id, onPlayed])
   const questionOpen = Boolean(draft)
   suspended.current = menuOpen || overlayOpen || questionOpen
   const error = startupError || state.error
