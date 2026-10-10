@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Weighted shortest-path frontier\n\n## Beat 1: Weighted shortest-path frontier\n\nContent needed: 2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Weighted shortest-path frontier. Animate Dijkstra on a nontrivial planar weighted graph with at least twelve vertices. Show the actual priority order, distance relaxation and recovered path between two nodes. Keep edge weights readable and animate only the active frontier; never imply breadth-first search is sufficient for unequal weights. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Weighted shortest-path frontier",
+    "centralQuestion": "Weighted shortest-path frontier",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Weighted shortest-path frontier. Animate Dijkstra on a nontrivial planar weighted graph with at least twelve vertices. Show the actual priority order, distance relaxation and recovered path between two nodes. Keep edge weights readable and animate only the active frontier; never imply breadth-first search is sufficient for unequal weights. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Weighted shortest-path frontier",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Weighted shortest-path frontier",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Animate Dijkstra on a nontrivial planar weighted graph with at least twelve vertices. Show the actual priority order, distance relaxation and recovered path between two nodes. Keep edge weights readable and animate only the active frontier; never imply breadth-first search is sufficient for unequal weights."
+        ],
+        "visualDescription": "2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Weighted shortest-path frontier. Animate Dijkstra on a nontrivial planar weighted graph with at least twelve vertices. Show the actual priority order, distance relaxation and recovered path between two nodes. Keep edge weights readable and animate only the active frontier; never imply breadth-first search is sufficient for unequal weights. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Weighted shortest-path frontier. Animate Dijkstra on a nontrivial planar weighted graph with at least twelve vertices. Show the actual priority order, distance relaxation and recovered path between two nodes. Keep edge weights readable and animate only the active frontier; never imply breadth-first search is sufficient for unequal weights. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# When a downhill step goes too far\n\n## Beat 1 — Read the step\n\nContent needed: On white axes, plot f(x)=x² in blue. Mark the current iterate in yellow on the horizontal axis and its corresponding graph point. Begin at x₀=1 with η=0.25. Show f′(1)=2 and x₁=1−0.25·2=0.5, then x₂=0.25. The horizontal displacement is minus η times the derivative; graph-point heights are always recomputed as x². Reveal each arithmetic result with the matching sentence. These are algorithm iterations, not a ball sliding on the curve.\n\nNarration: Gradient descent takes the current value of x and subtracts the learning rate times the derivative. For x squared, that derivative is twice x. So the next x is the current x minus eta times twice x.\n\nNarration: Start at one, with eta equal to one quarter. The derivative is two, so we subtract one half and land at one half. At that new point, the derivative is one. Another step subtracts one quarter, leaving one quarter.\n\nNarration: The yellow positions move toward zero, where the blue curve reaches its minimum. Notice that each step uses the derivative at its own starting point. We are updating a horizontal coordinate, then evaluating its height on the curve.\n\n## Beat 2 — Crossing zero can still converge\n\nContent needed: Retain the curve, axes, and yellow quarter-rate trajectory. Factor the update into xₙ₊₁=(1−2η)xₙ. Introduce q=1−2η only in visual notation; absolute distance to zero scales by |q|. Compare the retained η=0.25 example with a purple η=0.75 trajectory starting again at x₀=1: 1, −0.5, 0.25, −0.125. Corresponding heights are 1, 0.25, 0.0625, 0.015625. Show distance brackets supporting contraction. Reveal |1−2η|<1 iff 0<η<1 with the spoken explanation. Show η=0.5 giving zero in one step.\n\nNarration: To see what changes with the learning rate, factor out x. Each new value is the old value multiplied by one minus twice eta. That multiplier tells us both the direction and the size of every step's result.\n\nNarration: With eta equal to three quarters, the multiplier is negative one half. Starting again at one, we get negative one half, then one quarter, then negative one eighth. The signs alternate, but the distance to zero halves each time. Crossing the minimum does not necessarily mean failing to converge.\n\nNarration: For convergence, we need the multiplier's magnitude below one. That means the multiplier lies between negative one and one, which gives eta between zero and one, excluding the endpoints. Above one half, the signs alternate. At exactly one half, the multiplier is zero: one step reaches the minimum.\n\n## Beat 3 — The boundaries explain failure\n\nContent needed: Preserve the multiplier relationship. Compare trajectories from x₀=1 for η=0, 1, and 1.2: respectively 1→1→1; 1→−1→1; and 1→−1.4→1.96→−2.744. At the matching spoken reveals, show their multipliers 1, −1, and −1.4. Keep curve heights equal to x²; label three snapshots separately rather than overlapping paths. Conclude with an exploration trajectory whose default is the original η=0.25, x₀=1. One optional slider η∈[0,1.2] drives six updates, points, heights, multiplier, and regime readout from the same model. Make the control available after the fixed boundary comparisons so input cannot contradict their narration. No pauses.\n\nNarration: The endpoints reveal why the inequality is strict. At eta equal to zero, the multiplier is one, so nothing moves. At eta equal to one, it is negative one: starting at one, we alternate forever between one and negative one. The function value stays at one.\n\nNarration: Above one, the multiplier is less than negative one. At eta equal to one point two, the values begin one, negative one point four, then one point nine six. Each distance from zero grows by forty percent, and the squared heights grow too.\n\nNarration: Our original quarter-sized rate sits safely inside the contracting interval. For this quadratic, the same multiplier applies everywhere, so we can classify the entire trajectory. Other objectives can have changing curvature; this learning-rate interval is not a universal guarantee.",
+  "plan": {
+    "audience": "First-year university students who know derivatives.",
+    "prerequisites": [
+      "The derivative gives a function's local slope.",
+      "Evaluating x² and multiplying signed numbers.",
+      "Basic inequalities and absolute value."
+    ],
+    "learningGoal": "Use xₙ₊₁=(1−2η)xₙ to distinguish convergence, alternating convergence, fixed iterates, a two-cycle, and divergence for f(x)=x² starting at x₀=1.",
+    "centralQuestion": "Why can a gradient-descent step cross the minimum and still converge, while a still larger step fails?",
+    "keyInsight": "The exact quadratic update multiplies every iterate by 1−2η. Its sign determines side changes, while its magnitude determines shrinkage, constancy, or growth of distance to zero.",
+    "runningExample": "f(x)=x², f′(x)=2x, x₀=1. Default η=0.25 gives xₙ=0.5ⁿ. Comparisons use η=0.75 (q=−0.5), η=0.5 (q=0), η=0 (q=1), η=1 (q=−1), and η=1.2 (q=−1.4). All plotted heights are f(xₙ)=xₙ²; iteration number is discrete.",
+    "misconceptions": [
+      "Crossing the minimizer necessarily causes divergence.",
+      "Gradient descent follows a physical downhill path along the curve.",
+      "A negative iterate means a negative objective value.",
+      "The convergence interval 0<η<1 applies to arbitrary objectives.",
+      "The η=1 trajectory converges because its objective does not increase."
+    ],
+    "entities": [
+      {
+        "id": "quadratic-model",
+        "meaning": "The same f(x)=x² graph and white coordinate scaffold in beat-1 through beat-3. Horizontal coordinate is x and vertical coordinate is f(x), in dimensionless units with a consistent declared scale per view. Every point's height must equal its horizontal coordinate squared. The graph represents an objective, not a physical track.",
+        "color": "BLUE"
+      },
+      {
+        "id": "default-trajectory",
+        "meaning": "The x₀=1 gradient-descent trajectory, yellow throughout. Introduced with fixed η=0.25 in beat-1, retained as the reference in beat-2, and available as the adjustable trajectory in beat-3 after boundary demonstrations. Each point, coordinate label and objective value shares xₙ=(1−2η)ⁿ for n=0,…,6. The initial value stays one when η varies.",
+        "color": "YELLOW"
+      },
+      {
+        "id": "update-relation",
+        "meaning": "The exact update and its factored equivalent for this quadratic. Introduced in beat-1; factorization and magnitude condition added in beat-2; retained to explain boundaries in beat-3. Algebra parts may remain anchored where meaningful; no inferred symbolic animation is required.",
+        "color": "WHITE"
+      },
+      {
+        "id": "comparison-trajectory",
+        "meaning": "A purple comparison trajectory with the same objective and x₀=1, first η=0.75 in beat-2, then explicitly relabeled fixed boundary cases η=0,1,1.2 in beat-3. Separate views or sequential case replacement prevent confusing parameter choices. Its points always obey the declared rate.",
+        "color": "PURPLE"
+      },
+      {
+        "id": "slope-helper",
+        "meaning": "Temporary derivative and horizontal displacement indicators for the first update in beat-1, removed once the numerical rule is established.",
+        "color": "TEAL"
+      },
+      {
+        "id": "distance-helper",
+        "meaning": "Temporary grey distance-to-zero brackets in beat-2 and beat-3 that encode absolute value, independent of the sign of x.",
+        "color": "GREY"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Interpret gradient descent as a coordinate update using the derivative at the current iterate.",
+        "whyNow": "Opens with the familiar update requested by the viewer, establishes the concrete default, and prepares its factorization.",
+        "keyPoints": [
+          "The objective is f(x)=x² and its derivative is 2x.",
+          "At x₀=1 and η=0.25 the first two updates give x₁=0.5 and x₂=0.25.",
+          "The displacement is horizontal; evaluating f produces the graph-point height."
+        ],
+        "visualDescription": "2D (because the objective graph and scalar coordinate update are planar): Use a blue parabola on white axes, labeled x and f(x), with dimensionless coordinates. Establish the origin as the minimum. Introduce yellow x-axis marks and corresponding yellow graph points at (1,1), (0.5,0.25), and (0.25,0.0625) in spoken order. A teal slope helper shows derivative 2 at the initial point and a horizontal displacement of −0.5; it does not depict motion along a physical track. Show the update in white, then replace the numeric substitution as each step is computed. Actual iteration steps are discrete; any connecting arrows indicate sequence only. Construct default-trajectory so its points and labels can be reused in beat-2 and recalculated from η in beat-3. Keep graph labels upright and selective on a black background.",
+        "endsWith": "The blue parabola, white coordinate scaffold, white update rule, and three yellow iterate positions remain. The second result x₂=0.25 is visible, with all point heights consistent. The temporary slope helper is gone.",
+        "carry": [
+          "quadratic-model",
+          "default-trajectory",
+          "update-relation"
+        ],
+        "cleanup": [
+          "slope-helper"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Specifies the quadratic, exact gradient-descent update, audience, x₀=1, and default η=0.25; numerical iterates are deductions from that update."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-2",
+        "purpose": "Derive the contraction interval and show that alternating signs are compatible with convergence.",
+        "whyNow": "Builds directly on the carried numerical steps and update rule, and gives the multiplier criterion needed to interpret endpoint and divergent cases next.",
+        "keyPoints": [
+          "Factor xₙ−2ηxₙ into (1−2η)xₙ.",
+          "A negative multiplier changes side; magnitude below one decreases distance.",
+          "At η=0.75, signs alternate while distances halve.",
+          "|1−2η|<1 is equivalent to 0<η<1; 0.5<η<1 alternates; η=0.5 reaches zero in one step."
+        ],
+        "visualDescription": "2D (because signed multiplication and distance to zero are planar): Begin from beat-1's actual retained curve, yellow positions, and update. Factor the update with explicit correspondence of the same x and eta terms; no unrelated formulas morph. Retain the yellow η=0.25 reference and introduce a purple comparison at η=0.75, clearly labeled. Purple graph points are (1,1), (−0.5,0.25), (0.25,0.0625), and (−0.125,0.015625); distinguish coincident initial and second reference positions by outlined markers or separate comparisons sharing identical scales. Grey horizontal brackets from zero to each purple x show lengths 1,0.5,0.25,0.125. Side alternation and shrinking brackets are the evidence. State q=1−2η and |q|<1, then reveal −1<1−2η<1 and 0<η<1 only as their spoken explanation arrives. A compact η=0.5 substitution shows q=0 and the next position at the origin; label it as a separate case rather than silently changing the purple trajectory. End with the established inequality and comparison, removing the temporary zero-step substitution and grey brackets.",
+        "endsWith": "The original yellow reference and the purple η=0.75 alternating trajectory remain on the same quadratic model, with the factored update and contraction interval. Case labels preserve which trajectory uses which rate.",
+        "carry": [
+          "quadratic-model",
+          "default-trajectory",
+          "comparison-trajectory",
+          "update-relation"
+        ],
+        "cleanup": [
+          "distance-helper"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Requires contraction for 0<η<1 and alternating signs for 0.5<η<1. Factorization, sample iterates, and the η=0.5 boundary within that interval are deductions."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-3",
+        "purpose": "Explain no movement, the two-cycle, and divergence, then delimit the result to this quadratic.",
+        "whyNow": "Uses the multiplier and strict contraction interval just derived to explain their boundaries and conclude the lesson; there is no subsequent scene.",
+        "keyPoints": [
+          "η=0 gives q=1 and no movement.",
+          "η=1 gives q=−1, a two-cycle from x₀=1, and constant f=1.",
+          "η>1 gives q<−1 and divergence from x₀=1.",
+          "η=1.2 multiplies distance by 1.4 each update.",
+          "The constant-curvature quadratic admits this exact classification; arbitrary objectives need their own analysis."
+        ],
+        "visualDescription": "2D (because the same scalar recurrence, signed distances, and graph heights contain the entire argument): Start with beat-2's actual model and reference. Remove the completed purple η=0.75 marks before reusing that comparison entity for clearly labeled η=0, η=1, and η=1.2 demonstrations in spoken order. For η=0 show repeated iterations at (1,1) with the index advancing; for η=1 show (1,1) and (−1,1) with directed iteration arrows and objective height 1. For η=1.2 show (1,1),(−1.4,1.96),(1.96,3.8416), then (−2.744,7.529536) if room supports a fourth visible step; grey brackets reveal distance growth by factor 1.4. Any reframing keeps ticks explicit and does not make growing distances appear constant. No boundary label appears before its explanatory narration. After the fixed comparisons, remove their purple points and grey brackets and retain the original yellow default as a concluding exploration with η=0.25. Enable the single slider only at this settled exploration state. Rebuild its six-step trajectory, graph-point heights, coordinate labels, q value and regime readout from the same eta input. Use a fixed exploration domain x∈[−8,8], f∈[0,64] to contain all six updates throughout η∈[0,1.2], plus a clearly bounded magnified planar inset of the origin region so contraction remains legible; mark their scale relationship, do not use a 3D surface. Display only selected coordinate labels to avoid clutter. Control changes never alter audio or scripted demonstration states. No whole-scene orbit, textures, or physical simulation.",
+        "endsWith": "A clean quadratic exploration with yellow default trajectory at η=0.25, the factored recurrence, one slider, and a concise qualification that the interval belongs to f(x)=x². After interaction, the same quantities remain coherent for the selected rate. No future handoff depends on viewer input.",
+        "carry": [],
+        "cleanup": [
+          "comparison-trajectory",
+          "distance-helper"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Requires η=0 no movement, η=1 two-cycle from x₀=1, η>1 divergence, one optional slider from 0 to 1.2, and a distinction from guarantees for arbitrary objectives."
+          }
+        ],
+        "interactions": [
+          {
+            "id": "learning-rate",
+            "type": "slider",
+            "label": "Learning rate η",
+            "drives": "η from 0 to 1.2 in steps of 0.01; default 0.25. Available after the fixed comparisons. Hold f(x)=x² and x₀=1 fixed. Recalculate xₙ=(1−2η)ⁿ for n=0,…,6, graph heights xₙ², yellow trajectory geometry in both scale-linked views, selected labels, q=1−2η, and the regime readout together. Classify η=0 as stationary; 0<η<0.5 as same-side contraction; η=0.5 as one-step arrival; 0.5<η<1 as alternating contraction; η=1 as a two-cycle; η>1 as alternating divergence. Snap exact endpoint cases using the slider's integer step index. Rebuild dependent points and connectors; keep scene duration fixed.",
+            "discover": "Changing one multiplier exposes the separate roles of sign and magnitude: alternating sides can accompany either shrinking or growing distances, with a two-cycle exactly between them."
+          }
+        ]
+      }
+    ]
+  }
+}

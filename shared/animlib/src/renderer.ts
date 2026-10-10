@@ -1,3 +1,6 @@
+import { modelWGSL } from './model-shader.js';
+import { GPUModelTextures } from './model-textures.js';
+import type { ModelStore } from './model-store.js';
 /// <reference types="@webgpu/types" />
 import { VertexBufferLimitError, vertexBufferCapacity } from './vertex-buffer.js';
 import { lightingUniform } from './lighting.js';
@@ -9,23 +12,23 @@ import { VERTEX_FLOATS, textureWGSL } from './texture-shader.js';
 import { WebGLBackend } from './webgl.js';
 import { ViewInteraction } from './interaction.js';
 import { paletteResolver, parseColor } from './palette.js';
-import type { CameraState, ColorPalette, CompiledScene, ElementState, Frame, Geometry, InteractionSnapshot, Vec3 } from './types.js';
-import { add, sub, cameraRay, planePoint } from './spatial.js';
+import type { CameraState, ColorPalette, CompiledScene, Frame, InteractionSnapshot, Vec3 } from './types.js';
+import { add, sub, cameraRay, planePoint, pick } from './spatial.js';
 import { composeItems } from './composition.js';
 import type { DrawItem } from './composition.js';
 import { GPUCompositor } from './gpu-compositor.js';
 import { rotate } from './geometry.js';
-import { buildDrawItems, textTex } from './render-geometry.js';
+import { buildDrawItems } from './render-geometry.js';
 export { triangulateContours } from './render-geometry.js';
-import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
+import { validateRenderableScene } from './render-validation.js';
 
 const shader=`
 struct Camera { focus: vec4f, angles: vec4f, viewport: vec4f, light: vec4f, ambient: vec4f };
 @group(0) @binding(0) var<uniform> camera: Camera;
 struct ObjectState { transform: mat4x4f, info: vec4f };
 @group(1) @binding(0) var<uniform> objects: array<ObjectState,32>;
-struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @location(1) normal: vec3f, @location(2) lit: f32, @location(3) texPosition: vec3f, @location(4) texKind: f32, @location(5) texColor: vec4f, @location(6) texSeed: f32, @location(7) viewDirection: vec3f, @location(8) material: vec3f, @location(9) emission: vec3f, @location(10) viewPosition: vec3f, @location(11) bumpStrength: f32 };
-@vertex fn vertex(@builtin(instance_index) instanceIndex:u32, @location(0) localWorld: vec3f, @location(1) color: vec4f, @location(2) screen: f32, @location(3) localNormal: vec3f, @location(4) lit: f32, @location(5) localLayer: f32, @location(6) localViewportOffset: vec2f, @location(7) texPosition: vec3f, @location(8) texKind: f32, @location(9) texColor: vec4f, @location(10) texSeed: f32, @location(11) material: vec3f, @location(12) emission: vec3f, @location(13) bumpStrength: f32) -> Output {
+struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @location(1) normal: vec3f, @location(2) lit: f32, @location(3) texPosition: vec3f, @location(4) texKind: f32, @location(5) texColor: vec4f, @location(6) texSeed: f32, @location(7) viewDirection: vec3f, @location(8) material: vec3f, @location(9) emission: vec3f, @location(10) viewPosition: vec3f, @location(11) bumpStrength: f32, @location(12) uv:vec4f };
+@vertex fn vertex(@builtin(instance_index) instanceIndex:u32, @location(0) localWorld: vec3f, @location(1) color: vec4f, @location(2) screen: f32, @location(3) localNormal: vec3f, @location(4) lit: f32, @location(5) localLayer: f32, @location(6) localViewportOffset: vec2f, @location(7) texPosition: vec3f, @location(8) texKind: f32, @location(9) texColor: vec4f, @location(10) texSeed: f32, @location(11) material: vec3f, @location(12) emission: vec3f, @location(13) bumpStrength: f32, @location(14) uv:vec4f) -> Output {
   let object=objects[instanceIndex];
   let world=(object.transform*vec4f(localWorld,1.)).xyz;
   let normal=(object.transform*vec4f(localNormal,0.)).xyz/object.info.y;
@@ -48,7 +51,7 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
   var n=normal;
   n=vec3f(n.x*cy+n.z*sy,n.y,-n.x*sy+n.z*cy);
   n=vec3f(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
-  output.normal=n;output.lit=lit;output.color=color;
+  output.uv=uv;output.normal=n;output.lit=lit;output.color=color;
   output.texPosition=texPosition;output.texKind=texKind;output.texColor=texColor;output.texSeed=texSeed;
   output.material=material;output.emission=emission;output.viewPosition=p;output.bumpStrength=bumpStrength*object.info.y;
   output.viewDirection=mix(vec3f(0.,0.,1.),vec3f(-p.x,-p.y,depth),camera.angles.w);
@@ -56,7 +59,10 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
 }
 ${textureWGSL}
 ${materialWGSL}
+${modelWGSL}
 @fragment fn fragment(input:Output,@builtin(front_facing) frontFacing:bool) -> @location(0) vec4f { var color=input.color;
+  let imported=importedColor(color,input.uv,input.texSeed,input.normal,input.viewPosition,input.viewDirection,frontFacing,camera.light,camera.ambient.x);
+  if(model.flags.w>0.5){return imported;}
   let footprint=fwidth(input.texPosition);
   var height=0.;
   if(input.texKind>0.5){height=textureMix(input.texPosition,input.texKind,input.texSeed,footprint);color=mix(color,input.texColor,height);}
@@ -79,6 +85,7 @@ export class CanvasRenderer {
   onRecovered:(()=>void)|undefined;
   private gl:WebGLBackend|undefined;
   private retained=new RetainedGeometry();
+  private modelTextures:GPUModelTextures|undefined;
   private gpuRetained:GPURetained|undefined;
   private contextLost=false;
   private ready=false;
@@ -120,7 +127,7 @@ export class CanvasRenderer {
   private format:GPUTextureFormat|undefined;
   private initializing:Promise<void>|undefined;
   private disposed=false;
-  constructor(private canvas:HTMLCanvasElement, private hostPalette?:ColorPalette) {
+  constructor(private canvas:HTMLCanvasElement, private hostPalette?:ColorPalette, private models?:ModelStore) {
     this.originalCanvas=canvas;
     if(hostPalette)this.hostPalette=paletteResolver(hostPalette).palette;
     this.observer=new ResizeObserver(()=>{this.resize();if(this.onInvalidate)this.onInvalidate();else if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);});
@@ -143,6 +150,7 @@ export class CanvasRenderer {
     this.onCanvasChange?.(next);
   }
   private releaseGPU():void {
+    this.modelTextures?.dispose();this.modelTextures=undefined;
     this.gpuRetained?.dispose();this.gpuRetained=undefined;
     this.compositor?.dispose();this.compositor=undefined;
     this.depthOnlyPipeline=undefined;this.pipelineDescriptor=undefined;
@@ -160,7 +168,7 @@ export class CanvasRenderer {
     // The caller may reuse a canvas locked by an earlier renderer/context type.
     if(!gl&&this.canvas===this.originalCanvas&&typeof this.canvas.cloneNode==='function'){this.replaceCanvas();gl=acquire();}
     if(!gl)throw new Error('No WebGL2 context is available.');
-    this.gl=new WebGLBackend(gl);
+    this.gl=new WebGLBackend(gl,this.models?.images);
     this.canvas.addEventListener('webglcontextlost',this.glLost);
     this.canvas.addEventListener('webglcontextrestored',this.glRestored);
     this.contextLost=false;this.ready=true;this.resize();
@@ -177,7 +185,7 @@ export class CanvasRenderer {
     this.errorKind='backend';
     try {
       // Restored contexts have already invalidated every old GL handle.
-      const gl=this.gl.gl;this.gl=new WebGLBackend(gl);this.contextLost=false;this.ready=true;this.resize();
+      const gl=this.gl.gl;this.gl=new WebGLBackend(gl,this.models?.images);this.contextLost=false;this.ready=true;this.resize();
       if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);
       this.backendRecovered(generation);
     } catch(error){this.reportError(error instanceof Error?error:new Error(String(error)));}
@@ -233,7 +241,17 @@ export class CanvasRenderer {
     const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;
     for(const region of [...this.regions].reverse()) {
       const [left,top,width,height]=region.rect;
-      if(x>=left&&x<left+width&&y>=top&&y<top+height)return pan||this.canOrbit(region.id)?region.id:undefined;
+      if(x>=left&&x<left+width&&y>=top&&y<top+height) {
+        if(pan)return region.id;
+        if(!this.canOrbit(region.id))return;
+        if(region.orbitHitTest==='geometry') {
+          const snapshot=this.interactionSnapshot(region.id);if(!snapshot)return;
+          const px=(x-left)/width*snapshot.width,py=(y-top)/height*snapshot.height;
+          const targets=new Set(snapshot.frame.elements.filter(e=>e.view===region.id).map(e=>e.id));
+          if(!pick(snapshot.frame,cameraRay(px,py,snapshot.camera,snapshot.width,snapshot.height),targets,snapshot.camera,snapshot.width,snapshot.height,region.id,[px,py]))return;
+        }
+        return region.id;
+      }
     }
     return pan||this.canOrbit('')?'':undefined;
   }
@@ -313,7 +331,7 @@ export class CanvasRenderer {
     if(this.disposed)throw new Error('Renderer is disposed.');
     const errors=compilation.messages.filter(m=>m.type==='error');if(errors.length)throw new Error(errors.map(m=>m.message).join('\n'));
     this.format=navigator.gpu.getPreferredCanvasFormat();
-    const descriptor:GPURenderPipelineDescriptor={layout:'auto',vertex:{module,entryPoint:'vertex',buffers:[{arrayStride:VERTEX_FLOATS*4,attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x4'},{shaderLocation:2,offset:28,format:'float32'},{shaderLocation:3,offset:32,format:'float32x3'},{shaderLocation:4,offset:44,format:'float32'},{shaderLocation:5,offset:48,format:'float32'},{shaderLocation:6,offset:52,format:'float32x2'},{shaderLocation:7,offset:60,format:'float32x3'},{shaderLocation:8,offset:72,format:'float32'},{shaderLocation:9,offset:76,format:'float32x4'},{shaderLocation:10,offset:92,format:'float32'},{shaderLocation:11,offset:96,format:'float32x3'},{shaderLocation:12,offset:108,format:'float32x3'},{shaderLocation:13,offset:120,format:'float32'}]}]},fragment:{module,entryPoint:'fragment',targets:[{format:navigator.gpu.getPreferredCanvasFormat(),blend:{color:{srcFactor:'src-alpha',dstFactor:'one-minus-src-alpha',operation:'add'},alpha:{srcFactor:'one',dstFactor:'one-minus-src-alpha',operation:'add'}}}]},primitive:{topology:'triangle-list',cullMode:'none'},depthStencil:{format:'depth24plus',depthWriteEnabled:true,depthCompare:'less-equal'},multisample:{count:4}};
+    const descriptor:GPURenderPipelineDescriptor={layout:'auto',vertex:{module,entryPoint:'vertex',buffers:[{arrayStride:VERTEX_FLOATS*4,attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x4'},{shaderLocation:2,offset:28,format:'float32'},{shaderLocation:3,offset:32,format:'float32x3'},{shaderLocation:4,offset:44,format:'float32'},{shaderLocation:5,offset:48,format:'float32'},{shaderLocation:6,offset:52,format:'float32x2'},{shaderLocation:7,offset:60,format:'float32x3'},{shaderLocation:8,offset:72,format:'float32'},{shaderLocation:9,offset:76,format:'float32x4'},{shaderLocation:10,offset:92,format:'float32'},{shaderLocation:11,offset:96,format:'float32x3'},{shaderLocation:12,offset:108,format:'float32x3'},{shaderLocation:13,offset:120,format:'float32'},{shaderLocation:14,offset:124,format:'float32x4'}]}]},fragment:{module,entryPoint:'fragment',targets:[{format:navigator.gpu.getPreferredCanvasFormat(),blend:{color:{srcFactor:'src-alpha',dstFactor:'one-minus-src-alpha',operation:'add'},alpha:{srcFactor:'one',dstFactor:'one-minus-src-alpha',operation:'add'}}}]},primitive:{topology:'triangle-list',cullMode:'none'},depthStencil:{format:'depth24plus',depthWriteEnabled:true,depthCompare:'less-equal'},multisample:{count:4}};
     this.pipelineDescriptor=descriptor;
     const pipeline=await device.createRenderPipelineAsync(descriptor);
     if(this.disposed)throw new Error('Renderer is disposed.');
@@ -334,24 +352,7 @@ export class CanvasRenderer {
   }
   async prepare(scenes:CompiledScene[]):Promise<void> {
     if(this.disposed)throw new Error('Renderer is disposed.');
-    const prepareGeometry=(g:Geometry):void=>{if(g.kind==='latex')layoutLatexGeometry(g);if(g.kind==='text')layoutLatex(textTex(g.text??''));};
-    for(const scene of scenes) {
-      const palette=paletteResolver(this.hostPalette??scene.options.palette);
-      const prepareElement=(e:ElementState):void=>{prepareGeometry(e.geometry);palette.resolve(e.fill);palette.resolve(e.stroke);};
-      palette.resolve(scene.options.background);
-      if (scene.options.lighting && scene.options.lighting !== "studio" && scene.options.lighting.receiver) palette.resolve(scene.options.lighting.receiver.fill ?? "GREY_D");
-      for(const element of [...scene.initial,...scene.lifecycle.flatMap(event=>event.elements??[])])prepareElement(element);
-      for(const track of scene.tracks) {
-        if(track.action.geometry)prepareGeometry(track.action.geometry);
-        const properties=track.action.properties as Partial<ElementState>|undefined;
-        if(properties?.fill)palette.resolve(properties.fill);if(properties?.stroke)palette.resolve(properties.stroke);
-        for(const state of Object.values(track.from)) {
-          prepareElement(state);
-          if(track.action.type==='morph'&&track.action.geometry?.kind==='latex'&&state.geometry.kind==='latex')validateLatexMap(layoutLatexGeometry(state.geometry),layoutLatexGeometry(track.action.geometry),track.action.map);
-          else if(track.action.map&&Object.keys(track.action.map).length)throw new Error('Part mappings require a LaTeX-to-LaTeX morph.');
-        }
-      }
-    }
+    for(const scene of scenes)validateRenderableScene(scene,this.hostPalette);
     if(!this.initializing)this.initializing=this.initialize().catch(error=>{this.initializing=undefined;throw error;});
     await this.initializing;
   }
@@ -380,6 +381,7 @@ export class CanvasRenderer {
   render(frame:Frame,options:CompiledScene['options']):void {
     if(!this.ready||this.contextLost||this.disposed)return;
     this.lastFrame=frame;this.lastOptions=options;this.regions=frame.views??[];
+    frame=this.models?.resolve(frame)??frame;
     const {width,height}=this.size;
     const camera=this.effectiveCamera(frame.camera,options.orbit);
     const palette=paletteResolver(this.hostPalette??options.palette);
@@ -424,6 +426,7 @@ export class CanvasRenderer {
     const clear=parseColor(palette.resolve(options.background));
     if(this.gl){this.gl.render(data,ordered,clear,this.canvas.width,this.canvas.height);this.frameRendered();return;}
     const device=this.device!;
+    this.modelTextures??=new GPUModelTextures(device,this.models?.images??new Map());
     this.gpuRetained??=new GPURetained(device);
     this.gpuRetained.beginFrame();
     const viewIds=new Set(this.regions.map(v=>v.id));
@@ -449,12 +452,13 @@ export class CanvasRenderer {
         const depthBindGroup=device.createBindGroup({layout:this.depthOnlyPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:resources.uniform}}]});
         this.compositor.render(encoder,batch.commands,descriptor,batch.rect,this.canvas.width,this.canvas.height,(pass,command,depthOnly)=>{
           pass.setPipeline(depthOnly?this.depthOnlyPipeline!:command.opaque?this.pipeline!:this.transparentPipeline!);pass.setBindGroup(0,depthOnly?depthBindGroup:command.opaque?resources!.bindGroup:resources!.transparentBindGroup);
+          this.modelTextures!.bind(pass,depthOnly?this.depthOnlyPipeline!:command.opaque?this.pipeline!:this.transparentPipeline!,command.modelMaterial);
           this.gpuRetained!.draw(pass,depthOnly?this.depthOnlyPipeline!:command.opaque?this.pipeline!:this.transparentPipeline!,command,this.vertices);
         });
       } else {
         const pass=encoder.beginRenderPass(descriptor);
         if(batch.rect){const [x,y,w,h]=batch.rect;pass.setViewport(x,y,w,h,0,1);pass.setScissorRect(x,y,w,h);}
-        for(const command of batch.commands)if('first' in command){pass.setPipeline(command.opaque?this.pipeline!:this.transparentPipeline!);pass.setBindGroup(0,command.opaque?resources.bindGroup:resources.transparentBindGroup);this.gpuRetained.draw(pass,command.opaque?this.pipeline!:this.transparentPipeline!,command,this.vertices);}
+        for(const command of batch.commands)if('first' in command){pass.setPipeline(command.opaque?this.pipeline!:this.transparentPipeline!);pass.setBindGroup(0,command.opaque?resources.bindGroup:resources.transparentBindGroup);this.modelTextures.bind(pass,command.opaque?this.pipeline!:this.transparentPipeline!,command.modelMaterial);this.gpuRetained.draw(pass,command.opaque?this.pipeline!:this.transparentPipeline!,command,this.vertices);}
         pass.end();
       }
     }

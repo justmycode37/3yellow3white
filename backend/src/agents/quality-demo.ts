@@ -1,0 +1,2 @@
+/** Keep every quality milestone tied to exactly the same user request. */
+export const QUALITY_DEMO_PROMPT = 'Explain RNA transcription to a first-year biology student. Show how RNA polymerase opens a short DNA region and builds complementary RNA from the template strand. Use one consistent example, a spatial introduction followed by a clear flat close-up, and preserve strand identity. Keep labels readable, motion purposeful, and the screen uncluttered.';

@@ -1,0 +1,156 @@
+{
+  "cases": [
+    {
+      "case": "bayes",
+      "samples": [
+        {
+          "label": "A",
+          "scores": [3, 3, 3, 3, 2, 3, 3],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-1",
+              "detail": "Trim narration, particularly the full negative-outcome inventory and repeated setup, to better match roughly three minutes. The supplied estimate is 213 seconds at 140 wpm and 200–238 seconds across the planning range, versus a 180-second target. This is a pacing weakness, not a measured production overrun."
+            }
+          ],
+          "evidence": [
+            "Beat-2 explicitly removes negatives from the comparison, adds 9 and 99 to 108, and derives 9/108 = 1/12 ≈ 8.3%; the denominator is motivated rather than merely printed.",
+            "Beat-2 says the result raises the chance from one percent to about eight percent while leaving the condition unlikely. This usefully distinguishes evidence from a more-likely-than-not conclusion.",
+            "Beat-1 uses count-proportional areas, explicitly labeled enlargement, BLUE/GREY condition status and independent YELLOW positive outlines. Beat-2 preserves counts and scale while regrouping the same positive regions.",
+            "Beat-3 holds 90% sensitivity and 10% false-positive rate fixed, derives 90 and 90 in a distinct population, and explains the changed supplies of true and false positives. This earns the prevalence conclusion.",
+            "The five-second task has 9 and 108 already available, with the fraction value withheld; it is reachable for the stated audience and followed by a complete explanation.",
+            "Exactly three scenes; 441 spoken words and one five-second pause. Adjacent scene states preserve the positive subsets and attach each comparison's denominator locally.",
+            "Separate mechanics: the packet reports invalid source identifier bayes.request.json. The numerical claims nevertheless match the request; this identifier failure is not treated as a teaching or factual error."
+          ]
+        },
+        {
+          "label": "B",
+          "scores": [3, 3, 3, 2, 3, 3, 3],
+          "materialErrors": [
+            {
+              "sceneId": "beat-3",
+              "detail": "The closing assertion that a positive result 'becomes informative only when we combine' test behavior with prevalence is too strong. Those ingredients are needed to calculate the posterior probability, but the result supplies evidence even before that probability is calculated: here a positive is nine times as likely with the condition as without it. Replace the claim with a statement about calculating/interpreting the probability. The counts and posterior derivation themselves are correct."
+            }
+          ],
+          "improvements": [
+            {
+              "sceneId": "beat-2",
+              "detail": "A short observation that 8.3% is above the starting 1% but still below 50% would make the distinction between informative evidence and likely condition explicit."
+            },
+            {
+              "sceneId": "beat-1",
+              "detail": "Consider an explicitly marked detail view for the 9-of-10 portion of a common-scale 10-versus-990 bar comparison. Labels establish exact counts, but the small selected portion could be hard to inspect; this is a planning improvement, not a claim about an unseen rendering."
+            }
+          ],
+          "evidence": [
+            "Beat-1 pairs 9/10 with 90% and 99/990 with 10%, explicitly explaining that the latter rate acts on a much larger group.",
+            "Beat-2 extracts the same positive pieces without changing condition membership or scale, then associates the numerator with BLUE 9 and denominator with the entire 108-person bar.",
+            "The pause asks for a rough fraction using visible 9 and 99 while withholding the sum and answer. Adding these counts and estimating 9/108 is reachable for adults who know percentages.",
+            "Beat-3 derives 100×90%=90 and 900×10%=90 before showing 50%; the explicit fixed-size assumption supports the statement that higher prevalence gives more true positives and fewer false positives.",
+            "Exactly three scenes, 363 spoken words and a five-second pause; estimated 177 seconds at 140 wpm, range 165–197 seconds, fits the requested duration.",
+            "Each scene begins from the preceding actual bars, with obsolete annotations removed and the original positive result retained as a labeled reference. Separate mechanics: source identifiers validate in the packet."
+          ]
+        },
+        {
+          "label": "C",
+          "scores": [3, 3, 3, 3, 3, 3, 3],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-2",
+              "detail": "Optionally state that the positive raises probability from 1% to 8.3%, despite leaving the condition unlikely. The current explanation correctly answers the request, but this would directly prevent reading 'not a diagnosis' as 'no evidence.'"
+            },
+            {
+              "sceneId": "beat-3",
+              "detail": "Clarify that the compact first reference retains the original 9-versus-99 mark mixture if the final shot must compare both mixtures visibly. The plan first reduces it to a compact calculation and membership cue, then requests a final comparison of both mixtures; these are compatible but the retained visual extent could be more explicit."
+            }
+          ],
+          "evidence": [
+            "Beat-1 opens with the actual sensitivity/posterior confusion, establishes all supplied counts, and explains both test rates with their correct denominators.",
+            "Beat-2 explains 'We divide by all positive results because that is the group we know we belong to,' and contrasts the reverse question's denominator. The result is justified in plain language.",
+            "Equal person marks encode counts; BLUE/GREY membership survives YELLOW result outlines and regrouping. The plan requires exactly 9 and 99 selected people, giving the arithmetic observable referents.",
+            "The six-second pause leaves 9, 99 and 108 available and asks for numerator and denominator, while hiding the fraction. The reveal supplies 9/108 = 1/12 ≈ 8.3%.",
+            "Beat-3 explicitly introduces a different 1,000-person population, applies unchanged 90%/10% rates to 100/900, and derives the changed 90:90 mixture and 50% share. It does not suggest original people changing health status.",
+            "Exactly three scenes, 370 spoken words and six pause seconds; estimate 181 seconds at 140 wpm, range 169–202 seconds. No substantive timing mismatch is evident.",
+            "Separate mechanics: unavailable source identifier bayes.request.json fails validation. Its numerical/source-content claims are faithful to the request, so the identifier defect does not reduce semantic scores."
+          ]
+        }
+      ],
+      "comparison": "All three correctly derive the requested probability, explain denominator reversal, and earn the fixed-rate prevalence comparison. C has the strongest overall fit on this packet: sound teaching with a near-three-minute estimate. A adds a particularly useful prior-to-posterior comparison and explicit enlargement safeguards, but is substantially longer. B is similarly concise and has a clear bar-based derivation, but its final 'informative only when' claim needs correction. The A/C source-name failures are separate mechanical defects, not evidence that their mathematics or teaching is worse. These are script-and-plan judgments, not observations of rendered legibility or retention."
+    },
+    {
+      "case": "uniform",
+      "samples": [
+        {
+          "label": "A",
+          "scores": [3, 3, 3, 3, 2, 3, 3],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-1",
+              "detail": "Tighten repeated threshold wording across the opening and conclusion. At 555 words plus five pause seconds, the estimate is 267 seconds at 140 wpm and 250–299 seconds across the range, somewhat long for roughly four minutes, especially if the mathematics needs slow delivery."
+            },
+            {
+              "sceneId": "beat-4",
+              "detail": "If the optional N=14 numerical illustration changes the displayed current exponent, explicitly announce that reset. The preceding plot has n at least 32; N=14 can safely remain an independent threshold label, but should not look like an unannounced backwards step in the growing-n animation. This is a conditional handoff clarification, not an actual mathematical error."
+            }
+          ],
+          "evidence": [
+            "Beat-1 starts with the requested complete quantifiers, keeps the same error test, and distinguishes N(x,epsilon) from N(epsilon), including every n>=N.",
+            "Beat-2 treats x=1 separately, constructs the piecewise limit with open/filled markers, and explicitly says endpoint error is zero. It locates the obstruction near the endpoint rather than falsely at it.",
+            "Beat-3 gives x_n=(1/2)^(1/n), explains its half-unit error, then asks whether a one-quarter bound can hold uniformly. This is an accessible application of supplied evidence; showing the witness is legitimate scaffolding, not a failure merely because the task is easy.",
+            "The reveal takes n=N and x=x_N for any proposed cutoff, making the quantifier refutation explicit. It separately explains why a moving point does not contradict pointwise convergence.",
+            "Supremum one is justified by approaching one from below for fixed n and is labeled unattained, with endpoint error still zero. The graph supports an algebraic argument.",
+            "Beat-4 derives x^n<=a^n<=a^N<epsilon for all later n and states dependence on fixed a and epsilon but not x. The optional 0.9^14≈0.229 example is correct.",
+            "Exactly four scenes and one pause; graph/limit/error identities are maintained through restriction. Separate mechanics: uniform.request.json is unavailable in the packet and fails validation, although the content is faithful to the request."
+          ]
+        },
+        {
+          "label": "B",
+          "scores": [3, 3, 3, 3, 3, 3, 3],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-2",
+              "detail": "Replace 'It supplies no threshold for the whole interval' with 'That pointwise reasoning alone does not supply a common threshold.' The next scene correctly proves actual failure, but the distinction between an argument not supplying a threshold and a threshold not existing could be signposted more cleanly."
+            },
+            {
+              "sceneId": "beat-4",
+              "detail": "If a=3/4 is used with a carried large exponent, allow an explicitly stated smaller illustrative exponent or a clearly labeled error detail so the maximum location remains visually inspectable. The order-preservation premise already makes the prediction reachable even if the curve is very flat."
+            }
+          ],
+          "evidence": [
+            "The opening definitions explicitly preserve all later indices and distinguish whether N can adapt to x; they meet the requested opening rather than substituting a simpler analogy.",
+            "Beat-2 fixes probes 1/2,9/10,1 while n changes, derives the piecewise limit, and distinguishes endpoint value one from endpoint error zero.",
+            "Beat-3's root witness has error 1/2 for every index. The statement 'choose an index beyond [the threshold] and then this point' directly refutes the uniform quantifiers without treating sampled curves as proof.",
+            "The nonattained supremum one is established by a fixed-index approach from below, not by a sampled maximum or by misusing x=1.",
+            "The only prediction occurs in beat-4 after the explicit premise that positive integer powers preserve order on nonnegative inputs. Asking for the maximum-error location is purposeful and reachable; the plan hides its highlight and value until after the five-second pause.",
+            "The final scene derives the complete common bound and states that N may depend on a and epsilon but not x. Restriction visibly removes the excluded endpoint while preserving coordinates and values.",
+            "Exactly four scenes; 470 words, one five-second pause, estimate 227 seconds at 140 wpm with range 212–254. Separate mechanics: the packet validates its source identifiers."
+          ]
+        },
+        {
+          "label": "C",
+          "scores": [3, 3, 3, 3, 3, 3, 3],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-3",
+              "detail": "The pre-witness yes/no prediction is harder than the other samples' tasks. A short cue to inspect points strictly below one for each proposed index could improve accessibility without giving the root construction away. It is still plausibly reachable for second-year students from the established error rule, graph and reminder that the test point may depend on the index."
+            }
+          ],
+          "evidence": [
+            "Beat-1 begins with the complete pointwise and uniform definitions and explicitly compares N(x,epsilon) with N(epsilon); both retain the all-later-indices requirement.",
+            "Beat-2 correctly distinguishes the limit zero below one and one at the endpoint, then introduces error x^n below one and zero at one. Exact endpoint markers and separate color roles maintain these meanings.",
+            "Before the single five-second pause, the viewer knows the error rule and is reminded that the test point can depend on n; the task asks only whether a common bound exists, not for an unprepared exact formula.",
+            "After the pause the root witness is constructed and its error 1/2 proved algebraically for any positive n. The default explanation is complete even if the viewer predicted incorrectly.",
+            "The subsequent fixed-n approach to one establishes supremum one while labeling it unattained and retaining zero endpoint error. No mathematical conclusion depends solely on a finite plot.",
+            "Beat-4 proves x^n<=a^n<=a^N<epsilon, identifies the maximum at a, and distinguishes fixed a from variable x. It explicitly announces any reset to n=4 before showing 8 and 16, avoiding an apparent backwards-time change from the preceding n=128 curve.",
+            "Exactly four scenes, 487 words and five pause seconds; estimate 235 seconds at 140 wpm, range 220–263. The scene transitions preserve graph/limit identities, remove old supremum labels, and explicitly restrict the domain. Separate mechanics: source identifiers validate."
+          ]
+        }
+      ],
+      "comparison": "All three meet the demanding mathematical scope: correct definitions, endpoint-preserving pointwise limit, an explicit moving-witness refutation, and a uniform bound on every fixed [0,a]. None substitutes a plot for proof. B and C are both strong overall and there is no compelling semantic winner: B offers the most directly scaffolded prediction through order preservation, while C asks the harder pre-witness prediction and more explicitly handles an exponent reset for the final plot. A has the especially explicit n=N refutation and a useful numerical threshold example, but its estimated delivery is longer. A's failed source identifier is mechanically important and should be repaired, but does not refute its mathematics. These single outputs do not establish statistical superiority or rendered-animation quality."
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Why retrying can charge twice\n\n## Beat 1 — A reply disappears\n\nContent needed: A schematic client/server request-response trace: payment amount $20, one server commit, lost success response, client timeout. Establish separate request and response arrows. No key or safe-retry answer yet.\n\nNarration: Your app sends a payment request. The server charges twenty dollars, but its reply disappears. The app times out. Can it retry without charging the customer twice?\n\n## Beat 2 — One timeout, two histories\n\nContent needed: Compare alternate histories of the same $20 purchase: request lost before arrival with zero committed charges; request arrives and commits once but response is lost. Both produce the same client timeout. Extend each history with an unkeyed retry, yielding one versus two committed charges. These are alternatives, not successive purchases.\n\nNarration: A timeout tells the app that no response arrived before its deadline. It does not say what happened on the server. Compare two histories: in the first, the request never arrives, so no charge happens. In the second, the server commits the charge, but the response is lost. The app sees exactly the same timeout in both. Giving up can leave the first purchase unpaid. Sending an ordinary payment request again can charge twice in the second history. We need the server to recognize that another attempt can belong to the same purchase.\n\n## Beat 3 — Give the purchase a durable identity\n\nContent needed: Explicitly replay the same purchase under an idempotency protocol. Client creates and retains key K1 before sending. Show payload $20 for purchase A, server entry K1 with matching payload and success result R1, and payment P1. Charge and key/payload/result association share an atomic durability boundary in the simplified service. A concurrent same-key attempt cannot execute the charge independently. Compare stored-result replay after response loss with first execution after initial request loss. External charging needs equivalent coordination beyond a local transaction.\n\nNarration: Replay that purchase with an identity attached. Before the first attempt, the app creates a unique idempotency key and keeps it for retries. The server associates that key with the payment details and the result. In our simplified payment service, recording the charge and that association commit together: either both become durable, or neither does. Otherwise, a crash after charging but before saving the key could let a retry charge again. Concurrent attempts must also coordinate so only one performs the operation; another waits or receives an in-progress response. Now the lost reply is harmless to retry: the same key and details find the stored success, and the server returns it without another charge. If the first request never arrived, there is no stored entry, so the retry performs the purchase and records its result. An external payment provider needs equivalent coordination; a local database transaction alone cannot make its charge atomic.\n\n## Beat 4 — Reuse the identity, within its limits\n\nContent needed: Use K1 for a retry of purchase A; use distinct key K2 for new purchase B, also $20. Reject changed amount $25 under existing K1. Demonstrate that the K1 record is effective only within the defined account/operation scope and while retained. End on the retained K1 association and the replay route; do not imply global or permanent exactly-once delivery.\n\nNarration: The key identifies an intended purchase, not a network attempt. Retry the same purchase with the same key. A genuinely new purchase gets a new key, even if it also costs twenty dollars. Reusing a key with changed payment details must be rejected, rather than silently returning the old result or charging the changed amount. This protection lasts only within the service's defined key scope and retention period. Once a record expires, the same key may be treated as new. A timeout still leaves the outcome unknown, but a correctly implemented, retained key lets the server resolve that uncertainty without repeating the purchase.",
+  "plan": {
+    "audience": "Junior developers who have used client/server APIs.",
+    "prerequisites": [
+      "A client sends a request and a server sends a response.",
+      "A payment request can change durable server-side state."
+    ],
+    "learningGoal": "Explain ambiguous payment timeouts and apply idempotency keys with atomic outcome storage, payload checks, and scoped retention.",
+    "centralQuestion": "How can an app retry a payment after a timeout without charging for the same purchase twice?",
+    "keyInsight": "A timeout cannot identify the server's outcome; a durable identity shared across attempts lets the server either perform the purchase once or replay its prior result, provided the operation and stored association are atomically coordinated.",
+    "runningExample": "Purchase A for $20, key K1, payment P1 and success result R1. Compare initial request loss with response loss after commit. Purchase B also costs $20 but uses K2; changing A's payload to $25 under K1 is rejected. No specific retention duration is assumed.",
+    "misconceptions": [
+      "A timeout proves the payment failed.",
+      "Every retry should receive a fresh key.",
+      "Equal amounts identify the same purchase.",
+      "Saving the key after an uncoordinated charge prevents all duplicates.",
+      "A key is valid forever or across all scopes."
+    ],
+    "entities": [
+      {
+        "id": "client",
+        "meaning": "App initiating purchase A in beat-1; the same logical client compares histories in beat-2, retains K1 across attempts in beat-3, and distinguishes purchase B in beat-4.",
+        "color": "BLUE"
+      },
+      {
+        "id": "server",
+        "meaning": "Payment service handling requests in all four beats; its server-side knowledge differs from the client's. The atomic model in beat-3 is explicitly a simplified service.",
+        "color": "WHITE"
+      },
+      {
+        "id": "purchase",
+        "meaning": "Intended purchase A for $20 throughout beat-1 to beat-4. Its identity persists across attempts; compare a separate purchase B only in beat-4. Labels travel with their owning request.",
+        "color": "TEAL"
+      },
+      {
+        "id": "charge-record",
+        "meaning": "Committed payment records: one in beat-1; alternate history copies in beat-2 show zero/one then one/two; beat-3 deliberately replays the example under the new protocol and preserves payment P1 on retries through beat-4.",
+        "color": "GREEN"
+      },
+      {
+        "id": "network-loss",
+        "meaning": "Temporary red breaks on the lost response in beat-1 and on the respective lost messages in beat-2; the lost-response event recurs in beat-3. A break signifies message loss, not transaction rollback.",
+        "color": "RED"
+      },
+      {
+        "id": "timeout",
+        "meaning": "Identical client-observed absence of response in beat-1 and both histories of beat-2. Removed when the protocol is introduced in beat-3.",
+        "color": "GREY"
+      },
+      {
+        "id": "key",
+        "meaning": "K1 created before the replayed first attempt in beat-3; retained by the client and attached unchanged to purchase A retries through beat-4. K2 is a distinct instance of the same key concept for purchase B.",
+        "color": "YELLOW"
+      },
+      {
+        "id": "stored-association",
+        "meaning": "Durable scoped entry mapping K1 to purchase A's $20 payload and result R1 introduced in beat-3; linked with payment P1 at atomic commit and retained unchanged on retry. Beat-4 explores mismatch rejection and expiry, then returns to the retained reference case explicitly.",
+        "color": "PURPLE"
+      },
+      {
+        "id": "result",
+        "meaning": "Success result R1 stored and returned in beat-3; subsequent same-key retries return the same result, preserving payment identity. Remains part of the retained reference case in beat-4.",
+        "color": "GOLD"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Separate a completed payment from successful delivery of its response.",
+        "whyNow": "Open with the concrete failure that creates uncertainty; prepare comparison with a request that never reached the server.",
+        "keyPoints": [
+          "A $20 request reaches the server.",
+          "One charge commits.",
+          "The success response is lost and the client times out."
+        ],
+        "visualDescription": "2D (because message order and separate client/server knowledge are planar relationships): Construct a schematic request-response diagram with client and server lifelines, downward logical order rather than measured time, and arrows anchored to their endpoints. Keep the $20 purchase label attached to the outgoing request. Reveal a green committed payment mark at the server, then break the returning response in red before it reaches the client. Show the client timeout only after that. Prepare these same semantic objects for alternate-history copies in beat-2; no key or stored-result mechanism appears yet. Use black background, white scaffolding, restrained semantic colors and short local labels.",
+        "endsWith": "The client shows timeout while the server retains one committed $20 payment; the lost response visibly separates the two facts.",
+        "carry": [
+          "client",
+          "server",
+          "purchase",
+          "charge-record",
+          "network-loss",
+          "timeout"
+        ],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic (supplied text)",
+            "supports": "A payment response is lost after the server commits, and retrying may charge twice. The $20 amount is an authored teaching example."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-2",
+        "purpose": "Show why timeout alone cannot determine whether retrying creates the first charge or a duplicate.",
+        "whyNow": "Build on the lost-response trace and compare it with the requested never-arrived case, creating the need for request identity.",
+        "keyPoints": [
+          "The existing trace is one possible history.",
+          "A request lost before arrival gives a second possible history.",
+          "The client's timeout is identical in both.",
+          "An unkeyed retry produces one charge in the never-arrived history and two in the committed history."
+        ],
+        "visualDescription": "2D (because comparing message histories requires no spatial depth): Start from the actual preceding lost-response trace, retain it as the committed history, and introduce an explicitly alternative copy of the client/server scaffold. In that copy, stop the request before server arrival and leave the payment record empty. Align the two timeout observations by meaning without implying synchronized real clocks. Then extend each history with the same ordinary retry: add the first charge in the previously empty history and a second distinct charge in the committed history. Show individual committed marks so the result follows from the operations rather than from a counter alone. At the end, remove temporary loss marks and extra branch scaffolding, retaining the original case as a reference for the announced replay.",
+        "endsWith": "A compact reference to purchase A and its client/server trace remains with the committed payment and timeout; the comparison has established that an unkeyed retry can duplicate it.",
+        "carry": [
+          "client",
+          "server",
+          "purchase",
+          "charge-record",
+          "timeout"
+        ],
+        "cleanup": [
+          "network-loss"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic (supplied text)",
+            "supports": "The first request may never have arrived, and timeout cannot distinguish that case from a committed payment with a lost response."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-3",
+        "purpose": "Explain how durable, atomic purchase identity makes both ambiguous histories safely retryable within the model.",
+        "whyNow": "The prior scene established the need for recognition; now introduce the key and the server mechanism that supplies it, before discussing its limits.",
+        "keyPoints": [
+          "Announce replay of the same example and create K1 before its first request.",
+          "Bind K1 to the payload and result, committing that association atomically with the payment.",
+          "Coordinate concurrent attempts so only one performs the operation.",
+          "A retry after response loss reads and returns R1 without adding a payment.",
+          "A retry after nonarrival executes and stores the first payment.",
+          "A local transaction alone does not cover an external provider's charge."
+        ],
+        "visualDescription": "2D (because the mechanism is a transaction and message-flow relationship): Begin with the previous reference and deliberately mark a replay under the new protocol before clearing its unkeyed event trace. Keep client, server and purchase A identity. Introduce K1 at the client before the request departs. Show purchase A/$20 reaching the server and a durable association K1, matching payload, R1 connected to payment P1. Use a shared atomic-commit boundary for payment and association: both transition from proposed to durable together; no intermediate durable charge without its entry is depicted. Briefly show a simultaneous K1 request held at the same entry, not routed to a second charge. Lose the outgoing R1 response, then show the retry matching K1 and payload and following a read/replay path to R1 while P1 remains unchanged. Separately label the alternative initial-request-loss case, begin that case with no entry and no payment, and execute the first atomic commit on retry. Return to the common resulting state of one payment and its association. A short provider boundary annotation accompanies the spoken external-service limitation; do not suggest the local boundary encloses an external service.",
+        "endsWith": "Purchase A has one durable payment P1 and a retained K1/payload/R1 association; the client has received R1 via retry. Temporary loss and timeout annotations are gone.",
+        "carry": [
+          "client",
+          "server",
+          "purchase",
+          "charge-record",
+          "key",
+          "stored-association",
+          "result"
+        ],
+        "cleanup": [
+          "timeout",
+          "network-loss"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic (supplied text)",
+            "supports": "Atomic stored key/result association makes a retry return the prior result instead of repeating the operation. Concurrent coordination and the external-provider boundary clarify the required atomicity; identifiers are authored examples."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-4",
+        "purpose": "Define when a key represents the same operation and where its guarantee stops.",
+        "whyNow": "Apply the working replay mechanism to distinguish retries from new purchases and state the requested payload, scope and retention limits; then answer the opening question.",
+        "keyPoints": [
+          "K1 continues to identify purchase A retries.",
+          "A separate purchase B receives K2 despite the same $20 amount.",
+          "K1 with $25 is rejected without changing A's recorded outcome.",
+          "The association belongs to a defined account/operation scope and retention interval.",
+          "Conclude with the retained same-key replay path and unchanged payment."
+        ],
+        "visualDescription": "2D (because identity matching and the lifetime of a stored association are planar protocol relationships): Continue with the retained K1 entry, P1 and received R1. Compare one retry of A/K1/$20 with a new purchase B/K2/$20, preserving each label's ownership; K2 must not overwrite or rename K1. Remove that comparison before showing K1 with $25 rejected at the payload match, leaving K1's stored $20 payload and P1 unchanged. Show a small scope boundary labeled Account / operation around the entry and a schematic retention interval with no invented duration. For expiry, use an explicitly hypothetical comparison in which the entry is absent and lookup no longer recognizes K1; do not erase the current reference case and silently restore it. Remove temporary comparisons and keep the original retained entry and its replay path as the concluding model. All labels remain upright and within playback-safe bounds.",
+        "endsWith": "The retained K1 association connects the repeated request to the same R1 and unchanged P1, with concise scope and retention qualifiers visible.",
+        "carry": [],
+        "cleanup": [
+          "network-loss",
+          "timeout"
+        ],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic (supplied text)",
+            "supports": "Same intended purchase versus new purchase; reject changed payload on key reuse; retention scope limits the guarantee. K2, purchase B and $25 are authored contrast cases."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

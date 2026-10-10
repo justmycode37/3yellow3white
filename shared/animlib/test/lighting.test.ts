@@ -7,6 +7,7 @@ import { addPlanarShadows } from '../src/planar-shadows.js';
 import { buildDrawItems } from '../src/render-geometry.js';
 import { paletteResolver } from '../src/palette.js';
 import { composeItems } from '../src/composition.js';
+import { validateRenderableScene } from '../src/render-validation.js';
 import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import type { CameraState, SceneLighting } from '../src/types.js';
 const camera: CameraState = {yaw:0,pitch:0,target:[0,0,0],height:8,distance:12,perspective:1};
@@ -20,6 +21,20 @@ async function draw(style='') {
  return {items,result:addPlanarShadows(items,frame.lighting,camera,paletteResolver())};
 }
 describe('scene lighting and planar shadows',()=>{
+ it('validates receiver colors against the rendering host palette',async()=>{
+  const scene=await compileSource(source({...lighting,receiver:{size:[2,2],fill:'BLUE'}}));
+  expect(()=>validateRenderableScene(scene)).not.toThrow();
+  expect(()=>validateRenderableScene(scene,{colors:{BLACK:'#000000',WHITE:'#ffffff'},background:'BLACK',foreground:'WHITE'})).toThrow('BLUE');
+ });
+ it.each([true,false])('respects castShadow=%s on batched molecules',async castShadow=>{
+  const scene=await compileSource(`export default scene({mode:'3d',lighting:${JSON.stringify(lighting)}},s=>{
+   s.molecule('protein',{positions:[0,1,0],radius:0.2,castShadow:${castShadow}});s.wait(1);
+  });`);
+  const frame=evaluateScene(scene,0),items=buildDrawItems(frame,camera,640,480,paletteResolver());
+  expect(items.length).toBeGreaterThan(0);
+  expect(items.every(item=>item.castShadow===castShadow)).toBe(true);
+  expect(addPlanarShadows(items,frame.lighting,camera,paletteResolver()).some(item=>item.groups?.some(group=>group.id.startsWith('@shadow')))).toBe(castShadow);
+ });
  it('serializes, seeks deterministically, inherits handoffs and explicitly resets',async()=>{
   const scene=await compileSource(source());
   const frame=evaluateScene(scene,0);

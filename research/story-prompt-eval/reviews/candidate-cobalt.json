@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The lesson repeats the tradeoff but neither explains nor depicts the mechanism, and its speech is far short of the requested scope.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "Speech says 'Carbon goes in and water goes out' and claims the diagram makes the tradeoff clear, while the visualDescription explicitly forbids paths, a shared passage and humidity differences and supplies only a conclusion label. The viewer receives no bridge from an open pore to the two exchanges, nor any explanation of carbon dioxide's role in photosynthesis. Establish and depict the shared pore, carbon dioxide use inside and the moist-interior/drier-exterior conditions, with speech explaining why these produce the overall movements. Carry this mechanism into beat-3 so narrowing the same passage visibly explains both restrictions; distinguish overall movement from a one-way valve. The richer keyPoints and entity descriptions do not supply the missing viewer-facing reasoning."
+    },
+    {
+      "severity": "error",
+      "sceneId": null,
+      "detail": "The complete script has only 72 spoken words and no pauses, estimating about 32-38 seconds at 150-125 words per minute including the prescribed 10% allowance, substantially below roughly two minutes. Use the available duration to develop the missing causal explanation and its dry-condition application across the three scenes, rather than padding the repeated conclusion."
+    }
+  ],
+  "checks": [
+    "Exactly three scenes, no equations, no scripted pauses and empty interactions arrays satisfy the structural restrictions.",
+    "The spoken closing acknowledges that some water loss continues and does not attribute conscious decisions to the plant.",
+    "The current still-leaf visuals repeat conclusions rather than expose an observable relation supporting the central inference.",
+    "The shared registry plans connected interior space, two-way particles and narrowing guard cells, but the actual scene descriptions do not introduce or operate those elements, leaving their carried IDs unsupported by the described end states.",
+    "The duration estimate uses actual parsed speech, not measured audio."
+  ]
+}

@@ -1,0 +1,152 @@
+// Translation: native conceptual envelopes and a schematic cloverleaf, not atomistic dynamics.
+// Time 0..59 is global 102..161. Amino-acid chain joints retain fixed .52-unit spacing.
+export default scene({mode:'3d',orbit:false,end:'hold',background:Color.PURPLE_D},s=>{
+  // Export retained this actual RNA hierarchy through its preceding subscene.
+  // The matched scale cut below replaces it with the translation detail level.
+  try{s.remove(s.previous.get('exported-mRNA'));}catch{}
+  const PI=Math.PI,L=.52;
+  const colors={A:Color.GREEN,U:Color.ORANGE,C:Color.BLUE_A,G:Color.YELLOW_D};
+  const complement={A:'U',U:'A',C:'G',G:'C'};
+  const satin={roughness:.68,specular:.28,metalness:.08};
+  const slate={fill:Color.GREY_C,texture:{pattern:'noise',color:Color.GREY_D,scale:.16,seed:12,bumpStrength:.001},material:{roughness:.62,specular:.32,emissive:Color.PURE_BLUE,emissiveIntensity:.07}};
+  const blue={...slate};
+  const violet={fill:Color.PURPLE_C,material:{roughness:.65,specular:.31},texture:{pattern:'noise',color:Color.PURPLE_C,scale:2.8,seed:23,bumpStrength:.001}};
+  const sample=(fn,n)=>Array.from({length:n+1},(_,i)=>fn(i/n));
+  s.play(s.camera.to3D({yaw:.17,pitch:.12,height:10.8,distance:27,target:[0,.2,0]}),{duration:0});
+  const finalCyan=s.mesh('translation-final-cyan',{vertices:[[-60,-40,-40],[60,-40,-40],[60,40,-40],[-60,40,-40]],triangles:[[0,1,2],[0,2,3]],fill:Color.BLUE_A,shading:'unlit',opacity:0});
+  for(let i=0;i<80;i++){const y=-24+i*.6;s.rectangle('translation-cyan-field-'+i,{position:[0,y+.3,-12],width:100,height:.6,fill:{color:Color.BLUE_A,opacity:.12+.55/(1+Math.exp((y+1)/4))},stroke:Color.NONE});}
+  function domain(id,p,r,phase,twist=0){return s.parametricSurface(id,{
+    uRange:[0,2*PI],vRange:[0,PI],closedU:true,uSegments:id.includes('protein-envelope')?24:30,vSegments:id.includes('protein-envelope')?16:18,
+    fn:(u,v)=>{u=-u;const sv=Math.sin(v),cv=Math.cos(v),q=1+.14*Math.sin(3*u+phase)*sv*sv+.065*Math.cos(5*u-2*v+phase)*sv;
+      const x=r[0]*sv*Math.cos(u)*q,y=r[1]*sv*Math.sin(u)*q;
+      return[p[0]+x*Math.cos(twist)-y*Math.sin(twist),p[1]+x*Math.sin(twist)+y*Math.cos(twist),p[2]+r[2]*cv*(1+.09*Math.sin(3*u+v+phase)*sv*sv*sv)];},
+    fill:Color.GOLD_D,texture:{pattern:'noise',color:Color.GOLD_D,scale:3.2,seed:51,bumpStrength:.002},material:{roughness:.68,specular:.38,metalness:.06}});}
+  const ribosome=s.group('translation-ribosome',[
+    domain('translation-large-subunit',[0,1.75,-3],[5,3.15,2],.4,-.06),
+    domain('translation-small-subunit',[-.35,-3.35,-1.85],[4.1,1.75,1.85],2.1,.10),
+    domain('translation-large-left-domain',[-2.9,2.7,-1.5],[2,1.5,1.25],1.1),
+    domain('translation-large-right-domain',[1.6,3,-1.55],[1.9,1.6,1.3],2.2),
+    domain('translation-cleft-left-domain',[-3.6,.7,-1.95],[1.5,1.45,1.2],3.1,-.3),
+    domain('translation-cleft-center-domain',[-.8,1.0,-2],[2,1.9,1.15],4.1,.22),
+    domain('translation-cleft-right-domain',[2.65,.9,-2.1],[1.8,1.5,1.3],1.7,-.2),
+    domain('translation-small-left-domain',[-2.8,-3.65,-.9],[1.6,1.0,1.05],2.4,.15),
+    domain('translation-small-right-domain',[.2,-3.8,-.85],[2,1.05,1],3.6,-.1),
+  ]);
+  function rod(id,a,b,base,r=.105){return s.tube(id,{points:[a,b],radius:r,radialSegments:8,capped:true,fill:colors[base],material:satin});}
+  const seq=['A','C','U','G','U','C','A','G','C','U','A','C','G','A','G','C','U','U'];
+  const dx=.76,codon=3*dx,P=-3.04,A=-.76,yRNA=-2.65,yCarrier=-1.40,z=0;
+  const rnaParts=[s.tube('translation-mRNA-backbone',{points:sample(t=>[-8.48+11.9*t,yRNA,0],36),radius:.145,radialSegments:8,...slate})],rnaExtra=[];
+  const extension=s.tube('translation-mRNA-continuation',{points:[[3.41,yRNA,0],[13.52,yRNA,0]],radius:.145,radialSegments:8,...slate});rnaParts.push(extension);rnaExtra.push(extension);
+  seq.forEach((b,i)=>{const q=rod('translation-mRNA-base-'+i,[-3.8+i*dx,yRNA,0],[-3.8+i*dx,yRNA+1.15,0],b);rnaParts.push(q);if(i>=10)rnaExtra.push(q);});
+  const rna=s.group('translation-mRNA',rnaParts);
+  s.play(rnaExtra.map(q=>q.animate({opacity:0})),{duration:0});
+  // One continuous closed blue tube carries cloverleaf loops; stem bars are structural pairs.
+  const outline=[[-.2,3.02],[-.2,2.35],[-.42,2.15],[-.91,2.29],[-1.28,2.08],[-1.33,1.72],[-1.06,1.45],[-.53,1.55],[-.36,1.2],[-.50,.90],[-.83,.69],[-.86,.36],[-.58,.14],[0,.10],[.58,.14],[.86,.36],[.83,.69],[.5,.9],[.36,1.20],[.57,1.56],[1.08,1.45],[1.35,1.72],[1.28,2.08],[.92,2.30],[.42,2.15],[.20,2.35],[.20,3.02]];
+  function rounded(points){const out=[];for(let i=0;i<points.length-1;i++){const p0=points[Math.max(0,i-1)],p1=points[i],p2=points[i+1],p3=points[Math.min(points.length-1,i+2)];for(let j=0;j<3;j++){const t=j/3,t2=t*t,t3=t2*t;out.push([0,1,2].map(k=>.5*((2*(p1[k]||0))+(-(p0[k]||0)+(p2[k]||0))*t+(2*(p0[k]||0)-5*(p1[k]||0)+4*(p2[k]||0)-(p3[k]||0))*t2+(-(p0[k]||0)+3*(p1[k]||0)-3*(p2[k]||0)+(p3[k]||0))*t3)));}}out.push(points[points.length-1]);return out;}
+  function carrier(id,codonIndex,at){
+    const pts=outline.map((p,i)=>[p[0]*(p[1]<1.2?1:.76),p[1]+(p[1]<.9?.55*(1-p[1]/.9):0),.12*Math.sin(i*.5)]);
+    const parts=[s.tube(id+'-cloverleaf',{points:rounded(pts),radius:.112,radialSegments:8,...blue})];
+    for(let j=0;j<4;j++){const base=['G','C','U','A'][j];parts.push(rod(id+'-acceptor-pair-left-'+j,[-.152,2.4+j*.16,0],[0,2.4+j*.16,0],base,.05));parts.push(rod(id+'-acceptor-pair-right-'+j,[0,2.4+j*.16,0],[.152,2.4+j*.16,0],complement[base],.05));}
+    // The acceptor stem remains capped when its amino acid is transferred away.
+    parts.push(s.tube(id+'-acceptor-tip',{points:[[-.152,3.02,0],[0,3.07,0],[.152,3.02,0]],radius:.112,radialSegments:8,...blue}));
+    for(let j=0;j<3;j++){
+      const x=.40+j*.12;
+      const base=['A','C','G'][j];
+      for(const side of [-1,1]){parts.push(rod(id+'-arm-pair-lower-'+side+'-'+j,[side*x,1.6,0],[side*x,1.87,0],base,.050));parts.push(rod(id+'-arm-pair-upper-'+side+'-'+j,[side*x,1.87,0],[side*x,2.14,0],complement[base],.050));}
+      parts.push(rod(id+'-lower-stem-pair-left-'+j,[-.30,1.02+j*.13,0],[0,1.02+j*.13,0],base,.050));parts.push(rod(id+'-lower-stem-pair-right-'+j,[0,1.02+j*.13,0],[.30,1.02+j*.13,0],complement[base],.050));
+    }
+    for(let j=0;j<3;j++){
+      const b=complement[seq[codonIndex*3+j]],x=(j-1)*dx;
+      parts.push(rod(id+'-anticodon-'+j,[x,.65,0],[x,-.1,0],b,.105));
+    }
+    const handle=s.group(id,parts);s.play(handle.moveTo(at),{duration:0});
+    return handle;
+  }
+  const p=carrier('translation-P-carrier',0,[P,yCarrier,z]);
+  // P-site remains within the cleft while the viewer visits the next carrier.
+  const a=carrier('translation-A-carrier',1,[6.2,.05,1.25]);
+  const b=carrier('translation-next-carrier',2,[11.5,1.7,1.0]);
+  const c=carrier('translation-third-carrier',3,[15,1.5,1.0]);
+  s.play([a.animate({opacity:0}),b.animate({opacity:0}),c.animate({opacity:0})],{duration:0});
+  // Hierarchy is built from new C-terminal residues toward the old N terminus.
+  // Every downstream joint has the same fixed local displacement. Free amino acids
+  // live on their future residue handle; their offset is zeroed on incorporation.
+  const beads=[],joints=[],bonds=[];
+  for(let i=0;i<9;i++)beads.push(s.sphere('translation-amino-acid-'+i,{radius:.27,...violet}));
+  let child=null;
+  for(let i=8;i>=0;i--){
+    const parts=[beads[i]];
+    if(child){parts.push(child);const link=s.tube('translation-peptide-link-'+i,{points:[[0,0,0],[0,L,0]],radius:.112,radialSegments:8,fill:Color.PURPLE_D,material:satin});parts.push(link);bonds[i]=link;}
+    const g=s.group('translation-peptide-joint-'+i,parts);joints[i]=g;
+    if(i<8)s.play(child.moveTo([0,L,0]),{duration:0});
+    child=g;
+  }
+  const peptide=joints[0],aaY=yCarrier+3.14;
+  let root=[P,aaY-3*L,0];
+  s.play(peptide.moveTo(root),{duration:0});
+  const free=(index,world)=>beads[index].moveTo([world[0]-root[0],world[1]-root[1]-index*L,world[2]-root[2]]);
+  s.play([free(2,[6.2,.05+3.14,1.25]),free(1,[11.5,4.84,1]),free(0,[15,4.64,1]),beads[2].animate({opacity:0}),beads[1].animate({opacity:0}),beads[0].animate({opacity:0}),...bonds.slice(0,3).map(q=>q.animate({opacity:0}))],{duration:0});
+  s.play([p.animate({opacity:0}),peptide.animate({opacity:0})],{duration:0});
+  s.wait(1);
+  s.play([p.fadeIn(),peptide.fadeIn(),a.fadeIn(),beads[2].fadeIn(),...rnaExtra.map(q=>q.fadeIn()),s.camera.to3D({yaw:.12,pitch:.09,height:5.25,distance:27,target:[6.2,1.65,1]})],{duration:3,ease:'smooth'});
+  const aminoLabel=s.text('translation-amino-label',{text:'Amino acid',position:[8.13,3.62,1.5],fontSize:.30,fill:Color.WHITE,billboard:true});
+  const aminoLead=s.line('translation-amino-leader',{points:[[7.45,3.50,1.5],[6.53,3.24,1.5]],stroke:Color.WHITE,strokeWidth:.013});
+  const trnaLabel=s.text('translation-tRNA-label',{text:'tRNA',position:[8.1,1.29,1.5],fontSize:.30,fill:Color.WHITE,billboard:true});
+  const trnaLead=s.line('translation-tRNA-leader',{points:[[7.6,1.32,1.5],[6.95,1.55,1.5]],stroke:Color.WHITE,strokeWidth:.013});
+  s.play([aminoLabel.fadeIn(),aminoLead.fadeIn(),trnaLabel.fadeIn(),trnaLead.fadeIn()],{duration:1});
+  s.wait(4.5);
+  s.play([aminoLabel.fadeOut(),aminoLead.fadeOut(),trnaLabel.fadeOut(),trnaLead.fadeOut()],{duration:1.5}); // 11
+  s.play([a.moveTo([2.7,yCarrier+.7,.8]),free(2,[2.7,aaY+.7,.8]),s.camera.to3D({yaw:.12,pitch:.10,height:10.2,distance:27,target:[-.8,1.3,0]})],{duration:5,ease:'smooth'});
+  s.play([a.moveTo([A,yCarrier+.28,.2]),free(2,[A,aaY+.28,.2])],{duration:2.8,ease:'smooth'});
+  s.play([a.moveTo([A,yCarrier,0]),free(2,[A,aaY,0])],{duration:1.2,ease:'smooth'});
+  s.wait(1); // 21; anticodon bottoms align with mRNA uprights, same seq/complement arrays.
+  // Existing six-residue peptide transfers to the amino-acid end of the A carrier.
+  root=[A,aaY-2*L,0];
+  s.play([peptide.moveTo(root),beads[2].moveTo([0,0,0]),beads[1].moveTo([11.5-root[0],4.84-root[1]-L,1]),beads[0].moveTo([15-root[0],4.64-root[1],1])],{duration:3.2,ease:'smooth'});
+  s.play(bonds[2].fadeIn(),{duration:.6});
+  s.wait(1.2);
+  s.play(s.camera.to3D({yaw:.18,pitch:.11,height:11,distance:27,target:[-1,1.7,0]}),{duration:3}); //29
+  // The assembly advances exactly three bases. Empty carrier departs after transfer.
+  function step(oldCarrier,newCarrier,nextCarrier,nextIndex,nextCodon,offset,duration){
+    root=[P,aaY-nextIndex*L-L,0];
+    const preRoot=[P,aaY-(nextIndex+1)*L,0];
+    s.play([rna.moveTo([-offset*codon,0,0]),newCarrier.moveTo([P,yCarrier,0]),oldCarrier.moveTo([P-codon,yCarrier+.10,.25]),peptide.moveTo(preRoot)],{duration:1.2,ease:'smooth'});
+    root=preRoot;
+    s.play(free(nextIndex,nextIndex===1?[11.5,4.84,1]:[15,4.64,1]),{duration:0});
+    s.play([oldCarrier.moveTo([P-4,yCarrier+1,1.5]),oldCarrier.fadeOut(),nextCarrier.fadeIn(),nextCarrier.moveTo([A+2,yCarrier+.65,.7]),beads[nextIndex].fadeIn(),free(nextIndex,[A+2,aaY+.65,.7])],{duration:.8,ease:'smooth'});
+    s.play([nextCarrier.moveTo([A,yCarrier,0]),free(nextIndex,[A,aaY,0])],{duration:1.3,ease:'smooth'});
+    s.wait(.3);
+    root=[A,aaY-nextIndex*L,0];
+    const moves=[peptide.moveTo(root),beads[nextIndex].moveTo([0,0,0])];
+    s.play(moves,{duration:1.1,ease:'smooth'});
+    s.play(bonds[nextIndex].fadeIn(),{duration:.3});
+  }
+  step(p,a,b,1,2,1,5); //34
+  step(a,b,c,0,3,2,5); //39
+  // Mature chain rises through the visible top of the large subunit.
+  s.play([s.camera.to3D({yaw:.22,pitch:.10,height:12.0,distance:29,target:[-.4,2.7,0]}),c.fadeOut(),b.fadeOut()],{duration:6,ease:'smooth'}); //45
+  root=[A,aaY,0];
+  s.play([peptide.moveTo([0,6.1,.5]),ribosome.moveTo([0,-4.2,-2]),rna.moveTo([-2*codon,-4.2,-2]),finalCyan.animate({opacity:.45}),s.camera.to3D({yaw:.10,pitch:.10,height:9,distance:28,target:[0,8.0,0]})],{duration:2,ease:'smooth'}); //47
+  // Fixed-length articulated schematic folding; each residue and bond survives.
+  const first=[.9,-1.0,1.1,-.85,1.0,-1.05,.8,0];
+  s.play([...joints.slice(1).map((g,i)=>g.rotateTo([.35*Math.sin(i*1.2),.50*Math.cos(i*.85),first[i]])),s.camera.to3D({yaw:.30,pitch:.18,height:8,distance:27,target:[.05,7.7,0]})],{duration:2.5,ease:'smooth'}); //49.5
+  const folded=[[.55,.8,1.38],[-.8,.65,1.42],[.75,-.7,1.30],[-.6,.8,1.42],[.85,.6,1.35],[-.75,-.8,1.45],[.65,.75,1.38],[-.6,-.7,1.3]];
+  s.play([...joints.slice(1).map((g,i)=>g.rotateTo(folded[i])),...beads.map((q,i)=>q.scaleTo(1.35+.09*(i%3))),finalCyan.animate({opacity:1}),peptide.rotateTo([-.15,.4,.1]),s.camera.to3D({yaw:.32,pitch:.14,height:3.8,distance:26,target:[-.25,6.75,.1]})],{duration:2.4,ease:'smooth'}); //51.9
+  // The continuously folded skeleton is retained inside its coarse molecular
+  // envelope. This is an explicit representation blend, not a new disconnected protein.
+  const foldedEnvelope=s.group('translation-protein-envelope',[
+    domain('translation-protein-envelope-continuous',[-.25,6.75,.65],[.74,1.10,.75],1.2,-.18),
+    domain('translation-protein-envelope-upper',[-.42,7.28,1.08],[.51,.53,.44],2.6,.22),
+    domain('translation-protein-envelope-lower',[.07,6.35,1.1],[.53,.53,.48],3.3,-.3),
+  ]);
+  s.play([foldedEnvelope.fadeIn(),peptide.animate({opacity:0})],{duration:1.1,ease:'smooth'}); //53
+  // Warm gold highlights retain lilac sides and all existing residue identities.
+  s.play(beads.filter((q,i)=>i%3!==0).map(q=>q.animate({fill:Color.GOLD_B})),{duration:1});
+  const protein=s.text('translation-protein-label',{text:'Protein',position:[1.24,6.48,.8],billboard:true,fontSize:.25,fill:Color.GREY_D});
+  s.play(protein.fadeIn(),{duration:.8});
+  s.play(s.camera.to3D({yaw:.42,pitch:.16,height:3.8,distance:26,target:[-.25,6.75,.1]}),{duration:3.2,ease:'smooth'});
+  s.wait(1.0000000000000142); //59, compensation for binary addition
+});
+
+
+

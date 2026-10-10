@@ -1,0 +1,46 @@
+[00:04–00:08] Sometimes, math and physics conspire in ways that just feel too good to be true.
+[00:08–00:10] Let's play a strange sort of mathematical croquet.
+[00:11–00:13] We're going to have two sliding blocks and a wall.
+[00:14–00:19] The first block starts by coming in at some velocity from the right, while the second one starts out stationary.
+[00:19–00:27] Being overly idealistic physicists, let's assume there's no friction and all of the collisions are perfectly elastic, which means no energy is lost.
+[00:28–00:41] The astute among you might complain that such collisions would make no sound, but your goal here is to count how many collisions take place, so in slight conflict with that assumption I want to leave a little clack sound to better draw your attention to that count.
+[00:42–00:44] The simplest case is when both blocks have the same mass.
+[00:45–00:55] The first block hits the second, transferring all of its momentum, then the second one bounces off the wall, and then transfers all of its momentum back to the first, which then sails off towards infinity.
+[00:55–00:56] Three total clacks.
+[00:57–01:01] What about if the first block was 100 times the mass of the second one?
+[01:01–01:11] I promise I will explain to you all the relevant physics in due course, it's not entirely obvious how you would predict the dynamics here, but in the spirit of getting to the punchline, let's watch what happens.
+[01:11–01:23] The second one will keep bouncing back and forth between the wall and the first block, 100 times its mass, like a satisfying game of Breakout, slowly and discreetly redirecting that first block's momentum to point in the opposite direction.
+[01:23–01:30] In total, there will be 31 collisions before each block is sliding off towards infinity, never to be touched again.
+[01:31–01:35] What if the first block was 10,000 times the mass of the second one?
+[01:35–01:48] In that case, there would be quite a few more clacks, all happening very rapidly at one point, adding up and all to 313 total collisions.
+[01:48–01:50] Well, actually, hang on.
+[01:50–01:51] Wait for it.
+[01:51–01:54] Wait for it.
+[01:56–01:58] Okay, 314 clacks.
+[01:59–02:12] If the first block was 1,000,000 times the mass of the other, then again, with all of our crazy idealistic conditions, almost all of the clacks happen in one big burst, this time resulting in a total of 3,141 collisions.
+[02:13–02:18] Perhaps you see the pattern here, though it's forgivable if you don't, since it defies all expectation.
+[02:18–02:27] When the mass of that first block is some power of 100 times the mass of the second, the total number of collisions have the same digits as pi.
+[02:28–02:31] This absolutely blew my mind when it was first shared with me.
+[02:31–02:40] Credit to the viewer Henry Cavill for introducing me to this fact, which was originally discovered by the mathematician Gregory Galperin in 1995 and published in 2003.
+[02:41–02:53] Part of what I love about this is that if ever there were Olympic games for algorithms that compute pi, this one would have to win medals both for being the most elegant, and for being the most comically inefficient.
+[02:54–02:56] I mean, think about the actual algorithm here.
+[02:56–02:58] Step 1, implement a physics engine.
+[02:58–03:03] Step 2, choose the number of digits d of pi you'd like to compute.
+[03:03–03:12] Step 3, set the mass of one of the blocks to be 100 to the power d-1, then send it travelling on a frictionless surface towards a block of mass 1.
+[03:12–03:14] Step 4, count all of the collisions.
+[03:16–03:34] For example, to calculate only 20 digits of pi, which fits so cleanly on this screen, one block would have to have 100 billion billion billion billion times the mass of the other, which if that small block was 1 kilogram, means the big one has a mass about 10 times that of the supermassive black hole at the center of the Milky Way.
+[03:35–03:38] That means you would need to count 31 billion billion collisions.
+[03:38–03:45] At one point in this virtual process, the frequency of clacks would be around 100 billion billion billion billion clacks per second.
+[03:46–03:53] So let's just say you would need very good numerical precision to get this working accurately, and it would take a very long time for the algorithm to complete.
+[03:54–04:00] I'll emphasize again that this process is way over-idealized, quickly departing from anything that could possibly happen in real physics.
+[04:01–04:08] But of course, you all know this is not interesting because of its potential as an actual pi computing algorithm or as a pragmatic physics demonstration.
+[04:09–04:14] It's mind-boggling because why on earth would pi show up here?
+[04:14–04:17] And it's in such a weird way too.
+[04:17–04:23] Its decimal digits are counting something, but usually pi shows up when its precise value is describing something continuous.
+[04:24–04:26] I will show you why this is true.
+[04:26–04:31] Where there is pi, there is a hidden circle, and in this case, that hidden circle comes from the conservation of energy.
+[04:32–04:37] In fact, you're going to see two separate methods, which are each as stunning and surprising as the fact itself.
+[04:38–04:42] Delaying gratification though, I will make you wait until the next video to see what's going on.
+[04:42–04:47] In the meantime, I highly encourage you to take a stab at it yourself, and be social about it.
+[04:47–04:51] It's a hard puzzle, so it never hurts to recruit some other smart minds to the task.
+[05:01–05:12] Thanks for watching. I'll see you next time. Bye.

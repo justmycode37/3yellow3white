@@ -1,0 +1,201 @@
+[00:00–00:01] Let's kick things off with a quiz.
+[00:02–00:09] Suppose I take a normal distribution with this familiar bell curve shape, and I have a random variable x that's drawn from that distribution.
+[00:10–00:14] So what you're looking at right now are repeated samples of that random variable.
+[00:14–00:32] And as a quick reminder, the way that you interpret this curve, what the function actually means, is that if you want the probability that your sample falls within a given range of values, say the probability that it ends up between negative one and two, well that would equal the area under this curve in that range of values.
+[00:32–00:34] That's what the curve actually means.
+[00:35–00:42] I'll also pull up a second random variable, also following a normal distribution, but maybe this time a little more spread out, a slightly bigger standard deviation.
+[00:43–00:44] And here's the quiz for you.
+[00:44–00:53] If you repeatedly sample both of these variables, and at each iteration you add up the two results, well then that sum behaves like its own random variable.
+[00:53–00:58] And the question is what distribution describes that sum that you're looking at?
+[00:59–01:06] You think about it for a little moment, maybe you have a guess, maybe you think, I don't know, it's another normal distribution, or something with a different shape.
+[01:07–01:09] Needless to say, guessing is not enough.
+[01:09–01:14] The real quiz is to be able to explain why you get the answer that you do.
+[01:14–01:27] In this case, if you have that deep to your bones visceral level of understanding for why the answer is what it is, you'll be a long way towards understanding why normal distributions serve the special function that they do in probability.
+[01:27–01:38] Zooming out though, this is actually meant to be a much more general lesson about how you add two different random variables, regardless of their distribution, not necessarily just the normally distributed ones.
+[01:39–01:44] This amounts to a special operation that you apply to the distributions underlying those variables.
+[01:44–02:04] The operation has a special name, it's called a convolution, and the primary thing you and I will do today is motivate and build up two distinct ways to visualize what a convolution looks like for continuous functions, and then to talk about how these two different visualizations can each be helpful in different ways, with a special focus on the central limit theorem.
+[02:04–02:11] After we do the general lesson, I want to return to the opening quiz and offer an unusually satisfying way to answer it.
+[02:11–02:19] As a quick side note, regular viewers among you might know there's already a video about convolutions on this channel, but that one had a pretty different focus.
+[02:19–02:26] We were only doing the discrete case, and I wanted to show not just probability, but the ways that it comes up in a wide variety of contexts.
+[02:26–02:43] I'm in a slightly awkward spot because it doesn't really make sense for that to be a prerequisite to this video, but I think the best way to warm up today is to cover essentially one of the same examples used in that video, so if you are coming straight from that one, you can probably skip safely ahead, otherwise, let's dive right in.
+[02:46–02:54] For this opening quiz question, each of the random variables can take on a value in a continuous infinite range of values, all possible real numbers.
+[02:55–03:01] It'll be a lot easier if we warm up in a setting that's more discrete and finite, like maybe rolling a pair of weighted dice.
+[03:02–03:23] Here, the animation you're looking at is simulating two weighted dice, and you can probably tell what's going on, but just to spell it out explicitly, the blue die is following a distribution that seems to be biased towards lower values, the red die has a distinct distribution, and I'm repeatedly sampling from each one and recording the sum of the two values at each iteration.
+[03:23–03:32] Repeating samples like this many many different times can give you a heuristic sense of the final distribution, but our real task today is to compute that distribution precisely.
+[03:32–03:39] What is the precise probability of rolling a 2, or a 3, or a 4, or a 5, on and on for all possibilities?
+[03:39–03:44] It's not too hard a question, I'd actually encourage you to pause and try working it out for yourself.
+[03:44–03:51] The main goal in this warm-up section will be to walk through two distinct ways that you could visualize the underlying computation.
+[03:52–04:02] For example, one way you could start to think about it is that there are 36 distinct possible outcomes, and we could organize those outcomes in a little 6x6 grid.
+[04:03–04:12] Now if I was to ask you, what is the probability of seeing any one of these specific outcomes, say the probability of seeing a blue 4 and a red 2, what would you say?
+[04:13–04:23] We might say it should be the probability of that blue 4 multiplied by the probability of the red 2, and that would be correct assuming that the die rolls are independent from each other.
+[04:23–04:38] You might say that's kind of pedantic, of course the die rolls should be independent from each other, but it's a point worth emphasizing because everything that we're going to do from here moving forward, from this simple example all the way up to the central limit theorem, assumes that the random variables are independent.
+[04:38–04:42] In the real world, you want to keep a sharp eye out for if this assumption actually holds.
+[04:43–04:48] Now what I'm going to do is take this grid of all possible outcomes, but start filling it in with some numbers.
+[04:49–05:06] Maybe we'll put the numbers for all the probabilities of the blue die down on the bottom, all the probabilities for the red die over here on the left, and then we will fill in the grid where the probability for every outcome inside the grid looks like some product between one number from the blue distribution and one number from the red distribution.
+[05:06–05:10] Another way to think about it is we're basically constructing a multiplication table.
+[05:10–05:19] To be a little more visual about all of this, we could plot each one of these probabilities as the height of a bar above the square in this sort of three-dimensional plot.
+[05:20–05:25] In some sense, this three-dimensional plot carries all the data that we would need to know about rolling a pair of dice.
+[05:25–05:32] And so the question is how do we extract the thing that we want to know, the probabilities for various different sums?
+[05:33–05:41] Well, if you highlight all of the outcomes with a certain sum, say a sum of six, notice how all of those end up on a certain diagonal.
+[05:41–05:46] Same deal if I highlight all the pairs where the sum is seven, they sit along a different diagonal.
+[05:47–05:54] So to compute the probability of each possible sum, what you do is you add together all of the entries that sit on one of these diagonals.
+[05:58–06:10] Pulling up the 3D plot, we can better foreshadow where we'll go with this later by saying that the distribution of possible sums looks like combining all of the heights of this plot along one of these diagonal slices.
+[06:12–06:18] It's as if we've taken this full distribution for all possible outcomes and we've kind of collapsed it along one of the directions.
+[06:20–06:24] And admittedly, I'm just having a bit of fun with the animations at this point.
+[06:24–06:28] It's not like if you were working this out with pencil and paper you would be drawing some three-dimensional plot.
+[06:29–06:36] But it's fun when you collapse it on this direction, you actually do get the same distribution, which I knew you should, but it's still fun to see.
+[06:36–06:48] Also, even though all of this might just seem a little bit playful or even unnecessarily complicated, I can promise you this intuition about diagonal slices will come back to us later for a genuinely satisfying proof.
+[06:48–06:54] But staying focused on the simple dice case a little bit longer, here's the second way that we could think about it.
+[06:54–07:01] Take that bottom distribution and flip it around horizontally so that the die values increase as you go from right to left.
+[07:02–07:04] Why do this, you might ask?
+[07:04–07:08] Well, notice now which of the pairs of dice values line up with each other.
+[07:08–07:14] As it's positioned right now, we have 1 and 6, 2 and 5, 3 and 4, and so on.
+[07:14–07:18] It is all of the pairs of values that add up to 7.
+[07:18–07:32] So if you want to think about the probability of rolling a 7, a way to hold that computation in your mind is to take all of the pairs of probabilities that line up with each other, multiply together those pairs, and then add up all of the results.
+[07:32–07:35] Some of you might like to think of this as a kind of dot product.
+[07:36–07:39] But the operation as a whole is not just one dot product, but many.
+[07:40–08:02] If we were to slide that bottom distribution a little more to the left, so in this case it looks like the die values which line up are 1 and 4, 2 and 3, 3 and 2, 4 and 1, in other words all the ones that add up to a 5, well, now if we take the dot product, we multiply the pairs of probabilities that line up and add them together, that would give us the total probability of rolling a 5.
+[08:03–08:13] In general, from this point of view, computing the full distribution for the sum looks like sliding that bottom distribution into various different positions and computing this dot product along the way.
+[08:14–08:19] It is precisely the same operation as the diagonal slices we were looking at earlier.
+[08:20–08:23] They're just two different ways to visualize the same underlying operation.
+[08:27–08:40] And however you choose to visualize it, this operation that takes in two different distributions and spits out a new one describing the sum of the relevant random variables is called a convolution, and we often denote it with this asterisk.
+[08:40–08:49] Really the way you want to think about it, especially as we set up for the continuous case, is to think of it as combining two different functions and spitting out a new function.
+[08:50–08:55] For example, in this case, maybe I give the function for the first distribution the name p sub x.
+[08:55–09:02] This would be a function that takes in a possible value for the die, like a 3, and it spits out the corresponding probability.
+[09:04–09:13] Similarly, let's let p sub y be the function for our second distribution, and p sub x plus y be the function describing the distribution for the sum.
+[09:13–09:21] In the lingo, what you would say is that p sub x plus y is equal to a convolution between p sub x and p sub y.
+[09:21–09:26] And what I want you to think about now is what the formula for this operation should look like.
+[09:26–09:30] You've seen two different ways to visualize it, but how do we actually write it down in symbols?
+[09:30–09:41] To get your bearings, maybe it's helpful to write down a specific example, like the case of plugging in a 4, where you add up over all the different pairwise products corresponding to pairs of inputs that add up to a 4.
+[09:42–09:44] And more generally, here's how it might look.
+[09:44–09:55] This new function takes as an input a possible sum for your random variables, which I'll call s, and what it outputs looks like a sum over a bunch of pairs of values for x and y.
+[09:55–10:08] Except the usual way it's written is not to write with x and y, but instead we just focus on one of those variables, in this case x, letting it range over all of its possible values, which here just means going from 1 all the way up to 6.
+[10:08–10:15] And instead of writing y, you write s minus x, essentially whatever the number has to be to make sure the sum is s.
+[10:17–10:21] Now the astute among you might notice a slightly weird quirk with the formula as it's written.
+[10:22–10:36] For example, if you plug in a given value like s equals 4, and you unpack this sum, letting x range over all the possible values going from 1 up to 6, then sometimes that corresponding y value drops below the domain of what we've explicitly defined.
+[10:37–10:40] For example, you plug in 0 and negative 1 and negative 2.
+[10:41–10:42] It's not actually that big a deal.
+[10:43–10:48] Essentially, you would just say all of these values are 0, so all these later terms don't get counted.
+[10:48–10:49] And that should kind of make sense.
+[10:49–10:53] What is the probability that the red die rolls to become a negative 1?
+[10:53–10:54] Well, it's 0.
+[10:54–10:56] That is an impossible outcome.
+[11:01–11:11] As a next step, let's turn our attention towards continuous distributions, where your random variable can take on values anywhere in an infinite continuum, like all possible real numbers.
+[11:11–11:20] Maybe you're doing weather modeling and trying to predict the temperature tomorrow at noon, or you're doing some financial projections, or maybe you're modeling the typical wait times before a bus arrives.
+[11:20–11:23] There are all sorts of things where you need to handle continuity.
+[11:23–11:35] In all the graphs that we draw, the x value still represents a possible number that the random variable can take on, but the interpretation of the y-axis is a little bit different, because no longer does this represent probability.
+[11:36–11:39] Instead, the thing that we're graphing is what's called probability density.
+[11:40–11:43] This is something we've talked about before, so you know the deal.
+[11:43–11:51] Essentially, the probability that a sample of your variable falls within a given range looks like the area under the curve in that range.
+[11:51–12:12] The function describing this curve is commonly called a probability density function, a common enough phrase that it's frequently just given the abbreviation PDF, and so the proper way to write all of this down would be to say that the probability that your sample falls within a given range looks like the integral of your PDF, the probability density function, in that range.
+[12:12–12:19] As a general rule of thumb, anytime that you see a sum in the discrete case, you would use an integral in the continuous case.
+[12:20–12:23] So let's think about what that means for our main example.
+[12:23–12:34] Let's say we have two different random variables, but this time each one will follow a continuous distribution, and we want to understand their sum and the new distribution that describes that sum.
+[12:35–12:38] You can probably already guess what the formula will be just by analogy.
+[12:39–12:55] Remember, in the formula that we just wrote down, where p sub x is the function for the first variable, and p sub y is the function for the second variable, the convolution between them, the thing describing a sum of those variables, itself looks like a sum where we combine a bunch of pairwise products.
+[12:56–13:00] The expression in the continuous case really does look 100% analogous.
+[13:00–13:02] It's just that we swap out that sum for an integral.
+[13:03–13:08] Sometimes when students see this definition of a convolution out of context, it can seem a little intimidating.
+[13:09–13:18] Hopefully the analogy is enough to make it clear, but the continuous nature really does give it a different flavor, and it's worth taking a couple minutes to think through what it means on its own terms.
+[13:18–13:25] And so I put together a little interactive demo that helps unpack each part of the expression and what it's really saying.
+[13:25–13:33] For example, the first term in this integral is f of x, which represents the density function for the first of the two random variables.
+[13:33–13:38] And in this case, I'm choosing this sort of wedge-shaped function for that distribution, but it could be anything.
+[13:39–13:46] Similarly, g represents the density function for the second random variable, for which I'm choosing this sort of double lump-shaped distribution.
+[13:46–14:02] And in the same way that earlier we went over all possible pairs of dice values with a given sum, the way you want to think about this integral is that what it wants to do is iterate over all possible pairs of values x and y that are constrained to a given sum, s.
+[14:03–14:27] We don't really have great notation for doing that symmetrically, so instead the way we commonly write it down gives this artificial emphasis to one of the variables, in this case x, where we let that value x range over all possible real numbers, negative infinity up to infinity, and the thing we plug into the function g is s minus x, essentially whatever it has to be to make sure that this sum is constrained to be s.
+[14:29–14:34] So for the demo, instead of graphing g directly, I want to graph g of s minus x.
+[14:35–14:37] You might ask yourself, what does that look like?
+[14:37–14:43] Well, if you plug in negative x as the input, that has the effect of flipping around the graph horizontally.
+[14:44–14:54] And then if we throw in this parameter s, treat it as some kind of constant, that has the effect of shifting the graph either left or right, depending on if s is positive or negative.
+[14:54–14:58] In the demo, s is a parameter that I'll just grab and shift around a little bit.
+[14:58–15:04] The real fun comes from graphing the entire contents of the integral, the product between these two graphs.
+[15:04–15:17] This is analogous to the list of pairwise products that we saw earlier, but in this case instead of adding up all of those pairwise products, we want to integrate them together, which you would interpret as the area underneath this product graph.
+[15:18–15:24] As I shift around this value of s, the shape of that product graph changes and so does the corresponding area.
+[15:26–15:33] Keep in mind for all three graphs on the left, the input is x and the number s is just a parameter.
+[15:33–15:49] But for the final graph on the right, for the resulting convolution itself, this number s is the input to that function, and the corresponding output is whatever the area of the lower left graph is, whatever the integral between this combination of f and g turns out to be.
+[15:53–16:03] Here, it might be helpful if we do a simple example, say where each of our two random variables follows a uniform distribution between the values negative one half and positive one half.
+[16:04–16:16] So what that looks like is that our density functions each have this kind of top hat shape, where the graph equals one for all inputs between negative one half and positive one half, and it equals zero everywhere else.
+[16:17–16:21] The question, as always, is what should the distribution for the sum look like?
+[16:21–16:24] Well, let me show you how it looks inside our demo.
+[16:25–16:29] In this case, the product between the two graphs has a really easy interpretation.
+[16:29–16:34] It is one wherever the graphs overlap with each other, but zero everywhere else.
+[16:34–16:46] So if I slide this parameter s far enough to the left that our top graphs don't overlap at all, then the product graph is zero everywhere, and that's a way of saying this is an impossible sum to achieve.
+[16:47–16:48] That should make sense.
+[16:48–16:54] Each of the two variables can only get as low as negative one half, so the sum could never get below negative one.
+[16:54–17:05] As I start to slide s to the right and the graphs overlap with each other, the area increases linearly until the graphs overlap entirely and it reaches a maximum.
+[17:06–17:13] And then after that point it starts to decrease linearly again, which means that the distribution for the sum takes on this kind of wedge shape.
+[17:15–17:21] And I imagine this actually feels somewhat familiar for anyone who's thought about a pair of dice, that is unweighted dice.
+[17:21–17:29] There, if you add up two different uniformly distributed variables, then the distribution for the sum has a certain wedge shape.
+[17:30–17:34] Probabilities increase until they max out at a seven and then they decrease back down again.
+[17:36–17:46] Where this gets a lot more fun is if instead of asking for a sum of two uniformly distributed variables, I ask you what it looks like if we add up three different uniformly distributed variables.
+[17:46–17:52] At first you might say, I don't know, we need some new way to visualize combining three things instead of two.
+[17:53–18:04] But really what you can do here is think about the sum of the first two as their own variable, which we just figured out follows this wedge shape distribution, and then take a convolution between that and the top hat function.
+[18:05–18:07] Pulling up the demo, here's what that would look like.
+[18:07–18:16] Once again, what makes the top hat function really nice is that multiplying by it sort of has the effect of filtering out values from the top graph.
+[18:16–18:21] The product on the bottom looks just like a copy of the top graph, but limited to a certain window.
+[18:22–18:32] Again, as I slide this around left and right and the area gets bigger and smaller, the result maxes out in the middle, but tapers out to either side, except this time it does so more smoothly.
+[18:32–18:36] It's kind of like we're taking a moving average of that top left graph.
+[18:36–18:41] Actually, it's more than just kind of, this literally is a moving average of the top left graph.
+[18:42–18:45] One thing you might think to do is take this even further.
+[18:45–18:48] The way we started was combining two top hat functions and we got this wedge.
+[18:49–18:58] Then we replaced the first function with that wedge, and then when we took the convolution, we got this smoother shape describing a sum of three distinct uniform variables.
+[18:59–19:00] But we could just repeat.
+[19:01–19:06] Swap that out for the top function and then convolve that with the flat rectangular function.
+[19:06–19:12] And whatever result we see should describe a sum of four uniformly distributed random variables.
+[19:13–19:17] Any of you who watched the video about the central limit theorem should know what to expect.
+[19:17–19:22] As we repeat this process over and over, the shape looks more and more like a bell curve.
+[19:22–19:37] Or to be more precise, at each iteration we should rescale the x-axis to make sure that the standard deviation is one, because the dominant effect of this repeated convolution, the kind of repeated moving average process, is to flatten out the function over time.
+[19:37–19:39] So in the limit it just flattens out towards zero.
+[19:40–19:46] But rescaling is a way of saying yeah, yeah, yeah, I know that it gets flatter, but what's the actual shape underlying it all?
+[19:48–19:57] The statement of the central limit theorem, one of the coolest facts from probability, is that you could have started with essentially any distribution and this still would have been true.
+[19:58–20:17] That as you take repeated convolutions like this, representing bigger and bigger sums of a given random variable, then the distribution describing that sum, which might start off looking very different from a normal distribution, over time smooths out more and more until it gets arbitrarily close to a normal distribution.
+[20:18–20:30] It's as if a bell curve is, in some loose manner of speaking, the smoothest possible distribution, an attractive fixed point in the space of all possible functions, as we apply this process of repeated smoothing through the convolution.
+[20:35–20:38] Naturally you might wonder why normal distributions?
+[20:38–20:40] Why this function and not some other one?
+[20:41–20:49] That's a very good answer, and I think the most fun way to show the answer is in the light of the last visualization that we'll show for convolutions.
+[20:50–21:01] Remember how in the discrete case the first of our two visualizations involved forming this kind of multiplication table, showing the probabilities for all possible outcomes and adding up along the diagonals?
+[21:02–21:07] You've probably guessed it by now, but our last step is to generalize this to the continuous case.
+[21:08–21:10] And it is beautiful, but you have to be a little bit careful.
+[21:11–21:21] Pulling up the same two functions we had before, f of x and g of y, what in this case would be analogous to the grid of possible pairs that we were looking at earlier?
+[21:22–21:31] Well in this case each of the variables can take on any real number, so we want to think about all possible pairs of real numbers and the xy plane comes to mind.
+[21:32–21:37] Every point corresponds to a possible outcome when we sample from both distributions.
+[21:38–21:49] Now the probability of any one of these outcomes xy, or rather the probability density around that point, will look like f of x times g of y, again assuming that the two are independent.
+[21:49–21:59] So a natural thing to do is to graph this function f of x times g of y as a two variable function, which would give something that looks like a surface above the xy plane.
+[22:00–22:13] Notice in this example how if we look at it from one angle where we see the x values changing, it has the shape of our first graph, but if we look at it from another angle emphasizing the change in the y direction, it takes on the shape of our second graph.
+[22:14–22:17] This three-dimensional graph encodes all of the information we need.
+[22:17–22:21] It shows all the probability densities for every possible outcome.
+[22:21–22:35] And if you want to limit your view just to those outcomes where x plus y is constrained to be a given sum, what that looks like is limiting our view to a diagonal slice, specifically a slice over the line x plus y equals some constant.
+[22:35–22:50] All of the possible probability densities for the outcome subject to this constraint look sort of like a slice under this graph, and as we change around what specific sum we're constraining to, it shifts around which specific diagonal slice we're looking at.
+[22:53–23:07] Now what you might predict is that the way to combine all of the probability densities along one of these slices, the way to integrate them together, can be interpreted as the area under this curve, which is a slice of the surface.
+[23:07–23:09] And that is almost correct.
+[23:09–23:20] There's a subtle detail regarding a factor of the square root of two that we need to talk about, but up to a constant factor, the areas of these slices give us the values of the convolution.
+[23:21–23:28] In fact, all of these slices that we're looking at are precisely the same as the product graph that we were looking at earlier.
+[23:29–23:44] Here, to emphasize this point, let me pull up both visualizations side by side, and I'm going to slowly decrease the value of s, which on the left means we're looking at different slices, and on the right means we're shifting around the modified graph of g.
+[23:45–23:54] Notice how at all points the shape of the graph on the bottom right, the product between the functions, looks exactly the same as the shape of the diagonal slice.
+[23:58–23:59] And this should make sense.
+[23:59–24:02] They are two distinct ways to visualize the same thing.
+[24:03–24:13] It sounds like a lot when we put it into words, but what we're looking at are all the possible products between outputs of the functions, corresponding to pairs of inputs that have a given sum.
+[24:14–24:20] Again, it's kind of a mouthful, but I think you see what I'm saying, and we now have two different ways to see it.
+[24:31–24:37] The nice thing about the diagonal slice visualization is that it makes it much more clear that it's a symmetric operation.
+[24:37–24:43] It's much more obvious that f convolved with g is the same thing as g convolved with f.
+[24:44–24:47] Technically, the diagonal slices are not exactly the same shape.
+[24:47–24:51] They've actually been stretched out by a factor of the square root of 2.
+[24:51–25:05] The basic reason is that if you imagine taking some small step along one of these lines where x plus y equals a constant, then the change in your x value, the delta x here, is not the same thing as the length of that step.
+[25:05–25:08] That step is actually longer by a factor of the square root of 2.
+[25:09–25:21] I will leave a note up on the screen for the calculus enthusiasts among you who want to pause and ponder, but the upshot is very simply that the outputs of our convolution are technically not quite the areas of these diagonal slices.
+[25:21–25:24] We have to divide those areas by a square root of 2.
+[25:26–25:29] Stepping back from all of this for a moment, I just think this is so beautiful.
+[25:30–25:34] We started with such a simple question, or at least such a seemingly simple question.
+[25:34–25:36] How do you add up two random variables?
+[25:37–25:41] And what we end up with is this very intricate operation for combining two different functions.
+[25:42–25:52] We have at least two very pretty ways to understand it, but still, some of you might be raising your hands and saying, pretty pictures are all well and good, but do they actually help you calculate something?
+[25:53–25:59] For example, I still have not answered the opening quiz question about adding two normally distributed random variables.
+[25:59–26:13] Well, the ordinary way that you would approach this kind of question, if it showed up on a homework or something like that, is that you would plug in the formula for a normal distribution into the definition of a convolution, the integral that we've been describing here.
+[26:15–26:21] And in that case, the visualizations would really just be there to clarify what the expression is saying, but they sit in the back seat.
+[26:21–26:24] In this case, the integral is not prohibitively difficult.
+[26:24–26:26] There are analytical methods.
+[26:26–26:37] But for this example, I want to show you a more fun method where the visualizations, specifically the diagonal slices, will play a much more front and center role in the proof itself.
+[26:37–26:42] I think many of you may actually enjoy taking a moment to predict how this will look for yourself.
+[26:42–26:51] Think about what this 3D graph would look like in the case of two normal distributions, and what properties that it has that you might be able to take advantage of.
+[26:52–26:57] And it is for sure easiest if you start with the case where both distributions have the same standard deviation.
+[26:59–27:04] Whenever you want the details, and to see how the answer fits into the central limit theorem, come join me in the next video.

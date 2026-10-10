@@ -1,0 +1,24 @@
+{
+  "videoId": "97faaaeb-22d0-4bb2-9222-f3676827b3af",
+  "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+  "elapsedMs": 458878.4563,
+  "manualSourceEdits": false,
+  "scenes": [
+    {
+      "index": 0,
+      "sourceSha256": "81314338b52ea34eaad90fba16a3bbc0f3290956ca412085f504366fe7861b96",
+      "initialSourceSha256": "d9ba55c1f370561658ab8b7429ace1774ecd3c2da268103adab926487d9edf47",
+      "approvedAttempt": 1,
+      "durationSec": 24.198291666666666,
+      "frames": 24
+    },
+    {
+      "index": 1,
+      "sourceSha256": "86395e0887a58e6e1cf14b3143805f35ec1497ed604250652c5befe96ac2bca4",
+      "initialSourceSha256": "cf52d980f5af7a28a878a5d2c0e48b9fd4a991654c2a50ac971760e2b95a3587",
+      "approvedAttempt": 1,
+      "durationSec": 26.3345,
+      "frames": 24
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "scene": 0,
+    "approved": true,
+    "attempt": 1,
+    "hashMatches": true,
+    "hash": "9f78faad030b0be562d0ff7e9784f5393e87c548a8cab9f33a53ce2baded9d32",
+    "frames": 24
+  },
+  {
+    "scene": 1,
+    "approved": true,
+    "attempt": 0,
+    "hashMatches": true,
+    "hash": "305f94f6c9e5311e1c4100b0828f8c82c516ffbe669c0e1cd449a3f45fc59f0c",
+    "frames": 24
+  }
+]

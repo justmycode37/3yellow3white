@@ -1,0 +1,39 @@
+{
+  "duration": {
+    "export": 26,
+    "translation": 59
+  },
+  "audio": null,
+  "end": "hold",
+  "sourceCharacters": {
+    "export": 177399,
+    "translation": 197962
+  },
+  "cameraTracksUnchanged": true,
+  "maxMechanismDifference": 0,
+  "maxLinkError": 1.887379141862766e-15,
+  "maxBoundaryError": 1.7763568394002505e-15,
+  "largeFront": -0.8499999999999996,
+  "representationBlend": {
+    "start": 51.899999999999984,
+    "duration": 1.1,
+    "schematicFadeOut": 0.45,
+    "exampleFadeIn": 0.65,
+    "isolated": true
+  },
+  "times": [
+    0,
+    7,
+    20.5,
+    51.9,
+    52,
+    52.5,
+    53,
+    59,
+    52.75
+  ],
+  "overlaps": {
+    "1280x720": [],
+    "960x720": []
+  }
+}

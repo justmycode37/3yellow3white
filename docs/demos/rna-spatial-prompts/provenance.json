@@ -1,0 +1,454 @@
+{
+  "variant": "m9-spatial-prompts",
+  "videoId": "dd15b63e-963e-41df-ae80-5fc61f49d3a1",
+  "status": "complete",
+  "model": "gpt-6-astra",
+  "thinking": "high",
+  "prompt": "Explain RNA transcription to a first-year biology student. Show how RNA polymerase opens a short DNA region and builds complementary RNA from the template strand. Use one consistent example, a spatial introduction followed by a clear flat close-up, and preserve strand identity. Keep labels readable, motion purposeful, and the screen uncluttered.",
+  "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+  "elapsedMs": 323721.45119999995,
+  "manualSourceEdits": false,
+  "lessonAndNarration": "same frozen RNA fixtures used in earlier milestones",
+  "scenes": [
+    {
+      "file": "scene-0.js",
+      "sha256": "885859bf3827e2beb66796aa2c626c7ccb3f8e48c850887c07f5fdf605a6f338",
+      "review": {
+        "approved": true,
+        "sourceSha256": "885859bf3827e2beb66796aa2c626c7ccb3f8e48c850887c07f5fdf605a6f338",
+        "attempt": 0,
+        "evidence": {
+          "backend": "native-webgpu",
+          "frames": [
+            {
+              "time": 0,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-0.png"
+            },
+            {
+              "time": 0.5,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-1.png"
+            },
+            {
+              "time": 3.6630000000000003,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-2.png"
+            },
+            {
+              "time": 6.5535,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-3.png"
+            },
+            {
+              "time": 9.067,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-4.png"
+            },
+            {
+              "time": 10.89,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-5.png"
+            },
+            {
+              "time": 12.9915,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-6.png"
+            },
+            {
+              "time": 15.395,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-7.png"
+            },
+            {
+              "time": 17.798000000000002,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-8.png"
+            },
+            {
+              "time": 20.165243055555553,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-9.png"
+            },
+            {
+              "time": 22.18176736111111,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-10.png"
+            },
+            {
+              "time": 24.198291666666666,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-11.png"
+            },
+            {
+              "time": 0,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-0.png"
+            },
+            {
+              "time": 0.5,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-1.png"
+            },
+            {
+              "time": 3.6630000000000003,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-2.png"
+            },
+            {
+              "time": 6.5535,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-3.png"
+            },
+            {
+              "time": 9.067,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-4.png"
+            },
+            {
+              "time": 10.89,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-5.png"
+            },
+            {
+              "time": 12.9915,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-6.png"
+            },
+            {
+              "time": 15.395,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-7.png"
+            },
+            {
+              "time": 17.798000000000002,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-8.png"
+            },
+            {
+              "time": 20.165243055555553,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-9.png"
+            },
+            {
+              "time": 22.18176736111111,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-10.png"
+            },
+            {
+              "time": 24.198291666666666,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-11.png"
+            }
+          ],
+          "sheets": [
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-sheet-0.png",
+              "width": 1280,
+              "height": 720,
+              "times": [
+                0,
+                0.5,
+                3.6630000000000003,
+                6.5535,
+                9.067,
+                10.89
+              ],
+              "columns": 2
+            },
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\1280x720-sheet-1.png",
+              "width": 1280,
+              "height": 720,
+              "times": [
+                12.9915,
+                15.395,
+                17.798000000000002,
+                20.165243055555553,
+                22.18176736111111,
+                24.198291666666666
+              ],
+              "columns": 2
+            },
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-sheet-0.png",
+              "width": 960,
+              "height": 720,
+              "times": [
+                0,
+                0.5,
+                3.6630000000000003,
+                6.5535,
+                9.067,
+                10.89
+              ],
+              "columns": 2
+            },
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-0.visual\\0\\960x720-sheet-1.png",
+              "width": 960,
+              "height": 720,
+              "times": [
+                12.9915,
+                15.395,
+                17.798000000000002,
+                20.165243055555553,
+                22.18176736111111,
+                24.198291666666666
+              ],
+              "columns": 2
+            }
+          ]
+        },
+        "review": {
+          "approved": true,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "scene-1.js",
+      "sha256": "2a0ebbb9f7f8a3224096f7b2141995dfb66cc842bf47dd6df9d9b780a3300402",
+      "review": {
+        "approved": true,
+        "sourceSha256": "2a0ebbb9f7f8a3224096f7b2141995dfb66cc842bf47dd6df9d9b780a3300402",
+        "attempt": 0,
+        "evidence": {
+          "backend": "native-webgpu",
+          "frames": [
+            {
+              "time": 0,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-0.png"
+            },
+            {
+              "time": 0.5,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-1.png"
+            },
+            {
+              "time": 2.438,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-2.png"
+            },
+            {
+              "time": 4.348,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-3.png"
+            },
+            {
+              "time": 6.815,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-4.png"
+            },
+            {
+              "time": 9.95,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-5.png"
+            },
+            {
+              "time": 13.34,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-6.png"
+            },
+            {
+              "time": 15.081,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-7.png"
+            },
+            {
+              "time": 16.834,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-8.png"
+            },
+            {
+              "time": 19.8005,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-9.png"
+            },
+            {
+              "time": 22.488,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-10.png"
+            },
+            {
+              "time": 26.3345,
+              "width": 1280,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-11.png"
+            },
+            {
+              "time": 0,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-0.png"
+            },
+            {
+              "time": 0.5,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-1.png"
+            },
+            {
+              "time": 2.438,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-2.png"
+            },
+            {
+              "time": 4.348,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-3.png"
+            },
+            {
+              "time": 6.815,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-4.png"
+            },
+            {
+              "time": 9.95,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-5.png"
+            },
+            {
+              "time": 13.34,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-6.png"
+            },
+            {
+              "time": 15.081,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-7.png"
+            },
+            {
+              "time": 16.834,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-8.png"
+            },
+            {
+              "time": 19.8005,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-9.png"
+            },
+            {
+              "time": 22.488,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-10.png"
+            },
+            {
+              "time": 26.3345,
+              "width": 960,
+              "height": 720,
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-11.png"
+            }
+          ],
+          "sheets": [
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-sheet-0.png",
+              "width": 1280,
+              "height": 720,
+              "times": [
+                0,
+                0.5,
+                2.438,
+                4.348,
+                6.815,
+                9.95
+              ],
+              "columns": 2
+            },
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\1280x720-sheet-1.png",
+              "width": 1280,
+              "height": 720,
+              "times": [
+                13.34,
+                15.081,
+                16.834,
+                19.8005,
+                22.488,
+                26.3345
+              ],
+              "columns": 2
+            },
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-sheet-0.png",
+              "width": 960,
+              "height": 720,
+              "times": [
+                0,
+                0.5,
+                2.438,
+                4.348,
+                6.815,
+                9.95
+              ],
+              "columns": 2
+            },
+            {
+              "path": "C:\\Users\\samue\\Stuff\\3yellow3white\\data\\animation-quality\\dd15b63e-963e-41df-ae80-5fc61f49d3a1\\scene-1.visual\\0\\960x720-sheet-1.png",
+              "width": 960,
+              "height": 720,
+              "times": [
+                13.34,
+                15.081,
+                16.834,
+                19.8005,
+                22.488,
+                26.3345
+              ],
+              "columns": 2
+            }
+          ]
+        },
+        "review": {
+          "approved": true,
+          "findings": []
+        }
+      }
+    }
+  ]
+}

@@ -1,3 +1,7 @@
+import { modelGLSL } from './model-shader.js';
+import { GLModelTextures } from './model-textures.js';
+import type { ModelImage } from './models.js';
+import type { DecodedModelImage } from './model-store.js';
 import { lightingUniform } from './lighting.js';
 import { IDENTITY_INSTANCE, MAX_INSTANCES } from './retained-geometry.js';
 import type { RetainedMesh } from './retained-geometry.js';
@@ -35,6 +39,8 @@ layout(location=10) in float texSeed;
 layout(location=11) in vec3 material;
 layout(location=12) in vec3 emission;
 layout(location=13) in float bumpStrength;
+layout(location=14) in vec4 uv;
+out vec4 vUV;
 uniform mat4 objectTransform[${MAX_INSTANCES}];
 uniform vec4 objectInfo[${MAX_INSTANCES}];
 uniform vec4 focus;
@@ -75,13 +81,14 @@ void main() {
   position.z=2.*position.z-position.w;
   gl_Position=position;
   vec3 n=vec3(normal.x*cy+normal.z*sy,normal.y,-normal.x*sy+normal.z*cy);
-  vNormal=vec3(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
+  vUV=uv;vNormal=vec3(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
   vLit=lit; vColor=color;
   vTexPosition=texPosition;vTexKind=texKind;vTexColor=texColor;vTexSeed=texSeed;
   vMaterial=material;vEmission=emission;vViewPosition=p;vBumpStrength=bumpStrength*info.y;vViewDirection=mix(vec3(0.,0.,1.),vec3(-p.x,-p.y,depth),angles.w);
 }`;
 const fragment = `#version 300 es
 precision highp float;
+in vec4 vUV;
 in vec4 vColor;
 in vec3 vNormal;
 in float vLit;
@@ -99,8 +106,11 @@ uniform vec4 light;
 uniform vec4 ambient;
 ${textureGLSL}
 ${materialGLSL}
+${modelGLSL}
 void main() {
   vec4 color=vColor;
+  vec4 imported=importedColor(color,vUV,vTexSeed,vNormal,vViewPosition,vViewDirection,gl_FrontFacing,light,ambient.x);
+  if(modelFlags.w>0.5){outputColor=imported;return;}
   vec3 footprint=fwidth(vTexPosition);
   float height=0.;
   if(vTexKind>0.5){height=textureMix(vTexPosition,vTexKind,vTexSeed,footprint);color=mix(color,vTexColor,height);}
@@ -121,6 +131,7 @@ void main() {
 
 /** WebGL2 submission only; scene evaluation, tessellation and ordering live in CanvasRenderer. */
 export class WebGLBackend {
+  private modelTextures:GLModelTextures;
   private program: WebGLProgram;
   private buffer: WebGLBuffer;
   private vao: WebGLVertexArrayObject;
@@ -136,7 +147,7 @@ export class WebGLBackend {
   private compositor?: GLCompositor;
   readonly maxSize: number;
 
-  constructor(readonly gl: WebGL2RenderingContext) {
+  constructor(readonly gl: WebGL2RenderingContext,images:Map<ModelImage,DecodedModelImage>=new Map()) {
     const shaders: WebGLShader[] = [];
     let program: WebGLProgram | null = null, buffer: WebGLBuffer | null = null, vao: WebGLVertexArrayObject | null = null;
     try {
@@ -155,7 +166,7 @@ export class WebGLBackend {
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`WebGL2 program: ${gl.getProgramInfoLog(program)}`);
       buffer = gl.createBuffer(); vao = gl.createVertexArray();
       if (!buffer || !vao) throw new Error('WebGL2 could not allocate geometry resources.');
-      this.program = program; this.buffer = buffer; this.vao = vao;
+      this.program = program;this.modelTextures=new GLModelTextures(gl,images,program); this.buffer = buffer; this.vao = vao;
       const uniform = (name: string) => {
         const value = gl.getUniformLocation(program!, name);
         if (value === null) throw new Error(`WebGL2 camera uniform missing: ${name}`);
@@ -180,7 +191,7 @@ export class WebGLBackend {
 
   private attributes(): void {
     const gl = this.gl;
-    for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108],[13,1,120]]) {
+    for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108],[13,1,120],[14,4,124]]) {
       gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, VERTEX_FLOATS*4, offset);
     }
   }
@@ -238,6 +249,7 @@ export class WebGLBackend {
       const draw = (command: Extract<RenderCommand,{first:number}>) => {
         gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.depthMask(command.opaque);
         gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+        this.modelTextures.bind(command.modelMaterial);
         const instances = command.instances ?? [IDENTITY_INSTANCE];
         const matrices = new Float32Array(instances.length*16), info = new Float32Array(instances.length*4);
         instances.forEach((instance,i) => { matrices.set(instance.subarray(0,16),i*16); info.set(instance.subarray(16,20),i*4); });
@@ -261,6 +273,7 @@ export class WebGLBackend {
   }
 
   dispose(): void {
+    this.modelTextures.dispose();
     this.compositor?.dispose();
     for (const resource of this.meshes.values()) {
       this.gl.deleteBuffer(resource.vertices); this.gl.deleteBuffer(resource.indices); this.gl.deleteVertexArray(resource.vao);

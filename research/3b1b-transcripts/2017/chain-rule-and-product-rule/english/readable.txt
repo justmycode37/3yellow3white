@@ -1,0 +1,111 @@
+[00:14–00:26] In the last videos I talked about the derivatives of simple functions, and the goal was to have a clear picture or intuition to hold in your mind that actually explains where these formulas come from.
+[00:26–00:40] But most of the functions you deal with in modeling the world involve mixing, combining, or tweaking these simple functions in some other way, so our next step is to understand how you take derivatives of more complicated combinations.
+[00:41–00:47] Again, I don't want these to be something to memorize, I want you to have a clear picture in mind for where each one comes from.
+[00:49–00:53] Now, this really boils down into three basic ways to combine functions.
+[00:54–00:59] You can add them together, you can multiply them, and you can throw one inside the other, known as composing them.
+[01:00–01:07] Sure, you could say subtracting them, but really that's just multiplying the second by negative one and adding them together.
+[01:08–01:16] Likewise, dividing functions doesn't really add anything, because that's the same as plugging one inside the function, one over x, and then multiplying the two together.
+[01:17–01:26] So really, most functions you come across just involve layering together these three different types of combinations, though there's not really a bound on how monstrous things can become.
+[01:27–01:36] But as long as you know how derivatives play with just those three combination types, you'll always be able to take it step by step and peel through the layers for any kind of monstrous expression.
+[01:38–01:48] So the question is, if you know the derivative of two functions, what is the derivative of their sum, of their product, and of the function composition between them?
+[01:50–01:54] The sum rule is easiest, if somewhat tongue-twisting to say out loud.
+[01:54–01:58] The derivative of a sum of two functions is the sum of their derivatives.
+[01:59–02:15] But it's worth warming up with this example by really thinking through what it means to take a derivative of a sum of two functions, since the derivative patterns for products and function composition won't be so straightforward, and they're going to require this kind of deeper thinking.
+[02:16–02:21] For example, let's think about this function f of x equals sine of x plus x squared.
+[02:22–02:27] It's a function where, for every input, you add together the values of sine of x and x squared at that point.
+[02:29–02:42] For example, let's say at x equals 0.5, the height of the sine graph is given by this vertical bar, and the height of the x squared parabola is given by this slightly smaller vertical bar.
+[02:44–02:47] And their sum is the length you get by just stacking them together.
+[02:48–02:56] For the derivative, you want to ask what happens as you nudge that input slightly, maybe increasing it up to 0.5 plus dx.
+[02:57–03:02] The difference in the value of f between those two places is what we call df.
+[03:04–03:18] And when you picture it like this, I think you'll agree that the total change in the height is whatever the change to the sine graph is, what we might call d sine of x, plus whatever the change to x squared is, dx squared.
+[03:22–03:27] We know that the derivative of sine is cosine, and remember what that means.
+[03:27–03:33] It means that this little change, d sine of x, is about cosine of x times dx.
+[03:33–03:43] It's proportional to the size of our initial nudge dx, and the proportionality constant equals cosine of whatever input we started at.
+[03:43–03:53] Likewise, because the derivative of x squared is 2x, the change in the height of the x squared graph is 2x times whatever dx was.
+[03:55–04:10] So rearranging df divided by dx, the ratio of the tiny change to the sum function to the tiny change in x that caused it, is indeed cosine of x plus 2x, the sum of the derivatives of its parts.
+[04:11–04:19] But like I said, things are a bit different for products, and let's think through why in terms of tiny nudges again.
+[04:20–04:23] In this case, I don't think graphs are our best bet for visualizing things.
+[04:23–04:32] Pretty commonly in math, at a lot of levels of math really, if you're dealing with a product of two things, it helps to understand it as some kind of area.
+[04:33–04:39] In this case, maybe you try to configure some mental setup of a box where the side lengths are sine of x and x squared.
+[04:39–04:41] But what would that mean?
+[04:42–04:52] Well, since these are functions, you might think of those sides as adjustable, dependent on the value of x, which maybe you think of as this number that you can just freely adjust up and down.
+[04:53–05:00] So getting a feel for what this means, focus on that top side who changes as the function sine of x.
+[05:01–05:13] As you change this value of x up from 0, it increases up to a length of 1 as sine of x moves up towards its peak, and after that it starts to decrease as sine of x comes down from 1.
+[05:15–05:18] And in the same way, that height there is always changing as x squared.
+[05:20–05:25] So f of x, defined as the product of these two functions, is the area of this box.
+[05:27–05:33] And for the derivative, let's think about how a tiny change to x by dx influences that area.
+[05:33–05:36] What is that resulting change in area df?
+[05:39–05:47] Well, the nudge dx caused that width to change by some small d sine of x, and it caused that height to change by some dx squared.
+[05:50–06:00] And this gives us three little snippets of new area, a thin rectangle on the bottom whose area is its width, sine of x, times its thin height, dx squared.
+[06:01–06:09] And there's this thin rectangle on the right, whose area is its height, x squared, times its thin width, d sine of x.
+[06:10–06:14] And there's also this little bit in the corner, but we can ignore that.
+[06:14–06:22] Its area is ultimately proportional to dx squared, and as we've seen before, that becomes negligible as dx goes to zero.
+[06:23–06:28] I mean, this whole setup is very similar to what I showed last video, with the x squared diagram.
+[06:29–06:35] And just like then, keep in mind that I'm using somewhat beefy changes here to draw things, just so we can actually see them.
+[06:36–06:44] But in principle, dx is something very very small, and that means that dx squared and d sine of x are also very very small.
+[06:45–06:55] So, applying what we know about the derivative of sine and of x squared, that tiny change, dx squared, is going to be about 2x times dx.
+[06:56–07:01] And that tiny change, d sine of x, well that's going to be about cosine of x times dx.
+[07:02–07:15] As usual, we divide out by that dx to see that the ratio we want, df divided by dx, is sine of x times the derivative of x squared, plus x squared times the derivative of sine.
+[07:17–07:21] And nothing we've done here is specific to sine or to x squared.
+[07:21–07:25] This same line of reasoning would work for any two functions, g and h.
+[07:27–07:31] And sometimes people like to remember this pattern with a certain mnemonic that you kind of sing in your head.
+[07:32–07:33] Left d right, right d left.
+[07:34–07:44] In this example, where we have sine of x times x squared, left d right, means you take that left function, sine of x, times the derivative of the right, in this case 2x.
+[07:45–07:52] Then you add on right d left, that right function, x squared, times the derivative of the left one, cosine of x.
+[07:54–08:00] Now out of context, presented as a rule to remember, I think this would feel pretty strange, don't you?
+[08:00–08:05] But when you actually think of this adjustable box, you can see what each of those terms represents.
+[08:06–08:15] Left d right is the area of that little bottom rectangle, and right d left is the area of that rectangle on the side.
+[08:20–08:26] By the way, I should mention that if you multiply by a constant, say 2 times sine of x, things end up a lot simpler.
+[08:27–08:34] The derivative is just the same as the constant multiplied by the derivative of the function, in this case 2 times cosine of x.
+[08:35–08:40] I'll leave it to you to pause and ponder and verify that makes sense.
+[08:41–08:52] Aside from addition and multiplication, the other common way to combine functions, and believe me, this one comes up all the time, is to shove one inside the other, function composition.
+[08:53–09:00] For example, maybe we take the function x squared and shove it inside sine of x to get this new function, sine of x squared.
+[09:01–09:04] What do you think the derivative of that new function is?
+[09:05–09:12] To think this one through, I'll choose yet another way to visualize things, just to emphasize that in creative math, we've got lots of options.
+[09:13–09:25] I'll put up three different number lines, the top one is going to hold the value of x, the second one is going to hold the x squared, and the third line is going to hold the value of sine of x squared.
+[09:26–09:33] That is, the function x squared gets you from line 1 to line 2, and the function sine gets you from line 2 to line 3.
+[09:34–09:45] As I shift around this value of x, maybe moving it up to the value 3, that second value stays pegged to whatever x squared is, in this case moving up to 9.
+[09:46–09:52] That bottom value, being sine of x squared, is going to go to whatever sine of 9 happens to be.
+[09:54–10:00] So, for the derivative, let's again start by nudging that x value by some little dx.
+[10:01–10:07] I always think that it's helpful to think of x as starting at some actual concrete number, maybe 1.5 in this case.
+[10:08–10:15] The resulting nudge to that second value, the change in x squared caused by such a dx, is dx squared.
+[10:16–10:30] We could expand this like we have before, as 2x times dx, which for our specific input would be 2 times 1.5 times dx, but it helps to keep things written as dx squared, at least for now.
+[10:31–10:41] In fact, I'm going to go one step further, give a new name to this x squared, maybe h, so instead of writing dx squared for this nudge, we write dh.
+[10:42–10:47] This makes it easier to think about that third value, which is now pegged at sine of h.
+[10:48–10:53] Its change is d sine of h, the tiny change caused by the nudge dh.
+[10:55–11:05] By the way, the fact that it's moving to the left while the dh bump is going to the right just means that this change, d sine of h, is going to be some kind of negative number.
+[11:06–11:09] Once again, we can use our knowledge of the derivative of the sine.
+[11:10–11:14] This d sine of h is going to be about cosine of h times dh.
+[11:15–11:18] That's what it means for the derivative of sine to be cosine.
+[11:19–11:29] Unfolding things, we can replace that h with x squared again, so we know that the bottom nudge will be a size of cosine of x squared times dx squared.
+[11:31–11:32] Let's unfold things even further.
+[11:32–11:38] That intermediate nudge dx squared is going to be about 2x times dx.
+[11:39–11:43] It's always a good habit to remind yourself of what an expression like this actually means.
+[11:44–12:02] In this case, where we started at x equals 1.5 up top, this whole expression is telling us that the size of the nudge on that third line is going to be about cosine of 1.5 squared times 2 times 1.5 times whatever the size of dx was.
+[12:02–12:07] It's proportional to the size of dx, and this derivative is giving us that proportionality constant.
+[12:10–12:12] Notice what we came out with here.
+[12:12–12:23] We have the derivative of the outside function, and it's still taking in the unaltered inside function, and then multiplying it by the derivative of that inside function.
+[12:25–12:29] Again, there's nothing special about sine of x or x squared.
+[12:29–12:43] If you have any two functions, g of x and h of x, the derivative of their composition, g of h of x, is going to be the derivative of g evaluated on h, multiplied by the derivative of h.
+[12:47–12:50] This pattern right here is what we usually call the chain rule.
+[12:52–12:57] Notice for the derivative of g, I'm writing it as dg dh instead of dg dx.
+[12:58–13:06] On the symbolic level, this is a reminder that the thing you plug into that derivative is still going to be that intermediary function h.
+[13:07–13:12] But more than that, it's an important reflection of what this derivative of the outer function actually represents.
+[13:13–13:23] Remember, in our three line setup, when we took the derivative of the sine on that bottom, we expanded the size of that nudge, d sine, as cosine of h times dh.
+[13:24–13:29] This was because we didn't immediately know how the size of that bottom nudge depended on x.
+[13:30–13:32] That's kind of the whole thing we were trying to figure out.
+[13:33–13:37] But we could take the derivative with respect to that intermediate variable, h.
+[13:38–13:45] That is, figure out how to express the size of that nudge on the third line as some multiple of dh, the size of the nudge on the second line.
+[13:46–13:50] It was only after that that we unfolded further by figuring out what dh was.
+[13:53–14:04] In this chain rule expression, we're saying, look at the ratio between a tiny change in g, the final output, to a tiny change in h that caused it, h being the value we plug into g.
+[14:05–14:11] Then multiply that by the tiny change in h, divided by the tiny change in x that caused it.
+[14:12–14:22] So notice, those dh's cancel out, and they give us a ratio between the change in that final output and the change to the input that, through a certain chain of events, brought it about.
+[14:23–14:26] And that cancellation of dh is not just a notational trick.
+[14:26–14:33] That is a genuine reflection of what's going on with the tiny nudges that underpin everything we do with derivatives.
+[14:36–14:43] So those are the three basic tools to have in your belt to handle derivatives of functions that combine a lot of smaller things.
+[14:43–14:47] You've got the sum rule, the product rule, and the chain rule.
+[14:48–14:58] And I'll be honest with you, there is a big difference between knowing what the chain rule is and what the product rule is, and actually being fluent with applying them in even the most hairy of situations.
+[14:59–15:10] Watching videos, any videos, about the mechanics of calculus is never going to substitute for practicing those mechanics yourself, and building up the muscles to do these computations yourself.
+[15:11–15:17] I really wish I could offer to do that for you, but I'm afraid the ball is in your court, my friend, to seek out the practice.
+[15:18–15:23] What I can offer, and what I hope I have offered, is to show you where these rules actually come from.
+[15:24–15:34] To show that they're not just something to be memorized and hammered away, but they're natural patterns, things that you too could have discovered just by patiently thinking through what a derivative actually means.

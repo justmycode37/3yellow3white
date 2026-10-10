@@ -1,0 +1,62 @@
+[
+  {
+    "tab": "6",
+    "url": "http://127.0.0.1:5207/quality.html?manifest=http%3A%2F%2F127.0.0.1%3A5209%2Fmanifest.json&run=rna-fast-slow-20261010-1-fast",
+    "state": [
+      "gpt-6-astra · webgpu · ended · beat-2 · 26.334 s",
+      "",
+      "50.5 / 50.5 s"
+    ],
+    "errors": []
+  },
+  {
+    "tab": "7",
+    "url": "http://127.0.0.1:5207/quality.html?manifest=http%3A%2F%2F127.0.0.1%3A5209%2Fmanifest.json&run=rna-fast-slow-20261010-1-slow",
+    "state": [
+      "gpt-6-astra · webgpu · ended · beat-2 · 26.334 s",
+      "",
+      "50.5 / 50.5 s"
+    ],
+    "errors": []
+  },
+  {
+    "tab": "8",
+    "url": "http://127.0.0.1:5207/quality.html?manifest=http%3A%2F%2F127.0.0.1%3A5209%2Fmanifest.json&run=rna-fast-slow-20261010-2-fast",
+    "state": [
+      "gpt-6-astra · webgpu · ended · beat-2 · 26.334 s",
+      "",
+      "50.5 / 50.5 s"
+    ],
+    "errors": []
+  },
+  {
+    "tab": "9",
+    "url": "http://127.0.0.1:5207/quality.html?manifest=http%3A%2F%2F127.0.0.1%3A5209%2Fmanifest.json&run=rna-fast-slow-20261010-2-slow",
+    "state": [
+      "gpt-6-astra · webgpu · ended · beat-2 · 26.334 s",
+      "",
+      "50.5 / 50.5 s"
+    ],
+    "errors": []
+  },
+  {
+    "tab": "10",
+    "url": "http://127.0.0.1:5207/quality.html?manifest=http%3A%2F%2F127.0.0.1%3A5209%2Fmanifest.json&run=rna-fast-slow-20261010-3-fast",
+    "state": [
+      "gpt-6-astra · webgpu · ended · beat-2 · 26.334 s",
+      "",
+      "50.5 / 50.5 s"
+    ],
+    "errors": []
+  },
+  {
+    "tab": "11",
+    "url": "http://127.0.0.1:5207/quality.html?manifest=http%3A%2F%2F127.0.0.1%3A5209%2Fmanifest.json&run=rna-fast-slow-20261010-3-slow",
+    "state": [
+      "gpt-6-astra · webgpu · ended · beat-2 · 26.334 s",
+      "",
+      "50.5 / 50.5 s"
+    ],
+    "errors": []
+  }
+]

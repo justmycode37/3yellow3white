@@ -1,0 +1,75 @@
+{
+  "sourceSha256": "8e408a2e56641a4a07e9eac7a3e5f5acfe6d66b1c2127c4ee30a1bb252a51538",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.8,
+        5.4,
+        6.800000000000001,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.400000000000002,
+        12.8,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.8,
+        5.4,
+        6.800000000000001,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.400000000000002,
+        12.8,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 2.8,
+      "objectIds": [
+        "exact-svd",
+        "right-rotation-caption",
+        "stretch-caption",
+        "left-rotation-caption"
+      ],
+      "problem": "In both aspect ratios, the matrix formula begins around 10% of viewport height, placing its upper entries inside the reserved top 12% player-control area.",
+      "fix": "Lower the formula and the three operation captions together slightly (about 0.3 scene units), preserving their spacing and clearance from the grid."
+    }
+  ]
+}

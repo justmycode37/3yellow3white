@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Electric dipole field\n\n## Beat 1: Electric dipole field\n\nContent needed: 3D: Create exactly one 20-second silent single-scene visualization showcase: Electric dipole field. Show equal positive and negative point charges with a sparse 3D vector field and smooth field-line traces calculated from their inverse-square fields. Terminate lines near singularities, keep arrow direction correct and expose depth without clutter. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Electric dipole field",
+    "centralQuestion": "Electric dipole field",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Electric dipole field. Show equal positive and negative point charges with a sparse 3D vector field and smooth field-line traces calculated from their inverse-square fields. Terminate lines near singularities, keep arrow direction correct and expose depth without clutter. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Electric dipole field",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Electric dipole field",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Show equal positive and negative point charges with a sparse 3D vector field and smooth field-line traces calculated from their inverse-square fields. Terminate lines near singularities, keep arrow direction correct and expose depth without clutter."
+        ],
+        "visualDescription": "3D: Create exactly one 20-second silent single-scene visualization showcase: Electric dipole field. Show equal positive and negative point charges with a sparse 3D vector field and smooth field-line traces calculated from their inverse-square fields. Terminate lines near singularities, keep arrow direction correct and expose depth without clutter. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Electric dipole field. Show equal positive and negative point charges with a sparse 3D vector field and smooth field-line traces calculated from their inverse-square fields. Terminate lines near singularities, keep arrow direction correct and expose depth without clutter. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

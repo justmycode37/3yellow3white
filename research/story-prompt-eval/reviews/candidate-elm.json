@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The mathematics and narration earn the convergence distinction, but the sole prediction is spoiled by an explicit conflicting visual instruction.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-4",
+      "detail": "The visualDescription orders the maximum at x=a and the value a^n to be prominently labeled before the prediction and highlighted throughout the pause. This gives away exactly what the viewer is asked to predict and contradicts the context's instruction to withhold both until Reveal. Keep the restricted graph and established order relation available, but introduce the maximum identification and a^n answer label only with the Reveal."
+    }
+  ],
+  "checks": [
+    "Quantifier order is correct: pointwise N may depend on x, whereas uniform N must work for all x and all subsequent indices.",
+    "The moving witness has error 1/2 at every index and defeats tolerance 1/4 after any proposed threshold; the endpoint error remains zero and the full-domain supremum is one, unattained.",
+    "The restricted-domain argument correctly uses x^n <= a^n <= a^N < epsilon for a fixed 0 < a < 1.",
+    "The prediction is reachable from order preservation and its five-second pause has an explicit spoken invitation, but visual answer timing fails.",
+    "Exactly four scenes and 470 spoken words plus five seconds of silence estimate approximately 212-254 seconds at 150-125 words per minute with the prescribed allowance; no measured timing is claimed.",
+    "The registry preserves graph and error meanings across scenes, and all scenes use empty interactions arrays."
+  ]
+}

@@ -85,7 +85,7 @@ export class VideoService {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
       return publicManifest(JSON.parse(prior.manifest))
     }
-    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [], ...(this.provider !== 'simulated' ? { tokenUsage: emptyTokenUsage() } : {}) }
+    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, ...(request.narrationMode ? { narrationMode: request.narrationMode } : {}), createdAt: new Date().toISOString(), scenes: [], ...(this.provider !== 'simulated' ? { tokenUsage: emptyTokenUsage() } : {}) }
     this.db.transaction(() => {
       this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
       uploads.forEach((upload, index) => this.db.query('INSERT INTO video_uploads VALUES (?, ?, ?, ?, ?, NULL)').run(manifest.id, index, upload.name, upload.mimeType, upload.bytes))
@@ -159,7 +159,9 @@ export class VideoService {
   }
   private async run(row: Row, abort: AbortController) {
     const manifest: VideoManifest = JSON.parse(row.manifest)
-    const sequence = new SceneSequence()
+    const models: import('animlib/core').CompileInput['models'] = Object.create(null)
+    for (const scene of manifest.scenes) for (const [id, asset] of Object.entries(scene.assets ?? {})) models![id] = asset.metadata
+    const sequence = new SceneSequence({ models })
     const signal = AbortSignal.any([this.abort.signal, abort.signal])
     const usage = new TokenUsageTracker(tokenUsage => {
       if (!this.row(row.id)) return
@@ -191,6 +193,7 @@ export class VideoService {
         }
         const scene: VideoScene = { ...next.scene, audio: { id: next.scene.audio?.id ?? `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
         if (scene.index !== manifest.scenes.length || !Number.isFinite(scene.duration) || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
+        for (const [id, asset] of Object.entries(scene.assets ?? {})) models![id] = asset.metadata
         const result = await sequence.submit({ type: 'insert', after: manifest.scenes.at(-1)?.id ?? null, scenes: [scene] })
         if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join('; '))
         if (Math.abs(sequence.compiled.at(-1)!.duration - scene.duration) > 1e-6) throw new Error('Scene timing does not match its declared duration')
@@ -265,7 +268,9 @@ export class VideoService {
       } catch { return json({ detail: 'Invalid request body' }, 400) }
       if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
       if (body.videoMode !== undefined && body.videoMode !== 'classic' && body.videoMode !== 'interactive') return json({ detail: 'Choose classic or interactive video mode' }, 400)
+      if (body.narrationMode !== undefined && !['speech', 'subtitles'].includes(body.narrationMode)) return json({ detail: 'Choose speech or subtitles' }, 400)
       const normalized: VideoRequest = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })),
+        ...(body.narrationMode !== undefined ? { narrationMode: body.narrationMode } : {}),
         ...(body.videoMode !== undefined ? { videoMode: body.videoMode } : {}),
         ...(uploads.length ? { uploads: uploads.map(uploadMetadata) } : {}) }
       try { return json(this.create(owner, key, normalized, uploads), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }

@@ -25,6 +25,10 @@ test('scene repairs obey the saved mode and preserve pre-policy compatibility', 
   await expect(validateReview(repair, { ...input, videoMode: 'classic', legacyPlan: false })).rejects.toThrow('Classic scenes');
   expect(await validateReview(repair, { ...input, videoMode: 'interactive', legacyPlan: false })).toMatchObject({ approved: false });
   expect(await validateReview(repair, { ...input, videoMode: 'classic', legacyPlan: true })).toMatchObject({ approved: false });
+  const orbitRepair = repair.replace('scene({', 'scene({orbit:true,');
+  expect(await validateReview(orbitRepair, { ...input, videoMode: 'classic', legacyPlan: true })).toMatchObject({ approved: false });
+  expect(await validateReview(orbitRepair, { ...input, videoMode: 'interactive', legacyPlan: false, instructionVersion: 1 })).toMatchObject({ approved: false });
+  await expect(validateReview(orbitRepair, { ...input, videoMode: 'interactive', legacyPlan: false, instructionVersion: 2 })).rejects.toThrow('whole-scene orbit');
 });
 
 let root: string | undefined;

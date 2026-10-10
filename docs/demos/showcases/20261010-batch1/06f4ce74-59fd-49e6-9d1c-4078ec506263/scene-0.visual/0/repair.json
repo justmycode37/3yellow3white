@@ -1,0 +1,1 @@
+{"sourceSha256":"38971e2499be040f42622e34c34fd608d72c77e15be7eba16650443ef424d569","edits":[{"finding":0,"before":"camera:{yaw:-0.48,pitch:0.64,distance:17,height:8.7,target:[0,1,0]}","after":"camera:{yaw:-0.48,pitch:-0.64,distance:17,height:8.7,target:[0,1,0]}"}]}

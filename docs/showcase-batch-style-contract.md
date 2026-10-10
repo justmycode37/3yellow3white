@@ -1,0 +1,9 @@
+# Twenty-four production scene showcases
+
+User requested 24 varied, complicated single-scene showcases, using actual scene-generation Markdown, pipeline and tools. User chose silent timing fixtures instead of narration. This is a scene-stage benchmark, not an end-to-end speech/planning benchmark.
+
+Use `createPiGenerator` and `PiAgentRunner` without replacing their scene authoring, web tools, compiler validation, native WebGPU frame renderer, visual verification or bounded repair. Keep active production model and completion/timing settings. Supply a fixed single-scene plan and 20-second silent audio packet; record this fixture boundary explicitly. No manually authored or repaired showcase JavaScript. Keep identical topic prompts for reruns. Keep failed candidates, first verification, repairs and final evidence, rather than cherry-picking successes.
+
+Reference: approved Euler component construction in the personal 3blue1brown-explanation-style skill and production visual-style-reference.jpg. Transfer continuous geometry, stable color meaning, local mathematical labels, deliberate operation and reading holds. Each topic supplies its own physical/mathematical invariant. The showcase is visual capability, not a full explanatory lesson. Reject dense dashboard layouts, decorative motion, clipped models, false scientific precision and visually plausible but inconsistent geometry.
+
+Deliver one gallery with all 24 statuses, approved scenes playable, failed candidates visibly marked unapproved, and evidence/source links. Inspect actual initial, action-interior and final native frames. Review 2D and 3D examples independently against the same reference; report technical acceptance separately from scientific and visual judgment. First batch is evidence about present pipeline; do not silently modify production prompts to make selected cases pass.

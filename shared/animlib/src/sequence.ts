@@ -6,6 +6,7 @@ import { mergeReactiveUpdates } from './reactive.js';
 import type { ColorPalette, CompiledScene, ControlValue, Frame, SceneSource, Submission, SubmitResult } from "./types.js";
 
 export interface SequenceOptions {
+  models?: import("./types.js").CompileInput["models"];
   palette?: ColorPalette;
   seed?: number;
   executionLimitMs?: number;
@@ -76,7 +77,7 @@ export class SceneSequence {
     let previous: Frame | undefined = sources.length > prefix.length ? outgoing ?? (compiled.length ? evaluateScene(await this.sampleScene(compiled.at(-1)!, compiled.at(-1)!.duration), compiled.at(-1)!.duration) : undefined) : undefined;
     for (const source of sources.slice(prefix.length)) {
       try {
-        const scene = await this.compiler.compile(source.source, { previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
+        const scene = await this.compiler.compile(source.source, { models: this.options.models, previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
         await this.options.prepare?.([scene]);
         if (this.disposed) throw new Error("Scene sequence is disposed");
         compiled.push(scene); previous = evaluateScene(await this.sampleScene(scene, scene.duration), scene.duration);

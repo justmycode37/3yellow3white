@@ -1,0 +1,74 @@
+{
+  "sourceSha256": "5d0a3e886cc8d3456b4920b6868b81fc605e91bbabb21df7743c83dfd1bd8602",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.95,
+        5.4,
+        7.836363636363637,
+        9.048484848484849
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.260606060606062,
+        12.7,
+        15.149999999999999,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.95,
+        5.4,
+        7.836363636363637,
+        9.048484848484849
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.260606060606062,
+        12.7,
+        15.149999999999999,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 16.666666666666668,
+      "objectIds": [
+        "worksite",
+        "bucket-joint",
+        "retained-bucket-load"
+      ],
+      "problem": "In both aspect ratios, the final raised bucket's soil load is hidden behind its metal walls. The low viewing angle exposes the ground slab's underside and bucket exterior, so the final hold reads as an empty bucket rather than the requested successful scoop.",
+      "fix": "Adjust the worksite camera elevation to reveal the ground surface and bucket interior, making the retained soil clearly visible during lifting and the final hold. Preserve the existing construction, joint motion, contact timing and soil handoff; verify framing in both aspect ratios."
+    }
+  ]
+}

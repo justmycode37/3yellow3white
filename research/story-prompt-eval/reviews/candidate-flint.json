@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The source comparison is initially careful, but the final narration invents a definitive sole cause and unanimous motive unsupported by the fictional packet.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The final Reveal asserts that the wage cut 'was the sole cause' and 'every worker stopped for that reason.' The packet supplies an announced cut, a reported stoppage and one diarist's rent concern, without other workers' accounts or evidence ruling out other causes. These do not justify either universal claim. Replace the definitive assertion with a qualified interpretation that the cut may have contributed and explicitly preserve uncertainty about a single cause and everyone's motives; align speech with the already-qualified visual plan."
+    }
+  ],
+  "checks": [
+    "The source dates, announced 10% cut, diary quotation and manager's unnamed-agitator attribution match the supplied fictional evidence.",
+    "Earlier narration correctly distinguishes one writer's concern from everyone's motive and the manager's reported claim from established causation; the final assertion violates those same limits.",
+    "The visual plan maintains source attribution and proposes 'Cut may have contributed', directly conflicting with the definitive spoken conclusion.",
+    "Exactly two scenes contain no equations, scripted pauses or interactions. 185 spoken words estimate approximately 81-98 seconds at 150-125 words per minute with the prescribed allowance, consistent with roughly 90 seconds; audio timing was not measured.",
+    "The timeline and carried source entities preserve dates and distinguish an announcement from verified payroll evidence."
+  ]
+}

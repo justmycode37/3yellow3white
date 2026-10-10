@@ -1,0 +1,111 @@
+{
+  "durations": [
+    24,
+    20
+  ],
+  "total": 44,
+  "runs": [
+    {
+      "budgetMs": 125,
+      "cellHash": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+      "packagingHash": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f"
+    },
+    {
+      "budgetMs": 125,
+      "cellHash": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+      "packagingHash": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f"
+    },
+    {
+      "budgetMs": 125,
+      "cellHash": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+      "packagingHash": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f"
+    },
+    {
+      "budgetMs": 125,
+      "cellHash": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+      "packagingHash": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f"
+    },
+    {
+      "budgetMs": 125,
+      "cellHash": "43eea04e9e1974b3360f7af95f63339b1f990269b59072fff883e98733525b8b",
+      "packagingHash": "3ec2116f4956d0f05891ec74c22541f0f5cedd30736909a4b3a645e5d30ca49f"
+    }
+  ],
+  "comparisons": [
+    {
+      "globalTime": 24,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 26,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 30,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 33,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 36,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 37,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 38,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 39,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 40,
+      "cameraEqual": true,
+      "geometryEqual": true
+    },
+    {
+      "globalTime": 44,
+      "cameraEqual": true,
+      "geometryEqual": true
+    }
+  ],
+  "overlaps": [
+    {
+      "width": 1280,
+      "cell": [],
+      "packaging": []
+    },
+    {
+      "width": 960,
+      "cell": [],
+      "packaging": []
+    }
+  ],
+  "finalCamera": {
+    "yaw": 0.12,
+    "pitch": 0.06,
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "height": 11.5,
+    "distance": 32,
+    "perspective": 1
+  },
+  "finalPersistent": []
+}

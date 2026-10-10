@@ -1,0 +1,74 @@
+{
+  "sourceSha256": "9bc1a66f00e6fe475052d16b9a3a3c75d68352a942ea0c02396598c87a3e061a",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        18,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        18,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 15,
+      "objectIds": [
+        "momentum-label",
+        "gyro-view",
+        "motion-description"
+      ],
+      "problem": "The L label reaches the model view's upper clipping boundary and becomes unreadable. In the 4:3 frame, its remaining cyan fragment also crowds the underside of the precession heading; the 16:9 frame likewise loses the label.",
+      "fix": "Increase the model view's upper framing clearance so the complete moving L label stays inside its viewport and separated from the heading throughout precession, checking both aspect ratios. Preserve the existing geometry and motion."
+    }
+  ]
+}

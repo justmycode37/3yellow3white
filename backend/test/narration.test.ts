@@ -72,8 +72,8 @@ test("guidance production example is accepted by the actual parser", async () =>
   const example = /```md\r?\n([\s\S]*?)```/.exec(guidance)![1];
   const parsed = parseStoryline(example);
   expect(parsed.beats).toHaveLength(2);
-  expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(0);
-  expect(parsed.beats[1].blocks.filter(b => b.kind === "pause")).toHaveLength(1);
+  expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(2);
+  expect(parsed.beats[1].blocks.filter(b => b.kind === "pause")).toHaveLength(0);
   const messages = await buildStorylineMessages("Explain binary search.");
   const capabilities = await readFile(new URL("../../shared/animlib/docs/capabilities.md", import.meta.url), "utf8");
   expect(messages[0].role).toBe("system");

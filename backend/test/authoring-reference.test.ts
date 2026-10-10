@@ -15,7 +15,8 @@ test('retains every authoring section verbatim while excluding host and developm
     between('## 3. Writing a scene', '## 7. Live source submissions'),
     between('### Execution environment', '## 8. One audio track per scene'),
     between('## 8. One audio track per scene', '## 9. Engine structure and verification'),
-    between('## 10. Current boundaries and next steps'),
+    between('## 10. Current boundaries and next steps', '### Registering and delivering models'),
+    between('### Scene-agent publication'),
   ].join('\n\n') + '\n');
   for (const heading of ['### Player API', '### TypeScript surface', '## 7. Live source submissions', '## 9. Engine structure and verification']) {
     expect(output).not.toContain(heading);
@@ -23,8 +24,18 @@ test('retains every authoring section verbatim while excluding host and developm
   expect(output.length).toBeLessThan(reference.length);
   expect(output).toContain(between('### Procedural textures and materials', '### Function and parametric surfaces'));
   expect(output).toContain('### Retained reactive bindings');
+  for (const heading of ['### Shaded meshes', '### Function and parametric surfaces',
+    '### Basic solids and swept tubes', '### Curved paths and organic shapes']) expect(output).toContain(heading);
   expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
   expect(output).toContain(between('## Object bounds', '## Overlap inspection'));
+});
+
+test('retains the complete texture/material contract including reactive controls and limits', () => {
+  const output = buildAuthoringReference(reference);
+  for (const term of ['bumpStrength', 'metalness', 'roughness', 'emissiveIntensity',
+    'localPosition * scale + offset', 'whole-object', 'For procedural materials, no environment maps or image/video textures']) {
+    expect(output).toContain(term);
+  }
 });
 
 test('normalizes line endings deterministically without changing authoring prose', () => {
@@ -87,9 +98,18 @@ test('retains deformation topology, sandbox, and snapshot authoring rules verbat
 });
 test('retains explanatory geometry APIs, topology limits, palette ramps and label semantics', () => {
   const output = buildAuthoringReference(reference);
-  expect(output).toContain(between('## Sections, feature edges, scalar fields, and label depth'));
+  expect(output).toContain(between('## Sections, feature edges, scalar fields, and label depth', '## Imported static 3D models'));
   for (const text of ['dot(normal, localPosition) <= offset', 'nested holes', 'creaseAngle',
     'scalarColors', 'uniformly spaced palette', "'hide'", "'fade'", 'same view']) {
     expect(output).toContain(text);
   }
+});
+
+test('retains model authoring and agent publication while excluding host loading APIs', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('## Imported static 3D models', '### Registering and delivering models'));
+  expect(output).toContain(between('### Scene-agent publication'));
+  expect(output).not.toContain('### Registering and delivering models');
+  expect(output).toContain("assembly.part('Panel')");
+  expect(output).toContain('publish_model');
 });

@@ -1,0 +1,92 @@
+{
+  "atoms": 246,
+  "bonds": 274,
+  "hydrogenContacts": 14,
+  "sourceResolutionAngstrom": 1.9,
+  "covalentLengthAngstrom": [
+    1.2250485704656773,
+    1.603058638977377
+  ],
+  "compiles": [
+    {
+      "elapsedMs": 214.1994,
+      "elements": 5,
+      "vertices": 8872,
+      "triangles": 10840
+    },
+    {
+      "elapsedMs": 178.36810000000003,
+      "elements": 5,
+      "vertices": 8872,
+      "triangles": 10840
+    },
+    {
+      "elapsedMs": 173.66199999999998,
+      "elements": 5,
+      "vertices": 8872,
+      "triangles": 10840
+    },
+    {
+      "elapsedMs": 168.4017,
+      "elements": 5,
+      "vertices": 8872,
+      "triangles": 10840
+    },
+    {
+      "elapsedMs": 168.7219,
+      "elements": 5,
+      "vertices": 8872,
+      "triangles": 10840
+    }
+  ],
+  "variants": [
+    {
+      "representation": "Ball & stick",
+      "region": "Six base pairs",
+      "contacts": "Show",
+      "duration": 14
+    },
+    {
+      "representation": "Ball & stick",
+      "region": "Six base pairs",
+      "contacts": "Hide",
+      "duration": 14
+    },
+    {
+      "representation": "Ball & stick",
+      "region": "Central two pairs",
+      "contacts": "Show",
+      "duration": 14
+    },
+    {
+      "representation": "Ball & stick",
+      "region": "Central two pairs",
+      "contacts": "Hide",
+      "duration": 14
+    },
+    {
+      "representation": "Space filling",
+      "region": "Six base pairs",
+      "contacts": "Show",
+      "duration": 14
+    },
+    {
+      "representation": "Space filling",
+      "region": "Six base pairs",
+      "contacts": "Hide",
+      "duration": 14
+    },
+    {
+      "representation": "Space filling",
+      "region": "Central two pairs",
+      "contacts": "Show",
+      "duration": 14
+    },
+    {
+      "representation": "Space filling",
+      "region": "Central two pairs",
+      "contacts": "Hide",
+      "duration": 14
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+[00:02–00:08] Imagine you have a weighted coin, so the probability of flipping heads might not be 50-50 exactly.
+[00:09–00:18] It could be 20%, or maybe 90%, or 0%, or 31.41592%.
+[00:18–00:20] The point is that you just don't know.
+[00:20–00:25] But imagine that you flip this coin 10 different times, and 7 of those times it comes up heads.
+[00:25–00:32] Do you think that the underlying weight of this coin is such that each flip has a 70% chance of coming up heads?
+[00:32–00:39] If I were to ask you, hey, what's the probability that the true probability of flipping heads is 0.7, what would you say?
+[00:41–00:44] This is a pretty weird question, and for two reasons.
+[00:44–00:55] First of all, it's asking about a probability of a probability, as in the value we don't know is itself some kind of long-run frequency for a random event, which frankly is hard to think about.
+[00:56–01:01] But the more pressing weirdness comes from asking about probabilities in the setting of continuous values.
+[01:02–01:06] Let's give this unknown probability of flipping heads some kind of name, like h.
+[01:07–01:17] Keep in mind that h could be any real number from 0 up to 1, ranging from a coin that always flips tails up to one that always flips heads and everything in between.
+[01:18–01:34] So if I ask, hey, what's the probability that h is precisely 0.7, as opposed to, say, 0.7000001, or any other nearby value, well, there's going to be a strong possibility for paradox if we're not careful.
+[01:34–01:39] It feels like no matter how small the answer to this question, it just wouldn't be small enough.
+[01:39–01:54] If every specific value within some range, all uncountably infinitely many of them, has a non-zero probability, well, even if that probability was minuscule, adding them all up to get the total probability of any one of these values will blow up to infinity.
+[01:55–02:07] On the other hand though, if all of these probabilities are 0, aside from the fact that that now gives you no useful information about the coin, the total sum of those probabilities would be 0, when it should be 1.
+[02:08–02:16] After all, this weight of the coin h is something, so the probability of it being any one of these values should add up to 1.
+[02:17–02:22] So if these values can't all be non-zero, and they can't all be 0, what do you do?
+[02:24–02:34] Where we're going with this, by the way, is that I'd like to talk about the very practical question of using data to create meaningful answers to these sorts of probabilities of probabilities questions.
+[02:35–02:42] But for this video, let's take a moment to appreciate how to work with probabilities over continuous values, and resolve this apparent paradox.
+[02:49–02:53] The key is not to focus on individual values, but ranges of values.
+[02:54–03:02] For example, we might make these buckets to represent the probability that h is between, say, 0.8 and 0.85.
+[03:03–03:13] Also, and this is more important than it might seem, rather than thinking of the height of each of these bars as representing the probability, think of the area of each one as representing that probability.
+[03:13–03:17] Where exactly those areas come from is something that we'll answer later.
+[03:17–03:24] For right now, just know that in principle, there's some answer to the probability of h sitting inside one of these ranges.
+[03:24–03:34] Our task right now is to take the answers to these very coarse-grained questions, and to get a more exact understanding of the distribution at the level of each individual input.
+[03:35–03:38] The natural thing to do would be consider finer and finer buckets.
+[03:39–03:48] And when you do, the smaller probability of falling into any one of them is accounted for in the thinner width of each of these bars, while the heights are going to stay roughly the same.
+[03:49–03:55] That's important, because it means that as you take this process to the limit, you approach some kind of smooth curve.
+[03:55–04:07] So even though all of the individual probabilities of falling into any one particular bucket will approach zero, the overall shape of the distribution is preserved, and even refined in this limit.
+[04:08–04:14] If, on the other hand, we had let the heights of the bars represent probabilities, everything would have gone to zero.
+[04:20–04:25] So in the limit, we would have just had a flat line giving no information about the overall shape of the distribution.
+[04:27–04:28] So, wonderful.
+[04:28–04:31] Letting area represent probability helps solve this problem.
+[04:31–04:37] But let me ask you, if the y-axis no longer represents probability, what exactly are the units here?
+[04:37–04:49] Since probability sits in the area of these bars, or width times height, the height represents a kind of probability per unit in the x-direction, what's known in the business as a probability density.
+[04:50–04:56] The other thing to keep in mind is that the total area of all these bars has to equal one at every level of the process.
+[04:57–05:00] That's something that has to be true for any valid probability distribution.
+[05:01–05:06] The idea of probability density is actually really clever when you step back to think about it.
+[05:06–05:25] As you take things to the limit, even if there's all sorts of paradoxes associated with assigning a probability to each of these uncountably infinitely many values of h between 0 and 1, there's no problem if we associate a probability density to each one of them, giving what's known as a probability density function, or PDF for short.
+[05:26–05:37] Anytime you see a PDF in the wild, the way to interpret it is that the probability of your random variable lying between two values equals the area under this curve between those values.
+[05:38–05:43] So, for example, what's the probability of getting any one very specific number, like 0.7?
+[05:44–05:48] Well, the area of an infinitely thin slice is 0, so it's 0.
+[05:48–05:51] What's the probability of all of them put together?
+[05:51–05:53] Well, the area under the full curve is 1.
+[05:54–05:54] You see?
+[05:55–05:56] Paradox sidestepped.
+[05:57–06:00] And the way that it's been sidestepped is a bit subtle.
+[06:00–06:12] In normal, finite settings, like rolling a die or drawing a card, the probability that a random value falls into a given collection of possibilities is simply the sum of the probabilities of being any one of them.
+[06:13–06:15] This feels very intuitive.
+[06:15–06:17] It's even true in a countably infinite context.
+[06:18–06:21] But to deal with the continuum, the rules themselves have shifted.
+[06:22–06:28] The probability of falling into a range of values is no longer the sum of the probabilities of each individual value.
+[06:29–06:41] Instead, probabilities associated with ranges are the fundamental primitive objects, and the only sense in which it's meaningful to talk about an individual value here is to think of it as a range of width 0.
+[06:42–06:50] If the idea of the rules changing between a finite setting and a continuous one feels unsettling, well, you'll be happy to know that mathematicians are way ahead of you.
+[06:50–07:03] There's a field of math called measure theory, which helps to unite these two settings and make rigorous the idea of associating numbers like probabilities to various subsets of all possibilities in a way that combines and distributes nicely.
+[07:04–07:15] For example, let's say you're in a setting where you have a random number that equals 0 with 50% probability, and the rest of the time it's some positive number according to a distribution that looks like half of a bell curve.
+[07:16–07:24] This is an awkward middle ground between a finite context, where a single value has a non-zero probability, and a continuous one.
+[07:24–07:28] where probabilities are found according to areas under the appropriate density function.
+[07:29–07:32] This is the sort of thing that measure theory handles very smoothly.
+[07:33–07:38] I mention this mainly for the especially curious viewer, and you can find more reading material in the description.
+[07:40–07:51] It's a pretty common rule of thumb that if you find yourself using a sum in a discrete context, then use an integral in the continuous context, which is the tool from calculus that we use to find areas under curves.
+[07:51–07:57] In fact, you could argue this video would be way shorter if I just said that at the front and called it good.
+[07:57–08:03] For my part though, I always found it a little unsatisfying to do this blindly without thinking through what it really means.
+[08:04–08:19] And in fact, if you really dig into the theoretical underpinnings of integrals, what you'd find is that in addition to the way that it's defined in a typical intro calculus class, there is a separate more powerful definition that's based on measure theory, this formal foundation of probability.
+[08:20–08:39] If I look back to when I first learned probability, I definitely remember grappling with this weird idea that in continuous settings, like random variables that are real numbers or throwing a dart at a dartboard, you have a bunch of outcomes that are possible, and yet each one has a probability of zero, and somehow altogether they have a probability of one.
+[08:40–08:52] Now one step of coming to terms with this is to realize that possibility is better tied to probability density than probability, but just swapping out sums of one for integrals of the others never quite scratched the itch for me.
+[08:53–09:03] I remember that it only really clicked when I realized that the rules for combining probabilities of different sets were not quite what I thought they were, and there was simply a different axiom system underlying it all.
+[09:04–09:12] But anyway, steering away from the theory somewhere back in the loose direction of application, look back to our original question about the coin with an unknown weight.
+[09:12–09:22] What we've learned here is that the right question to ask is, what's the probability density function that describes this value h after seeing the outcomes of a few tosses?
+[09:23–09:32] If you can find that PDF, you can use it to answer questions like, what's the probability that the true probability of flipping heads falls between 0.6 and 0.8?
+[09:33–09:36] To find that PDF, join me in the next part.

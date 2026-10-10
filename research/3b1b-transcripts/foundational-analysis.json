@@ -1,0 +1,666 @@
+{
+  "title": "Foundational transcript analysis: 2016 plus 2017 Essence of Calculus",
+  "source_commit": "0bce59666e3b16b449d414da253beb11257b5da6",
+  "method": "Read all substantive sentence_timings.json content for every assigned nonempty file. No videos or frames watched. Analysis is of narrated visual instructions and reasoning, not verified rendered staging. Timings are source-caption seconds, rounded here to one decimal. Broad coding was manual after full reading; regex keyword hits were not substituted for reading.",
+  "coverage": {
+    "files_inspected": 33,
+    "nonempty_videos_fully_read": 32,
+    "videos_sampled": 0,
+    "empty_files": 1,
+    "full_read_keys": [
+      "2016/3d-transformations",
+      "2016/abstract-vector-spaces",
+      "2016/brachistochrone",
+      "2016/change-of-basis",
+      "2016/cross-products",
+      "2016/cross-products-extended",
+      "2016/determinant",
+      "2016/dot-products",
+      "2016/eigenvalues",
+      "2016/eola-preview",
+      "2016/hanoi-and-sierpinski",
+      "2016/inscribed-rectangle-problem",
+      "2016/inverse-matrices",
+      "2016/linear-transformations",
+      "2016/matrix-multiplication",
+      "2016/nonsquare-matrices",
+      "2016/snells-law",
+      "2016/span",
+      "2016/triangle-of-power",
+      "2016/vectors",
+      "2016/zeta",
+      "2017/essence-of-calculus",
+      "2017/derivatives",
+      "2017/derivative-formulas-geometrically",
+      "2017/chain-rule-and-product-rule",
+      "2017/eulers-number",
+      "2017/implicit-differentiation",
+      "2017/limits",
+      "2017/integration",
+      "2017/area-and-slope",
+      "2017/higher-order-derivatives",
+      "2017/taylor-series"
+    ],
+    "empty_keys": [
+      "2016/hilbert-curve"
+    ]
+  },
+  "cautions": [
+    "2016/hanoi-and-sierpinski has interleaved/duplicated/midword fragments and 21 nonpositive intervals; many final segments collapse to 838.1 seconds. Its rhetorical content is usable cautiously, but timing/ordering and raw word totals are unreliable.",
+    "2016/determinant contains a reversed 178.2–177.0 interval and repeated adjacent text. 2017/higher-order-derivatives contains duplicated/interleaved text and reversed 245.2–244.2 interval.",
+    "Other transcripts contain transcription errors in formula language. This is style research, not mathematical verification; equations and historical/physical claims must not be silently endorsed by quoting the captions.",
+    "Raw elapsed transcript span includes pauses, non-explanatory sections, thanks and sponsorship, and cannot establish speaking rate or video duration. Gaps cannot establish silence, reading holds, or animation lengths without audiovisual checks.",
+    "Deliberate choreography, color persistence, and gaze guidance are reported only where the narration explicitly describes them; effectiveness and actual motion execution remain unverified.",
+    "Quoted text budget is under 25 words per individual video across this report. Inventory descriptions are paraphrases."
+  ],
+  "video_inventory": [
+    {
+      "key": "2016/3d-transformations",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/3d-transformations/english/sentence_timings.json",
+      "structure": "Explicit short interchapter extension of the 2D treatment. Says 2D is easier to see; transfers the same argument to 3D.",
+      "visual_reasoning": "60.2–87.2: grid points stand for vector tips; 107.1–131.3: follows only basis vectors to reduce clutter, retains original axes, records landing coordinates as matrix columns.",
+      "progression_interaction": "169.8–204.8: same scaling/addition before and after transformation produces multiplication. 250.5–263.8 asks viewers to reconstruct 3D multiplication independently.",
+      "codes": "Representation reduction, retained reference, transfer, viewer derivation."
+    },
+    {
+      "key": "2016/abstract-vector-spaces",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/abstract-vector-spaces/english/sentence_timings.json",
+      "structure": "Reopens the series' initial question about what vectors are; puts competing definitions under pressure before introducing functions as a third embodiment.",
+      "visual_reasoning": "139.8–206.2: addition and scaling of function outputs parallel coordinate operations. 410.3–629.8: an infinite derivative matrix is shown in action term by term before its construction is assigned.",
+      "progression_interaction": "262.4–376.8 transitions from familiar grid behavior to additivity/scaling; 717.5–861.3 casts viewer as a mathematician designing axioms to serve future users. 767.7–778.1 explicitly leaves an axiom checklist on screen for pausing.",
+      "codes": "Concrete-to-abstract transfer, delayed formalism, role-taking, worked example before construction."
+    },
+    {
+      "key": "2016/brachistochrone",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/brachistochrone/english/sentence_timings.json",
+      "structure": "Exceptional interview format: promises problem/history/Bernoulli, then a visual geometry proof and final challenge. Balances shortest path against early speed before quantification.",
+      "visual_reasoning": "647.6–659.3 says the proof is hard to discuss without visuals. 660.2–750.0 follows a marked wheel point P, contact C, perpendicular tangent, and similar triangles to derive the conserved ratio.",
+      "progression_interaction": "715.6–719.3 delegates a pair of similar triangles to the screen; next segment starts 724.3 (5.0 seconds after prior end). 785.0–947.9 extends the solution into an unresolved challenge in time–angle coordinates.",
+      "codes": "Interview exception, physical-to-geometric translation, visually delegated step, open challenge; timing gap is transcript-measured, intent inferred."
+    },
+    {
+      "key": "2016/change-of-basis",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/change-of-basis/english/sentence_timings.json",
+      "structure": "Uses Jennifer's alternative basis as a sustained language-translation story; keeps the underlying vector constant while its coordinate description changes.",
+      "visual_reasoning": "203.6–249.8 explains grids as invented coordinate aids, shared origin but different axes/spacing. 358.6–432.6 transforms the viewer's mistaken reading of Jennifer's coordinates into her intended vector.",
+      "progression_interaction": "438.1–528.7 returns to opening numeric example to repay promised computation. 599.6–619.5 voices and rejects simply translating matrix columns, then 623.6–715.5 derives A⁻¹MA through a vector's three-step journey.",
+      "codes": "Stable referent, representation disclaimer, anticipated wrong turn, deferred answer, perspective-taking."
+    },
+    {
+      "key": "2016/cross-products",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/cross-products/english/sentence_timings.json",
+      "structure": "Splits standard introduction from deeper follow-on proof; begins with 2D signed area before explicitly admitting this is not the true 3D cross product.",
+      "visual_reasoning": "42.4–69.0 builds the parallelogram by moving vector copies tip-to-tail. 171.3–221.5 maps unit square to it and reads determinant as area/orientation. 330.8–399.7 maps that area to a perpendicular vector's length.",
+      "progression_interaction": "121.7–142.6 gives an area numerically before motivating its computation. 251.2–296.7 asks for mental play with angle and scale. 435.3–491.9 names the apparent absurdity of putting basis vectors inside a determinant.",
+      "codes": "Operation earns quantity, layered depth, productive incompleteness, computation–geometry tension."
+    },
+    {
+      "key": "2016/cross-products-extended",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/cross-products-extended/english/sentence_timings.json",
+      "structure": "Starts from the mysterious determinant trick and makes a clear contract: use duality to connect computation to geometry.",
+      "visual_reasoning": "310.9–355.4 varies one vector while two stay fixed, yielding signed volume as a function. 455.8–555.2 identifies coefficients computationally, then 568.9–710.3 answers the exact same question through projection and base-times-height.",
+      "progression_interaction": "357.5–373.4 acknowledges the construction can feel unmotivated. 556.0–559.8 asks digestion before repeating the question in geometric language. 712.6–765.0 recaps why two routes identify the same vector.",
+      "codes": "Same question in two representations, controlled variable, explicit bridge, acknowledgment of difficulty."
+    },
+    {
+      "key": "2016/determinant",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/determinant/english/sentence_timings.json",
+      "structure": "Starts with stretch/squish intuition; introduces determinant only after rectangle, shear, and arbitrary-region arguments.",
+      "visual_reasoning": "47.2–147.8 tracks one unit square, then reasons via small grid squares about any blob. 304.3–329.3 continuously moves i-hat through j-hat to make crossing into negative determinants feel natural.",
+      "progression_interaction": "148.9–168.4 names the quantity and postpones computation. 333.6–335.9 asks what 3D should mean; 516.7–522.9 leaves a diagram for pausing; 558.1–577.9 ends with multiplicativity as a one-sentence geometric challenge.",
+      "codes": "Concrete measure before label, refinement, sign via motion, explicit boundary between insight and drill. Raw timing anomaly at 178.2–177.0."
+    },
+    {
+      "key": "2016/dot-products",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/dot-products/english/sentence_timings.json",
+      "structure": "Explains why this normally early topic was delayed: transformation background permits a deeper answer to the projection/computation mismatch.",
+      "visual_reasoning": "131.6–234.9 uses equal-length symmetry then scales one vector, tracking what changes in each projection interpretation. 448.9–536.5 places a number line diagonally, clarifies it still outputs numbers, then zooms in to track basis projections.",
+      "progression_interaction": "543.0–630.6 uses symmetry to identify matrix entries with unit-vector coordinates. 582.2–583.3 invites thought; next segment starts 589.1 (5.8 seconds later). 677.6–726.4 reconstructs the whole route before naming duality.",
+      "codes": "Anticipated confusion, embedded representation disclaimer, local symmetry, return-and-name, measured gap."
+    },
+    {
+      "key": "2016/eigenvalues",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/eigenvalues/english/sentence_timings.json",
+      "structure": "Locates learner difficulty in prerequisite intuition, then selects vectors whose spans survive a transformation before naming eigenvectors.",
+      "visual_reasoning": "96.6–237.0 follows ordinary and special vectors on their own lines. 455.5–549.5 imagines a lambda knob changing a transformation until its determinant vanishes; unpacks why this yields an eigenvector.",
+      "progression_interaction": "568.3–643.5 reuses opening matrix numerically. 646.3–767.0 contrasts rotation, shear, and uniform scaling before a pause request; next starts 783.5 (16.5 seconds later). Eigenbasis is motivated by taking a 100th power.",
+      "codes": "Prerequisite repair, distinctive invariant before label, parameter variation, contrasting examples, computation motivated by use."
+    },
+    {
+      "key": "2016/eola-preview",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/eola-preview/english/sentence_timings.json",
+      "structure": "States the curriculum rationale explicitly: geometric understanding selects/interprets tools; numerical understanding carries out application.",
+      "visual_reasoning": "124.4–204.8 offers a counterfactual sine lesson taught via polynomial only, using that unfamiliar approach to expose what's missing in rote linear algebra.",
+      "progression_interaction": "228.9–261.1 defines scope as intuition-building rather than full mastery. 270.3–291.6 acknowledges varied backgrounds and assigns viewers responsibility for pausing and independent thought.",
+      "codes": "Pedagogical manifesto, analogy, scope boundary, learner-controlled pacing."
+    },
+    {
+      "key": "2016/hanoi-and-sierpinski",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/hanoi-and-sierpinski/english/sentence_timings.json",
+      "structure": "Introduces binary counting as a surprising solution and previews a Sierpinski connection for the next part; alternates narration with educator conversation.",
+      "visual_reasoning": "59.2–117.9 describes numbered disks and asks physical experimentation. Later narration connects disk motion rhythm and carry/rollover rhythm; 734.8–817.9 aligns the same recursive structure at several scales.",
+      "progression_interaction": "604.3–654.0 shifts into the largest disk's perspective to reduce the task; disk dialogue personifies constraints. Transcript is heavily corrupted/interleaved: use these reported times cautiously and do not derive pacing from it.",
+      "codes": "Rhythmic correspondence, recursion through viewpoint shift, physical participation, interview exception; unreliable timing/text order."
+    },
+    {
+      "key": "2016/hilbert-curve",
+      "status": "empty",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/hilbert-curve/english/sentence_timings.json",
+      "structure": "File is the literal empty array []. No substantive transcript evidence.",
+      "visual_reasoning": "",
+      "progression_interaction": "",
+      "codes": "Inspected empty, not counted as a video read."
+    },
+    {
+      "key": "2016/inscribed-rectangle-problem",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/inscribed-rectangle-problem/english/sentence_timings.json",
+      "structure": "Opens with childhood dissatisfaction at topology demonstrations that never solved a problem; motivates abstract surfaces through the concrete rectangle question.",
+      "visual_reasoning": "218.0–347.0 maps point-pairs to midpoint-plus-height and restates desired rectangle as a collision. 419.5–586.5 cuts loop to interval, pairs to square, glues to torus. 683.6–773.8 marks diagonal red, preserves its identity through cutting/twisting to Möbius edge.",
+      "progression_interaction": "Repeatedly reminds why each abstraction is needed (483.5, 612.2). 847.8–919.6 pays off red edge with forced self-intersection. 922.5–953.7 explicitly labels the remaining topological justification rather than claiming fully supplied rigor.",
+      "codes": "Problem-driven abstraction, identity through deformation, marked fact planted and repaid, honest rigor boundary."
+    },
+    {
+      "key": "2016/inverse-matrices",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/inverse-matrices/english/sentence_timings.json",
+      "structure": "Announces focus on intuition and omits procedural computation; repackages a linear system into Ax=v before interpreting it spatially.",
+      "visual_reasoning": "167.6–193.8 compresses intermingling equations into tracking which vector lands on v. 238.6–336.4 runs transformation backward while following v to explain inverse and solving.",
+      "progression_interaction": "403.5–459.4 shows why collapse cannot be reversed by a function; 463.3–653.6 grades different collapses, names rank/column space/null space, and reconnects them to existence and solutions.",
+      "codes": "Notation as spatial compression, replay backward, diagnostic countercase, distinctions before vocabulary."
+    },
+    {
+      "key": "2016/linear-transformations",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/linear-transformations/english/sentence_timings.json",
+      "structure": "Presents matrix-vector multiplication as something reconstructible; teaches how to interpret motion before asking it to explain algebra.",
+      "visual_reasoning": "71.9–132.8 defines input-to-output motion, substitutes tips for crowded arrows, uses grid plus reference copy. 170.6–195.3 tests nonexamples, including a deceptive grid whose diagonals curve.",
+      "progression_interaction": "237.5–337.4 follows v=-i+2j and basis vectors; notes one could simply watch v, but the construction allows prediction without animation. 378.4–478.0 packages that mechanism into matrices and general symbols; 535.8–560.2 asks reverse translation.",
+      "codes": "Representational contract, negative examples, persistent baseline, visual-to-independent prediction, delayed notation."
+    },
+    {
+      "key": "2016/matrix-multiplication",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/matrix-multiplication/english/sentence_timings.json",
+      "structure": "Starts with a substantial explicit recap, then gives a need for composition (rotation followed by shear).",
+      "visual_reasoning": "121.6–229.4 tracks basis vectors through two transformations and compares sequential action with one equivalent matrix. 296.3–355.2 deliberately predicts the second example without animation.",
+      "progression_interaction": "356.6–438.9 repeats the process with symbolic entries, announcing increased visual room. 448.9–490.7 compares order; 501.5–570.7 uses identical action sequences to explain associativity. Ends by prescribing visual play plus numerical checking.",
+      "codes": "Scaffold fading, same mechanism concrete then symbolic, contrast by operation order, proof through action."
+    },
+    {
+      "key": "2016/nonsquare-matrices",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/nonsquare-matrices/english/sentence_timings.json",
+      "structure": "Short response to comments, framed as a footnote viewers almost have enough background to reason out.",
+      "visual_reasoning": "60.0–80.9 explicitly uses side-by-side input and output spaces instead of movement to avoid implying 2D and 3D vectors inhabit one space. 205.8–222.3 swaps grid-line imagery for evenly spaced dots when outputs are numbers.",
+      "progression_interaction": "87.4–156.9 derives matrix shape from where basis vectors land. 157.9–179.7 asks viewers to infer the reverse shape. 246.4–258.3 assigns transfer of multiplication/equations to differing dimensions.",
+      "codes": "Representation chosen for mathematical semantics, deliberate non-animation, inference prompt, transfer."
+    },
+    {
+      "key": "2016/snells-law",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/snells-law/english/sentence_timings.json",
+      "structure": "Companion cut from an interview; sets up shortest-distance versus least-time tension before replacing it with energy minimization.",
+      "visual_reasoning": "66.4–105.3 shifts a refraction path to expose competing costs. 130.4–208.4 installs a rod/ring and imaginary constant-tension springs; matching energy to travel time permits a force-balance diagram.",
+      "progression_interaction": "169.6–187.4 explicitly says the springs are unphysical. 194.2–229.0 resolves horizontal components into sines, with the law named after the balancing argument.",
+      "codes": "Constructed physical analogy, concrete competition, approximation/model disclaimer, formula earned by mechanism."
+    },
+    {
+      "key": "2016/span",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/span/english/sentence_timings.json",
+      "structure": "Reinterprets known coordinates as scalars acting on basis vectors, then asks what arbitrary scalings can reach.",
+      "visual_reasoning": "127.6–150.7 asks reachability before answering. 194.9–250.9 varies one coefficient then both, producing line/plane/origin cases before naming span. 385.8–484.5 uses two imaginary knobs to trace a plane, then a third vector sweeps that plane through space.",
+      "progression_interaction": "283.6–344.4 explicitly changes arrows into endpoints to represent collections without clutter. 496.6–539.6 gives dependence/independence names after redundancy is understood; final basis definition is a puzzle to reconcile with opening.",
+      "codes": "Parameter play, set as trace of motion, granularity change, concept before name, closing reconciliation."
+    },
+    {
+      "key": "2016/triangle-of-power",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/triangle-of-power/english/sentence_timings.json",
+      "structure": "Unusual notation-centered essay, arguing three syntaxes hide one relationship; demonstrates a replacement and explores what questions it enables.",
+      "visual_reasoning": "120.5–165.7 fixes three corner roles and removes one to represent each inverse operation. 256.1–301.5 points to top/bottom corners and annotates which values add or multiply.",
+      "progression_interaction": "305.9–361.7 predicts the unfilled third symmetry case then introduces a new operation. 379.5–441.5 explicitly says symbolic pattern recognition is insufficient and should serve substantive re-derivation.",
+      "codes": "Stable positional semantics, symmetry generates question, symbol design in service of reasoning; exception to graph/geometry dominance."
+    },
+    {
+      "key": "2016/vectors",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/vectors/english/sentence_timings.json",
+      "structure": "Begins with physics, computer-science, and mathematician perspectives, then deliberately selects rooted arrows as the initial setting.",
+      "visual_reasoning": "172.7–234.3 constructs coordinate system and removes grid clutter while reading coordinates as walking instructions. 288.5–412.7 constructs addition tip-to-tail, motivates it as successive movement, then rearranges horizontal/vertical steps into coordinate addition.",
+      "progression_interaction": "414.6–488.5 gives concrete stretch/squish/flip examples before naming scalar and translating to components. 509.8–566.6 emphasizes fluency between representations, not allegiance to one ontology.",
+      "codes": "Explicit representation choice, construction before rule, bodily analogy, geometric/numeric bidirectionality."
+    },
+    {
+      "key": "2016/zeta",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/zeta/english/sentence_timings.json",
+      "structure": "Begins with a promised explanation of an already-shown animation and the conflicting impressions of divergent sums and zeta values.",
+      "visual_reasoning": "375.1–456.5 turns series terms into a converging spiral while a yellow input dot moves. 469.8–558.2 teaches complex maps using squaring, colored grid identity, and a replay focused on one marked point.",
+      "progression_interaction": "575.6–743.8 uses interrupted arcs to motivate extension; 763.3–953.0 constrains extensions by preserved angles, with a critical-point caveat at 846.7–866.8. 1120.3–1149.8 admits screen window undersells complexity and expands the shown critical line.",
+      "codes": "Promise/payoff, visual grammar warm-up, replay with attention target, geometric desire becomes mathematical question, caveat. Transcript account is not a complete complex-analysis proof."
+    },
+    {
+      "key": "2017/essence-of-calculus",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/essence-of-calculus/english/sentence_timings.json",
+      "structure": "Frames the entire series as plausible invention, then invests in one circle-area problem that unfolds into integrals, derivatives, and their link.",
+      "visual_reasoning": "150.4–246.4 names an inner ring radius, unwraps it approximately, names dr with concrete 0.1, and explains why thinner rings improve the approximation. 282.3–398.7 stacks corresponding rectangles on an axis, changes y-scale to fit, identifies triangle area.",
+      "progression_interaction": "410.2–508.5 replays why approximate sums yield precise area. 618.0–867.2 turns endpoint into a variable, nudges it, identifies an added sliver, and names derivative only after using it to constrain the mystery area function.",
+      "codes": "Single rich problem, approximate-to-exact ladder, notation from construction, causal nudge, retrospective abstraction."
+    },
+    {
+      "key": "2017/derivatives",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/derivatives/english/sentence_timings.json",
+      "structure": "Starts with the paradox in instantaneous change and gives one moving car as central example; distinguishes physical estimates from mathematical limit.",
+      "visual_reasoning": "83.9–179.8 maps motion into distance and velocity graphs, explains qualitative shapes first. 313.2–432.9 zooms onto rise/run nudges and explains the numerical process that generated the velocity curve.",
+      "progression_interaction": "433.5–445.5 pauses for consolidation before the limit. 638.2–781.6 works t³ at t=2 with finite dt, lets terms vanish, then generalizes. 879.7–977.5 returns to the opening paradox at t=0 rather than leaving it as a hook.",
+      "codes": "Problem tension, axes explained, qualitative first, exact finite example to generality, opening question repaid."
+    },
+    {
+      "key": "2017/derivative-formulas-geometrically",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/derivative-formulas-geometrically/english/sentence_timings.json",
+      "structure": "States abstract derivative fluency matters for modeling, then contrasts a graph's qualitative clues with a representation that determines the exact formula.",
+      "visual_reasoning": "145.1–258.1 changes from slope graph to an actual square and added strips/corner. 291.0–408.9 uses a cube's faces/edges/corner; 478.4–577.5 maps those contributions to terms in a general product expansion.",
+      "progression_interaction": "642.8–741.8 uses a constant-area puddle for reciprocal derivative and leaves final steps to viewer. 817.6–1005.4 guesses cosine from graph shape, then proves its coefficient through a zoomed unit-circle triangle. Explicitly says drawn nudges are enlarged.",
+      "codes": "Mechanism-sensitive representations, visible contribution accounting, graph as conjecture not proof, finite-size drawing disclaimer, viewer completion."
+    },
+    {
+      "key": "2017/chain-rule-and-product-rule",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/chain-rule-and-product-rule/english/sentence_timings.json",
+      "structure": "Reduces complicated functions to three composition types and warms up with the easy sum before more demanding rules.",
+      "visual_reasoning": "149.8–250.1 sum is stacked heights. 260.1–495.4 product is an adjustable rectangle with two first-order strips and negligible corner; mnemonic terms are mapped back to their strips.",
+      "progression_interaction": "545.3–727.9 changes to three number lines for composition, pins dependent values to x, nudges x, renames intermediate x² as h, follows negative direction, then unfolds notation. 749.7–873.9 generalizes and explains dh cancellation as actual linked nudges.",
+      "codes": "Different operation/different picture, directed dependence, local term referents, concrete input and temporary renaming, practice boundary."
+    },
+    {
+      "key": "2017/eulers-number",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/eulers-number/english/sentence_timings.json",
+      "structure": "Uses doubling creatures, then explicitly replaces count with total mass so arbitrarily small change is meaningful.",
+      "visual_reasoning": "99.8–207.1 tests full-day growth, voices the tempting false derivative, and narrows the interval. 219.6–247.7 says no clear geometric proof is available here and switches to numerical-pattern play.",
+      "progression_interaction": "248.7–382.8 factors the ratio to separate t from dt; 389.0–514.1 compares bases and turns mysterious constants into the question of a base with constant 1. 596.3–653.4 reveals natural logs; 716.3–791.7 gives constant's modeling meaning.",
+      "codes": "Honest exception to visual proof, model repaired for continuity, productive near-miss, empirical pattern to definition."
+    },
+    {
+      "key": "2017/implicit-differentiation",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/implicit-differentiation/english/sentence_timings.json",
+      "structure": "Opens with a procedure the narrator found weird, shows its answer, then pauses solving to connect the same circle equation with a sliding ladder.",
+      "visual_reasoning": "63.6–111.7 zooms onto a tiny step and distinguishes implicit constraint from input/output. 206.3–433.4 uses time-indexed ladder quantities to make differentiating both sides meaningful.",
+      "progression_interaction": "481.1–643.9 gives x²+y² a name s, allows a step anywhere, then constrains ds=0; explicitly corrects circle to tangent-line approximation. 645.2–867.6 transfers to another implicit curve and ln derivative.",
+      "codes": "Confusion voiced, related simpler semantics, unconstrained then constrained motion, example transfer, approximation boundary."
+    },
+    {
+      "key": "2017/limits",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/limits/english/sentence_timings.json",
+      "structure": "Formalism follows several derivative chapters, framed as reassurance that finite nudges already match the textbook definition.",
+      "visual_reasoning": "300.4–417.3 shows a punctured graph and narrows input/output ranges; 419.0–588.6 adds a jump counterexample before epsilon/delta labels. 729.0–849.0 zooms into two zero-crossings, matches tiny output nudges, and derives a ratio of slopes.",
+      "progression_interaction": "858.2–974.0 repeats the numeric L'Hôpital example generically then names rule. 995.0–1035.4 rejects circular use to discover unknown derivatives. Some spoken math is informal; do not reuse as a full theorem statement without conditions.",
+      "codes": "Formalism earned by need, counterexample sharpens definition, zoom as local linearity, concrete-to-general repetition."
+    },
+    {
+      "key": "2017/integration",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/integration/english/sentence_timings.json",
+      "structure": "Inverts the earlier car problem: only speedometer available, recover distance. Commits to one example, with generalization deferred.",
+      "visual_reasoning": "162.8–387.8 constructs constant-speed pieces, explains units of area as meters, chooses dt=.25 and 7 m/s, maps 1.75 meters to a rectangle. 390.0–509.0 gives integral notation after its operation and explains dt's dual role.",
+      "progression_interaction": "574.3–676.5 varies upper bound and uses a sliver to derive inverse relation. 752.4–847.2 resolves integration constant by dragging endpoints together. 978.7–1065.1 recaps causal chain; 1066.3–1134.2 adds backward travel to earn signed area.",
+      "codes": "Concrete measurement to area, dual-role symbol, exact limit, boundary condition visible as motion, late qualification."
+    },
+    {
+      "key": "2017/area-and-slope",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/area-and-slope/english/sentence_timings.json",
+      "structure": "Uses average height of sine to supply a second perspective on integral/derivative inversion; mentions application but strips constants away.",
+      "visual_reasoning": "133.8–310.8 samples finite heights, relates sample count to interval width/dx, and redistributes dx so terms become areas. 355.6–407.5 checks the antiderivative visually and reads net height change as 2.",
+      "progression_interaction": "421.3–500.1 reinterprets 2/pi as average tangent slope, equal to endpoint secant slope. 503.2–679.3 repeats generically; 683.1–727.8 gives a recognition cue for when to use integrals in new problems.",
+      "codes": "Finite-to-continuous bridge, unit sanity check, alternate proof perspective, transferable problem-recognition habit."
+    },
+    {
+      "key": "2017/higher-order-derivatives",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/higher-order-derivatives/english/sentence_timings.json",
+      "structure": "Explicit optional footnote preparing Taylor series; invites already-comfortable viewers to skip.",
+      "visual_reasoning": "40.1–110.9 distinguishes rate of slope change through upward/downward and faster/slower curvature. 153.2–221.6 follows two finite x steps, labels their separate output changes, and then the difference of changes.",
+      "progression_interaction": "162.0–169.7 admits drawing large steps for visibility. Motion/acceleration/jerk reconnects to physical sensation, but duplicated/interleaved segments and one reversed timestamp make this latter passage unreliable for pacing.",
+      "codes": "Just-in-time prerequisite, optional route, nested change construction, bodily intuition, defective timing."
+    },
+    {
+      "key": "2017/taylor-series",
+      "status": "full",
+      "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/taylor-series/english/sentence_timings.json",
+      "structure": "Begins with a personal physics episode: cosine approximation makes a pendulum problem manageable; asks how the particular quadratic could be invented.",
+      "visual_reasoning": "153.9–335.8 locks value, then slope, then curvature using one coefficient each. 549.4–637.8 explains why later terms preserve earlier matches and why shifting the center requires x−a.",
+      "progression_interaction": "866.4–1031.1 revisits area-under-graph construction: base area + rectangle + triangle gives three Taylor terms with local visual referents. 1041.4–1255.6 asks what happens if process never stops, contrasting eˣ with logarithm convergence range.",
+      "codes": "Constructive coefficient controls, preserving solved constraints, second geometric interpretation, finite process before infinity, limitation via counterexample."
+    }
+  ],
+  "strong_generalizations": [
+    {
+      "id": 1,
+      "claim": "Narration establishes the visual representation before asking it to prove anything.",
+      "evidence": [
+        {
+          "key": "2016/linear-transformations",
+          "time_seconds": "71.9–132.8",
+          "observation": "Defines movement as input-to-output mapping, replaces arrows by tips, then shows grid/reference copy.",
+          "quote": "a great way to understand functions of vectors is to use movement",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/linear-transformations/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/integration",
+          "time_seconds": "180.0–200.8",
+          "observation": "Explains why the area units mean distance, preempting a category confusion.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/integration/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/nonsquare-matrices",
+          "time_seconds": "60.0–80.9",
+          "observation": "Explains why input/output worlds are shown separately, and why the usual moving-between treatment is inappropriate.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/nonsquare-matrices/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Specify what each object, axis, position, and transformation denotes. The speech is a legend for an active mathematical model, not narration over generic decoration."
+    },
+    {
+      "id": 2,
+      "claim": "The chosen picture changes with the operation; a graph is often only an initial diagnostic.",
+      "evidence": [
+        {
+          "key": "2017/derivative-formulas-geometrically",
+          "time_seconds": "123.2–186.2; 817.6–986.2",
+          "observation": "Graph slope supplies trend/shape; square strips or unit-circle similar triangles supply the exact derivative.",
+          "quote": "looking at graphs isn't generally the best way",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/derivative-formulas-geometrically/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/chain-rule-and-product-rule",
+          "time_seconds": "149.8–250.1; 260.1–360.3; 545.3–600.4",
+          "observation": "Addition gets stacked bars, multiplication an area, composition linked number lines.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/chain-rule-and-product-rule/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Ask which manipulable representation exposes the dependency being explained; avoid forcing every concept into the same chart layout."
+    },
+    {
+      "id": 3,
+      "claim": "Track a stable object or invariant through change so a visual operation actually yields the conclusion.",
+      "evidence": [
+        {
+          "key": "2016/inscribed-rectangle-problem",
+          "time_seconds": "683.6–773.8; 847.8–919.6",
+          "observation": "The red diagonal stands for coincident point-pairs; after cutting and twisting it is the Möbius boundary needed for the final collision argument.",
+          "quote": "Right now, it's marked with a red line.",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/inscribed-rectangle-problem/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/linear-transformations",
+          "time_seconds": "237.5–337.4",
+          "observation": "Same linear-combination coefficients survive basis-vector motion, earning the result for v.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/linear-transformations/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/taylor-series",
+          "time_seconds": "173.1–242.6; 549.4–590.3",
+          "observation": "Changing the next coefficient preserves constraints already solved by earlier coefficients.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/taylor-series/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Narration names what changes and what stays fixed. A useful visual transition carries evidence forward; it does not merely switch to the next topic."
+    },
+    {
+      "id": 4,
+      "claim": "Give formulas local physical/geometric referents, often one term at a time.",
+      "evidence": [
+        {
+          "key": "2017/taylor-series",
+          "time_seconds": "936.0–1031.1",
+          "observation": "Extra area is separated into old area, rectangle, triangle, each matched to a Taylor term.",
+          "quote": "each one of the terms has a very clear meaning",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/taylor-series/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/chain-rule-and-product-rule",
+          "time_seconds": "350.2–435.7; 480.7–495.4",
+          "observation": "Each product-rule term is a specific added strip; the corner is accounted for and then discarded in the limit.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/chain-rule-and-product-rule/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/cross-products-extended",
+          "time_seconds": "597.1–703.1",
+          "observation": "Projection times parallelogram area explains why a dot-product vector encodes the determinant.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/cross-products-extended/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Words such as this, here, bottom, side, and that nudge are explicit bindings from algebra to marks on screen. Their explanatory value depends on those marks being visible and unambiguous."
+    },
+    {
+      "id": 5,
+      "claim": "The recurring route is specific manipulation, worked numerical case, general symbols, then a name or rule.",
+      "evidence": [
+        {
+          "key": "2016/span",
+          "time_seconds": "194.9–250.9; 496.6–560.2",
+          "observation": "Coefficient motion establishes reachability/redundancy before span, independence, and basis vocabulary.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/span/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/eigenvalues",
+          "time_seconds": "80.0–217.4",
+          "observation": "Several vectors in one transformation establish the special invariant before eigenvectors/eigenvalues are named.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/eigenvalues/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/limits",
+          "time_seconds": "707.0–849.0; 858.2–976.3",
+          "observation": "A concrete quotient limit becomes a general two-function argument, then L'Hôpital's rule.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/limits/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/matrix-multiplication",
+          "time_seconds": "296.3–438.9",
+          "observation": "Same reasoning repeats with variable entries.",
+          "quote": "this time I'll show variable entries in each matrix",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/matrix-multiplication/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Generalization should visibly preserve the worked mechanism. The name compresses an understood pattern; it need not be the opening slide."
+    },
+    {
+      "id": 6,
+      "claim": "Questions usually perform a precise reasoning job: prediction, expose a plausible error, or assign the next analogous step.",
+      "evidence": [
+        {
+          "key": "2016/change-of-basis",
+          "time_seconds": "599.6–619.5",
+          "observation": "Anticipates translating matrix columns directly, then explains why those track the wrong basis.",
+          "quote": "But that's not quite right.",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/change-of-basis/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/derivative-formulas-geometrically",
+          "time_seconds": "723.5–753.4; 1007.1–1014.2",
+          "observation": "Leaves reciprocal's final algebra and square-root/cosine analogies for the viewer.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/derivative-formulas-geometrically/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/determinant",
+          "time_seconds": "558.1–577.9",
+          "observation": "Asks for determinant-of-product proof in one geometric sentence.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/determinant/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/eulers-number",
+          "time_seconds": "141.7–195.0",
+          "observation": "Tempting full-day growth argument is close but wrong; shrinking the interval repairs it.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/eulers-number/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Place a question where the viewer has enough machinery to do a real small inference. Do not substitute generic engagement questions for mathematical work."
+    },
+    {
+      "id": 7,
+      "claim": "Pacing is organized into dependency blocks, with explicit recaps and learner-controlled holds, not a uniformly fast stream.",
+      "evidence": [
+        {
+          "key": "2016/dot-products",
+          "time_seconds": "579.2–600.2",
+          "observation": "After asking the analogous j-hat question at 582.2–583.3, the next segment begins 589.1: a 5.8-second transcript gap.",
+          "quote": "Think about it for a moment.",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/dot-products/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/eigenvalues",
+          "time_seconds": "762.0–783.5",
+          "observation": "A pause request ends 767.0; next segment starts 783.5, giving a 16.5-second transcript gap.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/eigenvalues/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/integration",
+          "time_seconds": "978.7–1065.1",
+          "observation": "Recap retraces problem, approximation, area, derivative link, and constant, not merely result labels.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/integration/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/eola-preview",
+          "time_seconds": "270.3–291.6",
+          "observation": "Explicitly delegates pace adaptation and consolidation to pausing and independent thinking.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/eola-preview/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Use a recap when the dependency chain becomes long; reserve actual thinking space for an inference. Measured gaps are caption gaps, not verified silence or motion holds. Editorial intent is inferred, not measured."
+    },
+    {
+      "id": 8,
+      "claim": "Approximation is a visible process with an error account; precise conclusions are earned by varying its scale.",
+      "evidence": [
+        {
+          "key": "2017/essence-of-calculus",
+          "time_seconds": "166.4–246.4; 336.0–399.4; 433.8–508.5",
+          "observation": "Unwrapped rings are only approximately rectangles; decreasing dr improves each approximation and the total becomes triangle area.",
+          "quote": "it's slightly wrong",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/essence-of-calculus/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/derivatives",
+          "time_seconds": "447.5–538.9; 734.3–781.6",
+          "observation": "Finite dt is distinguished from the limit; terms vanish only after division and taking the limiting process.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/derivatives/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/implicit-differentiation",
+          "time_seconds": "602.5–643.9",
+          "observation": "Corrects the ds=0 step as tangent-line rather than exact circle motion.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/implicit-differentiation/english/sentence_timings.json"
+        },
+        {
+          "key": "2017/higher-order-derivatives",
+          "time_seconds": "162.0–169.7",
+          "observation": "Discloses exaggerated step size for legibility.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/higher-order-derivatives/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Separate finite drawn displacement, approximating expression, and limiting claim. Visual enlargement should be confessed, and discarded terms should have an explicit reason."
+    },
+    {
+      "id": 9,
+      "claim": "Abstraction and alternative viewpoints are motivated by a bottleneck in an existing problem, then return to solve it.",
+      "evidence": [
+        {
+          "key": "2016/inscribed-rectangle-problem",
+          "time_seconds": "148.2–347.0; 351.5–417.5; 788.6–974.4",
+          "observation": "Point-pairs, torus, and Möbius strip are constructed to force the rectangle, answering the opening complaint about purposeless topology demos.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/inscribed-rectangle-problem/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/abstract-vector-spaces",
+          "time_seconds": "123.4–242.8; 717.5–861.3",
+          "observation": "Functions motivate a general linearity definition, and users of new vector spaces motivate axioms.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/abstract-vector-spaces/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/change-of-basis",
+          "time_seconds": "623.6–741.9",
+          "observation": "A vector translated to familiar coordinates, transformed, then translated back gives conjugation meaning.",
+          "quote": "a mathematical sort of empathy",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/change-of-basis/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Do not introduce a sophisticated object for prestige. State the unresolved requirement, build the representation needed, and explicitly repay the original question."
+    },
+    {
+      "id": 10,
+      "claim": "This style is a disciplined range, not a rule that everything must be visual or every video must follow one structure.",
+      "evidence": [
+        {
+          "key": "2017/eulers-number",
+          "time_seconds": "219.6–247.7",
+          "observation": "Admits not having the desired geometric proof and intentionally follows numerical patterns.",
+          "quote": "finding numerical patterns rather than visual ones",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2017/eulers-number/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/brachistochrone",
+          "time_seconds": "3.9–61.3; 647.6–659.3",
+          "observation": "Mixes historical conversation with a separately narrated geometric proof.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/brachistochrone/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/triangle-of-power",
+          "time_seconds": "379.5–441.5",
+          "observation": "Notation symmetry is useful, but expressly subordinate to substantive reasoning.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/triangle-of-power/english/sentence_timings.json"
+        },
+        {
+          "key": "2016/nonsquare-matrices",
+          "time_seconds": "67.0–80.9",
+          "observation": "Declines the usual animation specifically to protect meaning.",
+          "quote": "",
+          "source_url": "https://github.com/3b1b/captions/blob/0bce59666e3b16b449d414da253beb11257b5da6/2016/nonsquare-matrices/english/sentence_timings.json"
+        }
+      ],
+      "implication": "Preserve the deeper contract—representation serves inference—even when the correct treatment is algebraic, numerical, conversational, or static."
+    }
+  ],
+  "synthesis": "The strongest distinctive pattern is a narrated sequence of mathematical actions: choose a representation with explicit semantics; identify a concrete object and question; alter one thing while tracking dependencies/invariants; let the resulting diagram supply the inference; bind each algebraic term to that construction; reconstruct the same reasoning more generally; invite transfer. Qualitative impressions often initiate a conjecture, but exactness comes from an additional mechanism. Question, limitation, and recap placement expose the chain of reasoning rather than concealing it."
+}

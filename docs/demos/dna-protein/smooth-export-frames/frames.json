@@ -1,0 +1,65 @@
+{
+  "backend": "native-webgpu",
+  "frames": [
+    {
+      "time": 17,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\1280x720-0.png"
+    },
+    {
+      "time": 21,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\1280x720-1.png"
+    },
+    {
+      "time": 26,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\1280x720-2.png"
+    },
+    {
+      "time": 17,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\960x720-0.png"
+    },
+    {
+      "time": 21,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\960x720-1.png"
+    },
+    {
+      "time": 26,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\960x720-2.png"
+    }
+  ],
+  "sheets": [
+    {
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\1280x720-sheet-0.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        17,
+        21,
+        26
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\smooth-export-frames\\960x720-sheet-0.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        17,
+        21,
+        26
+      ],
+      "columns": 2
+    }
+  ]
+}

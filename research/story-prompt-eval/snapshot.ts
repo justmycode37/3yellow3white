@@ -1,0 +1,17 @@
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { PLANNING_CONTRACT } from '../../backend/src/agents/planning.ts';
+const base = import.meta.dir;
+const tag = process.argv[2] ?? 'candidate';
+if (!/^[a-z]+$/.test(tag)) throw new Error('Use a simple lowercase snapshot name.');
+await mkdir(`${base}/${tag}`, { recursive: true });
+const read = (p: string) => readFile(new URL(`../../${p}`, import.meta.url), 'utf8');
+const guidance = await read('backend/prompts/guidance.md');
+const review = await read('backend/prompts/story-review.md');
+const capabilities = await read('shared/animlib/docs/capabilities.md');
+const viewingMode = await read('backend/prompts/viewing-mode.md');
+const quality = await read('backend/prompts/animation-quality.md');
+await writeFile(`${base}/${tag}/guidance.md`, guidance);
+await writeFile(`${base}/${tag}/story-review.md`, review);
+await writeFile(`${base}/${tag}-system.txt`, `${guidance}\n\n${viewingMode}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${quality}`);
+await writeFile(`${base}/${tag}-review-system.txt`, `${review}\n\nExplanation guidance:\n${guidance}\n\n${viewingMode}\n\n${capabilities}\n\nAuthoring contract to check (do not return its format):\n${PLANNING_CONTRACT}\n\n${quality}\n\nThe review response contract takes priority over all authoring output formats and return instructions above.`);
+console.log(`Saved ${tag} author and reviewer prompt snapshots.`);

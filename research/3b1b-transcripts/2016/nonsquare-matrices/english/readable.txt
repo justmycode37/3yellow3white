@@ -1,0 +1,25 @@
+[00:10–00:14] Hey everyone, I've got another quick footnote for you between chapters today.
+[00:15–00:28] When I've talked about linear transformations so far, I've only really talked about transformations from 2D vectors to other 2D vectors, represented with 2x2 matrices, or from 3D vectors to other 3D vectors, represented with 3x3 matrices.
+[00:28–00:34] But several commenters have asked about non-square matrices, so I thought I'd take a moment to just show what those mean geometrically.
+[00:35–00:43] By now in the series, you actually have most of the background you need to start pondering a question like this on your own, but I'll start talking through it just to give a little mental momentum.
+[00:44–00:51] It's perfectly reasonable to talk about transformations between dimensions, such as one that takes 2D vectors to 3D vectors.
+[00:51–00:59] Again, what makes one of these linear is that gridlines remain parallel and evenly spaced, and that the origin maps to the origin.
+[01:00–01:06] What I have pictured here is the input space on the left, which is just 2D space, and the output of the transformation shown on the right.
+[01:07–01:20] The reason I'm not showing the inputs move over to the outputs like I usually do is not just animation laziness, it's worth emphasizing that 2D vector inputs are very different animals from these 3D vector outputs, living in a completely separate, unconnected space.
+[01:21–01:26] Encoding one of these transformations with a matrix is really just the same thing as what we've done before.
+[01:27–01:33] You look at where each basis vector lands, and write the coordinates of the landing spots as the columns of a matrix.
+[01:33–01:45] For example, what you're looking at here is an output of a transformation that takes i-hat to the coordinates 2, negative 1, negative 2, and j-hat to the coordinates 0, 1, 1.
+[01:47–01:56] Notice, this means the matrix encoding our transformation has three rows and two columns, which, to use standard terminology, makes it a 3x2 matrix.
+[01:57–02:06] In the language of last video, the column space of this matrix, the place where all the vectors land, is a 2D plane slicing through the origin of 3D space.
+[02:07–02:15] But the matrix is still full rank, since the number of dimensions in this column space is the same as the number of dimensions of the input space.
+[02:17–02:36] So if you see a 3x2 matrix out in the wild, you can know that it has the geometric interpretation of mapping two dimensions to three dimensions, since the two columns indicate that the input space has two basis vectors, and the three rows indicate that the landing spots for each of those basis vectors is described with three separate coordinates.
+[02:37–02:43] Likewise, if you see a 2x3 matrix with two rows and three columns, what do you think that means?
+[02:43–02:59] Well, the three columns indicate that you're starting in a space that has three basis vectors, so we're starting in three dimensions, and the two rows indicate that the landing spot for each of those three basis vectors is described with only two coordinates, so they must be landing in two dimensions.
+[03:00–03:09] So it's a transformation from 3D space onto the 2D plane, a transformation that should feel very uncomfortable if you imagine going through it.
+[03:13–03:17] You could also have a transformation from two dimensions to one dimension.
+[03:17–03:24] One-dimensional space is really just the number line, so a transformation like this takes in 2D vectors and spits out numbers.
+[03:25–03:42] Thinking about grid lines remaining parallel and evenly spaced is a little bit messy due to all of the squishification happening here, so in this case, the visual understanding for what linearity means is that if you have a line of evenly spaced dots, it would remain evenly spaced once they're mapped onto the number line.
+[03:43–03:50] One of these transformations is encoded with a 1x2 matrix, each of whose two columns has just a single entry.
+[03:50–03:58] The two columns represent where the basis vectors land, and each one of those columns requires just one number, the number that that basis vector landed on.
+[03:59–04:05] This is actually a surprisingly meaningful type of transformation with close ties to the dot product, and I'll be talking about that next video.
+[04:06–04:18] Until then, I encourage you to play around with this idea on your own, contemplating the meanings of things like matrix multiplication and linear systems of equations in the context of transformations between different dimensions. Have fun!

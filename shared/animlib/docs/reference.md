@@ -2,6 +2,10 @@
 
 For the purpose and core requirements, see the [README](../README.md).
 
+For deposited coordinate import and `s.molecule` batched display beads, see
+[Molecular coordinates](molecules.md). Parsing and smooth density-envelope
+generation are host-side; scene source uses compact coordinates or finished meshes.
+
 A framework-free TypeScript library for code-authored, realtime GPU animations
 on a canvas.
 Scenes are written in ordinary JavaScript. Each scene builds a local, seekable
@@ -648,7 +652,7 @@ settings for a continuous finish, or crossfade separate objects deliberately.
 
 The material model uses the renderer's camera-relative directional light and a
 procedural studio reflection approximation. It does not reflect other scene
-objects. Scene lighting can override its ambient and directional contributions. No environment maps, image/video textures,
+objects. Scene lighting can override its ambient and directional contributions. For procedural materials, no environment maps or image/video textures,
 image normal/bump maps, displacement, physically based material guarantees, or bloom
 are provided. Try the **Textures** study in `/spatial.html` for pattern, palette,
 frequency, seed, bump strength, metalness, roughness, highlight, and emission controls.
@@ -1582,7 +1586,13 @@ export default scene({}, s => {
 ```
 
 Left-button dragging rotates only the view where the drag started, even when the
-pointer leaves it. Scrolling does not zoom. Regions clip their geometry and use
+pointer leaves it. Set `orbitHitTest: "geometry"` alongside `orbit: true` to require
+a hit on a visible sphere, circle, rectangle, or triangle mesh before starting
+orbit. Standalone text, paths, lines and empty space do not start rotation;
+billboard labels stay upright and may sit over pickable model surfaces. Keep
+explanatory text outside the model view. Omit this option for legacy region-wide
+orbit. Pan gestures remain available across the region. The setting is saved in
+evaluated frames and inherited with a view. Scrolling does not zoom. Regions clip their geometry and use
 independent depth buffers; overlapping regions render in declaration order, with
 the last region receiving pointer input. Regions render transparently over the scene and
 have no automatic border. Empty space outside them uses the main scene camera.
@@ -2056,8 +2066,8 @@ and emission; procedural textures mix two palette colors. This is not a
 comprehensive physically based material system. Shape matching cannot infer semantic
 part correspondence or arbitrary mesh topology.
 
-Not yet included: custom fonts and general text shaping, images/video textures,
-environment maps, image bump/normal maps, displacement, bloom, arbitrary mesh receivers or self-shadowing, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
+Not yet included: custom fonts and general text shaping, standalone images/video textures,
+environment maps, image bump/normal maps on procedural primitives, displacement, bloom, arbitrary mesh receivers or self-shadowing, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
 infinite scenes, branching navigation, playback-rate controls,
 video export, or mobile-browser support guarantees. The initial control surface
 is sliders, toggles, selects, and requested orbit rotation.
@@ -2224,3 +2234,127 @@ is no label collision avoidance or automatic placement.
 
 The [explanatory studies](../demo/explanatory.html) demonstrate annular caps,
 independent cutaway/top views, a scalar height field, and orbit-sensitive labels.
+
+## Imported static 3D models
+
+`model(id, props)` instantiates a registered GLB asset, including its named parts,
+UV coordinates, vertex colors and embedded image materials. Geometry and image
+bytes stay in host-owned resources, outside QuickJS and serialized scene frames.
+The scene builder remains synchronous and has no network access.
+
+```js
+export default scene({ mode: '3d', orbit: true }, s => {
+  const assembly = s.model('assembly', {
+    asset: 'published-model-id', position: [0, 0, 0], scale: 2,
+  });
+  s.play(assembly.fadeIn(), { duration: 0.5 });
+  const panel = assembly.part('Panel');
+  s.play(panel.moveTo([1, 0, 0]), { duration: 1 });
+  s.play(panel.tintTo(Color.BLUE), { duration: 0.5 });
+  s.play(assembly.tintTo(Color.WHITE), { duration: 0.5 }); // Original materials.
+  s.keep(assembly);
+});
+```
+
+Props: `asset`, `position`, `rotation`, uniform `scale`, `opacity`, `castShadow`,
+and optional palette `tint`. Handles support ordinary element animations,
+`part(idOrName)`, and `tintTo(color)`. Part lookup requires a unique name or its
+stable `node-N` ID. Root IDs produce stable child IDs such as
+`assembly/node-2` and `assembly/primitive-0`; later scenes can retrieve kept
+parts with `s.previous.get('assembly/node-2')`. There is no arbitrary topology
+morph, deformation callback, skeletal animation, or animation-clip playback for
+imported models in this release.
+
+Imported node transforms, including nonuniform and negative scales, are baked
+into host geometry while node translations/pivots and the hierarchy remain
+addressable. Part rotations therefore use model axes around the imported pivot,
+not the original node's rotated local axes. `moveTo` sets a position relative to
+the part's parent; the published metadata includes each initial position.
+Units and overall model size are preserved. Use the published bounds to choose
+scale and camera framing.
+
+Materials retain imported colors independently of the host palette. Explicit
+tints multiply imported colors in linear space; `WHITE` clears the tint. The
+renderer supports base color, tangent-space normal, metallic/roughness,
+occlusion and emissive maps, unlit materials, vertex colors, OPAQUE/MASK/BLEND,
+and double-sided faces. Maps use TEXCOORD_0 or TEXCOORD_1, wrapping, nearest/linear
+filtering, and KHR_texture_transform. Normal-map tangent frames are reconstructed
+from UV derivatives. Lighting uses animlib's studio material approximation;
+it is not an exact glTF reference PBR renderer. Mipmap filtering currently uses
+its nearest/linear base-level equivalent. No environment maps or compressed
+textures are included yet. Alpha-masked surfaces do not cast planar shadows;
+blended surfaces retain the existing triangle-sorting limitations.
+
+### Registering and delivering models
+
+The host validates a self-contained GLB and registers the resulting metadata
+with its URL. `parseModelGLB` works in Bun, Node, and browsers. `createModelGLB`
+exports host-generated named triangle parts, UVs, colors/material factors and
+optional PNG/JPEG textures. Neither function is available inside scene code.
+
+```ts
+import { parseModelGLB, createPlayer } from 'animlib';
+const { metadata } = await parseModelGLB(bytes);
+const player = createPlayer({ canvas, assets: {
+  heart: { kind: 'model', url: '/api/models/<sha256>.glb', sha256, metadata },
+} });
+// Or player.registerAssets({ heart: { kind: 'model', url, sha256, metadata } });
+```
+
+URLs belong to the host manifest, not scene source. A supplied SHA-256 is checked
+before decoding. IDs are immutable; a renewed signed URL is accepted for the
+same hash and metadata. Identical hashes share downloads, decoded images, and
+GPU resources. Assets required by each candidate scene are fully prepared
+before submission commits. Failed loading leaves the last valid sequence in
+place. All sequence assets remain cached for backward seeking, within resident
+budgets, until the player is disposed. Disposal aborts pending downloads and
+releases textures/buffers. GPU recovery reuploads the cached decoded resources.
+
+For headless authoring, pass inventories to `compileSource(source, { models:
+{ heart: metadata } })` or `new SceneSequence({ models: { heart: metadata } })`.
+Frames carry only asset/primitive references and local bounds. Bounds and model
+picking use conservative primitive boxes when image/geometry bytes are absent;
+these are not exact painted-pixel bounds. This supports layout, attachment
+origins, and drag behaviors without importing full geometry into the compiler.
+
+The accepted profile is static, triangle-based glTF 2.0 in a GLB with all buffer
+and image data embedded. PNG/JPEG images, normalized attributes, sparse and
+interleaved accessors, and KHR_mesh_quantization are supported by the importer.
+Unsupported extensions, skins, morph targets, animation clips, external URIs,
+missing UVs, invalid attributes and corrupt image dimensions produce errors.
+Convert FBX/OBJ/Blender files to this profile before publication; bake Blender
+procedural materials to image maps. The importer does not run Blender itself.
+
+Per GLB limits: 32 MB file; 200,000 vertices and triangles; 256 nodes/primitives;
+64 images, each at most 4096×4096, totaling 16 megapixels. One compiled scene may
+reference at most 500,000 imported triangles across its instances. A player
+retains at most 1,000,000 imported vertices and 32 megapixels of decoded model
+images. These are rejection ceilings, not performance targets; use much smaller
+assets for mobile scenes.
+
+### Scene-agent publication
+
+The backend supplies the scene agent with `publish_model`. It accepts either a
+public HTTPS GLB URL or a `generated` JSON string describing named mesh parts.
+The tool validates and stores immutable bytes, records source/license/attribution,
+and returns the model ID and inventory for `s.model`. Existing assets are provided
+to later scene agents and restored when generation resumes. Each lesson supports
+up to 16 published models. Downloading does not grant reuse rights: supply the
+source's applicable license and attribution.
+
+The lesson's `VideoScene.assets` manifest reaches the client alongside its source
+and audio. The client registers these assets before submitting the scene.
+`POST /api/models` accepts a raw GLB body and returns `{ id, asset }` for external
+model-generation workflows. `GET`/`HEAD /api/models/<sha256>.glb` serve immutable
+binary assets with an ETag and cache headers. Storage defaults to `data/models`;
+set `MODEL_ASSET_DIR` to persistent storage in deployment. Model bytes are cached
+independently of video jobs; deleting a video does not garbage-collect shared
+models. Automatic cross-format conversion, mesh optimization, LODs and asset thumbnails
+are future additions. Agent inspection, browser previews, and native visual review
+receive the same published model assets; isolated renderers decode verified bytes
+without fetching external URLs.
+
+Open `/model-viewer.html` in the demo to import a local GLB, orbit, highlight named
+parts, and replay rotation. `/models.html` runs focused WebGL2/WebGPU browser
+checks; `npm --workspace animlib run test:gpu` includes native Vulkan model pixel
+checks when the browser has no WebGPU adapter.

@@ -1,0 +1,71 @@
+[00:09–00:17] Last video I talked about the dot product, showing both the standard introduction to the topic, as well as a deeper view of how it relates to linear transformations.
+[00:18–00:28] I'd like to do the same thing for cross products, which also have a standard introduction, along with a deeper understanding in the light of linear transformations, but this time I'm dividing it into two separate videos.
+[00:29–00:40] Here, I'll try to hit the main points that students are usually shown about the cross product, and in the next video I'll be showing a view which is less commonly taught, but really satisfying when you learn it.
+[00:40–00:41] We'll start in two dimensions.
+[00:42–00:47] If you have two vectors, v and w, think about the parallelogram that they span out.
+[00:47–01:00] What I mean by that is that if you take a copy of v and move its tail to the tip of w, and you take a copy of w and move its tail to the tip of v, the four vectors now on the screen enclose a certain parallelogram.
+[01:02–01:08] The cross product of v and w, written with the x-shaped multiplication symbol, is the area of this parallelogram.
+[01:10–01:11] Well, almost.
+[01:11–01:13] We also need to consider orientation.
+[01:14–01:20] Basically, if v is on the right of w, then v cross w is positive and equal to the area of the parallelogram.
+[01:21–01:27] But if v is on the left of w, then the cross product is negative, namely the negative area of that parallelogram.
+[01:28–01:30] Notice this means that order matters.
+[01:31–01:37] If you swapped v and w, instead taking w cross v, the cross product would become the negative of whatever it was before.
+[01:39–01:47] The way I always remember the ordering here is that when you take the cross product of the two basis vectors in order, i-hat cross j-hat, the result should be positive.
+[01:48–01:52] In fact, the order of your basis vectors is what defines orientation.
+[01:52–01:59] So since i-hat is on the right of j-hat, I remember that v cross w has to be positive whenever v is on the right of w.
+[02:01–02:07] So for example, with the vectors shown here, I'll just tell you that the area of that parallelogram is seven.
+[02:07–02:11] And since v is on the left of w, the cross product should be negative.
+[02:11–02:13] So v cross w is negative seven.
+[02:15–02:19] But of course, you want to be able to compute this without someone telling you the area.
+[02:20–02:22] This is where the determinant comes in.
+[02:23–02:29] So if you didn't see chapter five of this series, where I talk about the determinant, now would be a really good time to go take a look.
+[02:29–02:35] Even if you did see it, but it was a while ago, I'd recommend taking another look just to make sure those ideas are fresh in your mind.
+[02:37–02:49] For the 2D cross product, v cross w, what you do is you write the coordinates of v as the first column of a matrix, and you take the coordinates of w and make them the second column, then you just compute the determinant.
+[02:51–03:01] This is because a matrix whose columns represent v and w corresponds with a linear transformation that moves the basis vectors i-hat and j-hat to v and w.
+[03:06–03:16] The determinant is all about measuring how areas change due to a transformation, and the prototypical area that we look at is the unit square resting on i-hat and j-hat.
+[03:17–03:22] After the transformation, that square gets turned into the parallelogram that we care about.
+[03:22–03:31] So the determinant, which generally measures the factor by which areas are changed, gives the area of this parallelogram, since it evolved from a square that started with area one.
+[03:32–03:41] What's more, if v is on the left of w, it means that orientation was flipped during that transformation, which is what it means for the determinant to be negative.
+[03:43–03:50] As an example, let's say v has coordinates negative 3, 1, and w has coordinates 2, 1.
+[03:50–04:00] The determinant of the matrix with those coordinates as columns is negative 3 times 1 minus 2 times 1, which is negative 5.
+[04:01–04:09] So evidently, the area of the parallelogram they define is 5, and since v is on the left of w, it should make sense that this value is negative.
+[04:11–04:18] As with any new operation you learn, I'd recommend playing around with this notion a bit in your head, just to get kind of an intuitive feel for what the cross product is all about.
+[04:19–04:35] For example, you might notice that when two vectors are perpendicular, or at least close to being perpendicular, their cross product is larger than it would be if they were pointing in very similar directions, because the area of that parallelogram is larger when the sides are closer to being perpendicular.
+[04:37–04:48] Something else you might notice is that if you were to scale up one of those vectors, perhaps multiplying v by 3, then the area of that parallelogram is also scaled up by a factor of 3.
+[04:49–04:56] So what this means for the operation is that 3v cross w will be exactly 3 times the value of v cross w.
+[04:58–05:05] Now, even though all of this is a perfectly fine mathematical operation, what I just described is technically not the cross product.
+[05:05–05:11] The true cross product is something that combines two different 3d vectors to get a new 3d vector.
+[05:12–05:22] Just as before, we're still going to consider the parallelogram defined by the two vectors that we're crossing together, and the area of this parallelogram is still going to play a big role.
+[05:22–05:26] To be concrete, let's say that the area is 2.5 for the vectors shown here.
+[05:27–05:30] But as I said, the cross product is not a number, it's a vector.
+[05:30–05:41] This new vector's length will be the area of that parallelogram, which in this case is 2.5, and the direction of that new vector is going to be perpendicular to the parallelogram.
+[05:42–05:43] But which way, right?
+[05:44–05:49] I mean, there are two possible vectors with length 2.5 that are perpendicular to a given plane.
+[05:50–05:52] This is where the right hand rule comes in.
+[05:53–05:58] Point the forefinger of your right hand in the direction of v, then stick out your middle finger in the direction of w.
+[05:59–06:03] Then, when you point up your thumb, that's the direction of the cross product.
+[06:08–06:17] For example, let's say that v was a vector with length 2 pointing straight up in the z direction, and w is a vector with length 2 pointing in the pure y direction.
+[06:17–06:26] The parallelogram that they define in this simple example is actually a square, since they're perpendicular and have the same length, and the area of that square is 4.
+[06:26–06:28] So their cross product should be a vector with length 4.
+[06:29–06:33] Using the right hand rule, their cross product should point in the negative x direction.
+[06:36–06:39] So the cross product of these two vectors is negative 4 times i-hat.
+[06:45–06:54] For more general computations, there is a formula that you could memorize if you wanted, but it's common and easier to instead remember a certain process involving the 3D determinant.
+[06:55–06:58] Now, this process looks truly strange at first.
+[06:59–07:04] You write down a 3D matrix where the second and third columns contain the coordinates of v and w.
+[07:05–07:10] But for that first column, you write the basis vectors i-hat, j-hat, and k-hat.
+[07:11–07:14] Then you compute the determinant of this matrix.
+[07:15–07:16] The silliness is probably clear here.
+[07:17–07:20] What on earth does it mean to put in a vector as the entry of a matrix?
+[07:20–07:25] Students are often told that this is just a notational trick.
+[07:25–07:32] When you carry out the computations as if i-hat, j-hat, and k-hat were numbers, then you get some linear combination of those basis vectors.
+[07:35–07:49] And the vector defined by that linear combination, students are told to just believe, is the unique vector perpendicular to v and w, whose magnitude is the area of the appropriate parallelogram, and whose direction obeys the right hand rule.
+[07:51–07:56] And sure, in some sense this is just a notational trick, but there is a reason for doing it.
+[07:58–08:01] It's not just a coincidence that the determinant is once again important.
+[08:01–08:05] And putting the basis vectors in those slots is not just a random thing to do.
+[08:06–08:11] To understand where all of this comes from, it helps to use the idea of duality that I introduced in the last video.
+[08:12–08:19] This concept is a little bit heavy though, so I'm putting it in a separate follow-on video for any of you who are curious to learn more.
+[08:19–08:22] Arguably, it falls outside the essence of linear algebra.
+[08:23–08:27] The important part here is to know what that cross product vector geometrically represents.
+[08:28–08:30] So if you want to skip that next video, feel free.
+[08:30–08:40] But for those of you who are willing to go a bit deeper, and who are curious about the connection between this computation and the underlying geometry, the ideas that I'll talk about in the next video are just a really elegant piece of math.

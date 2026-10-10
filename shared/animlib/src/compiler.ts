@@ -1,9 +1,11 @@
+import { validateModelMetadata } from './model-metadata.js';
 import { validateSurfaceAppearance } from "./appearance-validation.js";
 import { parse } from "acorn";
 import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
 import { createSurfaceBuilders } from "./surfaces.js";
 import { createSolidBuilders } from "./solids.js";
+import { createMoleculeBuilders } from './molecules.js';
 import { validateLighting } from "./lighting.js";
 import { validatePath } from "./path.js";
 import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
@@ -14,7 +16,7 @@ export class SceneCompileError extends Error {
   constructor(public diagnostic: Diagnostic) { super(diagnostic.message); this.name = "SceneCompileError"; }
 }
 
-const kinds = new Set(["circle", "sphere", "rectangle", "path", "line", "arrow", "text", "latex", "mesh", "group"]);
+const kinds = new Set(["circle", "sphere", "rectangle", "path", "line", "arrow", "text", "latex", "mesh", "group", "model"]);
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -22,6 +24,13 @@ function number(value: unknown, label: string) { check(typeof value === "number"
 function vec(value: unknown, label: string, size = 3) { check(Array.isArray(value) && value.length === size, `Invalid ${label}`); value.forEach(n => number(n, label)); }
 function geometry(g: Geometry) {
   check(g && kinds.has(g.kind), "Invalid geometry kind");
+  check(!Object.keys(g).some(k => k.startsWith('_')), 'Internal geometry fields are host-owned');
+  if (g.kind === 'model') {
+    const r = g.model;
+    check(r && typeof r.asset === 'string' && r.asset.length > 0 && r.asset.length <= 256 && Number.isInteger(r.primitive) && r.primitive >= 0 && r.primitive < 256, 'Invalid model reference');
+    vec(r.bounds?.min, 'model bounds'); vec(r.bounds?.max, 'model bounds');
+    check(r.bounds.min.every((v,i) => v <= r.bounds.max[i]), 'Invalid model bounds');
+  } else check(g.model === undefined, 'Model references require model geometry');
   for (const key of ["radius", "width", "height", "fontSize"] as const) if (g[key] !== undefined) { number(g[key], key); check(g[key]! >= 0, `${key} must be nonnegative`); }
   for (const key of ["points", "vertices"] as const) if (g[key]) {
     check(Array.isArray(g[key]) && g[key]!.length <= 20000, `Invalid or oversized ${key}`);
@@ -131,6 +140,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
     const [x,y,w,h] = view.rect;
     check(x >= 0 && y >= 0 && w > 0 && h > 0 && x+w <= 1+1e-9 && y+h <= 1+1e-9, "View rectangle must fit within the canvas");
     check(typeof view.orbit === "boolean", "Invalid view orbit flag");
+    check(view.orbitHitTest === undefined || view.orbitHitTest === 'geometry', 'Invalid view orbit hit test');
     camera(view.camera);
   }
   const checkView = (e: ElementState) => check(e.view === undefined || typeof e.view === "string" && viewIds.has(e.view), "Element references unknown view");
@@ -289,6 +299,7 @@ export async function createSceneProgram(source: string, input: CompileInput = {
   let vm: ReturnType<Awaited<ReturnType<typeof getQuickJS>>["newContext"]> | undefined;
   let retained = false;
   try {
+    for (const m of Object.values(input.models ?? {})) validateModelMetadata(m);
     const resolver = paletteResolver(input.palette);
     input = { ...input, palette: resolver.palette };
     check(typeof source === "string" && source.length <= 256000, "Scene source limit exceeded (256 KB)");
@@ -324,7 +335,7 @@ export async function createSceneProgram(source: string, input: CompileInput = {
       const Color = __tokens(${JSON.stringify(Color)});
       const palette = Object.freeze({ ...__input.palette, colors: __tokens(Object.fromEntries(Object.keys(__input.palette.colors).map(name => [name, name]))) });
       const __buildScene = ${buildScene.toString()};
-      const __meshBuilders = Object.freeze({ ...(${createSurfaceBuilders.toString()})(), ...(${createSolidBuilders.toString()})() });
+      const __meshBuilders = Object.freeze({ ...(${createSurfaceBuilders.toString()})(), ...(${createSolidBuilders.toString()})(), ...(${createMoleculeBuilders.toString()})() });
       const scene = (options, builder) => __buildScene(options, builder, __input, update => { globalThis.__animlibUpdate = update; }, __meshBuilders);
       let __seed = ${JSON.stringify(input.seed ?? 1)} >>> 0;
       Math.random = () => { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };
@@ -336,6 +347,19 @@ export async function createSceneProgram(source: string, input: CompileInput = {
     check(json && json.length <= 8 * 1024 * 1024, "Invalid or oversized compiled scene");
     const compiled = JSON.parse(json) as CompiledScene;
     validateCompiledScene(compiled);
+    const verifyModel = (g: Geometry) => {
+      if (g.kind !== 'model') return;
+      const reference = g.model!, metadata = input.models?.[reference.asset];
+      check(metadata && JSON.stringify(metadata.primitives[reference.primitive]?.bounds) === JSON.stringify(reference.bounds), 'Model reference is missing or does not match its registered metadata');
+    };
+    for (const e of [...compiled.initial, ...compiled.lifecycle.flatMap(e => e.elements ?? []), ...compiled.tracks.flatMap(t => Object.values(t.from))]) verifyModel(e.geometry);
+    let importedTriangles=0;
+    for(const e of [...compiled.initial,...compiled.lifecycle.flatMap(e=>e.elements??[])]) {
+      const ref=e.geometry.model;
+      if(ref)importedTriangles+=input.models![ref.asset].primitives[ref.primitive].triangles;
+    }
+    check(importedTriangles<=500000,'Scene imported model budget exceeded (500,000 triangles across instances)');
+    for (const t of compiled.tracks) if (t.action.geometry) { check(t.action.geometry.kind !== 'model', 'Model geometry cannot be morphed'); verifyModel(t.action.geometry); }
     enforceScenePalette(compiled, resolver);
     retained = true;
     return {

@@ -1,0 +1,9 @@
+[00:00–00:01] Here's a really nice puzzle.
+[00:01–00:07] Suppose you randomly orient a cube in three-dimensional space, and you look at the area of its shadow.
+[00:08–00:10] What's the expected value for that area?
+[00:10–00:22] Or phrased another way, if you repeat this process over and over, randomly tossing that cube and tallying up the areas that you find, what would the empirically measured mean of all those measured areas approach as you do this more and more?
+[00:23–00:35] Strictly speaking, in referencing the shadow, that would depend on where the light source is, but here we're doing the typical mathematician thing of thinking of the light source as being infinitely far away, so the shadow is just a flat projection, say, onto the xy-plane.
+[00:36–00:40] It is definitely a hard problem, and I'm curious actually to hear how you would approach it in the comments.
+[00:41–00:44] The longest video I've made to date explores this question.
+[00:44–00:52] Really, it's a saga about two distinct problem-solving styles, and why popularizations of math tend to have a bias in what kinds of styles they represent.
+[00:52–00:55] The shadow puzzle just turns out to be a very perfect setting for that story.

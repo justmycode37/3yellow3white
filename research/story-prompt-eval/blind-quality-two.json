@@ -1,0 +1,277 @@
+{
+  "cases": [
+    {
+      "case": "leaf",
+      "samples": [
+        {
+          "label": "A",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-2",
+              "detail": "The spoken carbon-dioxide mechanism could explicitly say that use leaves less carbon dioxide inside; the existing use-to-inflow explanation is sound but leaves that concentration step implicit."
+            }
+          ],
+          "evidence": [
+            "beat-2 links photosynthesis consumption to inward carbon dioxide movement and evaporation plus drier exterior to outward vapor movement; it explicitly distinguishes bidirectional molecule motion from overall arrows.",
+            "beat-3 changes outside dryness before narrowing the same pore, then reduces both crossings while keeping a separate surface-loss route. This earns the tradeoff rather than merely labeling it.",
+            "Exactly three scenes, 258 words, no pauses, and estimated 114–136 seconds fit the request. A short 28-word opening selects the pore; the later scenes carry the explanation.",
+            "The same leaf patch, guard cells, particle identities, and cutaway topology persist across scene boundaries."
+          ]
+        },
+        {
+          "label": "B",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            2,
+            3,
+            3
+          ],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-1",
+              "detail": "Trim the repeated shared-passage summary and carbon uptake explanation across beats 1 and 2. At 305 words the estimate is 134–161 seconds, 144 at 140 wpm, stretching the roughly two-minute target."
+            },
+            {
+              "sceneId": "beat-2",
+              "detail": "Keep illustrative molecular speeds fixed in the humidity comparison; the plan permits 'speed changes' despite holding temperature fixed. Changing vapor density and net crossing imbalance alone communicates the intended cause."
+            },
+            {
+              "sceneId": "beat-1",
+              "detail": "Contract-only issue: leaf.request.json is unavailable in sourceRefs. Replace it with request in all three scenes. This does not make the botanical explanation incorrect."
+            }
+          ],
+          "evidence": [
+            "beat-2 holds opening and temperature constant while making outside air drier, making the humidity comparison unusually explicit.",
+            "beat-3 connects fewer carbon arrivals to slower photosynthesis and shows residual loss through the covering; no conscious decision or instantaneous zero-loss claim is made.",
+            "The opening already explains both streams; beat-2 repeats carbon use/inward flow while adding evaporation and the humidity manipulation. This is useful development with some removable repetition.",
+            "The packet's validator failure is an unavailable source name, separate from explanatory quality."
+          ]
+        },
+        {
+          "label": "C",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-3",
+              "detail": "Name the outer covering as an example in the spoken 'other routes' qualification so the surface-loss visual has an equally specific verbal referent."
+            }
+          ],
+          "evidence": [
+            "beat-1 explicitly keys gold dots as carbon dioxide and establishes two-way crossing with net uptake; beat-2 separately establishes blue liquid/vapor and evaporation before pore crossing.",
+            "beat-2 rejects a one-for-one exchange, and beat-3 holds dryness and viewing scale fixed while changing only the aperture, comparing crossings over comparable intervals.",
+            "Exactly three scenes, no pauses, 274 words, and a 121–145-second estimate are reasonable for roughly two minutes.",
+            "Guard cells remain attached, the pore is explicitly empty space rather than a membrane, and the residual surface route prevents closure from appearing to seal the leaf."
+          ]
+        }
+      ],
+      "comparison": "All three teach the requested mechanism and respect the substantive restrictions. A is the tightest duration fit and explicitly stages increased dryness before closure. B has the clearest controlled humidity comparison but repeats more and runs longer. C has a clean carbon-then-water-then-restriction progression and explicitly avoids a one-for-one swap. A and C are comparably strong overall; B's source-name rejection is a separate contract defect, not evidence of worse biology."
+    },
+    {
+      "case": "protocol",
+      "samples": [
+        {
+          "label": "A",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-3",
+              "detail": "A short qualification that the payment is inside the illustrated atomic boundary would help junior developers avoid applying a local transaction to an external charge. The stated atomic model itself is sound."
+            },
+            {
+              "sceneId": "beat-4",
+              "detail": "Explicitly label the return from the expired-record example to the retained-record ending as a reference case. The current ending is conditional, but the transition could look like an expired association being restored."
+            }
+          ],
+          "evidence": [
+            "beat-2 shows identical client timeout observations against different ledgers, and hypothetical retries create a duplicate only in the already-committed history.",
+            "beat-3 explicitly reconstructs protection from the first attempt, commits effect and key/payload/result together, shows unchanged ledger on replay, and coordinates concurrent attempts.",
+            "beat-4 distinguishes an identical new purchase P2/K8 from retry P/K7, rejects K7/$25, and preserves the charge when the record expires.",
+            "345 words give an estimated 152–182 seconds, near the three-minute target, with exactly four scenes and no pauses."
+          ]
+        },
+        {
+          "label": "B",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-3",
+              "detail": "This scene contains 152 spoken words plus atomicity, crash risk, concurrency, both loss histories, and an external-provider caveat. Keep the provider annotation brief and allow distinct visual stages so those dependencies remain inspectable; no extra scene is needed."
+            }
+          ],
+          "evidence": [
+            "The unkeyed retry comparison adds individual charge marks to show one versus two payments, rather than asserting the result in a counter.",
+            "beat-3 says both charge and association become durable together, explains the crash gap, and specifies waiting/in-progress behavior for concurrent attempts.",
+            "The spoken external-provider limitation explicitly prevents a local-transaction overclaim. beat-4 makes expiry an explicitly hypothetical comparison so the retained reference record is never silently recreated.",
+            "375 words estimate 165–198 seconds, 177 at 140 wpm. The short opening and long mechanism scene are purposeful and fit the four-scene constraint."
+          ]
+        },
+        {
+          "label": "C",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            1,
+            3,
+            3
+          ],
+          "materialErrors": [
+            {
+              "sceneId": "beat-1 through beat-4",
+              "detail": "The 461-word script substantially overruns roughly three minutes: estimated 203–243 seconds, 217 at 140 wpm. It needs about 169 wpm to fit 180 seconds under the rubric formula, above the 125–150 planning range. Repeated timeout and retry-risk exposition should be cut before compressing the atomic mechanism."
+            }
+          ],
+          "improvements": [
+            {
+              "sceneId": "beat-1",
+              "detail": "Contract-only issue: protocol.request.json is unavailable in sourceRefs throughout. Replace it with request; this filename problem is independent of protocol semantics."
+            },
+            {
+              "sceneId": "beat-2",
+              "detail": "The first scene already states the duplicate risk and difference between client and server observations. Shorten their reprise here while preserving the never-arrived comparison."
+            }
+          ],
+          "evidence": [
+            "beat-2 explicitly removes the hypothetical duplicate before comparing first attempts and resets to a protected pre-attempt state; the handoff avoids retroactively adding protection.",
+            "beat-3 commits the ledger and result association together, coordinates concurrent claims, and warns that an external service needs equivalent protection.",
+            "beat-4 preserves payment history after visibly expiring the key record and ends on an explicitly conditional statement; changed-payload and new-intent cases are both present.",
+            "The duration problem is not missing teaching content: the full mechanism is present, but the four scenes contain 96, 114, 128, and 123 words."
+          ]
+        }
+      ],
+      "comparison": "The three samples explain the protocol correctly and use the two histories as evidence for timeout ambiguity. B gives the most explicit practical atomicity boundary while remaining close to the requested duration. A is leaner and also strong, with a useful nonblocking opportunity to clarify external charging and the expiry/reference transition. C has careful state continuity and boundaries, but its extra exposition makes the requested duration materially harder to meet. Its validator failure is separately attributable to source naming."
+    },
+    {
+      "case": "history",
+      "samples": [
+        {
+          "label": "A",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-2",
+              "detail": "Refine Content needed's 'announced cut precedes the reported stoppage' to 'the planned start precedes the diary entry.' The narration remains cautious, but the plan should not encourage treating the diary date as a verified event date."
+            },
+            {
+              "sceneId": "beat-2",
+              "detail": "The closing 'cause remains only partly explained' could be 'the causes remain uncertain' to keep the conclusion as tentative as the preceding 'may have contributed'."
+            }
+          ],
+          "evidence": [
+            "The exact rent quotation is attributed to one worker; the notice's scheduled start is visually distinguished from verified implementation.",
+            "beat-2 compares the specificity of the rent concern with the manager's unidentified agitators, then labels the evidence links 'supports possibility' rather than drawing causal arrows.",
+            "It neither declares the manager false nor assigns the diarist's concern to all workers. The supplied absences are shown without inventing interviews or participation counts.",
+            "188 words, an 83–99-second estimate, two scenes, and no pauses closely match the request."
+          ]
+        },
+        {
+          "label": "B",
+          "scores": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
+          "materialErrors": [],
+          "improvements": [
+            {
+              "sceneId": "beat-2",
+              "detail": "Lightly tighten the repeated qualified conclusion if a closer 90-second delivery is needed: 213 words estimate 94–112 seconds, 100 at 140 wpm. This is a modest pacing issue, not a major overrun."
+            }
+          ],
+          "evidence": [
+            "The narration expressly distinguishes announced policy from actual pay and the planned start from the diary entry date.",
+            "It states that the diarist's participation is unspecified, names the manager's account 'unsupported within this packet, rather than proven false,' and still reaches a qualified financial-pressure interpretation.",
+            "The plan forbids a stoppage event marker at 11 May and retains source ownership as the timeline is removed. 'Participation unspecified' and 'Unconfirmed here' visually carry the limitations.",
+            "The requested two scenes, no pauses, and exclusive use of the fictional packet are maintained."
+          ]
+        },
+        {
+          "label": "C",
+          "scores": [
+            3,
+            3,
+            3,
+            2,
+            3,
+            3,
+            3
+          ],
+          "materialErrors": [
+            {
+              "sceneId": "beat-2",
+              "detail": "The spoken support includes 'a reported stoppage soon afterward' relative to the announced cut. The packet dates the diary, not the stoppage. This adds an unestablished event sequence to the argument precisely where the lesson is supposed to distinguish report from justified inference. Say that the diary entry follows the planned start and keep the stoppage's date unspecified."
+            }
+          ],
+          "improvements": [
+            {
+              "sceneId": "beat-2",
+              "detail": "Replace the visual 'All motives unknown' with 'Not all workers' motives established' or 'Individual motives uncertain.' The current label is broader than the spoken limitation and can obscure that a specific rent concern is known."
+            }
+          ],
+          "evidence": [
+            "beat-1 accurately treats the rent quotation as direct evidence of the diarist's concern and marks possible financial pressure as interpretation rather than source wording.",
+            "beat-2 compares specific support, does not dismiss the manager solely for lacking names, and concludes 'may have contributed' rather than declaring a definitive cause.",
+            "The plan correctly distinguishes source dates from event dates, but the final spoken 'stoppage soon afterward' contradicts that caution.",
+            "193 words give an 85–102-second estimate, with exactly two scenes and no pauses. The final interpretation updates the existing green inference rather than replacing the source evidence."
+          ]
+        }
+      ],
+      "comparison": "B is the most careful about the difference between the document date, actual event date, announced policy, and writer participation, although it is slightly longer. A is concise and strong; one planning phrase should be tightened to prevent overreading chronology. C gives a useful evidence comparison but its final spoken chronology claims more than the packet supplies, and its 'All motives unknown' label overstates the otherwise careful uncertainty. These are exploratory script-and-plan judgments, not evidence about rendered teaching effectiveness or statistical prompt superiority."
+    }
+  ]
+}

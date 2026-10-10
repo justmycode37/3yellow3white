@@ -1,0 +1,83 @@
+{
+  "sourceSha256": "7dfe2101521066271df2a87957633e638c26b430a2ffe5a5507ec2193555bf59",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.900000000000001,
+        4.100000000000001,
+        5.349999999999997,
+        7.799999999999988
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.24999999999998,
+        12.69999999999997,
+        15.149999999999963,
+        16.99999999999997,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.900000000000001,
+        4.100000000000001,
+        5.349999999999997,
+        7.799999999999988
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.24999999999998,
+        12.69999999999997,
+        15.149999999999963,
+        16.99999999999997,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 10.25,
+      "objectIds": [
+        "forearm-shell",
+        "fixed-tool",
+        "tool-coupler"
+      ],
+      "problem": "The gripper floats beyond the forearm, with a visible black gap in both aspect ratios. The source confirms that the forearm ends at L2−0.30 while the coupler begins at L2; no geometry bridges them.",
+      "fix": "Add a rigid wrist connector spanning this gap within the existing forearm/tool hierarchy, without adding another joint or changing the end-effector path."
+    },
+    {
+      "timeSec": 0,
+      "objectIds": [
+        "q2",
+        "upper-arm-shell"
+      ],
+      "problem": "The q2 label is hidden behind the upper arm in the initial hold and remains partly occluded at 4.1 seconds in both aspect ratios.",
+      "fix": "Adjust the attached label's offset or billboard offset so the complete q2 label remains outside the arm's swept silhouette, preserving its shoulder ownership."
+    }
+  ]
+}

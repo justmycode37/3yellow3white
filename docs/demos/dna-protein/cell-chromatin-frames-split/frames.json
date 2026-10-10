@@ -1,0 +1,151 @@
+{
+  "backend": "native-webgpu",
+  "frames": [
+    {
+      "time": 0,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-0.png"
+    },
+    {
+      "time": 7,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-1.png"
+    },
+    {
+      "time": 10,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-2.png"
+    },
+    {
+      "time": 14,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-3.png"
+    },
+    {
+      "time": 18,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-4.png"
+    },
+    {
+      "time": 20,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-5.png"
+    },
+    {
+      "time": 23,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-6.png"
+    },
+    {
+      "time": 24,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-7.png"
+    },
+    {
+      "time": 0,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-0.png"
+    },
+    {
+      "time": 7,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-1.png"
+    },
+    {
+      "time": 10,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-2.png"
+    },
+    {
+      "time": 14,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-3.png"
+    },
+    {
+      "time": 18,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-4.png"
+    },
+    {
+      "time": 20,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-5.png"
+    },
+    {
+      "time": 23,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-6.png"
+    },
+    {
+      "time": 24,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-7.png"
+    }
+  ],
+  "sheets": [
+    {
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-sheet-0.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        0,
+        7,
+        10,
+        14,
+        18,
+        20
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\1280x720-sheet-1.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        23,
+        24
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-sheet-0.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        0,
+        7,
+        10,
+        14,
+        18,
+        20
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\cell-chromatin-frames-split\\960x720-sheet-1.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        23,
+        24
+      ],
+      "columns": 2
+    }
+  ]
+}

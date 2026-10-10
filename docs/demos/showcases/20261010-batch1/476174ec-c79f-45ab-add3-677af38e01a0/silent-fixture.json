@@ -1,0 +1,22 @@
+{
+  "id": "silent-fourier",
+  "scriptHash": "13e6d7e6bf1aa44d67a6de40274afd5f5a09d6d4d364dcf80ffa03d0e92e6ced",
+  "totalScenes": 1,
+  "scenes": [
+    {
+      "id": "beat-1",
+      "title": "Fourier epicycles",
+      "context": "2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Fourier epicycles. Reconstruct a closed asymmetric curve with at least eight complex Fourier terms. Show rotating vectors, their chained endpoint, and the growing trace in one coherent view. Derive every endpoint from the same coefficients; retain the full trace at the end. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "startSec": 0,
+      "durationSec": 20,
+      "audio": {
+        "id": "silent-fourier",
+        "url": "http://127.0.0.1:5211/silence.wav",
+        "sha256": "cefe45b0c941084dfdaebce63b3e6b3ffee756334276589bbd5a33e4ebd85db3",
+        "sampleCount": 480000
+      },
+      "utterances": [],
+      "pauses": []
+    }
+  ]
+}

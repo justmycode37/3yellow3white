@@ -1,0 +1,78 @@
+{
+  "sourceSha256": "38971e2499be040f42622e34c34fd608d72c77e15be7eba16650443ef424d569",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.7,
+        5,
+        7.375,
+        8.625
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        12.375,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.7,
+        5,
+        7.375,
+        8.625
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        12.375,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 5,
+      "objectIds": [
+        "patch-view",
+        "bezier-patch",
+        "control-lattice",
+        "surface-grid",
+        "local-normal",
+        "normal-label",
+        "control-label"
+      ],
+      "problem": "In both aspect ratios, the opaque patch obscures nearly the entire control lattice, the parametric grid, and the normal arrow and label. This persists through the final hold. The moving P11 only emerges near 15 seconds, so its motion cannot visibly explain the surface deformation.",
+      "fix": "Reorient the default model camera to view the side exposing the lattice, raised grid, and outward normal. Preserve the existing Bernstein geometry and bindings; verify that P11 remains visible throughout its motion and all three required constructions remain readable during the final hold."
+    }
+  ]
+}

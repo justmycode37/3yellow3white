@@ -1,0 +1,63 @@
+{
+  "sourceSha256": "6897386437c52085ea699b77e06ea744a6ee7376a5b4627b9e32b4f115b85721",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.75,
+        4,
+        5.25,
+        6.5
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.75,
+        10.25,
+        12.5,
+        15,
+        17.5,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.75,
+        4,
+        5.25,
+        6.5
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.75,
+        10.25,
+        12.5,
+        15,
+        17.5,
+        20
+      ]
+    }
+  ],
+  "approved": true,
+  "findings": []
+}

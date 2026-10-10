@@ -1,0 +1,22 @@
+{
+  "id": "silent-crank",
+  "scriptHash": "808a374729871f44c635cca99282eaf857ab220942ead5dfd6f870502865baf5",
+  "totalScenes": 1,
+  "scenes": [
+    {
+      "id": "beat-1",
+      "title": "Slider-crank mechanism",
+      "context": "3D: Create exactly one 20-second silent single-scene visualization showcase: Slider-crank mechanism. Build an oblique cutaway slider-crank with crankshaft, flywheel, rigid connecting rod, wrist pin and constrained piston. Derive piston travel from fixed rod length and crank angle, preserve pin connections throughout a cycle, and use restrained metal materials. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "startSec": 0,
+      "durationSec": 20,
+      "audio": {
+        "id": "silent-crank",
+        "url": "http://127.0.0.1:5211/silence.wav",
+        "sha256": "cefe45b0c941084dfdaebce63b3e6b3ffee756334276589bbd5a33e4ebd85db3",
+        "sampleCount": 480000
+      },
+      "utterances": [],
+      "pauses": []
+    }
+  ]
+}

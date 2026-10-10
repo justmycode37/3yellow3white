@@ -1,0 +1,251 @@
+{
+  "backend": "native-webgpu",
+  "frames": [
+    {
+      "time": 0,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-0.png"
+    },
+    {
+      "time": 7,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-1.png"
+    },
+    {
+      "time": 16,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-2.png"
+    },
+    {
+      "time": 20.5,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-3.png"
+    },
+    {
+      "time": 24.7,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-4.png"
+    },
+    {
+      "time": 30.5,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-5.png"
+    },
+    {
+      "time": 33.8,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-6.png"
+    },
+    {
+      "time": 38.8,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-7.png"
+    },
+    {
+      "time": 42,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-8.png"
+    },
+    {
+      "time": 46,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-9.png"
+    },
+    {
+      "time": 48.5,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-10.png"
+    },
+    {
+      "time": 51,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-11.png"
+    },
+    {
+      "time": 53.5,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-12.png"
+    },
+    {
+      "time": 59,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-13.png"
+    },
+    {
+      "time": 0,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-0.png"
+    },
+    {
+      "time": 7,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-1.png"
+    },
+    {
+      "time": 16,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-2.png"
+    },
+    {
+      "time": 20.5,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-3.png"
+    },
+    {
+      "time": 24.7,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-4.png"
+    },
+    {
+      "time": 30.5,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-5.png"
+    },
+    {
+      "time": 33.8,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-6.png"
+    },
+    {
+      "time": 38.8,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-7.png"
+    },
+    {
+      "time": 42,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-8.png"
+    },
+    {
+      "time": 46,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-9.png"
+    },
+    {
+      "time": 48.5,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-10.png"
+    },
+    {
+      "time": 51,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-11.png"
+    },
+    {
+      "time": 53.5,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-12.png"
+    },
+    {
+      "time": 59,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-13.png"
+    }
+  ],
+  "sheets": [
+    {
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-sheet-0.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        0,
+        7,
+        16,
+        20.5,
+        24.7,
+        30.5
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-sheet-1.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        33.8,
+        38.8,
+        42,
+        46,
+        48.5,
+        51
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\translation-frames\\1280x720-sheet-2.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        53.5,
+        59
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-sheet-0.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        0,
+        7,
+        16,
+        20.5,
+        24.7,
+        30.5
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-sheet-1.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        33.8,
+        38.8,
+        42,
+        46,
+        48.5,
+        51
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\translation-frames\\960x720-sheet-2.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        53.5,
+        59
+      ],
+      "columns": 2
+    }
+  ]
+}

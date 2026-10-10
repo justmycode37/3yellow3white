@@ -1,0 +1,31 @@
+{
+  "elapsedMs": 17028.22710000002,
+  "providerCalls": 1,
+  "turns": [
+    {
+      "index": 1,
+      "elapsedMs": 16820.498399999924,
+      "providerMs": 16818.959500000114,
+      "stopReason": "toolUse",
+      "inputTokens": 44687,
+      "outputTokens": 589,
+      "reasoningTokens": 422,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 723
+    }
+  ],
+  "validations": [
+    {
+      "kind": "tool",
+      "elapsedMs": 0.17579999985173345,
+      "valid": true
+    },
+    {
+      "kind": "final",
+      "elapsedMs": 0.02239999989978969,
+      "valid": true
+    }
+  ]
+}

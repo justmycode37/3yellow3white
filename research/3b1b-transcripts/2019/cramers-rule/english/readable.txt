@@ -1,0 +1,86 @@
+[00:11–00:19] In a previous video I've talked about linear systems of equations, and I sort of brushed aside the discussion of actually computing solutions to these systems.
+[00:19–00:31] And while it's true that number crunching is typically something we leave to the computers, digging into some of these computational methods is a good litmus test for whether or not you actually understand what's going on, since that's really where the rubber meets the road.
+[00:32–00:38] Here I want to describe the geometry behind a certain method for computing solutions to these systems, known as Cramer's rule.
+[00:39–00:50] The relevant background here is understanding determinants, a little bit of dot products, and of course linear systems of equations, so be sure to watch the relevant videos on those topics if you're unfamiliar or rusty.
+[00:51–01:01] But first I should say up front that this Cramer's rule is not actually the best way for computing solutions to linear systems of equations, Gaussian elimination for example will always be faster.
+[01:01–01:03] So why learn it?
+[01:03–01:05] Well think of it as a sort of cultural excursion.
+[01:06–01:10] It's a helpful exercise in deepening your knowledge of the theory behind these systems.
+[01:11–01:19] Wrapping your mind around this concept is going to help consolidate ideas from linear algebra, like the determinant and linear systems, by seeing how they relate to each other.
+[01:20–01:26] Also from a purely artistic standpoint the ultimate result here is just really pretty to think about, way more so than Gaussian elimination.
+[01:28–01:35] Alright so the setup here will be some linear system of equations, say with two unknowns x and y and two equations.
+[01:36–01:45] In principle everything we're talking about will also work for systems with larger number of unknowns and the same number of equations, but for simplicity a smaller example is just nicer to hold in our heads.
+[01:46–02:00] So as I talked about in a previous video you can think of this setup geometrically as a certain known matrix transforming an unknown vector x y where you know what the output is going to be, in this case negative 4 negative 2.
+[02:00–02:10] Remember the columns of this matrix are telling you how that matrix acts as a transform, each one telling you where the basis vectors of the input space land.
+[02:10–02:18] So what we have is a sort of puzzle, which input vector x y is going to land on this output negative 4 negative 2.
+[02:19–02:36] One way to think about our little puzzle here is that we know the given output vector is some linear combination of the columns of the matrix x times the vector where i hat lands plus y times the vector where j hat lands, but what we want is to figure out what exactly that linear combination should be.
+[02:37–02:46] Remember the type of answer you get here can depend on whether or not the transformation squishes all of space into a lower dimension, that is if it has a zero determinant.
+[02:46–02:53] In that case either none of the inputs land on our given output, or there's a whole bunch of inputs landing on that output.
+[02:57–03:07] But for this video we'll limit our view to the case of a non-zero determinant, meaning the outputs of this transformation still span the full in-dimensional space that it started in.
+[03:07–03:12] Every input lands on one and only one output, and every output has one and only one input.
+[03:14–03:18] As a first pass let me show you an idea that's wrong but in the right direction.
+[03:18–03:25] The x coordinate of this mystery input vector is what you get by taking its dot product with the first basis vector 1 0.
+[03:26–03:31] Likewise the y coordinate is what you get by dotting it with the second basis vector 0 1.
+[03:31–03:43] So maybe you hope that after the transformation the dot products with the transformed version of the mystery vector with the transformed version of the basis vectors will also be these coordinates x and y.
+[03:43–03:48] That'd be fantastic because we know what the transformed version of each of those vectors are.
+[03:51–03:54] There's just one problem with it, it's not at all true.
+[03:54–04:00] For most linear transformations the dot product before and after the transformation will look very different.
+[04:00–04:11] For example, you could have two vectors generally pointing in the same direction with a positive dot product, which get pulled apart from each other during the transformation in such a way that they end up having a negative dot product.
+[04:12–04:23] Likewise things that start off perpendicular with dot product 0, like the two basis vectors, quite often don't stay perpendicular to each other after the transformation, that is they don't preserve that 0 dot product.
+[04:24–04:30] And looking at the example I just showed dot products certainly aren't preserved, they tend to get bigger since most vectors are getting stretched out.
+[04:31–04:39] In fact, worthwhile side note here, transformations which do preserve dot products are special enough to have their own name, orthonormal transformations.
+[04:39–04:44] These are the ones that leave all of the basis vectors perpendicular to each other and still with unit lengths.
+[04:45–04:52] You often think of these as the rotation matrices, they correspond to rigid motion with no stretching or squishing or morphing.
+[04:53–04:56] Solving a linear system with an orthonormal matrix is actually super easy.
+[04:57–05:12] Because dot products are preserved, taking the dot product between the output vector and all the columns of your matrix will be the same as taking the dot product between the mystery input vector and all of the basis vectors, which is the same as just finding the coordinates of that mystery input.
+[05:13–05:23] So in that very special case, x would be the dot product of the first column with the output vector, and y would be the dot product of the second column with the output vector.
+[05:26–05:30] Why am I bringing this up when this idea breaks down for almost all linear systems?
+[05:31–05:34] Well, it points us in a direction of something to look for.
+[05:34–05:41] Is there an alternate geometric understanding for the coordinates of our input vector that remains unchanged after the transformation?
+[05:42–05:46] If your mind has been mulling over determinants, you might think of the following clever idea.
+[05:47–05:53] Take the parallelogram defined by the first basis vector i-hat and the mystery input vector xy.
+[05:54–06:02] The area of this parallelogram is the base, 1, times the height perpendicular to that base, which is the y-coordinate of that input vector.
+[06:03–06:09] So the area of that parallelogram is a sort of screwy roundabout way to describe the vector's y-coordinate.
+[06:10–06:13] It's a wacky way to talk about coordinates, but run with me.
+[06:13–06:21] And actually, to be a little more accurate, you should think of this as the signed area of that parallelogram, in the sense described in the determinant video.
+[06:22–06:34] That way, a vector with a negative y-coordinate would correspond to a negative area for this parallelogram, at least if you think of i-hat as in some sense being the first out of these two vectors defining the parallelogram.
+[06:35–06:45] And symmetrically, if you look at the parallelogram spanned by our mystery input vector and the second basis, j-hat, its area is going to be the x-coordinate of that mystery vector.
+[06:45–06:50] Again, it's a strange way to represent the x-coordinate, but see what it buys us in a moment.
+[06:50–06:53] And just to make sure it's clear how this might generalize, let's look in three dimensions.
+[06:54–07:03] Ordinarily, the way you might think about one of a vector's coordinates, say its z-coordinate, would be to take its dot product with the third standard basis vector, often called k-hat.
+[07:04–07:12] But an alternate geometric interpretation would be to consider the parallelepiped that it creates with the other two basis vectors, i-hat and j-hat.
+[07:13–07:23] If you think of the square with area 1 spanned by i-hat and j-hat as the base of this whole shape, then its volume is the same as its height, which is the third coordinate of our vector.
+[07:24–07:35] And likewise, the wacky way to think about the other coordinates of the vector would be to form a parallelepiped using the vector and then all of the basis vectors other than the one corresponding to the direction you're looking for.
+[07:35–07:37] Then the volume of this gives you the coordinate.
+[07:38–07:45] Or rather, we should be talking about the signed volume of parallelepiped in the sense described in the determinant video using the right-hand rule.
+[07:45–07:48] So the order in which you list these three vectors matters.
+[07:48–07:51] That way, negative coordinates still make sense.
+[07:52–07:55] Okay, so why think of coordinates as areas and volumes like this?
+[07:55–08:03] Well, as you apply some sort of matrix transformation, the areas of these parallelograms, well, they don't stay the same, they might get scaled up or down.
+[08:04–08:12] But, and this is the key idea of determinants, all of the areas get scaled by the same amount, namely the determinant of our transformation matrix.
+[08:13–08:24] For example, if you look at the parallelogram spanned by the vector where your first basis vector lands, which is the first column of the matrix, and the transformed version of xy, what is its area?
+[08:25–08:33] Well, this is the transformed version of the parallelogram we were looking at earlier, the one whose area was the y-coordinate of the mystery input vector.
+[08:33–08:39] So its area is just going to be the determinant of the transformation multiplied by that y-coordinate.
+[08:40–08:49] So that means we can solve for y by taking the area of this new parallelogram in the output space divided by the determinant of the full transformation.
+[08:50–08:52] And how do you get that area?
+[08:53–08:59] Well, we know the coordinates for where the mystery input vector lands, that's the whole point of a linear system of equations.
+[08:59–09:10] So what you might do is create a new matrix whose first column is the same as that of our matrix, but whose second column is the output vector, and then you take its determinant.
+[09:11–09:24] So look at that, just using data from the output of the transformation, namely the columns of the matrix and the coordinates of our output vector, we can recover the y-coordinate of the mystery input vector, which is halfway to solving the system.
+[09:25–09:27] Likewise, the same idea can give us the x-coordinate.
+[09:28–09:35] Look at the parallelogram we defined earlier, which encodes the x-coordinate of the mystery input vector spanned by that vector and j-hat.
+[09:36–09:46] The transformed version of this guy is spanned by the output vector and the second column of the matrix, and its area will have been multiplied by the determinant of that matrix.
+[09:47–09:52] So to solve for x, you can take this new area divided by the determinant of the full transformation.
+[09:53–10:05] And similar to what we did before, you can compute the area of that output parallelogram by creating a new matrix whose first column is the output vector and whose second column is the same as the original matrix.
+[10:06–10:12] So again, just using data from the output space, the numbers we see in our original linear system, we can solve for what x must be.
+[10:13–10:18] This formula for finding the solutions to a linear system of equations is known as Cramer's rule.
+[10:19–10:21] Here, just to sanity check ourselves, plug in some numbers here.
+[10:22–10:30] The determinant of that top altered matrix is 4 plus 2, which is 6, and the bottom determinant is 2, so the x-coordinate should be 3.
+[10:31–10:35] And indeed, looking back at the input vector we started with, the x-coordinate is 3.
+[10:36–10:46] Likewise, Cramer's rule suggests that the y-coordinate should be 4 divided by 2, or 2, and that is in fact the y-coordinate of the input vector we were starting with.
+[10:47–10:53] The case with three dimensions or more is similar, and I highly recommend you take a moment to pause and think through it yourself.
+[10:54–10:55] Here, I'll give you a little bit of momentum.
+[10:56–11:08] What we have is a known transformation given by some 3x3 matrix and a known output vector given by the right side of our linear system, and we want to know what input lands on that output.
+[11:09–11:23] And if you think of, say, the z-coordinate of that input vector as the volume of that special parallelepiped we were looking at earlier, spanned by i-hat, j-hat, and the mystery input vector, what happens to that volume after the transformation?
+[11:24–11:27] And what are the various ways you can compute that volume?
+[11:28–11:37] Really, pause and take a moment to think through the details of generalizing this to higher dimensions, finding an expression for each coordinate of the solution to a larger linear system.
+[11:38–11:48] Thinking through more general cases like this and convincing yourself that it works and why it works is where all the learning really happens, much more so than listening to some dude on YouTube walk you through the same reasoning again.

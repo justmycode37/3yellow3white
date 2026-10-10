@@ -10,7 +10,7 @@ import { agentConfig, AgentError, agentFailure } from "../src/agents/config.js";
 import { authPath, createModelRuntime, deviceId, revokeSubscription } from "../src/agents/auth.js";
 import { PiAgentRunner } from "../src/agents/runtime.js";
 import type { AgentTask } from "../src/agents/runtime.js";
-import { createPiGenerator } from "../src/agents/generator.js";
+import { createPiGenerator as createProductionGenerator } from "../src/agents/generator.js";
 import { NarrationService } from "../src/narration/service.js";
 import { settingsFromEnv } from "../src/narration/elevenlabs.js";
 import { VideoService } from "../src/videos.js";
@@ -341,6 +341,8 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     }
     expect(agentCalls).toBe(4); expect(speechCalls).toBe(2);
     expect(tasks[3].prompt).toContain('"previousFrame"');
+    const endpoint = JSON.parse(await readFile(join(settings.dataDir, video.id, 'scene-0.final-frame.json'), 'utf8'));
+    expect(endpoint.elements.some((element: { id: string }) => element.id === 'dot')).toBe(true);
     const packet = JSON.parse(tasks[2].prompt.slice(tasks[2].prompt.indexOf('\n') + 1));
     expect(packet.planning.lesson.learningGoal).toBe('Count dots');
     expect(packet.planning.outline.map((scene: { id: string }) => scene.id)).toEqual(['beat-1', 'beat-2']);
@@ -418,7 +420,11 @@ test.each(['classic', 'interactive'] as const)('%s scenes receive the shared pol
     const source = `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:${JSON.stringify(input.endMode)}},s=>{${commands}s.wait(${input.scene.durationSec});});`;
     const withOrbit = source.replace('scene({', 'scene({orbit:true,');
     if (videoMode === 'classic') await expect(task.validate!(withOrbit)).rejects.toThrow('Classic scenes');
-    else await task.validate!(withOrbit);
+    else {
+      await expect(task.validate!(withOrbit)).rejects.toThrow('whole-scene orbit');
+      const targetedOrbit = source.replace('s=>{', "s=>{s.view('inspection',{rect:[0,0,1,1],orbit:true,orbitHitTest:'geometry'},v=>v.circle('inspection-dot'));");
+      await task.validate!(targetedOrbit);
+    }
     await task.validate!(source); return source;
   } };
   const service = new VideoService(join(settings.agentDir, 'progressive.sqlite'), createPiGenerator(runner, narration, settings.dataDir), 'pi');
@@ -454,10 +460,10 @@ test('compiler repair messages retain locations and hints in the actual Pi conve
   expect(JSON.stringify(contexts[1])).toContain('Preserve the task');
 });
 
-test.each(['markdown', 'planned'])('existing saved %s videos resume their historical contract without a new planning call', async format => {
+test.each(['markdown', 'planned', 'version-1'])('existing saved %s videos resume their historical contract without a new planning call', async format => {
   const settings = await config();
   const videoId = crypto.randomUUID(), owner = 'shared-user';
-  const request = { title: 'Old lesson', topic: 'Dots', documents: [] };
+  const request = { title: 'Old lesson', topic: 'Dots', documents: [], ...(format === 'version-1' ? { videoMode: 'interactive' as const } : {}) };
   const directory = join(settings.dataDir, videoId);
   const { mkdir } = await import('node:fs/promises');
   await mkdir(directory, { recursive: true });
@@ -465,6 +471,7 @@ test.each(['markdown', 'planned'])('existing saved %s videos resume their histor
   if (format === 'markdown') await writeFile(join(directory, 'script.md'), markdown);
   else {
     const cached = JSON.parse(planned(markdown));
+    if (format === 'version-1') cached.instructionVersion = 1;
     cached.plan.scenes[0].interactions = [{ id: 'explore', type: 'toggle', label: 'Explore', drives: 'Example', discover: 'Count' }];
     await writeFile(join(directory, 'lesson.json'), JSON.stringify(cached));
   }
@@ -481,10 +488,11 @@ test.each(['markdown', 'planned'])('existing saved %s videos resume their histor
     calls++;
     expect(task.prompt).toStartWith('Generate');
     const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
-    expect(input.legacyPlan).toBe(true);
-    expect(input.videoMode).toBe('classic');
+    expect(input.legacyPlan).toBe(format !== 'version-1');
+    expect(input.instructionVersion).toBe(format === 'version-1' ? 1 : undefined);
+    expect(input.videoMode).toBe(format === 'version-1' ? 'interactive' : 'classic');
     if (format === 'markdown') expect(input.planning.outline[0].context).toContain('One dot');
-    return `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:"hold",orbit:true},s=>{s.circle('dot');${format === 'planned' ? "s.toggle('explore',{default:false});" : ''}s.wait(${input.scene.durationSec});});`;
+    return `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:"hold",orbit:true},s=>{s.circle('dot');${format !== 'markdown' ? "s.toggle('explore',{default:false});" : ''}s.wait(${input.scene.durationSec});});`;
   } }, narration, settings.dataDir);
   const result = await generator(request, 0, { videoId, owner, signal: new AbortController().signal });
   expect(result?.scene.narration).toBe('One dot.'); expect(calls).toBe(1);
@@ -505,3 +513,8 @@ test('existing Pi subscription credentials use their selected provider without f
   expect(JSON.parse(await readFile(authPath(settings), 'utf8'))['openai-codex']).toEqual(legacy);
   expect(() => agentConfig({ AGENT_PROVIDER: 'openai-codex', AGENT_AUTH_MODE: 'api-key' })).toThrow('subscription mode');
 });
+
+// These tests isolate narration/timing contracts. visual-gate.test.ts covers rendered review.
+function createPiGenerator(...args: Parameters<typeof createProductionGenerator>) {
+  return createProductionGenerator(args[0], args[1], args[2], { ...args[3], visualGate: async ({ source }) => source });
+}

@@ -1,0 +1,67 @@
+[00:00–00:06] Last week I put up this video about solving the game Wordle, or at least trying to solve it, using information theory.
+[00:06–00:13] And I wanted to add a quick, what should we call this, an addendum, a confession, basically I just want to explain a place where I made a mistake.
+[00:14–00:22] It turns out there was a very slight bug in the code that I was running to recreate Wordle and then run all of the algorithms to solve it and test their performance.
+[00:22–00:30] And it's one of those bugs that affects a very small percentage of cases, so it was easy to miss, and it has only a slight effect that for the most part doesn't really matter.
+[00:31–00:36] Basically it had to do with how you assign a color to a guess that has multiple different letters in it.
+[00:36–00:42] For example if you guess speed and the true answer is abide, how should you color those two e's from the guess?
+[00:43–00:49] Well the way that it works with the Wordle conventions is that the first e would be colored yellow, and the second one would be colored gray.
+[00:49–00:55] You might think of that first one as matching up with something from the true answer, and the grayness is telling you there is no second e.
+[00:55–01:06] By contrast, if the answer was something like erase, both of those e's would be colored yellow, telling you that there is a first e in a different location, and there's a second e also in a different location.
+[01:07–01:20] Similarly if one of the e's hits and it's green, then that second one would be gray in the case where the true answer has no second e, but it would be yellow in the case where there is a second e and it's just in a different location.
+[01:20–01:26] Long story short, somewhere along the convention slightly.
+[01:27–01:28] Honestly it was really dumb.
+[01:28–01:42] Basically at some point in the middle of the project I wanted to speed up some of the computations, and I was trying a little trick for how it computed the value for this pattern between any given pair of words, and you know I just didn't really think it through, and it introduced this slight change.
+[01:43–01:55] The ironic part is that in the end the actual way to make things fastest is to pre-compute all those patterns so that everything is just a lookup, and so it wouldn't matter how long it takes to do each one, especially if you're writing hard to read buggy code to make it happen.
+[01:56–01:57] You know, you live and you learn.
+[01:58–02:02] As far as how this affects the actual video, I mean very little of substance really changes.
+[02:02–02:06] Of course the main lessons about what is information, what is entropy, all that stays the same.
+[02:06–02:20] Every now and then if I'm showing on screen some distribution associated with a given word, that distribution might actually be a little bit off because some of the buckets associated with various patterns should include either more or fewer true answers.
+[02:20–02:26] Even then it doesn't really come up because it was very rare that I would be showing a word that had multiple letters that also hit this edge case.
+[02:27–02:42] But one of the very few things of substance that does change, and that arguably does matter a fair bit, was the final conclusion around how if we want to find the optimal possible score for the wordle answer list, what opening guess does such an algorithm use?
+[02:43–02:52] In the video I said the best performance that I could find came from opening with the word crane, which was true only in the sense that the algorithms were playing a very slightly different game.
+[02:53–03:00] After fixing it and rerunning it all, there is a different answer for what the theoretically optimal first guess is for this particular list.
+[03:01–03:09] And look, I know that you know that the point of the video is not to find some technically optimal answer to some random online game.
+[03:09–03:15] The point of the video is to shamelessly hop on the bandwagon of an internet trend to sneak attack people with an information theory lesson.
+[03:16–03:18] And that's all good, I stand by that part.
+[03:18–03:24] But I know how the internet works, and for a lot of people the one main takeaway was what is the best opener for the game wordle.
+[03:25–03:31] And I get it, I walked into that because I put it in the thumbnail, but presumably you can forgive me if I want to add a little correction here.
+[03:31–03:42] And a more meaningful reason to circle back to all this actually is that I never really talked about what went into that final analysis, and it's interesting as a sublesson in its own right, so that's worth doing here.
+[03:43–03:52] Now if you'll recall, most of our time last video was spent on the challenge of trying to write an algorithm to solve wordle that did not use the official list of all possible answers.
+[03:52–03:58] To my taste that feels a bit like overfitting to a test set, and what's more fun is building something that's resilient.
+[03:58–04:08] This is why we went through the whole process of looking at relative word frequencies in the English language to come up with some notion of how likely each one would be to be included as a final answer.
+[04:09–04:25] However, for what we're doing here, where we're just trying to find an absolute best performance period, I am incorporating that official list and just shamelessly overfitting to the test set, which is to say we know with certainty whether a word is included or not, and we can assign a uniform probability to each one.
+[04:26–04:36] If you'll remember, the first step in all of this was to say for a particular opening guess, maybe something like my old favorite, crane, how likely is it that you would see each of the possible patterns?
+[04:36–04:45] And in this context, where we are shamelessly overfitting to the wordle answer list, all that involves is counting how many of the possible answers give each one of these patterns.
+[04:45–05:06] And then of course most of our time was spent on this kind of funny looking formula to quantify the amount of information that you would get from this guess that basically involves going through each one of those buckets and saying how much information would you gain, that has this log expression that is a fanciful way of saying how many times would you cut your space of possibilities in half if you observed a given pattern.
+[05:07–05:13] We take a weighted average of all of those and it gives us a measure of how much we expect to learn from this first guess.
+[05:13–05:33] In a moment we'll go deeper than this, but if you simply search through all 13,000 different words that you could start with and you ask which one has the highest expected information, it turns out the best possible answer is soar, which doesn't really look like a real word, but I guess it's an obsolete term for a baby hawk.
+[05:34–05:47] The top 15 openers by this metric happen to look like this, but these are not necessarily the best opening guesses because they're only looking one step in with the heuristic of expected information to try to estimate what the true score will be.
+[05:47–05:51] But there's few enough patterns that we can do an exhaustive search two steps in.
+[05:52–06:00] For example let's say you opened with soar and the pattern you happen to see was the most likely one, all grays, then you can run identical analysis from that point.
+[06:01–06:21] For a given proposed second guess, something like kitty, what's the distribution across all patterns in that restricted case where we're restricted only to the words that would produce all grays for soar, and then we measure the flatness of that distribution using this expected information formula, and we do that for all 13,000 possible words that we could use as a second guess.
+[06:22–06:28] Doing this we can find the optimal second guess in that scenario and the amount of information we were expected to get from it.
+[06:28–06:39] And if we wash rinse and repeat and do this for all of the different possible patterns that you might see, we get a full map of all the best possible second guesses together with the expected information of each.
+[06:43–06:56] From there, if you take a weighted average of all those second step values, weighted according to how likely you are to fall into that bucket, it gives you a measure of how much information you're likely to gain from the guess soar after the second step.
+[06:57–07:01] When we use this two-step metric as our new means of ranking, the list gets shaken up a bit.
+[07:02–07:07] Soar is no longer first place, it falls back to 14th, and instead what rises to the top is slain.
+[07:08–07:16] Again, doesn't feel very real, and it looks like it is a British term for a spade that's used for cutting turf.
+[07:17–07:25] All right, but as you can see, it is a really tight race among all of these top contenders for who gains the most information after those two steps.
+[07:25–07:34] And even still, these are not necessarily the best opening guesses, because information is just the heuristic, it's not telling us the actual score if you actually play the game.
+[07:34–07:44] What I did is I ran the simulation of playing all 2315 possible Wurtle games with all possible answers on the top 250 from this list.
+[07:46–08:05] And by doing this, seeing how they actually perform, the one that ends up very marginally with the best possible score turns out to be Salé, which is, let's see, Salé, an alternate spelling for Salé, which is a light medieval helmet.
+[08:06–08:24] All right, if that feels a little too fake for you, which it does for me, you'll be happy to know that trace and crate give almost identical performance, and each of them has the benefit of obviously being a real word, so there is one day when you get it right on the first guess, since both are actual Wurtle answers.
+[08:25–08:32] This move from sorting based on the best two-step entropies to sorting based on the lowest average score also shakes up the list, but not nearly as much.
+[08:32–08:39] For example, Salé was previously third place before it bubbles to the top, and crate and trace were both fourth and fifth.
+[08:39–08:43] If you're curious, you can get slightly better performance from here by doing a little brute forcing.
+[08:44–08:53] There's a very nice blog post by Jonathan Olson, if you're curious about this, where he also lets you explore what the optimal following guesses are for a few of the starting words based on these optimal algorithms.
+[08:55–09:03] Stepping back from all this though, I'm told by some people that it quote ruins the game to overanalyze it like this and try to find an optimal opening guess.
+[09:04–09:14] It feels kinda dirty if you use that opening guess after learning it, and it feels inefficient if you don't, but the thing is, I don't actually think this is the best opener for a human playing the game.
+[09:14–09:19] For one thing, you would need to know what the optimal second guess is for each one of the patterns you see.
+[09:20–09:26] And more importantly, all of this is in a setting where we are absurdly overfit to the official Wurtle answer list.
+[09:26–09:32] The moment that, say, the New York Times chooses to change what that list is under the hood, all of this would go out the window.
+[09:33–09:37] The way that we humans play the game is just very different from what any of these algorithms are doing.
+[09:38–09:41] We don't have the word list memorized, we're not doing exhaustive searches.
+[09:41–09:45] We get intuition from things like what are the vowels, and how are they placed.
+[09:45–10:03] I would actually be most happy if those of you watching this video promptly forgot what happens to be the technically best opening guess, and instead came out remembering things like how do you quantify information, or the fact that you should look out for when a greedy algorithm falls short of the globally best performance that you would get from a deeper search.
+[10:03–10:10] For my taste at least, the joy of writing algorithms to try to play games actually has very little bearing on how I like to play those games as a human.
+[10:11–10:20] The point of writing algorithms for all this is not to affect the way that we play the game, it's still just a fun word game.

@@ -1,3 +1,4 @@
+import { ModelStore } from './model-store.js';
 import { AudioClock } from "./audio.js";
 import { ControlOverlay } from "./controls.js";
 import { CanvasRenderer } from "./renderer.js";
@@ -12,6 +13,7 @@ import { getLocalBounds, getWorldBounds, getCameraBounds, getScreenBounds } from
 import type { Asset, Bounds2D, Bounds3D, ColorPalette, CompiledScene, ControlValue, PlayerBoundsOptions, PlayerOptions, PlayerState, Submission, SubmitResult, Vec3 } from "./types.js";
 
 export class Player {
+  private readonly models:ModelStore;
   private readonly renderer: CanvasRenderer;
   private readonly audio: AudioClock;
   private readonly sequence: SceneSequence;
@@ -44,16 +46,19 @@ export class Player {
   constructor(options: PlayerOptions) {
     const palette = paletteResolver(options.palette).palette;
     this.palette = palette;
-    this.renderer = new CanvasRenderer(options.canvas, palette);
+    this.models = new ModelStore(options.assets);
+    this.renderer = new CanvasRenderer(options.canvas, palette, this.models);
     this.behaviors = new BehaviorRuntime(options.behaviors);
     this.input = new CanvasInput(options.canvas, this.behaviors, view => this.renderer.interactionSnapshot(view), () => this.invalidateFrame());
-    this.audio = new AudioClock(options.assets);
+    this.audio = new AudioClock(Object.fromEntries(Object.entries(options.assets??{}).filter(([,a])=>a.kind==='audio')));
     this.sequence = new SceneSequence({
+      models: this.models.metadata,
       palette,
       seed: options.seed,
       executionLimitMs: options.executionLimitMs,
       prepare: async scenes => {
         this.behaviors.validate(scenes);
+        await this.models.prepare(scenes);
         await this.audio.prepare(scenes);
         await this.renderer.prepare(scenes);
       },
@@ -446,7 +451,7 @@ export class Player {
 
   setMuted(muted: boolean): void { this.assertAlive(); this.audio.setMuted(muted); }
 
-  registerAssets(assets: Record<string, Asset>): void { this.assertAlive(); this.audio.register(assets); }
+  registerAssets(assets: Record<string, Asset>): void { this.assertAlive(); this.models.register(assets); this.audio.register(Object.fromEntries(Object.entries(assets).filter(([,a])=>a.kind==='audio'))); }
   unlockAudio(): Promise<void> { this.assertAlive(); return this.audio.unlock(); }
 
   getState(): PlayerState {
@@ -484,6 +489,7 @@ export class Player {
     this.input.dispose(); this.behaviors.reset();
     this.overlay?.dispose();
     this.renderer.dispose();
+    this.models.dispose();
     this.audio.dispose();
     this.sequence.dispose();
   }

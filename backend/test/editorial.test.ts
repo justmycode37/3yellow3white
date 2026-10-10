@@ -72,6 +72,8 @@ test('editorial repairs update speech and plan together, forward sources, and pr
     expect(task.systemPrompt).toContain(await loadPrompt('guidance'));
     expect(task.systemPrompt).toContain(await loadPrompt('viewing-mode'));
     expect(task.systemPrompt).toContain(PLANNING_CONTRACT);
+    expect(task.systemPrompt).toContain('## Visual model planning');
+    expect(task.systemPrompt).toContain('# Current animation quality policy');
     expect(task.systemPrompt).not.toContain('3D is the default');
   }
   expect(tasks[1].systemPrompt).toContain('Visual plans and reveal guards belong in nonspoken context');

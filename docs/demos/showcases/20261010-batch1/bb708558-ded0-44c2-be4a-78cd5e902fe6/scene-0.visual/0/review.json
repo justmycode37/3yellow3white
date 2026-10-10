@@ -1,0 +1,73 @@
+{
+  "sourceSha256": "01e33b12ac91568a1054bdf615fc321f5462cdaf7054c230b778d59b0ffd9653",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3.3333333333333335,
+        5,
+        7.1000000000000005,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        12.2,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3.3333333333333335,
+        5,
+        7.1000000000000005,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        12.2,
+        15,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 15,
+      "objectIds": [
+        "acceptor-label",
+        "donor-label"
+      ],
+      "problem": "The endpoint labels sit within the dense backbone in both aspect ratios: O_i is obscured and N_{i+4} intersects nearby molecular geometry. This persists through the final hold, making the highlighted hydrogen-bond endpoints difficult to identify.",
+      "fix": "Move both upright labels into clear space beside the model and add short leaders to their existing atom anchors. Preserve the molecular geometry, bonds and timing."
+    }
+  ]
+}

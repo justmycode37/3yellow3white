@@ -1,0 +1,11 @@
+{
+  "title": "Can one source tell us why workers protested?",
+  "topic": "Write a roughly 90-second lesson in exactly 2 scenes for secondary-school history students, using only the supplied fictional source packet. Explain the difference between what a source directly reports and what it can justify about motives. Reach a qualified interpretation, not an invented definitive cause. No equations, no scripted pauses, no fabricated facts or additional sources. A timeline or evidence comparison may help. Do not force a mathematical proof or a single causal explanation.",
+  "videoMode": "classic",
+  "documents": [
+    {
+      "name": "fictional-source-packet.txt",
+      "text": "All events and sources here are fictional. A factory notice dated 4 May announces a 10% wage cut starting 10 May. A worker diary dated 11 May reports that several workers stopped work and records: \"My pay will not cover rent now.\" A manager letter dated 12 May attributes the stoppage to outside agitators but identifies none. No interviews with other workers, attendance totals, earlier wage records, or additional evidence are supplied."
+    }
+  ]
+}

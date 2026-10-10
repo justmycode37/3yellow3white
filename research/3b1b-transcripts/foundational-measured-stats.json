@@ -1,0 +1,266 @@
+[
+  {
+    "key": "2016/3d-transformations",
+    "segments": 30,
+    "words": 691,
+    "start_s": 13.46,
+    "end_s": 274.5,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/abstract-vector-spaces",
+    "segments": 99,
+    "words": 2508,
+    "start_s": 16.88,
+    "end_s": 960.0,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/brachistochrone",
+    "segments": 138,
+    "words": 2750,
+    "start_s": 3.88,
+    "end_s": 947.88,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/change-of-basis",
+    "segments": 87,
+    "words": 1938,
+    "start_s": 12.76,
+    "end_s": 751.76,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/cross-products",
+    "segments": 71,
+    "words": 1515,
+    "start_s": 9.02,
+    "end_s": 520.98,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/cross-products-extended",
+    "segments": 76,
+    "words": 2103,
+    "start_s": 16.54,
+    "end_s": 774.5,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/determinant",
+    "segments": 80,
+    "words": 1753,
+    "start_s": 11.98,
+    "end_s": 591.6,
+    "nonpositive_intervals": 1
+  },
+  {
+    "key": "2016/dot-products",
+    "segments": 104,
+    "words": 2333,
+    "start_s": 16.58,
+    "end_s": 829.19,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/eigenvalues",
+    "segments": 119,
+    "words": 2573,
+    "start_s": 19.92,
+    "end_s": 1006.12,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/eola-preview",
+    "segments": 31,
+    "words": 914,
+    "start_s": 11.98,
+    "end_s": 294.54,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/hanoi-and-sierpinski",
+    "segments": 126,
+    "words": 2954,
+    "start_s": 4.2,
+    "end_s": 838.1,
+    "nonpositive_intervals": 21
+  },
+  {
+    "key": "2016/hilbert-curve",
+    "segments": 0,
+    "words": 0,
+    "start_s": null,
+    "end_s": null,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/inscribed-rectangle-problem",
+    "segments": 127,
+    "words": 2763,
+    "start_s": 4.3,
+    "end_s": 987.94,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/inverse-matrices",
+    "segments": 89,
+    "words": 1991,
+    "start_s": 10.24,
+    "end_s": 719.66,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/linear-transformations",
+    "segments": 85,
+    "words": 1810,
+    "start_s": 12.04,
+    "end_s": 646.32,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/matrix-multiplication",
+    "segments": 79,
+    "words": 1653,
+    "start_s": 10.94,
+    "end_s": 592.18,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/nonsquare-matrices",
+    "segments": 25,
+    "words": 729,
+    "start_s": 10.62,
+    "end_s": 258.32,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/snells-law",
+    "segments": 35,
+    "words": 727,
+    "start_s": 3.78,
+    "end_s": 230.98,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/span",
+    "segments": 72,
+    "words": 1655,
+    "start_s": 11.88,
+    "end_s": 577.88,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/triangle-of-power",
+    "segments": 58,
+    "words": 1395,
+    "start_s": 3.9,
+    "end_s": 455.58,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/vectors",
+    "segments": 71,
+    "words": 1793,
+    "start_s": 10.92,
+    "end_s": 591.82,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2016/zeta",
+    "segments": 147,
+    "words": 3606,
+    "start_s": 4.22,
+    "end_s": 1214.36,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/essence-of-calculus",
+    "segments": 114,
+    "words": 2904,
+    "start_s": 14.98,
+    "end_s": 1003.42,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/derivatives",
+    "segments": 134,
+    "words": 2917,
+    "start_s": 15.26,
+    "end_s": 1008.4,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/derivative-formulas-geometrically",
+    "segments": 113,
+    "words": 3108,
+    "start_s": 12.14,
+    "end_s": 1033.36,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/chain-rule-and-product-rule",
+    "segments": 111,
+    "words": 2554,
+    "start_s": 14.5,
+    "end_s": 934.56,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/eulers-number",
+    "segments": 89,
+    "words": 2174,
+    "start_s": 14.76,
+    "end_s": 829.5,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/implicit-differentiation",
+    "segments": 98,
+    "words": 2525,
+    "start_s": 10.32,
+    "end_s": 922.73,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/limits",
+    "segments": 125,
+    "words": 3076,
+    "start_s": 14.32,
+    "end_s": 1106.24,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/integration",
+    "segments": 148,
+    "words": 3363,
+    "start_s": 12.08,
+    "end_s": 1225.42,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/area-and-slope",
+    "segments": 81,
+    "words": 1999,
+    "start_s": 15.06,
+    "end_s": 758.84,
+    "nonpositive_intervals": 0
+  },
+  {
+    "key": "2017/higher-order-derivatives",
+    "segments": 35,
+    "words": 873,
+    "start_s": 4.02,
+    "end_s": 316.62,
+    "nonpositive_intervals": 1
+  },
+  {
+    "key": "2017/taylor-series",
+    "segments": 127,
+    "words": 3521,
+    "start_s": 14.64,
+    "end_s": 1339.06,
+    "nonpositive_intervals": 0
+  }
+]
