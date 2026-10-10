@@ -78,6 +78,8 @@ The [demo scenes](demo/scenes.ts) exercise the three subject areas. The demo use
 fullscreen black canvas, mostly white drawing with selective color accents, and a
 bottom progress bar with play/pause controls and native scene controls. Open
 `http://localhost:5173/?interactive` for a two-view interaction example.
+Open `http://localhost:5173/?reactive` for the [reactive slider prototype](docs/reactive-controls.md):
+JavaScript bindings update object properties without rerunning their scene builder.
 Open `http://localhost:5173/behaviors.html` for a canvas-only example: draggable
 atoms, spring return, attached labels, a surface-clipped bond, pan/orbit and a
 composited object fade. All interaction is declared in the scene.
@@ -112,6 +114,9 @@ npm run demo:build   # bundled static demo
 
 The library is a private npm workspace named `animlib` in `shared/animlib`.
 Build it before importing it elsewhere in this project.
+
+See [interaction performance](docs/performance.md) for slider/orbit profiling,
+measured bottlenecks, and reproducible browser and CPU benchmarks.
 
 ## Shared scene evaluation
 

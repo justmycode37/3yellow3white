@@ -27,6 +27,24 @@ afterEach(() => {
 });
 
 describe("off-thread source compiler", () => {
+  it('sends callback updates to the retained worker program and releases discarded programs', async () => {
+    const scene=await compileSource(`export default scene({},s=>{
+      const r=s.slider('r',{reactive:true,default:1,min:0,max:3});const a=s.sphere('a');
+      s.bind(a,[r],r=>({radius:r}));s.wait(1);
+    });`);
+    vi.stubGlobal('Worker',TestWorker);
+    const instance=compiler(), loading=instance.compile('source');
+    const worker=TestWorker.instances[0], session=worker.requests[0].id;
+    worker.respond({id:session,ok:true,scene});
+    const loaded=await loading;
+    const updating=instance.update(loaded,{r:2},['r']);
+    expect(worker.requests[1]).toMatchObject({type:'update',session,values:{r:2},changed:['r']});
+    worker.respond({id:worker.requests[1].id,ok:true,updates:[{target:'a',properties:{radius:2}}]});
+    expect(await updating).toEqual([{target:'a',properties:{radius:2}}]);
+    instance.retain([]);
+    expect(worker.requests[2]).toMatchObject({type:'release',sessions:[session]});
+    expect(instance.canUpdate(loaded)).toBe(false);
+  });
   it("uses the sandbox directly for headless Node consumers", async () => {
     vi.stubGlobal("Worker", undefined);
     const instance = compiler();

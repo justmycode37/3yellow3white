@@ -2,6 +2,7 @@ import { SceneCompileError } from "./compiler.js";
 import { SourceCompiler } from "./compiler-client.js";
 import { evaluateScene } from "./timeline.js";
 import { paletteResolver } from "./palette.js";
+import { mergeReactiveUpdates } from './reactive.js';
 import type { ColorPalette, CompiledScene, ControlValue, Frame, SceneSource, Submission, SubmitResult } from "./types.js";
 
 export interface SequenceOptions {
@@ -80,18 +81,38 @@ export class SceneSequence {
         return { ok: true, revision: this.revision, diagnostics: [] };
       } catch (error) {
         return { ok: false, revision: this.revision, diagnostics: [error instanceof SceneCompileError ? error.diagnostic : { severity: "error", code: "SUBMISSION", message: error instanceof Error ? error.message : String(error) }] };
-      }
+      } finally { this.compiler.retain(this.compiled); }
     });
   }
   setControl(sceneId: string, id: string, value: ControlValue): Promise<void> {
     return this.enqueue(async () => {
       if (this.disposed) throw new Error("Scene sequence is disposed");
-      const scene = this.compiled[this.index(sceneId)];
-      if (!scene.controls.some(c => c.id === id)) throw new Error(`Unknown control: ${sceneId}/${id}`);
+      const index = this.index(sceneId), scene = this.compiled[index];
+      const control = scene.controls.find(c => c.id === id);
+      if (!control) throw new Error(`Unknown control: ${sceneId}/${id}`);
+      if (control.reactive) {
+        if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error(`Slider ${id} requires a finite number`);
+        value = Math.max(control.min!, Math.min(control.max!, value));
+        if (value === control.value) return;
+      }
       const values = new Map(this.values);
       values.set(sceneId, { ...values.get(sceneId), [id]: value });
-      const candidate = await this.reconstruct(this.sources, values);
-      this.compiled = candidate.compiled; this.values = candidate.values;
+      try {
+        if (control.reactive && this.compiler.canUpdate(scene)) {
+          const updates = await this.compiler.update(scene, values.get(sceneId)!, [id], this.options);
+          const updated = { ...scene, controls: scene.controls.map(c => c.id === id ? { ...c, value } : c), reactiveBindings: mergeReactiveUpdates(scene, updates, [id]) };
+          // Preserve transactional handoffs. Earlier scenes and the changed builder
+          // are reused; downstream sources still receive a freshly evaluated end frame.
+          const candidate = await this.reconstruct(this.sources, values, [...this.compiled.slice(0, index), updated]);
+          scene.controls = updated.controls; scene.reactiveBindings = updated.reactiveBindings;
+          candidate.compiled[index] = scene; // Retain its callback program and live behavior identity.
+          this.compiled = candidate.compiled; this.values = candidate.values;
+        } else {
+          // A lost worker can recover from the last committed values on the next update.
+          const candidate = await this.reconstruct(this.sources, values, control.reactive ? this.compiled.slice(0, index) : []);
+          this.compiled = candidate.compiled; this.values = candidate.values;
+        }
+      } finally { this.compiler.retain(this.compiled); }
     });
   }
 

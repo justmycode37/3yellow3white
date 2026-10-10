@@ -2,7 +2,8 @@ import { parse } from "acorn";
 import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
 import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
-import type { CameraState, CompileInput, CompiledScene, Diagnostic, ElementState, Geometry } from "./types.js";
+import type { CameraState, CompileInput, CompiledScene, ControlValue, Diagnostic, ElementState, Geometry, ReactiveUpdate } from "./types.js";
+import { mergeReactiveUpdates, validateReactiveBindings } from './reactive.js';
 
 export class SceneCompileError extends Error {
   constructor(public diagnostic: Diagnostic) { super(diagnostic.message); this.name = "SceneCompileError"; }
@@ -224,16 +225,26 @@ export function validateCompiledScene(scene: CompiledScene): void {
   for (const c of scene.controls) {
     check(typeof c.id === "string" && !ids.has(c.id) && typeof c.label === "string" && c.label.length <= 512, "Invalid control ID or label"); ids.add(c.id);
     check(["slider", "toggle", "select"].includes(c.kind), "Invalid control kind");
+    check(c.reactive === undefined || typeof c.reactive === 'boolean' && c.kind === 'slider', 'Only sliders support reactive inputs');
     if (c.position !== undefined) { vec(c.position, "control position", 2); check(c.position.every(v => v >= 0 && v <= 1), "Control position must be within the canvas"); }
     if (c.width !== undefined) { number(c.width, "control width"); check(c.width > 0 && c.width <= 4096, "Invalid control width"); }
     if (c.kind === "slider") { number(c.value, "slider value"); number(c.default, "slider default"); number(c.min, "slider min"); number(c.max, "slider max"); check(c.min! <= c.max! && Number(c.value) >= c.min! && Number(c.value) <= c.max!, "Invalid slider range"); if (c.step !== undefined) { number(c.step, "slider step"); check(c.step > 0, "Invalid slider step"); } }
     if (c.kind === "toggle") check(typeof c.value === "boolean" && typeof c.default === "boolean", "Invalid toggle value");
     if (c.kind === "select") check(Array.isArray(c.options) && c.options.length <= 100 && c.options.every(o => typeof o === "string" && o.length <= 256) && c.options.includes(String(c.value)), "Invalid select options/value");
   }
+  validateReactiveBindings(scene);
 }
 
-export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<CompiledScene> {
+export interface SceneProgram {
+  scene: CompiledScene;
+  update(values: Record<string, ControlValue>, changed: string[]): ReactiveUpdate[];
+  dispose(): void;
+}
+
+/** A worker-owned program retains callback closures; only plain data leaves this boundary. */
+export async function createSceneProgram(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<SceneProgram> {
   let vm: ReturnType<Awaited<ReturnType<typeof getQuickJS>>["newContext"]> | undefined;
+  let retained = false;
   try {
     const resolver = paletteResolver(input.palette);
     input = { ...input, palette: resolver.palette };
@@ -248,7 +259,7 @@ export async function compileSource(source: string, input: CompileInput = {}, li
     vm = QuickJS.newContext();
     vm.runtime.setMemoryLimit(32 * 1024 * 1024);
     vm.runtime.setMaxStackSize(512 * 1024);
-    const deadline = Date.now() + (limits.executionLimitMs ?? 200);
+    let deadline = Date.now() + (limits.executionLimitMs ?? 200);
     vm.runtime.setInterruptHandler(() => Date.now() > deadline);
     const execute = (code: string, file: string): string | undefined => {
       const result = vm!.evalCode(code, file);
@@ -270,7 +281,7 @@ export async function compileSource(source: string, input: CompileInput = {}, li
       const Color = __tokens(${JSON.stringify(Color)});
       const palette = Object.freeze({ ...__input.palette, colors: __tokens(Object.fromEntries(Object.keys(__input.palette.colors).map(name => [name, name]))) });
       const __buildScene = ${buildScene.toString()};
-      const scene = (options, builder) => __buildScene(options, builder, __input);
+      const scene = (options, builder) => __buildScene(options, builder, __input, update => { globalThis.__animlibUpdate = update; });
       let __seed = ${JSON.stringify(input.seed ?? 1)} >>> 0;
       Math.random = () => { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };
       const math = Object.freeze(Math);
@@ -282,10 +293,29 @@ export async function compileSource(source: string, input: CompileInput = {}, li
     const compiled = JSON.parse(json) as CompiledScene;
     validateCompiledScene(compiled);
     enforceScenePalette(compiled, resolver);
-    return compiled;
+    retained = true;
+    return {
+      scene: compiled,
+      update(values, changed) {
+        if (!vm) throw new Error('Scene runtime is disposed');
+        deadline = Date.now() + (limits.executionLimitMs ?? 200);
+        const json = execute(`JSON.stringify(globalThis.__animlibUpdate(JSON.parse(${JSON.stringify(JSON.stringify(values))}), JSON.parse(${JSON.stringify(JSON.stringify(changed))})))`, 'bindings.js');
+        check(json && json.length <= 1024 * 1024, 'Invalid or oversized reactive update');
+        const updates = JSON.parse(json) as ReactiveUpdate[];
+        mergeReactiveUpdates(compiled, updates, changed);
+        return updates;
+      },
+      dispose() { vm?.dispose(); vm = undefined; },
+    };
   } catch (error) {
     if (error instanceof SceneCompileError) throw error;
     const e = error as Error & { loc?: { line: number; column: number } };
     throw new SceneCompileError({ severity: "error", code: e.loc ? "SYNTAX" : "SCENE_VALIDATION", message: e.message ?? String(error), ...(e.loc ? { line: e.loc.line, column: e.loc.column + 1 } : {}) });
-  } finally { vm?.dispose(); }
+  } finally { if (!retained) vm?.dispose(); }
+}
+
+/** Standalone compilation remains serializable; runtime callbacks are disposed. */
+export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<CompiledScene> {
+  const program = await createSceneProgram(source, input, limits);
+  try { return program.scene; } finally { program.dispose(); }
 }
