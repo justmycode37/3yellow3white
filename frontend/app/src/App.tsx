@@ -130,6 +130,8 @@ export default function App() {
   }
   const menuContent = <NavigationDrawer
     open={menu}
+    theme={theme}
+    onTheme={setTheme}
     current={settings ? 'settings' : planning ? 'plan' : selected ? 'lesson' : libraryPage ? 'library' : 'workspace'}
     onClose={() => setMenu(false)}
     onWorkspace={goWorkspace}
@@ -144,7 +146,7 @@ export default function App() {
   const subjects = availableSubjects.filter(subject => visible.some(l => l.subject === subject))
 
   return <>
-    {selected ? <LessonPlayer key={selected.id} lesson={selected} theme={theme} overlayOpen={false} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary}/>
+    {selected ? <LessonPlayer key={selected.id} lesson={selected} overlayOpen={false} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary}/>
     : <div className={`app-shell ${settings ? 'settings-shell' : !planning && !libraryPage ? 'workspace-shell' : ''}`}>
       <header className="header">
         <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation and settings" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={goWorkspace}>Aha!</button></div>

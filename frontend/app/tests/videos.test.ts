@@ -11,7 +11,7 @@ const manifest = (id = 'video-1'): VideoManifest => ({
 
 test('server refresh preserves curriculum context and updates measured duration', () => {
   const video = manifest()
-  const previous = { ...videoLesson(video), subject: 'Analysis', subtitle: 'Sequences', color: 'blue', duration: 0,
+  const previous = { ...videoLesson(video), videoMode: 'interactive' as const, subject: 'Analysis', subtitle: 'Sequences', color: 'blue', duration: 0,
     artwork: 'idea' as const, source: { name: 'Lecture.pdf', chapter: 'Sequences', text: 'The original course material.' } }
   const [updated] = mergeVideoLessons([video], [previous])
   assert.equal(updated.videoId, video.id)
@@ -19,6 +19,7 @@ test('server refresh preserves curriculum context and updates measured duration'
   assert.equal(updated.subject, 'Analysis')
   assert.equal(updated.subtitle, 'Sequences')
   assert.equal(updated.artwork, 'idea')
+  assert.equal(updated.videoMode, 'interactive')
   assert.deepEqual(updated.source, previous.source)
 })
 
@@ -39,6 +40,40 @@ test('authoritative refresh removes deleted server videos and reflects generatio
   assert.equal(merged[0].generationStatus, 'generating')
   assert.equal(merged[0].demo, false)
   assert.equal(merged[0].subtitle, 'Visual explanation')
+})
+
+test('workspace sends actual upload bytes with JSON metadata and an idempotency key', async () => {
+  const { requestVideo } = await import('../src/videos.ts')
+  const original = globalThis.fetch
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/videos')
+    assert.equal((options!.headers as Record<string, string>)['Idempotency-Key'], 'upload-key')
+    assert.equal((options!.headers as Record<string, string>)['Content-Type'], undefined)
+    const body = options!.body as FormData
+    assert.deepEqual(JSON.parse(body.get('request') as string), { title: 'Topic', topic: 'Explain this page.', documents: [], videoMode: 'interactive' })
+    assert.equal((body.get('files') as File).name, 'page.png')
+    assert.equal(await (body.get('files') as File).text(), 'image pixels')
+    return Response.json({ ...manifest(), provider: 'pi', status: 'queued', scenes: [] })
+  }
+  try { await requestVideo({ title: 'Topic', topic: 'Explain this page.', documents: [], videoMode: 'interactive' }, 'upload-key', [new File(['image pixels'], 'page.png')]) }
+  finally { globalThis.fetch = original }
+})
+
+test('text-only workspace requests include the selected video mode', async () => {
+  const { requestVideo } = await import('../src/videos.ts')
+  const original = globalThis.fetch
+  const received: string[] = []
+  globalThis.fetch = async (_url, options) => {
+    assert.equal((options!.headers as Record<string, string>)['Content-Type'], 'application/json')
+    received.push(JSON.parse(options!.body as string).videoMode)
+    return Response.json(manifest())
+  }
+  try {
+    for (const videoMode of ['classic', 'interactive'] as const) {
+      await requestVideo({ title: 'Topic', topic: 'Explain this idea.', documents: [], videoMode }, `mode-${videoMode}`)
+    }
+    assert.deepEqual(received, ['classic', 'interactive'])
+  } finally { globalThis.fetch = original }
 })
 
 test('generated thumbnails arrive through refresh and replace stale browser-local artwork', () => {

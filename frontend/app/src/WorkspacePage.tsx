@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent, FormEvent } from 'react'
 import { ArrowRight, Camera, FileImage, FileText, Plus, Upload, X } from './Icons'
 import PhotoCapture from './PhotoCapture'
+import VideoModeSelector from './VideoModeSelector'
 import { artworkForTitle } from './data'
-import type { Lesson } from './data'
+import type { Lesson, VideoMode } from './data'
 import type { TopicVideoRequest } from './subjectPlans'
 import { requestVideo, videoLesson } from './videos'
 
@@ -29,6 +30,7 @@ function PhotoPreview({ file }: { file: File }) {
 
 export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (lesson: Lesson) => void; initialTopic?: TopicVideoRequest | null }) {
   const [mode, setMode] = useState<InputMode>('text')
+  const [videoMode, setVideoMode] = useState<VideoMode>('classic')
   const [topic, setTopic] = useState(initialTopic ? `${initialTopic.title}\n\n${initialTopic.text}` : '')
   const [modeFiles, setModeFiles] = useState<Record<InputMode, File[]>>({ drop: [], text: [], photos: [] })
   const [error, setError] = useState('')
@@ -94,11 +96,11 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
       if (!mounted.current) return
       const context = mode === 'text' ? initialTopic : null
       if (context) documents.unshift({ name: context.sourceName, text })
-      const body = { title, topic: text, documents }
+      const body = { title, topic: text, documents, videoMode }
       const serialized = JSON.stringify({ ...body, files: files.map(file => ({ name: file.name, size: file.size, lastModified: file.lastModified })) })
       if (serialized !== requestBody.current) { requestBody.current = serialized; requestKey.current = crypto.randomUUID() }
       const lesson = videoLesson(await requestVideo(body, requestKey.current, files))
-      if (mounted.current) onCreate({ ...lesson, subtitle: context?.chapter || lesson.subtitle, subject: context?.subject || lesson.subject, artwork: artworkForTitle(title, 'idea'), color: context?.color || lesson.color, source: context ? { text, chapter: context.chapter, name: context.sourceName } : undefined })
+      if (mounted.current) onCreate({ ...lesson, videoMode, subtitle: context?.chapter || lesson.subtitle, subject: context?.subject || lesson.subject, artwork: artworkForTitle(title, 'idea'), color: context?.color || lesson.color, source: context ? { text, chapter: context.chapter, name: context.sourceName } : undefined })
     } catch (error) {
       if (mounted.current) setError(error instanceof Error ? error.message : 'Could not create your video.')
     } finally {
@@ -127,7 +129,10 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
             onDragOver={event => { if (event.dataTransfer.types.includes('Files')) event.preventDefault() }}
             onDragLeave={() => { dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDragging(false) }}
             onDrop={dropFiles}>
-            <div className="composer-heading"><span className="composer-icon"><Icon size={20}/></span><h2 id={`input-${mode}-heading`} tabIndex={-1}>{item.label}</h2></div>
+            <div className="composer-heading">
+              <span className="composer-icon"><Icon size={20}/></span><h2 id={`input-${mode}-heading`} tabIndex={-1}>{item.label}</h2>
+              <VideoModeSelector value={videoMode} onChange={setVideoMode} disabled={creating}/>
+            </div>
 
             {mode === 'text' ? <textarea id="video-topic" aria-label="What would you like explained?" disabled={creating} value={topic} onChange={event => setTopic(event.target.value)} placeholder="Explain something I’ve always wondered about…" maxLength={10000}/>
             : mode === 'drop' ? <button className="composer-upload-area" type="button" onClick={() => picker.current?.click()}>
