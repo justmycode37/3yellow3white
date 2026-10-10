@@ -245,6 +245,8 @@ export interface OverlapOptions {
   ignorePairs?: readonly (readonly [string, string])[];
 }
 export interface SceneOverlapOptions extends OverlapOptions {
+  /** Include text affected by active tracks, groups, bindings, or cameras. Default false. */
+  includeAnimating?: boolean;
   /** Explicit local sample times; sorted/deduplicated. Overrides sampleRate. */
   times?: readonly number[];
   /** Samples per second, default 10. Includes endpoints, lifecycle events and track boundaries. */

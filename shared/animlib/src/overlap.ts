@@ -79,8 +79,12 @@ function validateOptions(options: OverlapOptions): number {
   return minOpacity;
 }
 
-/** Pure, opt-in glyph intersection checks between distinct text/LaTeX elements. */
+/** Snapshot glyph checks; a Frame alone does not describe active animation tracks. */
 export function detectOverlaps(frame: Frame, options: OverlapOptions): OverlapDiagnostic[] {
+  return inspectFrame(frame, options);
+}
+
+function inspectFrame(frame: Frame, options: OverlapOptions, excluded: ReadonlySet<string> = new Set()): OverlapDiagnostic[] {
   const minOpacity = validateOptions(options), palette = paletteResolver(options.palette), space = new SpatialFrame(frame);
   const footprints = new Map<string, Footprint>();
   const regions = [{ camera: frame.camera, rect: [0, 0, 1, 1], id: undefined as string | undefined },
@@ -89,7 +93,7 @@ export function detectOverlaps(frame: Frame, options: OverlapOptions): OverlapDi
     const [left, top, w, h] = region.rect, width = w * options.width, height = h * options.height;
     if (width <= 0 || height <= 0) continue;
     for (const item of buildDrawItems(frame, region.camera, width, height, palette, region.id, true)) {
-      if (item.component !== 'content') continue;
+      if (item.component !== 'content' || excluded.has(item.elementId)) continue;
       const data = item.vertices, opacity = data[6] * (item.groups ?? []).reduce((n, group) => n * group.opacity, 1);
       if (opacity <= 0 || opacity < minOpacity) continue;
       for (let i = 0; i < data.length; i += 45) {
@@ -128,7 +132,41 @@ export function detectOverlaps(frame: Frame, options: OverlapOptions): OverlapDi
   return diagnostics;
 }
 
-/** Sample authored animation state, returning only times with overlaps. Not continuous collision detection. */
+/** Follow active tracks through the frame's parent and binding dependencies. */
+function animatingElements(scene: CompiledScene, frame: Frame, time: number): Set<string> {
+  const animated = new Set<string>(), dependents = new Map<string, string[]>();
+  const dependsOn = (target: string, source: string): void => {
+    const targets = dependents.get(source) ?? [];
+    targets.push(target); dependents.set(source, targets);
+  };
+  for (const element of frame.elements) {
+    for (const child of element.geometry.children ?? []) dependsOn(child, element.id);
+  }
+  for (const binding of scene.bindings ?? []) {
+    const sources = binding.type === 'attach' ? [binding.source] : [binding.from, binding.to];
+    for (const source of sources) dependsOn(binding.target, source);
+  }
+  for (const track of scene.tracks) {
+    // Half-open intervals include the first animation frame but allow the settled endpoint.
+    if (track.action.type !== 'camera' && track.start <= time && time < track.start + track.duration) {
+      for (const id of track.action.ids) animated.add(id);
+    }
+  }
+  const queue = [...animated];
+  for (let i = 0; i < queue.length; i++) {
+    for (const target of dependents.get(queue[i]) ?? []) {
+      if (!animated.has(target)) { animated.add(target); queue.push(target); }
+    }
+  }
+  // Camera motion changes projected world text, but leaves screen-space text stationary.
+  const animatedViews = new Set(frame.views?.filter(view => view.cameraAnimated).map(view => view.id));
+  for (const element of frame.elements) {
+    if (element.space !== 'screen' && (element.view === undefined ? frame.cameraAnimated : animatedViews.has(element.view))) animated.add(element.id);
+  }
+  return animated;
+}
+
+/** Check settled text by default, returning only sample times with overlaps. */
 export function detectSceneOverlaps(scene: CompiledScene, options: SceneOverlapOptions): SceneOverlapSample[] {
   validateOptions(options);
   if (!Number.isFinite(scene.duration) || scene.duration < 0) throw new Error('Scene duration must be finite and nonnegative.');
@@ -149,7 +187,9 @@ export function detectSceneOverlaps(scene: CompiledScene, options: SceneOverlapO
   }
   const samples: SceneOverlapSample[] = [];
   for (const time of [...new Set(times)].sort((a, b) => a - b)) {
-    const overlaps = detectOverlaps(evaluateScene(scene, time), { ...options, palette: options.palette ?? scene.options.palette });
+    const frame = evaluateScene(scene, time);
+    const excluded = options.includeAnimating ? undefined : animatingElements(scene, frame, time);
+    const overlaps = inspectFrame(frame, { ...options, palette: options.palette ?? scene.options.palette }, excluded);
     if (overlaps.length) samples.push({ time, overlaps });
   }
   return samples;

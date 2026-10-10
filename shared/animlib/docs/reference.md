@@ -1235,8 +1235,7 @@ inside one formula or text element are never compared with each other, including
 old/new glyphs overlapping during a morph of that element. Only the text portion
 of a shape/text morph participates in detection.
 
-Separate text elements intentionally crossfading can still produce reports.
-`ignorePairs` optionally excludes such pairs in either order. A group ID matches
+`ignorePairs` optionally excludes intentional text pairs in either order. A group ID matches
 all its descendants; `['labels', 'labels']` excludes internal text pairs in that
 group while preserving checks against other text. Group membership by itself
 does not imply an exclusion.
@@ -1258,14 +1257,34 @@ antialiasing can differ slightly at edges. No minimum-clearance/near-miss check
 or continuous collision solver is included.
 
 Scene inspection returns `{ time, overlaps }[]` for **only samples with
-collisions**. By default it samples at 10 Hz and includes scene endpoints,
+collisions between settled text**. By default it samples at 10 Hz and includes scene endpoints,
 lifecycle events, and track start/end times. `times` replaces that schedule and
 must contain finite values within `[0, compiled.duration]`; values are sorted and
 deduplicated. Empty `times` inspects nothing. Each call supports up to 100,000
 samples; reduce `sampleRate` or split explicit times for larger jobs. Sampling
 can miss collisions between inspected frames. Reports use authored cameras and
-current compiled controls/bindings; for viewer camera changes or live interaction,
-pass the corresponding presentation frame to `detectOverlaps`.
+current compiled controls/bindings.
+
+`detectSceneOverlaps` excludes text affected by an active animation at each sample.
+That includes move/style, fade, morph, and numeric-value tracks on the text itself,
+tracks on its ancestors, and animations of binding sources (including chained
+attachments). This dependency rule is conservative: any active track on a binding
+source makes its dependent text ineligible until the track ends. Active camera
+tracks exclude world-space text only in the affected view; screen-space labels
+remain eligible. Other stationary text is still checked, even while unrelated
+elements animate.
+
+A track is active on `[start, start + duration)`. Its exact endpoint is eligible
+unless another animation affecting that text starts there. Zero-duration tracks
+apply immediately and do not suppress a check. Consequently, transient crossings
+and text crossfades are ignored by default, while an overlapping final placement
+is reported when the text settles. Explicit `times` use the same policy. Set
+`includeAnimating: true` to include text during its animations for debugging.
+
+`detectOverlaps(frame, options)` remains a pure geometry check: a single `Frame`
+has no per-element track history, so this lower-level API does not infer whether
+text is animating. This also applies to presentation frames supplied by a host
+during live interaction. Use the scene API for authored-animation filtering.
 
 ## 9. Engine structure and verification
 
