@@ -1,9 +1,21 @@
-import type { CompiledScene, Frame } from 'animlib/core';
+import type { CameraState, CompiledScene, Frame } from 'animlib/core';
 import type { ScenePlan } from './planning.js';
 
 /** Enforce declarations we can observe. Visual quality and teaching remain review questions. */
 export function validateScenePlan(compiled: CompiledScene, finalFrame: Frame, plan: ScenePlan) {
   const errors: string[] = [];
+  // Observe configured projection/orientation, including camera transitions and
+  // subviews. This is a contract check, not evidence of meaningful visual depth.
+  const spatial = (camera: CameraState) => camera.perspective > 0 || camera.yaw !== 0 || camera.pitch !== 0;
+  const cameras = [compiled.camera, ...(compiled.views ?? []).map(view => view.camera)];
+  for (const track of compiled.tracks) {
+    if (track.action.type === 'camera' && track.cameraFrom) {
+      cameras.push(track.cameraFrom, { ...track.cameraFrom, ...track.action.properties });
+    }
+  }
+  if (plan.view?.mode === '3d' && !cameras.some(spatial)) {
+    errors.push('The planned 3d view requires a camera with perspective or spatial orientation, in the main scene or a subview. Configure it with mode: "3d", s.camera.to3D(), or a spatial s.view camera.');
+  }
   const elements = new Map(finalFrame.elements.map(element => [element.id, element]));
   for (const id of plan.carry) {
     if (!elements.get(id)?.persistent) errors.push(`Carry entity "${id}" must exist at the end and be passed to s.keep().`);
