@@ -1,6 +1,8 @@
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {create,globals} from 'webgpu';
+import {VertexBufferLimitError} from '../src/vertex-buffer.js';
+import {createPlayer} from '../src/player.js';
 import {CanvasRenderer} from '../src/renderer.js';
 import {SceneSequence} from '../src/sequence.js';
 import {initialSources} from '../demo/scenes.js';
@@ -16,6 +18,7 @@ import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
 import {reactiveCases} from './reactive-cases.js';
+import {lightingCases} from './lighting-cases.js';
 import {materialCases,materialSource,bumpSource} from './material-cases.js';
 import {textureCases,texturePixelIssues} from './texture-cases.js';
 import {transparencyCases} from './transparency-cases.js';
@@ -47,7 +50,8 @@ describe('native Vulkan WebGPU rendering',()=> {
     // The renderer still calls its production requestAdapter/requestDevice path.
     vi.stubGlobal('navigator',{gpu:{requestAdapter:async()=>({requestDevice:async()=>device}),getPreferredCanvasFormat:()=>format}});
     renderer=new CanvasRenderer(canvas);renderer.onError=error=>errors.push(error.message);
-    sequence=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+    // Large allocation fixtures test GPU limits, not the default sandbox time budget.
+    sequence=new SceneSequence({executionLimitMs:1000,prepare:scenes=>renderer.prepare(scenes)});
     const result=await sequence.submit({type:'load',scenes:initialSources});
     expect(result).toEqual({ok:true,revision:1,diagnostics:[]});
   });
@@ -79,6 +83,55 @@ describe('native Vulkan WebGPU rendering',()=> {
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
   function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  it.each(lightingCases)('lighting: $name',async test=>{
+    let imageIndex=0;
+    await test.run(async(source,yaw=0,time=0)=>{
+      renderer.resetInteraction();
+      const result=await sequence.submit({type:'load',scenes:[{id:'lighting',source}]});
+      expect(result.ok,JSON.stringify(result)).toBe(true);
+      renderer.setOrbit({yaw,pitch:0});
+      renderer.render(sequence.frame(0,time),sequence.compiled[0].options);
+      const image=await pixels();await artifact('lighting-'+test.name.replace(/[^a-z]+/gi,'-')+'-'+imageIndex++,image);return image;
+    });
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('caps shadow-expanded allocations and rejects oversized uploads without losing the last frame',async()=>{
+    const source=(count:number)=>`export default scene({mode:'3d',lighting:{directional:{direction:[0,1,0],space:'world',shadow:{quality:'high'}},receiver:{size:[8,8]}}},s=>{
+      for(let i=0;i<${count};i++)s.parametricSurface('surface'+i,{uSegments:100,vSegments:100,fn:(u,v)=>[u,1+i*.1,v]});s.wait(1);
+    });`;
+    // Default production requestDevice() guarantees at least this limit; the
+    // regression target requests no increased maxBufferSize on the test device.
+    const limit=device!.limits.maxBufferSize;
+    expect(limit).toBe(268435456);
+    const create=vi.spyOn(device!,'createBuffer'),submit=vi.spyOn(device!.queue,'submit'),write=vi.spyOn(device!.queue,'writeBuffer');
+    const controlled:Error[]=[],previousError=renderer.onError;
+    renderer.onError=error=>controlled.push(error);
+    try {
+      const loaded=await sequence.submit({type:'load',scenes:[{id:'large-shadow',source:source(2)}]});
+      expect(loaded.ok,JSON.stringify(loaded)).toBe(true);
+      renderer.resetInteraction();renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+      await device!.queue.onSubmittedWorkDone();
+      expect(controlled).toEqual([]);expect(errors).toEqual([]);
+      const buffers=create.mock.calls.map(([descriptor])=>descriptor).filter(d=>(d.usage&GPUBufferUsage.VERTEX)!==0);
+      expect(buffers.map(d=>d.size)).toEqual([limit]); // payload fits; doubled growth does not.
+      expect(write.mock.calls.some(([, ,data])=>(data as ArrayBufferView).byteLength===208320744)).toBe(true);
+      const before=await pixels();expect(changedPixels(before)).toBeGreaterThan(1000);
+      const oversized=await sequence.submit({type:'load',scenes:[{id:'large-shadow',source:source(3)}]});
+      expect(oversized.ok,JSON.stringify(oversized)).toBe(true);
+      const allocationCount=create.mock.calls.length,submitCount=submit.mock.calls.length,writeCount=write.mock.calls.length;
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+      expect(controlled).toHaveLength(1);expect(controlled[0]).toBeInstanceOf(VertexBufferLimitError);
+      expect(controlled[0].message).toContain('312480744');
+      expect(create).toHaveBeenCalledTimes(allocationCount);expect(submit).toHaveBeenCalledTimes(submitCount);expect(write).toHaveBeenCalledTimes(writeCount);
+      expect(renderer.backend).toBe('webgpu');expect(Buffer.from(await pixels())).toEqual(Buffer.from(before));
+      expect(errors).toEqual([]);
+      // A scene budget error is recoverable: a smaller frame renders on the same device.
+      expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);await device!.queue.onSubmittedWorkDone();
+      expect(renderer.backend).toBe('webgpu');expect(controlled).toHaveLength(1);expect(errors).toEqual([]);
+    } finally {renderer.onError=previousError;create.mockRestore();submit.mockRestore();write.mockRestore();}
+  });
   it.each([false,true])('bump changes normals with constant albedo, metal=%s',async metal=>{
     const images:Uint8Array[]=[];
     for(const strength of [undefined,0,0.15,-0.15]) {
@@ -514,6 +567,36 @@ describe('native Vulkan WebGPU rendering',()=> {
     const expected={...frame,elements:frame.elements.map(e=>({...e,morph:undefined,geometry:{kind:'text' as const,text:'A',fontSize:2}}))};
     renderer.render(expected,scene.options);
     expect(Buffer.from(await pixels()).equals(actual)).toBe(true);expect(errors).toEqual([]);
+  });
+
+  // Last: this public player owns/disposes the native device supplied by the harness.
+  it('public Player recovers from an oversized frame and can play a smaller scene',async()=>{
+    Object.assign(canvas,{getAttribute:()=>null,setAttribute:()=>{},removeAttribute:()=>{}});
+    const callbacks=new Map<number,FrameRequestCallback>();let id=0;
+    vi.stubGlobal('requestAnimationFrame',(callback:FrameRequestCallback)=>{callbacks.set(++id,callback);return id;});
+    vi.stubGlobal('cancelAnimationFrame',(id:number)=>callbacks.delete(id));
+    const player=createPlayer({canvas,executionLimitMs:1000});
+    const source=`export default scene({mode:'3d',lighting:{directional:{direction:[0,1,0],space:'world',shadow:{quality:'high'}},receiver:{size:[8,8]}}},s=>{
+      for(let i=0;i<3;i++)s.parametricSurface('surface'+i,{uSegments:100,vSegments:100,fn:(u,v)=>[u,1+i*.1,v]});s.wait(1);
+    });`;
+    try{
+      expect((await player.submit({type:'load',scenes:[{id:'large',source}]})).ok).toBe(true);
+      expect(player.getState()).toMatchObject({status:'blocked',error:expect.stringContaining('exceeding WebGPU maxBufferSize')});
+      await expect(player.play()).rejects.toBeInstanceOf(VertexBufferLimitError);
+      expect((await player.submit({type:'load',scenes:[{id:'small',source:"export default scene({},s=>{s.rectangle('r',{width:3,height:2,fill:'PURE_RED'});s.wait(1)});"}]})).ok).toBe(true);
+      expect(player.getState()).toMatchObject({scene:'small',status:'paused'});
+      expect(player.getState().error).toBeUndefined();
+      const image=await pixels();expect(Array.from(image.slice((240*640+320)*4,(240*640+320)*4+4))).toEqual([255,0,0,255]);
+      await player.play();expect(player.getState().status).toBe('playing');expect(callbacks.size).toBe(1);
+      const time=performance.now(),clock=vi.spyOn(performance,'now').mockReturnValue(time+250);
+      try{
+        const [key,callback]=callbacks.entries().next().value!;callbacks.delete(key);callback(time+250);
+        expect(player.getState().time).toBeGreaterThanOrEqual(0.25);
+        expect(player.getState().status).toBe('playing');expect(callbacks.size).toBe(1);
+      }finally{clock.mockRestore();}
+      player.pause();expect(player.getState().status).toBe('paused');
+      expect(errors).toEqual([]);
+    }finally{player.dispose();}
   });
 
 });

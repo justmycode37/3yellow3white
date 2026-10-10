@@ -33,6 +33,7 @@ test('normalizes line endings deterministically without changing authoring prose
 test.each([
   ['unknown heading', reference.replace('### Local timing', '### New timing API')],
   ['new nested heading', reference.replace('### Local timing', '#### New API\n\n### Local timing')],
+  ['new lighting subsection', reference.replace('### Scene lighting and planar shadows', '### Scene lighting and planar shadows\n\n#### New light API')],
   ['missing heading', reference.replace('### Local timing\n', '')],
   ['duplicate heading', reference.replace('### Local timing', '### Local timing\n\n### Local timing')],
   ['reordered headings', reference.replace('### Source format', '### TEMP').replace('### Local timing', '### Source format').replace('### TEMP', '### Local timing')],
@@ -56,4 +57,21 @@ test('retains curved-path authoring rules and the Bézier example', () => {
   const output = buildAuthoringReference(reference);
   expect(output).toContain(between('### Curved paths and organic shapes', '### Choosing how objects relate and move'));
   expect(output).toContain("d: 'M0 0 C0.5 0.6 1.3 0.7 2 0 C1.3 -0.5 0.5 -0.4 0 0 Z'");
+});
+
+test('retains the complete lighting API, example, casting policy and limits verbatim', () => {
+  const output = buildAuthoringReference(reference);
+  const lighting = between('### Scene lighting and planar shadows', '### Procedural textures and materials');
+  expect(lighting).toStartWith('### Scene lighting and planar shadows');
+  expect(output).toContain(lighting);
+  for (const prose of [
+    "direction: [-0.7, 1, 0.5], space: 'world', intensity: 1",
+    "lighting: 'studio'",
+    "space: 'camera'",
+    "`castShadow: false`",
+    'translucent fills/textures and members of translucent isolated groups do not cast',
+    'no self-shadowing',
+    'arbitrary mesh receivers',
+    'Use medium quality and modest caster counts for interactive scenes.',
+  ]) expect(lighting).toContain(prose);
 });

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lighting study · animlib</title>
+<style>
+:root{color-scheme:dark;font:16px/1.6 system-ui;background:#101111;color:#ecebe5}body{max-width:1240px;margin:auto;padding:28px}h1{font-weight:500;margin:0}p{color:#a4aaa5;max-width:850px}main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:28px}canvas{display:block;width:100%;height:600px;background:#000;border:1px solid #343b36;border-radius:10px;touch-action:none}#controls .animlib-controls{position:static!important;width:auto!important;height:auto!important;gap:18px!important;padding:0!important}#controls .animlib-control{width:100%!important}button{font:inherit;background:#222825;color:inherit;border:1px solid #38443d;border-radius:6px;padding:7px 14px;cursor:pointer}#error{color:#ffaaaa;white-space:pre-wrap}@media(max-width:750px){main{grid-template-columns:1fr}canvas{height:480px}}
+</style></head><body>
+<h1>Light, form, and contact</h1><p>Orbit around the objects to compare a world-fixed source with a light that follows the camera. Lift the objects to see their shadows separate from the floor and soften with distance.</p>
+<main><section><canvas aria-label="Interactive lighting and shadow study"></canvas><p><button id="reset">Reset view</button></p></section><aside id="controls" aria-label="Lighting controls"></aside></main>
+<p>Shadows fall on the finite floor. Objects do not shadow themselves or each other. Softness uses deterministic directional samples; higher quality gives smoother edges.</p><pre id="error" role="alert"></pre>
+<script type="module">
+import {createPlayer} from '../src/index.ts';
+import {lightingSource} from './lighting.ts';
+const player=createPlayer({canvas:document.querySelector('canvas'),controlsRoot:document.querySelector('#controls')});
+player.subscribe(state=>{document.querySelector('#error').textContent=state.error?.message??state.error??''});
+document.querySelector('#reset').onclick=()=>player.resetView();
+window.lightingPlayer=player;
+window.lightingReady=player.submit({type:'load',scenes:[lightingSource]});
+</script></body></html>

@@ -1,22 +1,35 @@
 import { VERTEX_FLOATS } from './texture-shader.js';
+/** Internal layer operations shared by both compositors. */
+export interface LayerEffect {
+  /** Opaque receiver: apply lighting to accumulated coverage, before saturation. */
+  receiverLight?: number;
+  /** Linear palette albedo, applied only after accumulating coverage. */
+  receiverColor?: [number, number, number];
+  /** Direct-light reduction per unit of encoded coverage (includes normalization). */
+  receiverShadow?: number;
+  /** Add a silhouette's coverage without attenuating earlier samples. */
+  additive?: boolean;
+}
 /** Shared draw order for the two native graphics backends. */
 export type RenderCommand =
   | { first: number; count: number; opaque: boolean }
-  | { children: RenderCommand[]; opacity: number; opaque: boolean };
+  | ({ children: RenderCommand[]; opacity: number; opaque: boolean } & LayerEffect);
 export interface DrawItem {
   depth: number; vertices: Float32Array; transparent: boolean; screen: boolean;
-  groups?: { id: string; opacity: number }[];
+  /** Requires world-space packing after the effective camera is known. */
+  cameraDependentGeometry?: boolean;
+  groups?: ({ id: string; opacity: number } & LayerEffect)[];
 }
 
 /** Isolated groups form atomic compositing units; ordinary groups remain flattened. */
 export function composeItems(items: DrawItem[], first: number): { commands: RenderCommand[]; items: DrawItem[] } {
-  interface Unit { depth: number; transparent: boolean; item?: DrawItem; children?: Unit[]; opacity: number; }
+  interface Unit extends LayerEffect { depth: number; transparent: boolean; item?: DrawItem; children?: Unit[]; opacity: number; }
   const root: Unit[] = [], groups = new Map<string, Unit>();
   for (const item of items) {
     let children = root;
     for (const group of item.groups ?? []) {
       let unit = groups.get(group.id);
-      if (!unit) { unit = { depth: item.depth, transparent: group.opacity < 0.999999, children: [], opacity: group.opacity }; groups.set(group.id, unit); children.push(unit); }
+      if (!unit) { unit = { depth: item.depth, transparent: group.opacity < 0.999999, children: [], opacity: group.opacity, receiverLight: group.receiverLight, receiverColor: group.receiverColor, receiverShadow: group.receiverShadow, additive: group.additive }; groups.set(group.id, unit); children.push(unit); }
       unit.depth = Math.min(unit.depth, item.depth);
       unit.transparent ||= item.transparent;
       children = unit.children!;
@@ -26,11 +39,14 @@ export function composeItems(items: DrawItem[], first: number): { commands: Rend
   const ordered: DrawItem[] = [];
   const build = (units: Unit[]): RenderCommand[] => {
     // A nested translucent layer makes its enclosing layer translucent as well.
-    const transparent = (unit: Unit): boolean => unit.transparent || Boolean(unit.children?.some(transparent));
+    // A receiver layer contains an opaque finite plane beneath all of its masks.
+    // Resolve it before unrelated transparency; its projected masks are not scene glass.
+    const transparent = (unit: Unit): boolean => unit.receiverLight === undefined
+      && (unit.transparent || Boolean(unit.children?.some(transparent)));
     for (const unit of units) unit.transparent = transparent(unit);
     units.sort((a,b) => Number(a.transparent)-Number(b.transparent) || b.depth-a.depth);
     const commands: RenderCommand[] = units.map(unit => {
-      if (unit.children) return { children: build(unit.children), opacity: unit.opacity, opaque: !unit.transparent };
+      if (unit.children) return { children: build(unit.children), opacity: unit.opacity, opaque: !unit.transparent, ...(unit.receiverLight !== undefined ? { receiverLight: unit.receiverLight, receiverColor: unit.receiverColor, receiverShadow: unit.receiverShadow } : {}), ...(unit.additive ? { additive: true } : {}) };
       const item = unit.item!, count = item.vertices.length/VERTEX_FLOATS, command = { first, count, opaque: !item.transparent };
       ordered.push(item); first += count; return command;
     });

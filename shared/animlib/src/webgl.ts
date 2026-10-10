@@ -1,12 +1,14 @@
+import { lightingUniform } from './lighting.js';
 import { materialGLSL } from './material-shader.js';
 import { VERTEX_FLOATS, textureGLSL } from './texture-shader.js';
-import type { CameraState } from './types.js';
+import type { CameraState, Frame } from './types.js';
 import type { RenderCommand } from './composition.js';
 import { GLCompositor } from './gl-compositor.js';
 
 /** The same packed triangles and camera data are submitted by both backends. */
 export interface RenderBatch {
   camera: CameraState;
+  lighting?: Frame['lighting'];
   width: number;
   height: number;
   rect?: number[];
@@ -83,6 +85,8 @@ in vec3 vEmission;
 in vec3 vViewPosition;
 in float vBumpStrength;
 out vec4 outputColor;
+uniform vec4 light;
+uniform vec4 ambient;
 ${textureGLSL}
 ${materialGLSL}
 void main() {
@@ -98,8 +102,8 @@ void main() {
     n=n/max(length(n),0.000001);
     if(vBumpStrength!=0.){n=bumpNormal(n,dx,dy,dh,vBumpStrength);}
     if(vLit>1.5&&!gl_FrontFacing){n=-n;}
-    if(vMaterial.y>0.){color=vec4(materialColor(color.rgb,n,normalize(vViewDirection),vMaterial),color.a);}
-    else {float amount=0.32+0.68*max(0.,dot(n,normalize(vec3(-0.4,0.65,1.))));
+    if(vMaterial.y>0.){color=vec4(materialColor(color.rgb,n,normalize(vViewDirection),vMaterial,light,ambient.x),color.a);}
+    else {float amount=0.32*ambient.x+0.68*light.w*max(0.,dot(n,normalize(light.xyz)));
     color=vec4(color.rgb*amount,color.a);}
   }
   outputColor=vec4(color.rgb+vEmission,color.a);
@@ -113,6 +117,8 @@ export class WebGLBackend {
   private focus: WebGLUniformLocation;
   private angles: WebGLUniformLocation;
   private viewport: WebGLUniformLocation;
+  private light: WebGLUniformLocation;
+  private ambient: WebGLUniformLocation;
   private capacity = 0;
   private compositor?: GLCompositor;
   readonly maxSize: number;
@@ -143,6 +149,7 @@ export class WebGLBackend {
         return value;
       };
       this.focus = uniform('focus'); this.angles = uniform('angles'); this.viewport = uniform('viewport');
+      this.light = uniform('light'); this.ambient = uniform('ambient');
       gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108],[13,1,120]]) {
         gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, VERTEX_FLOATS*4, offset);
@@ -187,6 +194,9 @@ export class WebGLBackend {
       gl.uniform4f(this.focus, ...c.target, 0);
       gl.uniform4f(this.angles, c.yaw, c.pitch, c.distance, c.perspective);
       gl.uniform4f(this.viewport, batch.width, batch.height, c.height, 0);
+      const light = lightingUniform(batch.lighting, c);
+      gl.uniform4f(this.light, light[0], light[1], light[2], light[3]);
+      gl.uniform4f(this.ambient, light[4], 0, 0, 0);
       const count = batch.floatCount / VERTEX_FLOATS;
       const commands = batch.commands ?? [{ first, count: batch.opaqueVertices, opaque: true }, { first: first+batch.opaqueVertices, count: count-batch.opaqueVertices, opaque: false }];
       const draw = (command: Extract<RenderCommand,{first:number}>) => {

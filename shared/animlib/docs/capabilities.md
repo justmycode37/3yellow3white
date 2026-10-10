@@ -30,6 +30,12 @@ Keep these instructions in nonspoken planning; they are not narration.
   color/intensity create stylized metal, matte, plastic, and luminous surfaces.
   These settings can be explored with ordinary controls. Emission does not cast
   light or create bloom, and metallic reflections do not show other scene objects.
+- **Lighting and contact:** scene ambient and directional lights, with an explicit
+  world-fixed or camera-relative direction. Optional deterministic soft shadows from
+  opaque mesh/sphere fills fall onto a finite horizontal receiving plane. Overlapping
+  casters keep one silhouette's darkness. Transparent objects and labels do not cast;
+  `castShadow: false` excludes an element. There is no self-shadowing or arbitrary
+  mesh receiver. Omitted lighting preserves the original studio default.
 - **Views:** a main camera plus clipped rectangular regions with independent
   cameras. Side-by-side views can compare the same construction from different
   angles. Screen-space labels can remain fixed while world geometry moves.
@@ -165,7 +171,7 @@ run asynchronous builders.
 ## Current boundaries
 
 - No image/video textures, UV mapping, imported 3D models, photorealistic materials,
-  image bump/normal maps, displacement, environment maps, shadows, bloom, configurable lights,
+  image bump/normal maps, displacement, environment maps, self-shadowing, arbitrary mesh shadow receivers, bloom, point/spot lights,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
 - SVG support accepts path geometry, not complete SVG files or their styling.
   Filled contours must be closed, simple, and nonintersecting; nested contours
