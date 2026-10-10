@@ -207,7 +207,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
     if (b.type === "attach") { if (b.offset !== undefined) vec(b.offset, "attachment offset"); }
     else {
       check(["line", "arrow"].includes(target.geometry.kind), "Connect requires a line or arrow");
-      check(b.endpoints === undefined || ["center", "surface"].includes(b.endpoints), "Invalid connector endpoints");
+      check(b.endpoints === undefined || ["center", "surface", "bounds"].includes(b.endpoints), "Invalid connector endpoints");
       if (b.offset !== undefined) number(b.offset, "connector offset");
       if (b.endpoints === "surface") for (const id of sources) check(["sphere", "circle"].includes(all.get(id)!.geometry.kind), "Surface connectors require spheres or circles");
     }

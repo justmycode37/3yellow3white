@@ -952,8 +952,18 @@ are ignored. Screen elements use pixel coordinates within their view.
 `attach(target, source, { offset })` binds the target's position to the source's
 center, with an optional offset in world units (pixels for screen elements).
 `connect(line, from, to, { endpoints, offset })` maintains a line/arrow's endpoints.
+By default, text/LaTeX endpoints use their **visual bounding-box centers** and
+trim the connecting segment to the boxes with a small gap. This follows the
+actual glyphs, named anchors, numeric values, morphs, and transformed groups.
+Other source kinds use their element origins. `endpoints: 'bounds'` explicitly
+selects this behavior; `endpoints: 'center'` opts out and joins element origins.
+Label padding shrinks when space is tight. If even the unpadded gap cannot fit
+a readable line (or an arrowhead plus shaft), the connector hides until there is
+room again; move the labels farther apart to make it visible. It never reverses
+direction or falls back to drawing through the expressions. Unbound lines are
+unaffected.
 `endpoints: 'surface'` clips to sphere/circle radii, accounting for scale and radius
-morphs; the default is `'center'`. A signed strand `offset` creates parallel bonds
+morphs. A signed strand `offset` creates parallel bonds
 using a deterministic perpendicular. Overlapping endpoint surfaces hide the rod.
 The connector binding owns the line's geometry. Bindings work across transformed
 groups, require the same view/coordinate space, resolve in dependency order, and
