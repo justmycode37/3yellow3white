@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 import type { AssistantMessage, Context } from "@earendil-works/pi-ai";
 import { compileSource } from "animlib/core";
-import { agentConfig, AgentError } from "../src/agents/config.js";
+import { agentConfig, AgentError, agentFailure } from "../src/agents/config.js";
 import { authPath, createModelRuntime, deviceId, revokeSubscription } from "../src/agents/auth.js";
 import { PiAgentRunner } from "../src/agents/runtime.js";
 import type { AgentTask } from "../src/agents/runtime.js";
@@ -21,6 +21,13 @@ async function config() {
   return agentConfig({ PI_CODING_AGENT_DIR: root, AGENT_DATA_DIR: join(root, "jobs"), AGENT_AUTH_MODE: "api-key", OPENAI_API_KEY: "test-api-key" });
 }
 const oauth = { type: "oauth", access: "test-subscription-token", refresh: "test-refresh-token", expires: Date.now() + 3600_000, clientId: "test-client" };
+
+test("unsupported account models report an actionable configuration error", () => {
+  const failure = agentFailure(new Error('OpenAI API error (400): The model is not supported when using Codex with a ChatGPT account.'));
+  expect(failure.code).toBe("MODEL");
+  expect(failure.message).toContain("AGENT_MODEL");
+  expect(failure.message).not.toContain("OpenAI API error");
+});
 
 test("auth mode is explicit: subscription requires OAuth and API-key mode ignores saved OAuth", async () => {
   const settings = await config();
@@ -64,7 +71,7 @@ test("logout revokes at the provider before removing local credentials and retai
 });
 
 function message(text: string, stopReason: AssistantMessage["stopReason"] = "stop"): AssistantMessage {
-  return { role: "assistant", content: [{ type: "text", text }], provider: "openai", api: "openai-responses", model: "gpt-5.4",
+  return { role: "assistant", content: [{ type: "text", text }], provider: "openai", api: "openai-responses", model: "gpt-6.1-sol",
     usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
     stopReason, timestamp: Date.now(), ...(stopReason === "error" ? { errorMessage: "401 sensitive-provider-detail" } : {}) };
 }
