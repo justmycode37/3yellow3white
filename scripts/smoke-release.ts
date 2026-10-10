@@ -7,8 +7,9 @@ import { createModelRuntime } from "../backend/src/agents/auth.js";
 import { agentConfig } from "../backend/src/agents/config.js";
 
 // Import the actual Pi SDK under the shipped Bun runtime without making paid calls.
-const agentRuntime = await createModelRuntime(agentConfig({ AGENT_AUTH_MODE: "api-key", OPENAI_API_KEY: "container-fixture" }));
-assert(agentRuntime.getModel("openai", "gpt-6.1-sol"), "Pinned agent model is missing");
+const agentSettings = agentConfig({ AGENT_AUTH_MODE: "api-key", OPENAI_API_KEY: "container-fixture" });
+const agentRuntime = await createModelRuntime(agentSettings);
+assert(agentRuntime.getModel(agentSettings.provider, agentSettings.model), "Pinned agent model is missing");
 assert((await Bun.file(new URL("../shared/animlib/docs/reference.md", import.meta.url)).text()).includes("s.wait"));
 
 const revision = (await Bun.file(new URL("../REVISION", import.meta.url)).text()).trim();
