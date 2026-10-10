@@ -1,7 +1,7 @@
 # Pi agents
 
 The backend uses pinned Pi 1.1.0 to write a lesson plan and storyline Markdown in
-one JSON response, then animlib scene JavaScript. The host sends only the script
+one JSON response, reviews it in a separate editorial conversation, then writes animlib scene JavaScript. The host sends only the approved script
 to ElevenLabs, then gives each scene agent its narration timing, the lesson plan,
 and the animlib API reference. Each task gets a separate
 conversation and only a `validate_output` tool. Shell, file access, discovered
@@ -37,6 +37,33 @@ and consistent entity/control declarations before submitting paid speech. PDF
 extraction retains `[Page N]` markers; references are planner assertions to review,
 not independently verified citations. Document content remains untrusted lesson
 material. Planning never supplies acoustic timestamps or fixed scene durations.
+
+New lessons receive an editorial review before paid speech, adapting the useful
+review prompt from PR #25. The reviewer sees the full request/sources, the same
+source images, the plan, and parsed speech in order. It checks examples, factual
+claims, missing reasoning, pause/reveal order, requested scope and language, and
+agreement between neighboring scripts and plans. Visual plans remain valid in
+nonspoken metadata. Unreadable or missing source details must not be invented;
+the explanation need not force every topic into a puzzle or mathematical derivation.
+
+Material errors trigger a fresh authoring conversation that repairs the script
+and plan together; cosmetic warnings do not trigger a rewrite. At most three
+draft/review pairs are allowed. Failure stops before speech submission. Reviews
+record concrete checks but do not constitute independent fact verification.
+This adds one model call before TTS for a passing first draft, plus calls for
+necessary repairs. It does not gate individual scene streaming once speech starts.
+
+Each invocation gets a unique private `editorial/RUN_UUID/` directory containing
+`lesson-draft-N.json`, `lesson-draft-N.prompt.md`, `lesson-review-N.json`, and
+`lesson-review-N.prompt.md` (N starts at zero). Restarts preserve earlier runs,
+including partial pairs, without overwriting or mixing their evidence. Only a
+passing lesson is committed as `lesson.json`; its host-owned `editorialReview`
+records the approved run UUID, pair number, and SHA-256 of the saved draft.
+`storyline.prompt.md` is a convenient export of that approved authoring prompt.
+Restarts reuse the committed envelope; a crash before its commit can repeat
+authoring/review calls in a new run directory. Existing
+saved lesson envelopes and legacy Markdown resume without editorial rewriting,
+preserving their speech and scene identities.
 
 An evaluated previous frame at default controls is authoritative for generation;
 planned end descriptions do not replace it. Compiled output must keep declared
