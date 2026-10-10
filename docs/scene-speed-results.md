@@ -87,6 +87,14 @@ illustrative pair, not an isolated causal estimate.
 - Submit-only and the reduced guide remain saved research candidates. Neither
   outperformed validated-reference on the complete three-topic comparison.
 
+Full playback of the repeated derivative exposed a shared renderer defect:
+interpolated opacity near zero produced `rgba(...,8.087694351666065e-7)`, which
+the existing color parser rejected. A narrow parser fallback now handles signed
+exponent alpha without rounding opacity or modifying generated animation source.
+Regression tests reproduce the observed value, extreme small values, and an
+evaluated fade. Independent code review found no remaining issue. This fixes an
+engine failure applicable to any generation protocol, not a prompt-quality cut.
+
 ## Limits and provenance
 
 Model output is stochastic. Eight configurations received one three-topic round;
@@ -117,7 +125,8 @@ The local comparison player runs at `http://127.0.0.1:5197/benchmark.html`, with
 the loopback artifact server on port 8082. It loads original scene source and
 frozen narration, supports scene selection and seeking, and shows failed trials.
 
-Artifacts live under `data/scene-speed/` in the benchmark checkout: `fixtures/`
+Artifacts live under `data/scene-speed/` in both the benchmark checkout and a
+saved copy in the primary application checkout: `fixtures/`
 contains frozen scripts, narration and hashes; `runs/` contains source, canonical
 input, prompt, validation diagnostics, per-turn timing/usage, and immutable run
 results; `summary.json`/`.csv` contain measurements and `reviews.json` decisions.
@@ -150,11 +159,14 @@ only. Omit it or set `text` to restore the original protocol. Experimental submi
 modes and reduced reference are benchmark-only and are not accepted by server
 configuration. Credentials and global defaults are unchanged.
 
-33 focused tests pass (95 assertions), covering candidate selection, invalid
+33 focused backend tests pass (95 assertions), covering candidate selection, invalid
 references, repairs, provider failures, aborts, host revalidation, metrics,
 reference extraction, and configuration scoping. Backend, animlib and benchmark
-typechecks pass. Independent runtime and integration reviews found no remaining
-blockers. The full backend suite reports 125 pass / 6 fail on Windows. The same
+typechecks pass. All 246 animlib tests pass, including 37 palette tests after the
+playback regression fix. Independent runtime and integration reviews found no remaining
+blockers. The application frontend build also passes after installing its own
+locked dependencies (it is separate from the root workspaces). The full backend
+suite reports 125 pass / 6 fail on Windows. The same
 six baseline failures concern three narration pipeline/persistence tests, two
 narration service tests, and a CRLF-sensitive guidance test; they predate this
 change. Details are recorded in the local `final-tests.log`. This is not a clean
