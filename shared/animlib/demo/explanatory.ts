@@ -1,5 +1,7 @@
 import type { SceneSource } from '../src/types.js';
 
+// Keep sampled meshes modest: controls rebuild these scenes inside the same
+// 200 ms sandbox budget as generated scenes, including both section views.
 export const explanatorySources: SceneSource[] = [{
   id:'section-lab',
   source:`export default scene({mode:'3d',orbit:true,end:'hold'},s=>{
@@ -7,7 +9,7 @@ export const explanatorySources: SceneSource[] = [{
     const caps=s.toggle('caps',{label:'Fill the section',default:true});
     const camera={height:6.5,distance:12,yaw:0.5,pitch:-0.7};
     function shape(v,id){
-      v.torus(id,{radius:1.65,tubeRadius:0.65,radialSegments:48,tubularSegments:24,
+      v.torus(id,{radius:1.65,tubeRadius:0.65,radialSegments:24,tubularSegments:12,
         fill:'BLUE_D',clipPlanes:[{normal:[0,1,0],offset:cut,section:{color:'YELLOW',width:0.045,...(caps?{cap:'GOLD'}:{})}}],
         outline:{color:'BLUE_A',creaseAngle:Math.PI,width:0.018}});
       v.text(id+'-label',{text:'Inside the ring',fontSize:0.25,position:[0,-0.5,0],billboard:true,labelOcclusion:'fade',fill:'WHITE'});
@@ -24,7 +26,7 @@ export const explanatorySources: SceneSource[] = [{
     const cut=s.slider('cut',{label:'Slice X',min:-2,max:2,default:0.8,step:0.05});
     s.play(s.camera.to3D({height:7.5,distance:13,yaw:0.45,pitch:-0.5}),{duration:0});
     s.surface('field',{fn:(x,y)=>amplitude*Math.cos(x*1.7)*Math.sin(y*1.7),
-      xSegments:36,ySegments:36,rotation:[-Math.PI/2,0,0],
+      xSegments:24,ySegments:24,rotation:[-Math.PI/2,0,0],
       scalar:{fn:(x,y,z)=>z,domain:[-1.5,1.5],colors:['BLUE_E','BLUE','WHITE','GOLD','RED']},
       clipPlanes:[{normal:[1,0,0],offset:cut,section:{color:'YELLOW',width:0.04}}],
       outline:{color:'GREY_A',creaseAngle:Math.PI,width:0.015}});

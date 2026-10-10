@@ -10,7 +10,7 @@ import { createSolidBuilders } from '../src/solids.js';
 import { paletteResolver } from '../src/palette.js';
 import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import { cross, sub } from '../src/spatial.js';
-import type { Geometry, Vec3 } from '../src/types.js';
+import type { CompileInput, Geometry, Vec3 } from '../src/types.js';
 const solids=createSolidBuilders();
 const corners=(g:Geometry):Corner[]=>meshTriangles(g).points.map(p=>({p}));
 const area=(c:Corner[])=>{let sum=0;for(let i=0;i<c.length;i+=3)sum+=Math.hypot(...cross(sub(c[i+1].p,c[i].p),sub(c[i+2].p,c[i].p)))/2;return sum;};
@@ -18,8 +18,38 @@ const scene=(body:string)=>compileSource(`export default scene({},s=>{${body};s.
 const draw=async(body:string,time=0)=>{const c=await scene(body),f=evaluateScene(c,time);return buildDrawItems(f,f.camera,640,480,paletteResolver());};
 
 describe('explanatory geometry',()=>{
-  it('compiles every explanatory demo through the generated-scene sandbox',async()=>{
-    for(const source of explanatorySources){const c=await compileSource(source.source);const f=evaluateScene(c,0);expect(f.elements.length).toBeGreaterThan(0);}
+  it.each(explanatorySources)('compiles $id with the production sandbox budget',async({source})=>{
+    // No test-only execution limit: this is the same budget the demo host uses.
+    const c=await compileSource(source);
+    expect(evaluateScene(c,0).elements.length).toBeGreaterThan(0);
+  });
+  it.each(explanatorySources)('rebuilds $id controls with the production sandbox budget',async({id,source})=>{
+    const cases: Record<string, NonNullable<CompileInput['controls']>[]> = {
+      'section-lab': [{cut:-0.65,caps:false},{cut:0,caps:true},{cut:0.65,caps:true}],
+      'scalar-lab': [{amplitude:0.25,cut:-2},{amplitude:1.5,cut:2}],
+      'outline-lab': ['depth','hide','fade','overlay'].map((mode,i)=>({mode,angle:i*60})),
+    };
+    for(const controls of cases[id]) {
+      const c=await compileSource(source,{controls}),f=evaluateScene(c,0);
+      for(const [key,value] of Object.entries(controls)) expect(c.controls.find(control=>control.id===key)?.value).toBe(value);
+      if(id==='section-lab') {
+        for(const key of ['ring','section-ring']) {
+          const plane=f.elements.find(e=>e.id===key)!.geometry.clipPlanes![0];
+          expect(plane.offset).toBe(controls.cut);
+          expect(plane.section?.cap).toBe(controls.caps?'GOLD':undefined);
+        }
+      } else if(id==='scalar-lab') {
+        const g=f.elements.find(e=>e.id==='field')!.geometry;
+        expect(g.clipPlanes![0].offset).toBe(controls.cut);
+        expect(g.scalarColors!.values).toEqual(g.vertices!.map(p=>p[2]));
+        expect(Math.max(...g.scalarColors!.values)).toBeCloseTo(Number(controls.amplitude),1);
+      } else {
+        for(const key of ['a','b']) expect(f.elements.find(e=>e.id===key)!.geometry.labelOcclusion).toBe(controls.mode);
+        expect(f.elements.find(e=>e.id==='box')!.geometry.outline!.creaseAngle).toBe(Number(controls.angle)*Math.PI/180);
+      }
+      evaluateScene(c,c.duration);
+      expect(evaluateScene(c,0)).toEqual(f);
+    }
   });
   it('uses displayed overlay footprints and hidden anchors in overlap diagnostics',async()=>{
     const c=await scene("s.box('b',{width:3,height:3,depth:1});s.text('a',{text:'TEXT',position:[1,0,-2],labelOcclusion:'overlay'});s.text('b-label',{text:'TEXT',position:[1,0,-2],labelOcclusion:'overlay'});s.text('hidden',{text:'TEXT',position:[1,0,-2],labelOcclusion:'hide'})");
