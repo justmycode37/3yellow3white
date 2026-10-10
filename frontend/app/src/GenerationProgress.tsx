@@ -1,5 +1,7 @@
 import { Fragment, useState } from 'react'
 import type { VideoManifest } from '../../../shared/video/contract'
+import GenerationWater from './GenerationWater'
+import { illustrativeWaterMl } from './generationWaterEstimate'
 import './generation-progress.css'
 
 const number = new Intl.NumberFormat('en-US')
@@ -17,7 +19,7 @@ function RollingNumber({ value }: { value: number }) {
   return <>{digits.map((digit, index) => {
     const place = digits.length - index - 1
     const previous = previousDigits[place]
-    const changed = previous !== undefined && previous !== digit
+    const changed = previous !== digit
     const current = <span className="generation-digit-row generation-digit-current">{digit}</span>
 
     return <Fragment key={place}>
@@ -49,5 +51,6 @@ export default function GenerationProgress({ usage, queued = false }: {
       </span>
       <span className="generation-unit">tokens</span>
     </div>
+    {usage && <GenerationWater milliliters={illustrativeWaterMl(usage)} />}
   </div>
 }

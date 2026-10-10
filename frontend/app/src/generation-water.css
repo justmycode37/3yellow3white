@@ -1,0 +1,20 @@
+.generation-water { display: flex; align-items: center; justify-content: center; gap: 8px; max-width: min(100%, 360px); margin-top: 12px; }
+.generation-water-approximately { flex: none; color: #93979b; font-size: 14px; line-height: 1; }
+.generation-water-glasses { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+.generation-water-glass { display: block; flex: none; width: 28px; height: 36px; overflow: visible; }
+.generation-water-outline { fill: none; stroke: #92979b; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; animation: generation-water-draw 650ms ease-out both; }
+.generation-water-fill { transition: transform 500ms cubic-bezier(.4, 0, .2, 1); }
+.generation-water-wave { fill: #6ba8d0; opacity: .7; animation: generation-water-wave 3s linear infinite; }
+.generation-water-overflow { color: #93979b; font-size: 14px; line-height: 1; }
+@keyframes generation-water-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes generation-water-wave {
+  from { transform: translateX(0); }
+  to { transform: translateX(-14px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .generation-water-outline, .generation-water-wave { animation: none; }
+  .generation-water-fill { transition: none; }
+}
