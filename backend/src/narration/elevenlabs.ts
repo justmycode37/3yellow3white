@@ -14,7 +14,7 @@ export interface SpeechProvider {
 export function createElevenLabs(settings: SpeechSettings, key = process.env.ELEVENLABS_API_KEY, fetcher: typeof fetch = fetch,
   sleep: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms))): SpeechProvider {
   return { settings, async synthesize(input) {
-    if (!key || !settings.voiceId) throw new NarrationError("NOT_CONFIGURED", "Set ELEVENLABS_API_KEY and the verified Alexander ELEVENLABS_VOICE_ID on the server.", 503);
+    if (!key || !settings.voiceId) throw new NarrationError("NOT_CONFIGURED", "Set ELEVENLABS_API_KEY and an available ELEVENLABS_VOICE_ID on the server.", 503);
     for (let attempt = 0; attempt < 3; attempt++) {
       let response: Response;
       try {
@@ -32,7 +32,7 @@ export function createElevenLabs(settings: SpeechSettings, key = process.env.ELE
         const code = raw?.detail?.status;
         if (code === "quota_exceeded" || code === "insufficient_credits") throw new NarrationError("QUOTA", "ElevenLabs has insufficient credits for this narration.", 402);
         if (response.status === 401 || response.status === 403) throw new NarrationError("PROVIDER_AUTH", "ElevenLabs rejected the API key, permissions, voice, or audio format access.", 502);
-        if (response.status === 404) throw new NarrationError("VOICE_UNAVAILABLE", "The configured Alexander voice is unavailable. Verify its exact voice ID.", 502);
+        if (response.status === 404 || code === 'voice_not_found') throw new NarrationError("VOICE_UNAVAILABLE", "The configured voice is unavailable to this ElevenLabs account. Select an available ELEVENLABS_VOICE_ID.", 502);
         if ((response.status === 429 || response.status === 503) && attempt < 2) {
           const seconds = Number(response.headers.get("retry-after"));
           await sleep(Number.isFinite(seconds) && seconds > 0 ? Math.min(seconds * 1000, 30_000) : 1000 * 2 ** attempt); continue;

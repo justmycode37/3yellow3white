@@ -5,7 +5,7 @@ import { agentConfig } from './agents/config.js';
 import { PiAgentRunner } from './agents/runtime.js';
 import { createPiGenerator } from './agents/generator.js';
 
-const generation = process.env.VIDEO_GENERATOR ?? 'simulated';
+const generation = process.env.VIDEO_GENERATOR ?? 'pi';
 if (generation !== 'pi' && generation !== 'simulated') throw new Error('VIDEO_GENERATOR must be pi or simulated.');
 const narration = new NarrationService();
 const config = generation === 'pi' ? agentConfig() : undefined;
@@ -21,6 +21,7 @@ const server = Bun.serve({
   hostname,
   port: Number(process.env.PORT ?? 8080),
   idleTimeout: 30,
+  maxRequestBodySize: 101 * 1024 * 1024,
   fetch: createHandler(undefined, videos, narration),
   error(error) {
     console.error(error);

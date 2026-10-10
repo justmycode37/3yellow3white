@@ -8,7 +8,7 @@ import type { SpeechProvider } from "./elevenlabs.js";
 import { NarrationError, publicError } from "./errors.js";
 import { parseStoryline } from "./markdown.js";
 import { sceneAgentMarkdown } from "./handoff.js";
-import type { AudioAsset, NarrationJob, NarrationPackageV1, NarrationScene, RawAlignment, ScriptBlock, SpeechResult, Storyline, SynthesisInput } from "./types.js";
+import type { AudioAsset, NarrationJob, NarrationPackageV1, NarrationScene, NarrationScenePackage, RawAlignment, ScriptBlock, SpeechResult, Storyline, SynthesisInput } from "./types.js";
 
 const PROCESSING_VERSION = "narration-v1.1";
 const validId = /^[a-f0-9]{64}$/;
@@ -125,12 +125,21 @@ export class NarrationService {
     if (job.status !== "complete") throw new NarrationError("NOT_READY", "Narration is not complete.", 409);
     return json(join(this.dir(id), "narration.json"));
   }
+  async scenePackage(owner: string, id: string, index: number): Promise<NarrationScenePackage | undefined> {
+    const job = await this.get(owner, id);
+    if (job.status === 'complete') return this.package(owner, id);
+    try {
+      const pkg = await json<NarrationScenePackage>(join(this.dir(id), 'progress.json'));
+      return pkg.scenes[index] ? pkg : undefined;
+    } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined; throw error; }
+  }
   async artifact(owner: string, id: string, name: "scene-agent.md" | "alignment.raw.json") {
     await this.package(owner, id); return readFile(join(this.dir(id), name), "utf8");
   }
   async audio(owner: string, id: string, assetId: string): Promise<string> {
-    const pkg = await this.package(owner, id);
-    const assets = [...pkg.scenes.map(s => s.audio), pkg.combinedAudio];
+    const job = await this.get(owner, id);
+    const pkg = job.status === 'complete' ? await this.package(owner, id) : await this.scenePackage(owner, id, 0);
+    const assets = [...(pkg?.scenes.map(s => s.audio) ?? []), ...((pkg && 'combinedAudio' in pkg) ? [pkg.combinedAudio as AudioAsset] : [])];
     if (!assets.some(a => a.id === assetId)) throw new NarrationError("NOT_FOUND", "Audio asset not found.", 404);
     return join(this.dir(id), `${assetId}.wav`);
   }
@@ -185,6 +194,10 @@ export class NarrationService {
         const pcm = joinPcm(parts); allPcm.push(pcm); scene.durationSec = samples / SAMPLE_RATE;
         scene.audio = await saveAudio(`${job.id}.${beat.id}`, pcm);
         lessonSamples += samples; scenes.push(scene);
+        // Audio is durable before its matching timing packet becomes visible.
+        await atomicWrite(join(this.dir(job.id), 'progress.json'), JSON.stringify({
+          id: job.id, scriptHash: hash(story.markdown), totalScenes: story.beats.length, scenes,
+        } satisfies NarrationScenePackage));
       }
       const pkg: NarrationPackageV1 = { schemaVersion: 1, id: job.id, title: story.title, scriptHash: hash(story.markdown), settings: job.settings,
         sampleRate: SAMPLE_RATE, durationSec: lessonSamples / SAMPLE_RATE, scenes, combinedAudio: await saveAudio(`${job.id}.full`, joinPcm(allPcm)) };

@@ -121,6 +121,14 @@ test("Pi executes the validation tool and returns its result to the model", asyn
   expect(contexts[1].messages.some(message => message.role === "toolResult" && message.toolName === "validate_output")).toBe(true);
 });
 
+test('Pi includes uploaded image attachments in the script conversation', async () => {
+  const { runner, contexts } = await fakeRuntime([message('Narration: One dot.')]);
+  const image = { type: 'image' as const, mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGOQi7rzHwAEQgJUZSSrPwAAAABJRU5ErkJggg==' };
+  await runner.run({ systemPrompt: 'Describe the image', prompt: 'Write a lesson', images: [image] });
+  const user = contexts[0].messages.find(message => message.role === 'user');
+  expect(user?.content).toContainEqual(image);
+});
+
 test("partial provider failures cannot be accepted as a successful script or leak provider details", async () => {
   const { runner } = await fakeRuntime([message("partial content", "error")]);
   const error = await runner.run({ systemPrompt: "Write", prompt: "Generate" }).catch(error => error);
@@ -158,7 +166,7 @@ test("cancelling a running Pi request stops generation", async () => {
 
 test("the video pipeline preserves narration audio IDs and reuses completed script, speech and scenes", async () => {
   const settings = await config();
-  const script = "# Counting\n\n## Beat 1\n\nNarration: One dot.\n\n## Beat 2\n\nNarration: Another dot.";
+  const script = "# Counting\n\n## Beat 1\n\nContent needed: Show one dot.\n\nNarration: One dot.\n\n## Beat 2\n\nContent needed: Add another dot.\n\nNarration: Another dot.";
   let speechCalls = 0, agentCalls = 0;
   const narration = new NarrationService({ root: join(settings.agentDir, "narration"), provider: {
     settings: settingsFromEnv({ ELEVENLABS_VOICE_ID: "test" }),
@@ -200,5 +208,82 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     const result = await reopened(request, 0, { videoId: video.id, owner: "user:demo", signal: new AbortController().signal });
     expect(result?.scene.source).toBe(video.scenes[0].source);
     expect(agentCalls).toBe(3); expect(speechCalls).toBe(2);
+    // A process replacement resumes interrupted speech from the persisted chunk cache.
+    const narrationId = await readFile(join(settings.dataDir, video.id, 'narration-id'), 'utf8');
+    const job = await narration.get('user:demo', narrationId);
+    await writeFile(join(narration.root, narrationId, 'job.json'), JSON.stringify({ ...job, status: 'running' }));
+    const restartedNarration = new NarrationService({ root: narration.root, provider: narration.provider });
+    const resumed = createPiGenerator(runner, restartedNarration, settings.dataDir);
+    expect((await resumed(request, 0, { videoId: video.id, owner: 'user:demo', signal: new AbortController().signal }))?.scene.source).toBe(video.scenes[0].source);
+    await restartedNarration.idle();
+    expect((await restartedNarration.get('user:demo', narrationId)).status).toBe('complete');
+    expect(agentCalls).toBe(3); expect(speechCalls).toBe(2);
   } finally { await service.close(); await narration.idle(); }
+});
+
+test('scene one streams before later TTS finishes and scene two receives its evaluated end-state', async () => {
+  const settings = await config();
+  let release!: () => void, secondSpeechStarted = false;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const script = '# Dots\n\n## Beat 1\n\nContent needed: Show a blue dot.\n\nNarration: One dot.\n\n## Beat 2\n\nContent needed: Keep the previous dot.\n\nNarration: Keep it.';
+  const narration = new NarrationService({ root: join(settings.agentDir, 'progressive-narration'), provider: {
+    settings: settingsFromEnv({ ELEVENLABS_VOICE_ID: 'test' }),
+    async synthesize({ text }) {
+      if (text === 'Keep it.') { secondSpeechStarted = true; await gate; }
+      const characters = Array.from(text);
+      return { pcm: new Uint8Array(48_000), normalizedAlignment: { characters,
+        character_start_times_seconds: characters.map((_, i) => i * 0.01), character_end_times_seconds: characters.map((_, i) => (i + 1) * 0.01) } };
+    },
+  } });
+  const runner = { async run(task: AgentTask) {
+    if (task.prompt.startsWith('Write')) return script;
+    const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
+    expect(task.systemPrompt).toContain('s.previous');
+    expect(input.scene.utterances[0].words[0].startSec).toBe(0);
+    let commands: string;
+    if (input.scene.id === 'beat-1') {
+      expect(input.endMode).toBe('advance');
+      commands = "const dot=s.circle('dot',{position:[2,0]});s.keep(dot);";
+    } else {
+      expect(input.endMode).toBe('hold');
+      expect(input.previousFrame.elements[0].position).toEqual([2, 0, 0]);
+      commands = "const dot=s.previous.get('dot');s.keep(dot);";
+    }
+    const source = `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:${JSON.stringify(input.endMode)}},s=>{${commands}s.wait(${input.scene.durationSec});});`;
+    await task.validate!(source); return source;
+  } };
+  const service = new VideoService(join(settings.agentDir, 'progressive.sqlite'), createPiGenerator(runner, narration, settings.dataDir), 'pi');
+  const video = service.create('shared-user', 'progressive', { title: 'Dots', topic: 'Dots', documents: [] });
+  const until = async (check: () => boolean) => {
+    for (let i = 0; i < 300; i++) { if (check()) return; await Bun.sleep(10); }
+    throw new Error('Timed out waiting for scene');
+  };
+  try {
+    await until(() => secondSpeechStarted && service.get(video.id, 'shared-user')!.scenes.length === 1);
+    const first = service.get(video.id, 'shared-user')!;
+    expect(first.status).toBe('generating');
+    expect(first.scenes[0].narration).toBe('One dot.');
+    expect(first.scenes[0].visualDescription).toContain('blue dot');
+    expect(first.scenes[0].words!.map(word => word.text)).toEqual(['One', 'dot']);
+    const events = await service.handle(new Request(`http://localhost/api/videos/${video.id}/events`));
+    const reader = events.body!.getReader();
+    expect(new TextDecoder().decode((await reader.read()).value)).toContain('beat-1');
+    await reader.cancel(); // Leaving playback must not cancel generation.
+    release();
+    await until(() => service.get(video.id, 'shared-user')!.status === 'complete');
+    expect(service.get(video.id, 'shared-user')!.scenes).toHaveLength(2);
+  } finally { release(); await service.close(); await narration.idle(); }
+});
+
+test('existing Pi subscription credentials use their selected provider without falling back to OpenAI keys', async () => {
+  const settings = { ...await config(), authMode: 'subscription', provider: 'openai-codex' as const };
+  const legacy = { type: 'oauth', access: 'existing-pi-token', refresh: 'pi-refresh', expires: Date.now() + 3600_000, accountId: 'pi-account' };
+  await writeFile(authPath(settings), JSON.stringify({ 'openai-codex': legacy, openai: oauth }));
+  const runtime = await createModelRuntime(settings);
+  expect((await runtime.getAuth('openai-codex'))?.auth.apiKey).toBe('existing-pi-token');
+  expect(runtime.getModel('openai-codex', settings.model)).toBeDefined();
+  expect(runtime.getProvider('openai-codex')!.auth.apiKey).toBeUndefined();
+  await expect(revokeSubscription(settings)).rejects.toMatchObject({ code: 'REVOKE' });
+  expect(JSON.parse(await readFile(authPath(settings), 'utf8'))['openai-codex']).toEqual(legacy);
+  expect(() => agentConfig({ AGENT_PROVIDER: 'openai-codex', AGENT_AUTH_MODE: 'api-key' })).toThrow('subscription mode');
 });

@@ -1,6 +1,7 @@
 import { NarrationError, publicError } from "./errors.js";
 import { buildNarrationPreview, buildSceneAgentInput } from "./handoff.js";
 import { NarrationService } from "./service.js";
+import { SHARED_OWNER } from '../identity.js';
 
 async function body(request: Request) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new NarrationError("CONTENT_TYPE", "Send application/json.", 415);
@@ -16,16 +17,13 @@ async function body(request: Request) {
   try { return JSON.parse(Buffer.concat(parts).toString("utf8")); }
   catch { throw new NarrationError("INVALID_JSON", "Request body must be valid JSON.", 400); }
 }
-export function narrationRoutes(service = new NarrationService(), options: { allowLocal?: boolean } = {}) {
+export function narrationRoutes(service = new NarrationService()) {
   return async (request: Request, path: string): Promise<Response> => {
     try {
       const url = new URL(request.url);
-      // Production identity comes only from the existing trusted ingress. Local fallback is opt-in.
-      const local = options.allowLocal ?? (process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1");
-      const owner = request.headers.get("x-user-id") || (local && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) ? "local-developer" : null);
-      if (!owner) throw new NarrationError("UNAUTHORIZED", "Sign in through the application gateway, or enable local development access.", 401);
+      const owner = SHARED_OWNER;
       const origin = request.headers.get("origin");
-      const publicOrigin = process.env.NARRATION_PUBLIC_ORIGIN ?? url.origin;
+      const publicOrigin = process.env.NARRATION_PUBLIC_ORIGIN ?? `${request.headers.get('x-forwarded-proto') ?? url.protocol.slice(0, -1)}://${url.host}`;
       if (request.method === "POST" && (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== publicOrigin))) {
         throw new NarrationError("ORIGIN", "Cross-origin narration requests are not allowed.", 403);
       }

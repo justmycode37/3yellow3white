@@ -13,9 +13,9 @@ const modes = [
   { id: 'photos', label: 'Photos', icon: FileImage },
 ] as const
 type InputMode = typeof modes[number]['id']
-const acceptedFiles = '.pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif,.avif,.heic,.heif'
-const imageFile = /\.(png|jpe?g|webp|gif|avif|heic|heif)$/i
-const supportedFile = /\.(pdf|docx|txt|md|png|jpe?g|webp|gif|avif|heic|heif)$/i
+const acceptedFiles = '.pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp'
+const imageFile = /\.(png|jpe?g|webp)$/i
+const supportedFile = /\.(pdf|docx|txt|md|png|jpe?g|webp)$/i
 
 function PhotoPreview({ file }: { file: File }) {
   const [url, setUrl] = useState('')
@@ -64,6 +64,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
       if (file.size > 50 * 1024 * 1024) { errors.add('Each file must be 50 MB or smaller.'); continue }
       if (next.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) continue
       if (next.length >= 10) { errors.add('You can add up to 10 files to one video.'); continue }
+      if (next.reduce((sum, item) => sum + item.size, 0) + file.size > 100 * 1024 * 1024) { errors.add('Files must total 100 MB or less.'); continue }
       next.push(file)
     }
     setModeFiles(current => ({ ...current, [mode]: next }))
@@ -89,22 +90,14 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
     const text = mode === 'text' ? topic.trim() : ''
     const title = text.split('\n')[0].slice(0, 100) || files[0].name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ')
     try {
-      if (files.some(file => imageFile.test(file.name))) throw new Error('Photo-to-video is not available yet. Use text or a PDF, Word, or text file.')
       const documents = []
-      if (files.length) {
-        const { readPlanDocument } = await import('./documentReader')
-        for (const file of files) {
-          const document = await readPlanDocument(file, () => {})
-          documents.push({ name: document.name, text: document.lines.map(line => line.text).join('\n') })
-        }
-      }
       if (!mounted.current) return
       const context = mode === 'text' ? initialTopic : null
       if (context) documents.unshift({ name: context.sourceName, text })
       const body = { title, topic: text, documents }
-      const serialized = JSON.stringify(body)
+      const serialized = JSON.stringify({ ...body, files: files.map(file => ({ name: file.name, size: file.size, lastModified: file.lastModified })) })
       if (serialized !== requestBody.current) { requestBody.current = serialized; requestKey.current = crypto.randomUUID() }
-      const lesson = videoLesson(await requestVideo(body, requestKey.current))
+      const lesson = videoLesson(await requestVideo(body, requestKey.current, files))
       if (mounted.current) onCreate({ ...lesson, subtitle: context?.chapter || lesson.subtitle, subject: context?.subject || lesson.subject, artwork: artworkForTitle(title, 'idea'), color: context?.color || lesson.color, source: context ? { text, chapter: context.chapter, name: context.sourceName } : undefined })
     } catch (error) {
       if (mounted.current) setError(error instanceof Error ? error.message : 'Could not create your video.')
@@ -153,7 +146,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
               <button type="button" disabled={creating} aria-label={`Remove ${file.name}`} onClick={() => setModeFiles(current => ({ ...current, [mode]: current[mode].filter((_, i) => i !== index) }))}><X size={14}/></button>
             </li>)}</ul>}
             {error && <p className="composer-error" role="alert">{error}</p>}
-            <input ref={picker} type="file" accept={mode === 'photos' ? 'image/*' : acceptedFiles} multiple onChange={selectFiles} hidden aria-label={mode === 'photos' ? 'Choose photos' : 'Choose source files'}/>
+            <input ref={picker} type="file" accept={mode === 'photos' ? '.png,.jpg,.jpeg,.webp' : acceptedFiles} multiple onChange={selectFiles} hidden aria-label={mode === 'photos' ? 'Choose photos' : 'Choose source files'}/>
             <div className="composer-actions">
               {mode === 'text' && <button type="button" className="attach-source" onClick={() => picker.current?.click()}><Plus size={17}/> Add a file</button>}
               <button className="primary-button create-video-button" type="submit" disabled={!ready || cameraOpen || creating}>{creating ? 'Preparing your video…' : 'Create video'} <ArrowRight size={17}/></button>
