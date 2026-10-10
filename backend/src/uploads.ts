@@ -23,7 +23,9 @@ export async function extractUpload(upload: Upload): Promise<string> {
       const pdf = await getDocumentProxy(new Uint8Array(upload.bytes))
       try {
         if (pdf.numPages > 500) throw new AgentError('DOCUMENT', 'Split PDFs with more than 500 pages into smaller files.')
-        text = (await extractText(pdf, { mergePages: true })).text
+        const pages = (await extractText(pdf, { mergePages: false })).text
+        if (!pages.some(page => page.trim())) throw new AgentError('DOCUMENT', `No readable text in ${upload.name}. For scans, upload a photo or paste the text.`)
+        text = pages.map((page, i) => `[Page ${i + 1}]\n${page}`).join('\n\n')
       } finally { await pdf.loadingTask.destroy() }
     } else if (upload.name.toLowerCase().endsWith('.docx')) {
       const mammoth = await import('mammoth')
