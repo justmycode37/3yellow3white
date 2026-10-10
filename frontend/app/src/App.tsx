@@ -174,7 +174,6 @@ export default function App() {
     onLibrary={goLibrary}
     onCourses={() => navigate('/courses')}
     onCreate={() => { goWorkspace(); requestAnimationFrame(() => document.getElementById('video-topic')?.focus()) }}
-    onSettings={() => navigate('/settings')}
   />
 
   const subjectTitle = (lesson: Lesson) => courseForSubject(courses, lesson.subject)?.title ?? lesson.subject
@@ -188,7 +187,7 @@ export default function App() {
     {selected ? <LessonPlayer key={selected.id} lesson={selected} onPlayed={onPlayed} overlayOpen={false} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary}/>
     : <div className={`app-shell ${settings ? 'settings-shell' : !planning && !libraryPage ? 'workspace-shell' : ''}`}>
       <header className="header">
-        <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation and settings" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={goWorkspace}>Aha!</button></div>
+        <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={goWorkspace}>Aha!</button></div>
         {!settings && !planning && !libraryPage && <button className="workspace-library-link" onClick={goLibrary}>Your library <ArrowUpRight size={15}/></button>}
       </header>
       {settings ? <SettingsPage theme={theme} onTheme={setTheme}/> : planning ? <CoursesPage curriculum={courses} selectedId={path.split('/')[2]} onSelect={id => navigate(`/courses/${id}`, false)} plans={subjectPlans} onAddMaterial={addPlanMaterial} onMakeVideo={makeTopicVideo} onAddCourse={createCourse} onDeleteCourse={removeCourse} onNewVideo={goWorkspace} recent={overviewLessons(playHistory, allLessons, courses)} renderVideo={lesson => <VideoThumbnail lesson={lesson} color={lesson.color} onOpen={() => openLesson(lesson)}/>} storageNote={planStorageNote}/> : libraryPage ? <main className="library-page">
