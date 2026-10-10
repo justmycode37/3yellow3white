@@ -16,7 +16,7 @@ export function agentConfig(env: Record<string, string | undefined> = process.en
     authMode,
     agentDir: resolve(env.PI_CODING_AGENT_DIR ?? join(homedir(), ".aha", "pi")),
     dataDir: resolve(env.AGENT_DATA_DIR ?? "data/agents"),
-    model: env.AGENT_MODEL ?? "gpt-5.4",
+    model: env.AGENT_MODEL ?? "gpt-6.1-sol",
     thinking: thinking as "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max",
     timeoutMs,
     apiKey: env.OPENAI_API_KEY,
@@ -28,6 +28,7 @@ export type AgentConfig = ReturnType<typeof agentConfig>;
 export function agentFailure(error: unknown): AgentError {
   if (error instanceof AgentError) return error;
   const message = error instanceof Error ? error.message : "";
+  if (/model.*(?:not supported|does not exist|not found|unavailable)/i.test(message)) return new AgentError("MODEL", "AGENT_MODEL is unavailable for this account. Select a supported model and run agents:check.");
   if (/401|403|auth|credential|invalid.grant|revoked/i.test(message)) return new AgentError("AUTH", "Agent authentication failed. Stop the backend, run agents:logout then agents:login, or check the API key if using API-key mode.");
   if (/429|quota|usage.limit|usage.unavailable|rate.limit/i.test(message)) return new AgentError("LIMIT", "The model usage limit was reached. Check your account allowance before retrying.");
   return new AgentError("PROVIDER", "The agent request failed. Check agents:check and retry the job.");
