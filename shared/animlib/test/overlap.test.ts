@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compileSource, detectOverlaps, detectSceneOverlaps } from '../src/core.js';
+import { compileSource, detectOverlaps, detectSceneOverlaps, evaluateScene } from '../src/core.js';
 import type { CameraState, ElementState, Frame, Geometry, Vec3 } from '../src/types.js';
 
 const camera: CameraState = { yaw: 0, pitch: 0, target: [0, 0, 0], height: 8, distance: 10, perspective: 0 };
@@ -184,24 +184,131 @@ describe('text overlap detection', () => {
 });
 
 describe('animation text overlap sampling', () => {
-  it('finds a text collision during motion with clear endpoints without modifying the scene', async () => {
+  it('ignores transient crossings by default while allowing explicit animation inspection', async () => {
     const scene = await compileSource(`export default scene({}, s => {
       s.text('fixed', {text:'H',fontSize:2});
       const moving = s.text('moving', {text:'H',fontSize:2,position:[-3,0]});
       s.play(moving.moveTo([3,0]), {duration:2,ease:'linear'});
     });`);
     const before = structuredClone(scene);
-    const results = detectSceneOverlaps(scene, { ...options, sampleRate: 4 });
+    expect(detectSceneOverlaps(scene, { ...options, sampleRate: 4 })).toEqual([]);
+    expect(detectSceneOverlaps(scene, { ...options, times: [1] })).toEqual([]);
+    const results = detectSceneOverlaps(scene, { ...options, sampleRate: 4, includeAnimating: true });
     expect(results.map(r => r.time)).toEqual([0.75, 1, 1.25]);
     expect(results[1].overlaps[0].elements).toEqual(['fixed', 'moving']);
     expect(scene).toEqual(before);
-    expect(detectSceneOverlaps(scene, { ...options, times: [2, 1, 0, 1] })).toEqual([results[1]]);
+    expect(detectSceneOverlaps(scene, { ...options, times: [2, 1, 0, 1], includeAnimating: true })).toEqual([results[1]]);
+    // A single frame has no track history; its API still reports the geometric intersection.
+    expect(detectOverlaps(evaluateScene(scene, 1), options)).toEqual(results[1].overlaps);
+  });
+
+  it('reports text as soon as it settles, including the exact scene endpoint', async () => {
+    const scene = await compileSource(`export default scene({}, s => {
+      s.text('fixed', {text:'H',fontSize:2});
+      const moving = s.text('moving', {text:'H',fontSize:2,position:[-3,0]});
+      s.play(moving.moveTo([0,0]), {duration:0.357,ease:'linear'});
+    });`);
+    expect(detectSceneOverlaps(scene, { ...options, sampleRate: 10 }).map(r => r.time)).toEqual([0.357]);
+    expect(detectSceneOverlaps(scene, { ...options, times: [0.356, 0.357] }).map(r => r.time)).toEqual([0.357]);
+  });
+
+  it('checks pauses between animations but skips boundaries where another track starts immediately', async () => {
+    const source = (pause: number) => `export default scene({}, s => {
+      s.text('fixed', {text:'H',fontSize:2});
+      const moving = s.text('moving', {text:'H',fontSize:2,position:[-3,0]});
+      s.play(moving.moveTo([0,0]), {duration:1,ease:'linear'}); s.wait(${pause});
+      s.play(moving.moveTo([3,0]), {duration:1,ease:'linear'});
+    });`;
+    const continuous = await compileSource(source(0));
+    expect(detectSceneOverlaps(continuous, options)).toEqual([]);
+    const paused = await compileSource(source(0.25));
+    expect(detectSceneOverlaps(paused, { ...options, times: [0.99, 1, 1.1, 1.25, 2.25] }).map(r => r.time)).toEqual([1, 1.1]);
+  });
+
+  it('still checks stationary text while unrelated text and shapes animate', async () => {
+    const scene = await compileSource(`export default scene({}, s => {
+      s.text('a', {text:'H',fontSize:2}); s.text('b', {text:'H',fontSize:2});
+      const moving = s.text('moving', {text:'H',fontSize:2,position:[-3,0]});
+      const shape = s.circle('shape');
+      s.play([moving.moveTo([3,0]),shape.scaleTo(2)], {duration:1,ease:'linear'});
+    });`);
+    const results = detectSceneOverlaps(scene, { ...options, times: [0, 0.5, 1] });
+    expect(results.map(r => r.overlaps.map(o => o.elements))).toEqual([[['a', 'b']], [['a', 'b']], [['a', 'b']]]);
+  });
+
+  it.each(['b.fadeIn()', 'b.scaleTo(1.2)', 'b.rotateTo(0.2)', "b.morphTo({kind:'text',text:'H',fontSize:2.2})"])(
+    'skips active %s and resumes checks at completion', async action => {
+      const scene = await compileSource(`export default scene({}, s => {
+        s.text('a', {text:'H',fontSize:2}); const b = s.text('b', {text:'H',fontSize:2});
+        s.play(${action}, {duration:1,ease:'linear'});
+      });`);
+      expect(detectSceneOverlaps(scene, { ...options, times: [0, 0.5, 1] }).map(r => r.time)).toEqual([1]);
+    });
+
+  it('ignores active numeric text tracks and checks the final values', async () => {
+    const scene = await compileSource(String.raw`export default scene({}, s => {
+      s.latex('a', {tex:'\\animnum{n}',numbers:{n:2},numberFormat:{digits:1,decimals:0},fontSize:2});
+      const b = s.latex('b', {tex:'\\animnum{n}',numbers:{n:1},numberFormat:{digits:1,decimals:0},fontSize:2});
+      s.play(b.countTo({n:2}), {duration:1});
+    });`);
+    expect(detectSceneOverlaps(scene, { ...options, times: [0, 0.5, 1] }).map(r => r.time)).toEqual([1]);
+  });
+
+  it('follows nested animated groups and chained attachments regardless of declaration order', async () => {
+    const scene = await compileSource(`export default scene({}, s => {
+      s.text('fixed', {text:'H',fontSize:2});
+      const source = s.circle('source', {position:[-3,0]});
+      const first = s.text('first', {text:'H',fontSize:2});
+      const second = s.text('second', {text:'H',fontSize:2});
+      s.attach(second, first); s.attach(first, source);
+      const inner = s.group('inner', [source]); const outer = s.group('outer', [inner]);
+      s.play(outer.moveTo([3,0]), {duration:1,ease:'linear'});
+    });`);
+    const results = detectSceneOverlaps(scene, { ...options, times: [0, 0.5, 1] });
+    expect(results.map(r => r.time)).toEqual([1]);
+    expect(results[0].overlaps.map(o => o.elements)).toEqual([['first', 'fixed'], ['first', 'second'], ['fixed', 'second']]);
+  });
+
+  it('checks text after zero-duration animation rather than treating it as in motion', async () => {
+    const scene = await compileSource(`export default scene({}, s => {
+      s.text('a', {text:'H'}); const b = s.text('b', {text:'H',position:[-3,0]});
+      s.play(b.moveTo([0,0]), {duration:0});
+    });`);
+    expect(detectSceneOverlaps(scene, options).map(r => r.time)).toEqual([0]);
+  });
+
+  it('skips world text during a camera track but still checks stationary screen labels', async () => {
+    const scene = await compileSource(`export default scene({}, s => {
+      s.text('world-a', {text:'H',position:[-3,0]}); s.text('world-b', {text:'H',position:[-3,0]});
+      s.text('screen-a', {text:'H',space:'screen',position:[200,0]});
+      s.text('screen-b', {text:'H',space:'screen',position:[200,0]});
+      s.play(s.camera.animate({height:7}), {duration:1});
+    });`);
+    const results = detectSceneOverlaps(scene, { ...options, times: [0.5, 1] });
+    expect(results[0].overlaps.map(o => o.elements)).toEqual([['screen-a', 'screen-b']]);
+    expect(results[1].overlaps.map(o => o.elements)).toEqual([['screen-a', 'screen-b'], ['world-a', 'world-b']]);
+  });
+
+  it('limits camera exclusions to the animated view', async () => {
+    const scene = await compileSource(`export default scene({}, s => {
+      let viewCamera;
+      s.view('left', {rect:[0,0,0.5,1],camera:{yaw:0,pitch:0,perspective:0}}, v => {
+        v.text('left-a', {text:'H'}); v.text('left-b', {text:'H'}); viewCamera = v.camera;
+      });
+      s.view('right', {rect:[0.5,0,0.5,1],camera:{yaw:0,pitch:0,perspective:0}}, v => {
+        v.text('right-a', {text:'H'}); v.text('right-b', {text:'H'});
+      });
+      s.play(viewCamera.animate({height:7}), {duration:1});
+    });`);
+    const results = detectSceneOverlaps(scene, { ...options, times: [0.5, 1] });
+    expect(results[0].overlaps.map(o => o.elements)).toEqual([['right-a', 'right-b']]);
+    expect(results[1].overlaps.map(o => o.elements)).toEqual([['left-a', 'left-b'], ['right-a', 'right-b']]);
   });
 
   it('includes nonuniform lifecycle and track boundaries and respects removal', async () => {
     const scene = await compileSource(`export default scene({}, s => {
       s.text('a', {text:'H'}); s.wait(0.123);
-      const b = s.text('b', {text:'H'});
+      const b = s.text('b', {text:'H'}); s.wait(0.01);
       s.play(b.fadeOut(), {duration:0.234}); s.remove(b); s.wait(0.5);
     });`);
     const results = detectSceneOverlaps(scene, { ...options, sampleRate: 1 });
