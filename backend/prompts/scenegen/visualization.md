@@ -64,13 +64,20 @@ Focus (strict; the viewer must always know where to look):
 - FOCUS FRAME, for text and flat 2D things (a term, a label, a formula, a matrix, a
   number, a small flat shape): a thin yellow rectangle drawn around it, in the style
   of 3Blue1Brown. `s.rectangle(id, { width, height, position, fill: Color.NONE,
-  stroke: Color.YELLOW, strokeWidth: 0.04, opacity: 0 })`, centred on the thing, with
-  about 0.15 units of padding on each side. Fade it in over 0.4 s, hold it for about
-  1 s while the thing is being talked about, fade it out over 0.4 s and remove it.
-  Size it from the text: a character is about 0.5 x fontSize wide and a line about
-  1.2 x fontSize tall; a 2x2 matrix at fontSize 0.46 is about 2.6 x 1.1. To frame
-  one term of a longer formula, make that term its own `s.latex` element so its
-  position and size are known.
+  stroke: Color.YELLOW, strokeWidth: 0.03, opacity: 0 })`. Fade it in over 0.4 s,
+  hold it for at least 1 s while the thing is being talked about, fade it out over
+  0.4 s and remove it.
+- The frame sits tight and centred on its text. A formula is centred exactly on its
+  own `position`, so give the frame that SAME position (never a separately guessed
+  one) and size it from the formula, with f = its fontSize:
+  width = text width + 0.6 f, height = text height + 0.6 f, where
+  text width is about 0.47 f per letter or digit plus 1.1 f per operator (+, -, =,
+  x), and text height is about 0.7 f for plain letters, 1.0 f with a superscript or
+  capital, 1.15 f with brackets, 1.8 f for a fraction and 2.4 f for a two-row matrix
+  (a 2x2 matrix written as `A=[...]` is about 4.9 f wide). Examples at f = 0.5:
+  `ab` is 0.46 x 0.35, `a^2+2ab` is 1.8 x 0.5, `(a+b)^2` is 1.6 x 0.57.
+  To frame one term of a longer formula, make that term its own `s.latex` element,
+  so its position and size are known.
 - FOCUS PULSE, for 3D objects and for lines and arrows: the object smoothly grows to
   1.15 times its size and returns, about 1.2 s in total (`obj.scaleTo(1.15)` for
   0.6 s, then `obj.scaleTo(1)` for 0.6 s). For a line or arrow, thicken it instead:
