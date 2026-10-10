@@ -25,10 +25,15 @@ When writing the plan:
   a scene introduces a new formula, say in its description which earlier one leaves
   or turns into it. Carry at most three formulas into the next scene, and list the
   others under cleanup. Fewer, larger, well-spaced things beat a full screen.
+  Plan only objects the concept itself is about: no illustrative props such as
+  hands, people, icons or scenery, unless the idea is about that object (a hand for
+  the right-hand rule). List as entities only what the explanation cannot do without.
 - **Focus:** for every scene, say in its visualDescription which object the student
   should be looking at for each sentence of the narration, in order. The scene marks
-  each one with the same brief "focus pulse" (it grows slightly and returns) as it is
-  mentioned, so plan one clear focus per sentence, not several at once.
+  each one as it is mentioned: text, formulas and flat 2D things get a temporary thin
+  yellow frame around them (3Blue1Brown style), 3D objects, lines and arrows get a
+  brief pulse. Plan one clear focus per sentence, not several at once, and do not
+  list the frame as an entity or use yellow as a concept colour.
 - **Interactions:** plan an interactive element in every scene where playing with a
   value deepens that scene's idea (a slider for a quantity, a toggle to compare with
   and without, a select between a few named cases). Most lessons should have

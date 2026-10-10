@@ -31,6 +31,11 @@ Visual style: 3Blue1Brown-like explanatory animation.
 
 Simplicity (the most important rule; clutter is the most common failure):
 - Less is more. Show the fewest objects that make the point; one idea at a time.
+- Only objects the concept itself is about. No illustrative props, mascots, hands,
+  people, icons or decorative scenery: a hand appears only when the idea IS a hand
+  rule (such as the right-hand rule), a container only when the idea is about what
+  is inside it. If removing an object would not make the explanation harder to
+  follow, it should not be there.
 - Never leave duplicates behind. When a vector is stretched, scaled, moved or
   rotated, animate THAT object; do not keep the original next to a stretched copy.
   A temporary helper copy must be removed as soon as it has done its job.
@@ -53,22 +58,34 @@ Smooth motion (strict; jarring motion ruins the explanation):
   shakes, no fast zooms, no flashes.
 
 Focus (strict; the viewer must always know where to look):
-- Whenever the narration turns to a specific object (a vector, an atom, a formula,
-  a matrix entry), mark that object with the FOCUS PULSE as its word is spoken. This
-  is the one and only highlight style, used the same way in every scene and lesson.
-- The focus pulse: the object smoothly grows to 1.15 times its size and returns,
-  about 1.2 s in total (`obj.scaleTo(1.15)` for 0.6 s, then `obj.scaleTo(1)` for
-  0.6 s). For a line or arrow that scaling would shift, thicken it instead: stroke
-  width to 1.6 times and back, same timing. Nothing else moves during a pulse.
-- One focus at a time. Pulse what is being talked about now, not everything that is
-  on screen; at most one pulse per sentence, and never two objects at once unless the
-  sentence is about that pair (then pulse both together).
-- The pulse never changes an object's colour (colours belong to concepts) and never
-  adds anything: no boxes, frames, underlines, glows, arrows pointing at things or
-  extra shapes. Do not dim the rest of the picture to create focus.
+- Whenever the narration turns to a specific thing (a term, a formula, a matrix, a
+  vector, an atom), mark it as its word is spoken. There are exactly two highlight
+  styles, used the same way in every scene and lesson:
+- FOCUS FRAME, for text and flat 2D things (a term, a label, a formula, a matrix, a
+  number, a small flat shape): a thin yellow rectangle drawn around it, in the style
+  of 3Blue1Brown. `s.rectangle(id, { width, height, position, fill: Color.NONE,
+  stroke: Color.YELLOW, strokeWidth: 0.04, opacity: 0 })`, centred on the thing, with
+  about 0.15 units of padding on each side. Fade it in over 0.4 s, hold it for about
+  1 s while the thing is being talked about, fade it out over 0.4 s and remove it.
+  Size it from the text: a character is about 0.5 x fontSize wide and a line about
+  1.2 x fontSize tall; a 2x2 matrix at fontSize 0.46 is about 2.6 x 1.1. To frame
+  one term of a longer formula, make that term its own `s.latex` element so its
+  position and size are known.
+- FOCUS PULSE, for 3D objects and for lines and arrows: the object smoothly grows to
+  1.15 times its size and returns, about 1.2 s in total (`obj.scaleTo(1.15)` for
+  0.6 s, then `obj.scaleTo(1)` for 0.6 s). For a line or arrow, thicken it instead:
+  stroke width to 2 times and back, same timing. Nothing else moves during a pulse.
+- The focus frame is the only frame allowed anywhere, and it is always temporary:
+  it never stays on screen after its sentence, is never kept into the next scene, and
+  never has a fill. Permanent boxes or panels around text remain forbidden. YELLOW is
+  reserved for the focus frame; do not use it as a concept colour.
+- One focus at a time: frame or pulse what is being talked about now, at most one
+  per sentence, and two things together only when the sentence is about that pair.
+- A highlight never changes an object's colour and adds nothing else: no underlines,
+  glows, arrows pointing at things or extra shapes. Do not dim the rest of the
+  picture to create focus.
 - When a formula states what the geometry just showed, pulse the geometry first and
-  then the matching formula (or its `\animpart`), so the eye is led from one to the
-  other.
+  then frame the matching formula, so the eye is led from one to the other.
 
 On-screen text (strict):
 - Only necessary text: short object labels (e.g. v, î, A), formulas, matrices and
@@ -155,7 +172,7 @@ Alignment (strict; misplaced parts are the most visible kind of jank):
 
 Layout (keep it identical in every scene):
 - Geometry (2D or 3D) on the left two thirds of the frame; the right third is a fixed text
-  area for formulas and matrices. It is just empty space: NO box, border, frame,
+  area for formulas and matrices. It is just empty space (the temporary focus frame aside): NO box, border, frame,
   backing rectangle or panel shape around text anywhere. Geometry never enters the
   text area; text never sits on the grid except short object labels.
 - The right third from top to bottom: controls in the top third (kept empty when

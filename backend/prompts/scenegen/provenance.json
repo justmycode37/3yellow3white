@@ -7,14 +7,14 @@
       "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
       "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
       "pullRequest": 59,
-      "sha256": "55088a7f21ddec11d9ede2033eee124cc6e67965141cb98b05d1348efbd001f7"
+      "sha256": "e731e2b730bdebb33ef9ba419ddcd3d7271ca73bd69d1688a5f07684fce3b410"
     },
     {
       "file": "planning.md",
       "source": "scenegen/prompts/planning.md (maintained here since PR 59)",
       "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
       "pullRequest": 59,
-      "sha256": "c5bd88baced4d8a0eefa31fb7bd19a82d67e051fb83ee3e0a0428fed3ee681e7"
+      "sha256": "7d7cc7ba6990c8667ce539db77afa4f2ef6ef0294b13eb2d416a11bb6013ca42"
     },
     {
       "file": "topics-system.md",
