@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
-import { ArrowRight, Maximize, MenuGlyph, Pause, Play, RotateCcw } from './Icons'
+import { ArrowRight, ClosedCaptions, Maximize, MenuGlyph, Pause, Play, RotateCcw } from './Icons'
 import type { Lesson } from './data'
 import { formatTime } from './data'
 import { LessonPlayback } from './lessonPlayback'
@@ -31,6 +31,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   const [manifest, setManifest] = useState<VideoManifest>()
   const [attempt, setAttempt] = useState(0)
   const [isFullscreen, setFullscreen] = useState(false)
+  const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [cursorHidden, setCursorHidden] = useState(false)
   const cursorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const state = useSyncExternalStore(playback?.subscribe ?? subscribeLoading, playback?.getState ?? getLoadingState)
@@ -170,6 +171,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
           <div className="progress-meta"><span>{formatTime(state.time)}</span><span>{state.playing ? 'A little more understanding, every second.' : state.ended ? 'That’s an aha! moment.' : 'Take your time. Curiosity can wait.'}</span><span>{formatTime(duration)}</span></div>
         </div>
         <button className="icon-button" aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} onClick={fullscreen}><Maximize size={17}/></button>
+        <button className="icon-button captions-toggle" aria-label="Captions" aria-pressed={captionsEnabled} title={captionsEnabled ? 'Turn captions off' : 'Turn captions on'} onClick={() => setCaptionsEnabled(enabled => !enabled)}><ClosedCaptions size={19}/></button>
       </div>
     </div>
     {state.ended && <div className="lesson-complete"><button onClick={onHome}>Back to your library <ArrowRight size={16}/></button></div>}

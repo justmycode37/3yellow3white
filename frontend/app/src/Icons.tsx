@@ -37,6 +37,7 @@ export const Play = icon('Play', <path d="M7 6q0-3 2.5-1.5l10 6q2.5 1.5 0 3l-10 
 export const Pause = icon('Pause', <path d="M7 5v14M17 5v14" strokeWidth="5"/>)
 export const RotateCcw = icon('RotateCcw', <path d="M4 10a8 8 0 1 1 1 7M3 4v3q0 3 3 3h3"/>)
 export const Maximize = icon('Maximize', <path d="M9 3H7q-4 0-4 4v2m12-6h2q4 0 4 4v2M3 15v2q0 4 4 4h2m12-6v2q0 4-4 4h-2"/>)
+export const ClosedCaptions = icon('ClosedCaptions', <path d="M10 8.5a4.5 4.5 0 1 0 0 7m11-7a4.5 4.5 0 1 0 0 7"/>)
 export const LoaderCircle = icon('LoaderCircle', <><circle cx="12" cy="12" r="8.5" opacity=".18"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5"/></>)
 export const Sun = icon('Sun', <><circle cx="12" cy="12" r="4"/><path d="M12 2v1M12 21v1M2 12h1m18 0h1M5 5l.5.5m13 13 .5.5M5 19l.5-.5M18.5 5.5 19 5" strokeWidth="2.5"/></>)
 export const Moon = icon('Moon', <path d="M11.5 3c1 0 1.2.4.6 1.2C8 10 12.8 16.7 19 15c.9-.2 1.4.3.8 1.2A9 9 0 1 1 11.5 3Z"/>)
