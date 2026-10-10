@@ -36,10 +36,10 @@ export class SceneSequence {
   private enqueue<T>(work: () => Promise<T>): Promise<T> {
     const result = this.queue.then(work); this.queue = result.catch(() => undefined); return result;
   }
-  private async reconstruct(sources: SceneSource[], values: Map<string, Record<string, ControlValue>>) {
-    const compiled: CompiledScene[] = [];
-    let previous: Frame | undefined;
-    for (const source of sources) {
+  private async reconstruct(sources: SceneSource[], values: Map<string, Record<string, ControlValue>>, prefix: CompiledScene[] = []) {
+    const compiled: CompiledScene[] = prefix.slice();
+    let previous: Frame | undefined = compiled.length ? evaluateScene(compiled.at(-1)!, compiled.at(-1)!.duration) : undefined;
+    for (const source of sources.slice(prefix.length)) {
       try {
         const scene = await this.compiler.compile(source.source, { previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
         compiled.push(scene); previous = evaluateScene(scene, scene.duration);
@@ -48,7 +48,7 @@ export class SceneSequence {
         throw error;
       }
     }
-    await this.options.prepare?.(compiled);
+    await this.options.prepare?.(compiled.slice(prefix.length));
     if (this.disposed) throw new Error("Scene sequence is disposed");
     const normalized = new Map<string, Record<string, ControlValue>>();
     sources.forEach((s, i) => normalized.set(s.id, Object.fromEntries(compiled[i].controls.map(c => [c.id, c.value]))));
@@ -74,7 +74,8 @@ export class SceneSequence {
           if (!s || typeof s.id !== "string" || !s.id || s.id.length > 256 || ids.has(s.id)) throw new Error(`Invalid or duplicate scene ID: ${s?.id}`);
           ids.add(s.id);
         }
-        const candidate = await this.reconstruct(sources, change.type === "load" ? new Map() : this.values);
+        const append = change.type === 'insert' && change.after === (this.sources.at(-1)?.id ?? null);
+        const candidate = await this.reconstruct(sources, change.type === "load" ? new Map() : this.values, append ? this.compiled : []);
         this.sources = sources; this.compiled = candidate.compiled; this.values = candidate.values; this.revision++;
         return { ok: true, revision: this.revision, diagnostics: [] };
       } catch (error) {

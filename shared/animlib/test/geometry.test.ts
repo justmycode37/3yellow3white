@@ -81,13 +81,13 @@ describe('WebGPU rendering geometry',()=> {
     for(let i=0;i<triangles.length;i+=3){const [a,b,c]=triangles.slice(i,i+3);area+=Math.abs((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))/2;}
     expect(area).toBeCloseTo(12);
   });
-  it('rejects unavailable WebGPU without requesting another canvas context',async()=> {
+  it('reports when both rendering backends are unavailable',async()=> {
     vi.stubGlobal('ResizeObserver',class {observe(){}disconnect(){}});
     vi.stubGlobal('navigator',{});
     const canvas={width:800,height:450,style:{},getBoundingClientRect:()=>({width:800,height:450}),getContext:vi.fn(),addEventListener:vi.fn(),removeEventListener:vi.fn()} as unknown as HTMLCanvasElement;
     const renderer=new CanvasRenderer(canvas);
-    await expect(renderer.prepare([])).rejects.toThrow('WebGPU is required');
-    expect(canvas.getContext).not.toHaveBeenCalled();renderer.dispose();
+    await expect(renderer.prepare([])).rejects.toThrow('Neither WebGPU nor WebGL2');
+    expect(canvas.getContext).toHaveBeenCalledWith('webgl2',expect.objectContaining({depth:true}));renderer.dispose();
   });
 });
 

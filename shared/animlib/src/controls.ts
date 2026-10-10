@@ -59,7 +59,7 @@ export class ControlOverlay {
   constructor(
     root: HTMLElement,
     private readonly onChange: (id: string, value: ControlValue) => Promise<void> | void,
-    private readonly canvas?: HTMLCanvasElement,
+    private canvas?: HTMLCanvasElement,
   ) {
     this.root = root;
     this.stylesheet = root.ownerDocument.createElement("style");
@@ -81,6 +81,13 @@ export class ControlOverlay {
       root.ownerDocument.defaultView?.addEventListener("scroll", this.align, true);
       this.align();
     }
+  }
+
+  setCanvas(canvas: HTMLCanvasElement): void {
+    if (this.canvas) this.observer?.unobserve(this.canvas);
+    this.canvas = canvas;
+    this.observer?.observe(canvas);
+    this.align();
   }
 
   private align = (): void => {

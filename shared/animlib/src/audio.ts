@@ -30,6 +30,17 @@ export class AudioClock {
     return this.context;
   }
 
+  register(assets: Record<string, Asset>): void {
+    if (this.disposed) throw new Error('Audio player is disposed');
+    for (const [id, asset] of Object.entries(assets)) {
+      if (Object.hasOwn(this.assets, id) && this.assets[id].url !== asset.url) throw new Error(`Audio asset is immutable: ${id}`);
+    }
+    for (const [id, asset] of Object.entries(assets)) Object.defineProperty(this.assets, id, { value: { ...asset }, enumerable: true, configurable: true });
+  }
+
+  /** Call directly from a user gesture, before queuing async playback work. */
+  unlock(): Promise<void> { return this.ensureContext().resume(); }
+
   async prepare(scenes: CompiledScene[]): Promise<void> {
     for (const scene of scenes) {
       const id = scene.options.audio;

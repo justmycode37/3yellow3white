@@ -11,7 +11,7 @@ describe("browser host preparation contract", () => {
     vi.stubGlobal("navigator", {});
     vi.stubGlobal("isSecureContext", true);
     vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
-    const getContext = vi.fn(() => { throw new Error("No rendering fallback is allowed"); });
+    const getContext = vi.fn(() => { throw new Error("WebGL2 is unavailable"); });
     const renderer = new CanvasRenderer({
       width: 640, height: 480, style: {}, getContext,
       getBoundingClientRect: () => ({ width: 640, height: 480 }),
@@ -22,8 +22,8 @@ describe("browser host preparation contract", () => {
       const result = await sequence.submit({ type: "load", scenes: initialSources });
       expect(result.ok).toBe(false);
       expect(result.diagnostics).toHaveLength(1);
-      expect(result.diagnostics[0].message).toMatch(/^WebGPU is required\./);
-      expect(getContext).not.toHaveBeenCalled();
+      expect(result.diagnostics[0].message).toMatch(/^Neither WebGPU nor WebGL2/);
+      expect(getContext).toHaveBeenCalledWith('webgl2', expect.any(Object));
       expect(sequence.revision).toBe(0);
       expect(sequence.compiled).toEqual([]);
     } finally {

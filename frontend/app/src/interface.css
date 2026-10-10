@@ -182,8 +182,22 @@ html, body, #root { min-height: 100%; background: var(--bg); }
   .navigation-layer, .navigation-drawer, .drawer-scrim { transition: none; }
 }
 
-/* The host UI surrounds a real animlib canvas; its timeline owns playback. */
-.lesson-visual > .lesson-canvas { width: 100%; height: 100%; display: block; border-radius: 24px; }
+/* The scene owns the entire viewport; host UI floats above it. */
+.player-stage { position: absolute; inset: 0; isolation: isolate; }
+.lesson-canvas-host { position: absolute; inset: 0; }
+.lesson-canvas-host > .lesson-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.player-heading { position: absolute; z-index: 10; top: max(28px, env(safe-area-inset-top)); left: 90px; max-width: min(45vw, 560px); padding: 10px 16px; border-radius: 16px; background: var(--bg); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.player-heading.show-controls, .player-page:focus-within .player-heading { opacity: .95; }
+.player-heading h1 { font-size: clamp(14px, 2vw, 20px); line-height: 1.35; margin: 0; font-weight: 500; }
+.player-heading p { font-size: 12px; line-height: 1.5; margin: 5px 0 0; }
+.player-page .player-menu-toggle { background: var(--bg); color: var(--ink); }
+.player-page .player-controls { padding: 12px 16px; border-radius: 20px; background: var(--bg); color: var(--ink); }
+.player-page .paused-indicator { z-index: 3; }
+.player-stage .player-status { border-radius: 0; z-index: 2; }
+@media (max-width: 650px) {
+  .player-heading { top: max(20px, env(safe-area-inset-top)); left: 76px; max-width: calc(100vw - 100px); padding: 8px 12px; }
+  .player-stage .animlib-controls { padding-top: 140px !important; }
+}
 .player-status { position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; background: var(--art-bg); border-radius: 24px; font-size: 14px; }
 .player-error p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }
 .player-controls button:disabled { opacity: .4; cursor: default; }

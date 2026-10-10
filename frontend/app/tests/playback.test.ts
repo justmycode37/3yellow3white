@@ -5,6 +5,7 @@ import type { PlayerState, SceneSource, Submission, SubmitResult } from 'animlib
 import { LessonPlayback, scenePosition, sequenceTime } from '../src/lessonPlayback.ts'
 import { lessonScenes } from '../src/lessonScenes.ts'
 import { lessons } from '../src/data.ts'
+import type { VideoManifest } from '../../../shared/video/contract.ts'
 
 class TestPlayer {
   state: PlayerState = { revision: 0, scene: null, time: 0, duration: 0, status: 'empty', scenes: [], controls: [], orbitEnabled: false }
@@ -151,4 +152,77 @@ test('every sample lesson compiles into a deterministic animlib timeline with ma
       assert.notDeepEqual(evaluateScene(scene, 0).elements, middle.elements, lesson.id)
     }
   }
+})
+
+class StreamingPlayer extends TestPlayer {
+  async submit(change: Submission) {
+    await this.submitGate
+    if (change.type === 'insert') {
+      const scenes = [...this.state.scenes, ...change.scenes.map(scene => ({ id: scene.id, duration: 10 }))]
+      this.emit({ scenes, scene: this.state.scene ?? scenes[0].id, duration: 10, status: this.state.scene ? this.state.status : 'paused' })
+    }
+    return this.result
+  }
+}
+const manifest = (count: number, complete = false): VideoManifest => ({
+  schemaVersion: 1, id: 'video', title: 'Test', revision: count + (complete ? 1 : 0), status: complete ? 'complete' : 'generating', provider: 'simulated', createdAt: '',
+  scenes: Array.from({ length: count }, (_, index) => ({ id: index ? 'second' : 'first', index, source: '', duration: 10, audio: { id: `audio-${index}`, url: '/audio' }, captions: [] })),
+})
+
+test('streaming buffers at the available edge, resumes at the next scene, and ends only on completion', async () => {
+  const player = new StreamingPlayer(), playback = new LessonPlayback(player)
+  await playback.acceptManifest(manifest(1))
+  player.emit({ time: 10, status: 'ended' })
+  assert.equal(playback.getState().ended, false)
+  assert.equal(playback.getState().buffering, true)
+  await playback.acceptManifest(manifest(2))
+  assert.equal(player.state.scene, 'second')
+  assert.equal(player.state.time, 0)
+  assert.equal(playback.getState().playing, true)
+  player.emit({ time: 10, status: 'ended' })
+  await playback.acceptManifest(manifest(2, true))
+  assert.equal(playback.getState().ended, true)
+  assert.equal(playback.getState().buffering, false)
+  playback.dispose()
+})
+
+test('pausing while buffering survives a reconnect snapshot and duplicate delivery', async () => {
+  const player = new StreamingPlayer(), playback = new LessonPlayback(player)
+  await playback.acceptManifest(manifest(1))
+  player.emit({ time: 10, status: 'ended' })
+  await playback.toggle()
+  await playback.acceptManifest(manifest(2))
+  await playback.acceptManifest(manifest(2))
+  assert.equal(player.state.scenes.length, 2)
+  assert.equal(playback.getState().playing, false)
+  assert.equal(playback.getState().ended, false)
+  await playback.toggle()
+  assert.equal(playback.getState().playing, true)
+  playback.dispose()
+})
+
+test('a generation failure preserves playable scenes and reports its message separately', async () => {
+  const player = new StreamingPlayer(), playback = new LessonPlayback(player, false)
+  await playback.acceptManifest({ ...manifest(1), status: 'failed', error: 'Generation failed' })
+  assert.equal(playback.getState().ready, true)
+  assert.equal(playback.getState().generationError, 'Generation failed')
+  assert.equal(playback.getState().error, '')
+  await playback.toggle()
+  assert.equal(playback.getState().playing, true)
+  playback.dispose()
+})
+
+test('reaching the boundary while the next scene is preparing resumes without replaying', async () => {
+  const player = new StreamingPlayer(), playback = new LessonPlayback(player)
+  await playback.acceptManifest(manifest(1))
+  let release!: () => void
+  player.submitGate = new Promise(resolve => { release = resolve })
+  const append = playback.acceptManifest(manifest(2))
+  await Promise.resolve()
+  player.emit({ time: 10, status: 'ended' })
+  release(); await append
+  assert.equal(player.state.scene, 'second')
+  assert.equal(player.state.time, 0)
+  assert.equal(playback.getState().playing, true)
+  playback.dispose()
 })
