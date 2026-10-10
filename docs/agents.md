@@ -40,6 +40,26 @@ visuals, intended end picture, carry/cleanup IDs, source references, and up to t
 useful interactions. A complete outline and adjacent scene plans go to every
 scene agent, including while later narration is still being synthesized.
 
+For reusable objects, the planner describes later uses and lasting relationships
+in the shared entity `meaning`, with construction needs in the introducing
+scene's `visualDescription` and continuing structure in `endsWith`/`carry`.
+This uses the existing plan schema. The outline contains titles and purposes;
+only the current, previous, and next scene plans are sent in full. Recording
+later uses in the shared entity registry makes requirements several scenes away
+available when the object is first built. The planner states what must remain
+connected or constant; the scene author selects bindings, rigid groups, or joint
+rotations using the API reference's method-selection guidance. This prepares the
+representation without revealing later results early.
+
+Bindings are scene-local: the evaluated frame carries element geometry and
+transforms, not `connect`, `attach`, or behavior declarations. Scene authors must
+re-establish those relationships on the carried IDs. A connector keeps endpoints
+attached but does not constrain their distance. The planner and rendered-review
+guidance check these requirements; current compiler/plan validation does not
+automatically prove connectivity throughout motion or constant segment lengths.
+These prompt changes affect newly generated stages; saved scenes are reused and
+are not repaired automatically.
+
 The host validates scene/beat correspondence, source filenames, palette tokens,
 and consistent entity/control declarations before submitting paid speech. PDF
 extraction retains `[Page N]` markers; references are planner assertions to review,

@@ -64,6 +64,36 @@ measured audio and alignment determine scene duration and reveal cues. Estimate
 scope and pacing, but do not invent exact timestamps. The narrated default must
 explain the lesson without requiring viewer actions.
 
+### Plan an object's later uses before its introduction
+
+For each reusable object, establish which parts move together, which can move
+independently, what remains connected, and which quantities must stay constant
+throughout motion. State intentional changes to those relationships too. A still
+opening picture does not imply that its parts are independent drawing strokes.
+For example: "The same amino-acid chain is introduced in beat-1 and folds in
+beat-4; residue order and adjacency remain unchanged, links stay attached, and
+each adjacent center-to-center distance stays constant while joint angles change."
+This describes a schematic model, not a molecular simulation. Fixed world-space
+lengths may appear shorter under 3D projection.
+
+In the structured lesson plan, put a concise description of later uses (with
+actual beat IDs) and lasting relationships in the shared entity's `meaning`.
+Put the initial construction requirements in the introducing scene's
+`visualDescription`, and describe the required continuing structure in its
+`endsWith` and appropriate `carry` IDs. Repeat relevant requirements in the scenes
+that use them. These are existing fields; do not invent extra JSON fields.
+Each scene author receives the shared entity registry and the full outline, but
+detailed scene plans only for the current and adjacent scenes. Requirements for
+beat-4 must therefore not appear only in beat-4's plan. For Markdown-only scripts,
+put this context in the introducing beat's `Content needed` or `Notes`.
+
+Specify observable relationships and invariants; leave API choices to the scene
+author. Live connectors can keep edges attached, but do not fix their length.
+Rigid groups can move together; articulated groups can bend at authored joints
+with fixed offsets. There is no built-in fixed-distance chain solver. Request
+only relationships needed by the lesson, and preserve reveal order: preparing
+an object for a later fold does not mean showing that fold early.
+
 ## Interaction
 
 Sliders, toggles, and selects can change scene inputs and redraw even while

@@ -385,6 +385,41 @@ Basic creation methods are `circle`, `sphere`, `rectangle`, `line`, `arrow`,
 `path`, `text`, `latex`, `mesh`, and `group`. All take stable IDs and plain
 data. Groups supply parent transforms and operate on their children together.
 
+### Choosing how objects relate and move
+
+Choose the representation from the object's meaning and planned later uses,
+including when the current scene is still. Two coordinates that happen to match
+do not establish an attachment. Keep reusable parts under stable IDs so later
+scenes can retrieve them and preserve their relationships.
+
+| Need | Use | What it preserves or leaves to the author |
+| --- | --- | --- |
+| Independent geometry, such as an axis or reference mark | `s.line`, `s.arrow`, `s.path`; `line3D`/`arrow3D` for round shafts | Authored points. Creating a segment does not associate it with nearby objects. |
+| A bond, graph edge, or arrow joining two objects | Create a line/arrow, then `s.connect(segment, from, to)` | Endpoints follow both sources every frame, even during authored motion. Their distance may change. |
+| A label following an object's center | `s.attach(label, object, { offset })` | Position with a world-space offset. It does not inherit the source's rotation or scale. |
+| Parts moving as one rigid object | `s.group`, then group `moveTo`/`rotateTo` | Relative distances, while child positions and scale stay fixed. `scaleTo` deliberately changes size and distances. |
+| A chain bending while each link keeps its length | Nested groups with origins at joints and fixed local offsets; `rotateTo` on joints | Segment lengths throughout interpolation. The author supplies the hierarchy and joint angles. |
+| Independent translation or style changes | `moveTo` or `animate` | Interpolated properties, without inferring relationships to other objects. |
+| An intentional change of shape | `morphTo` | Object identity and supported geometric correspondence, not physical constraints such as length or rigidity. |
+| Viewer dragging or spring return | `s.behavior` with `drag` or `spring` | Live presentation behavior. A spring returns toward an authored target; it is not a distance constraint between objects. |
+
+For a semantic connection, prefer `connect` even if its sources are initially
+still. Animate the sources instead of independently moving or replacing the
+segment. Static points are sufficient inside a rigid assembly whose parts never
+move relative to one another. A label that must rotate and scale with an object
+belongs in its group; use `attach` when only its position should follow.
+Generic outline morphing may reverse a line's endpoint correspondence to reduce
+geometric travel; it does not know which endpoint belongs to which object.
+Use `connect` to preserve that relationship while the sources move.
+
+Connection and constant length are separate requirements. Independently
+interpolating two endpoint positions can stretch or collapse a segment even if
+its start and end lengths match. A fixed-length vector should rotate about its
+tail; a folding chain should rotate about its joints. Neither a geometry morph
+nor smoother easing enforces those constraints. Animlib has no built-in
+fixed-distance chain solver or generated per-frame callback API. See the
+[chain handoff example](#example-a-chain-that-folds-in-a-later-scene).
+
 ### Fading a composed object
 
 Use `s.group(id, children, { isolated: true })` when overlapping components belong
@@ -463,6 +498,15 @@ compiled tracks or outgoing scene handoffs. A seek, reset, successful recompilat
 or scene change clears live behavior state. Removing a target disposes its behaviors
 and cancels its held gesture. View pan/orbit is retained across control changes;
 `resetView()` clears pan/orbit and behavior state without changing scene time.
+
+Bindings and behavior declarations belong to the compiled scene, not to an
+element's persistent state. The handoff carries evaluated authored geometry,
+including resolved bindings, but no declarations or live interaction state.
+In each receiving scene, retrieve the existing objects and declare needed
+`connect`, `attach`, and behaviors again. Declare bindings before the
+first `play`/`wait` for clarity; they apply throughout the bound target's lifetime
+in that scene, rather than starting at the builder's current cursor. Matching
+incoming geometry and binding parameters prevents a snap at time zero.
 
 #### Custom behaviors
 
@@ -617,6 +661,73 @@ Lifetime details:
   state. Its siblings do not silently become persistent.
 - Removing a child detaches it from its group's membership, so later reuse of
   that local ID does not accidentally attach a new object to the old group.
+- Binding and behavior declarations do not cross the boundary. Re-declare them
+  on carried IDs; otherwise a carried connector retains its last evaluated
+  points when its sources move independently.
+
+### Example: a chain that folds in a later scene
+
+The first scene only shows a straight schematic chain. It already gives each
+residue and bond an ID, binds the bonds, and creates the joint needed later.
+`residue-c` is offset from `joint-b` in local coordinates; the joint's origin is
+placed at `residue-b`. Keeping the root group also keeps its descendants and
+their hierarchy.
+
+```js
+export default scene({ mode: "2d", end: "advance" }, s => {
+  const length = 1.5;
+  const a = s.circle("residue-a", { radius: 0.15 });
+  const b = s.circle("residue-b", { radius: 0.15, position: [length, 0] });
+  const c = s.circle("residue-c", { radius: 0.15, position: [length, 0] });
+  const joint = s.group("joint-b", [c]);
+  const ab = s.line("bond-ab", { strokeWidth: 0.04 });
+  const bc = s.line("bond-bc", { strokeWidth: 0.04 });
+  const chain = s.group("chain", [a, b, joint, ab, bc]);
+  s.connect(ab, a, b, { endpoints: "surface" });
+  s.connect(bc, b, c, { endpoints: "surface" });
+  // Initialize the pivot; c is now at [2 * length, 0] in world coordinates.
+  s.play(joint.moveTo([length, 0]), { duration: 0 });
+  s.keep(chain);
+  s.wait(1);
+});
+```
+
+The receiving scene reuses the root and joint, re-establishes the bindings, and
+animates angles. It does not create replacement residues or bonds. Both adjacent
+center-to-center distances remain 1.5 at every intermediate time; with unchanged
+radii, the visible surface-to-surface segments also retain their lengths.
+
+```js
+export default scene({ mode: "2d", end: "hold" }, s => {
+  const chain = s.previous.get("chain");
+  const joint = s.previous.get("joint-b");
+  const a = s.previous.get("residue-a");
+  const b = s.previous.get("residue-b");
+  const c = s.previous.get("residue-c");
+  s.connect(s.previous.get("bond-ab"), a, b, { endpoints: "surface" });
+  s.connect(s.previous.get("bond-bc"), b, c, { endpoints: "surface" });
+  s.play([
+    chain.rotateTo(-Math.PI / 6),
+    joint.rotateTo(Math.PI / 2),
+  ], { duration: 2, ease: "smooth" });
+  s.keep(chain);
+});
+```
+
+For longer chains, nest downstream joints with fixed offsets, and rotate the
+joint groups instead of independently translating the residues. Preserve the
+joint groups when carrying the chain; keeping only individual residues preserves
+their current poses but loses any departing parents needed for later articulation.
+In 3D, use the same principle with authored joint rotations and `line3D` bonds;
+fixed world-space lengths can change apparent length under projection. This
+constructs prescribed motion, without solving collisions, joint limits, or
+molecular dynamics.
+
+An incoming scene can also `connect` an existing unbound segment to its carried
+endpoints. It need not replace that segment. Match the incoming endpoint positions
+and clipping convention when establishing the binding so the handoff remains
+continuous. Building the intended hierarchy at introduction avoids needing to
+restructure already-parented parts later.
 
 ### Direct navigation and reconstruction
 

@@ -4,6 +4,8 @@ The attached images show sampled frames of the current source. Use any timestamp
 
 Report concrete problems: colliding labels or geometry, clipped content, small or low-contrast text, leftover copies or arrowheads, misleading intermediate mathematical states, unexplained snaps, a key point not visibly demonstrated, early answer reveals, inconsistent concept colors, or a mismatch with the actual carried start state. Distinguish a demonstrated problem from something the samples cannot establish. A few still images cannot prove continuous motion or acoustic synchronization.
 
+Check relationships that the plan requires throughout motion: links stay on their endpoints, labels follow their objects, and fixed-length chains do not stretch between poses. Read the source for bindings re-established on carried objects and for transforms that preserve the required distances. s.connect alone does not enforce fixed length; surface connectors intentionally hide when endpoint surfaces overlap. Treat API choice as evidence to investigate, not a defect by itself: report an actual violated requirement, and do not infer changing world-space lengths solely from 3D screen projections.
+
 Fix only demonstrated problems with the smallest change. Prefer removing clutter over adding effects. Keep the same example values, existing object IDs, inherited state, narration, audio asset, end mode, and measured duration. Retain planned controls and carry/cleanup declarations. The animlib API and timing contract supplied below still apply.
 
 Return one JSON object, without code fences:
