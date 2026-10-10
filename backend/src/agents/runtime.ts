@@ -104,6 +104,7 @@ export class PiAgentRunner implements AgentRunner {
     const controller = new AbortController();
     const signal = task.signal ? AbortSignal.any([task.signal, controller.signal]) : controller.signal;
     let session: Awaited<ReturnType<typeof createAgentSession>>["session"] | undefined;
+    const usage = createAgentUsageObserver();
     const abort = () => { void session?.abort(); };
     signal.addEventListener("abort", abort, { once: true });
     const validate = async (output: string, kind: AgentValidationMetrics['kind']) => {
@@ -169,14 +170,16 @@ export class PiAgentRunner implements AgentRunner {
         cwd: this.config.agentDir, agentDir: this.config.agentDir, settingsManager, resourceLoader,
         sessionManager: SessionManager.inMemory(), tools: customTools.map(tool => tool.name), customTools }));
       signal.throwIfAborted();
-      session.subscribe(createAgentUsageObserver());
+      session.subscribe(usage);
       let turns = 0, turnStarted = 0, providerMs = 0;
       let providerStarted: number | undefined;
       const stream = session.agent.streamFunction;
-      session.agent.streamFunction = (...args) => {
+      session.agent.streamFunction = async (...args) => {
         metrics.providerCalls++;
         providerStarted = performance.now();
-        return stream(...args);
+        usage.startRequest(args[0].maxTokens, signal);
+        try { return await stream(...args); }
+        catch (error) { usage.stopRequest(); throw error; }
       };
       session.subscribe(event => {
         if (event.type === 'turn_start') {
@@ -237,6 +240,7 @@ export class PiAgentRunner implements AgentRunner {
       if (signal.aborted) throw signal.reason instanceof AgentError ? signal.reason : new AgentError("ABORTED", "Agent generation was cancelled.");
       throw agentFailure(error);
     } finally {
+      usage.dispose();
       signal.removeEventListener("abort", abort); session?.dispose();
     }
   }

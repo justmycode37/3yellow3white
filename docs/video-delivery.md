@@ -134,15 +134,21 @@ backends. This does not change authored colors or scene/timeline semantics.
 `VideoManifest.tokenUsage` is optional for compatibility with existing and simulated
 jobs. `inputTokens`, `outputTokens`, and `totalTokens` are cumulative provider-reported
 model usage. Cached input is included once. `estimatedOutputTokens` separately tracks
-unconfirmed output observed in streamed text, reasoning, and tool-call deltas using
-roughly four characters per token. The UI displays their sum as a number in the
-DynaPuff title font with a small “tokens” label below. The title tooltip and accessible
-label identify estimates while they remain; confirmation may adjust the number downward.
-Hidden reasoning and input usage become visible when reported by the provider.
+provisional output usage. A model request starts its estimate immediately, before response
+headers or visible output arrive, and advances it every 500 ms while the request is active.
+This uses a heuristic of 20 tokens per second, bounded by the model's output limit;
+streamed text, reasoning summaries, and tool arguments also establish a lower bound at
+roughly four characters per token. These are activity-based estimates, not measured hidden
+reasoning tokens. The UI displays the sum in the DynaPuff title font with a small “tokens”
+label below and a visible `~` while estimates remain. The tooltip and accessible label
+also identify estimates. Provider-reported usage replaces each response's estimate,
+including hidden reasoning and input; this can adjust the number downward.
 
 Pi generation uses one request-scoped tracker for planning, review, scene, and thumbnail
-calls, including retries. Estimates publish at most four times per second; confirmed
-responses publish immediately. Totals are stored in SQLite and sent in authoritative
-SSE snapshots, including the final success/failure snapshot. Reconnects do not add totals
+calls, including retries. The heartbeat stops on response completion, error, cancellation,
+and session disposal, so queued jobs, validation, and speech synthesis do not invent
+ongoing model activity. Confirmed responses publish immediately. Totals are stored in
+SQLite and sent in authoritative SSE snapshots, including the final success/failure
+snapshot. Reconnects do not add totals
 again. Interrupted responses retain their unconfirmed estimate when usage is unavailable.
 Speech synthesis is excluded because it does not report model token usage.

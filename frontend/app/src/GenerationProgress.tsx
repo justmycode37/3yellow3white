@@ -12,8 +12,8 @@ export default function GenerationProgress({ usage, queued = false, compact = fa
   const description = total === undefined ? 'Waiting for token usage' : `${estimated ? 'Approximately ' : ''}${number.format(total)} tokens used`
 
   return <div className={`generation-progress ${compact ? 'generation-progress-compact' : 'player-status'}`} role="group" aria-label={status}>
-    <div className="generation-usage" role="group" aria-live="off" aria-label={description} title={estimated ? 'Estimated token usage, confirmed after each response' : description}>
-      <span className="generation-count">{total === undefined ? '—' : number.format(total)}</span>
+    <div className="generation-usage" role="group" aria-live="off" aria-label={description} title={estimated ? 'Estimated while the model is working; reconciled with reported usage after each response' : description}>
+      <span className="generation-count">{estimated ? '~' : ''}{total === undefined ? '—' : number.format(total)}</span>
       <span className="generation-unit">tokens</span>
     </div>
   </div>
