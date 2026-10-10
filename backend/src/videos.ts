@@ -1,3 +1,4 @@
+import { emptyTokenUsage, TokenUsageTracker, withTokenUsage } from './token-usage.js'
 import { Database } from 'bun:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
@@ -86,7 +87,7 @@ export class VideoService {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
       return publicManifest(JSON.parse(prior.manifest))
     }
-    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [] }
+    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [], ...(this.provider !== 'simulated' ? { tokenUsage: emptyTokenUsage() } : {}) }
     this.db.transaction(() => {
       this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
       uploads.forEach((upload, index) => this.db.query('INSERT INTO video_uploads VALUES (?, ?, ?, ?, ?, NULL)').run(manifest.id, index, upload.name, upload.mimeType, upload.bytes))
@@ -157,6 +158,10 @@ export class VideoService {
         const abort = new AbortController()
         const signal = AbortSignal.any([this.abort.signal, abort.signal])
         this.active = { id: row.id, abort }
+        const usage = new TokenUsageTracker(tokenUsage => {
+          if (!this.row(row.id)) return
+          manifest.tokenUsage = tokenUsage; this.save(manifest); this.notify(manifest)
+        }, manifest.tokenUsage)
         const started = performance.now()
         logEvent('video.started', { videoId: manifest.id, sceneCount: manifest.scenes.length, resumed: manifest.status === 'generating' })
         let thumbnailWork: Promise<void> | undefined
@@ -165,18 +170,18 @@ export class VideoService {
           const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
           manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
           const { request: input, images } = await logStage({ videoId: manifest.id, stage: 'sources' }, () => this.sources(row, signal))
-          thumbnailWork = this.thumbnail(manifest, input, { signal, images })
+          thumbnailWork = withTokenUsage(usage, () => this.thumbnail(manifest, input, { signal, images }))
           const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
           if (!initial.ok) throw new Error('Stored scenes could not be restored')
           while (!this.stopped) {
             const priorIndex = manifest.scenes.length - 1
-            const next = await generate(input, manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
-              previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal, images })
+            const next = await withTokenUsage(usage, () => generate(input, manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
+              previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal, images }))
             if (this.stopped || !this.row(row.id)) break
             if (!next) {
               await thumbnailWork
               if (this.stopped || !this.row(row.id)) break
-              manifest.status = 'complete'; this.save(manifest); this.notify(manifest)
+              usage.flush(); manifest.status = 'complete'; this.save(manifest); this.notify(manifest)
               logEvent('video.completed', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
               break
             }
@@ -197,14 +202,14 @@ export class VideoService {
         } catch (error) {
           await thumbnailWork
           if (this.stopped || !this.row(row.id)) continue
-          manifest.status = 'failed'; manifest.errorCode = error instanceof AgentError ? error.code : 'GENERATION'
+          usage.flush(); manifest.status = 'failed'; manifest.errorCode = error instanceof AgentError ? error.code : 'GENERATION'
           manifest.error = videoFailureMessage(manifest.errorCode, manifest.scenes.length > 0)
           logEvent('video.failed', { videoId: manifest.id, sceneCount: manifest.scenes.length, code: error instanceof AgentError ? error.code : 'GENERATION', elapsedMs: Math.round(performance.now() - started) }, 'error')
           this.save(manifest); this.notify(manifest)
         } finally {
           await thumbnailWork
           if (this.stopped) logEvent('video.interrupted', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
-          this.active = undefined; sequence.dispose()
+          usage.flush(); this.active = undefined; sequence.dispose()
         }
       }
     }).finally(() => { this.running = false })

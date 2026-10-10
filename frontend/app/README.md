@@ -23,6 +23,8 @@ npm run app:test
 
 ## Integration points
 
+- `src/GenerationProgress.tsx`: generation shows only a live number in the DynaPuff title font with a small “tokens” label below, using a compact version during playback. Server manifest snapshots provide cumulative model usage, including planning, reviews, scene work, and any thumbnail calls. The title tooltip and accessible label identify unconfirmed streamed output as estimated; confirmation can reconcile the count downward. The count does not advance on a timer. Legacy jobs without usage show a waiting state. Speech synthesis usage is not measured in model tokens.
+
 - `src/CanvasQuestion.tsx`: right-click the canvas to open a compact input and black circular send icon; successive questions cycle through the widget colours. The draft retains the lesson, timestamp, pixel and normalized location, and detached scene frame locally. Playback pauses while the input is open. Escape or clicking outside dismisses it. Sending is disabled; no question API is called.
 
 - `videoMode: 'classic' | 'interactive'`: the selected viewing experience, separate from the input method. The repository frontend sends it in JSON and multipart creation requests and preserves it in browser-local lesson metadata across library refreshes. The standalone prototype saves it on its sample lesson. This change does not enable interactive generation: the future backend must validate, persist, and pass it to generation/rendering as described in `backend/prompts/guidance.md` (repository path). Requests without a mode default to Classic in that contract.
