@@ -18,12 +18,12 @@ afterEach(() => { vi.unstubAllGlobals(); vi.clearAllMocks(); });
 function setup(failure = '') {
   vi.stubGlobal('isSecureContext', true);
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
-  vi.stubGlobal('GPUBufferUsage', { UNIFORM: 1, COPY_DST: 2, VERTEX: 4 });
+  vi.stubGlobal('GPUBufferUsage', { UNIFORM: 1, COPY_DST: 2, VERTEX: 4, INDEX: 8 });
   vi.stubGlobal('GPUTextureUsage', { RENDER_ATTACHMENT: 1 });
   let lose!: (info: { message: string }) => void;
   const buffer = () => ({ destroy: vi.fn() });
   const device = {
-    limits: { maxTextureDimension2D: 8192 }, destroy: vi.fn(), addEventListener: vi.fn(),
+    limits: { maxTextureDimension2D: 8192, maxBufferSize: 268435456 }, destroy: vi.fn(), addEventListener: vi.fn(),
     lost: new Promise(resolve => { lose = resolve; }),
     createShaderModule: () => ({ getCompilationInfo: async () => ({ messages: failure === 'shader' ? [{ type: 'error', message: 'bad shader' }] : [] }) }),
     createRenderPipelineAsync: vi.fn(async () => { if (failure === 'pipeline') throw new Error('bad pipeline'); return { getBindGroupLayout: () => ({}) }; }),
@@ -104,9 +104,10 @@ it('submits shared lit geometry, opacity ordering, and viewport offsets to WebGL
   await renderer.prepare([scene]); renderer.render(evaluateScene(scene, 0), scene.options);
   const [data, batches] = glState.render.mock.calls[0];
   expect(data).toBeInstanceOf(Float32Array);
-  expect(batches[0].opaqueVertices).toBeGreaterThan(100);
-  expect(data[11]).toBe(1); expect(data[13]).toBeCloseTo(0.2);
-  expect(data[batches[0].opaqueVertices * VERTEX_FLOATS + 6]).toBe(0.5);
+  const opaque=batches[0].commands.find((c:any)=>c.mesh);
+  expect(opaque.mesh.indices.length).toBeGreaterThan(100);
+  expect(opaque.mesh.vertices[11]).toBe(1); expect(opaque.instances[0][18]).toBeCloseTo(0.2);
+  expect(data[6]).toBe(0.5);
   renderer.dispose();
 });
 it('reports loss once, rebuilds WebGL resources on restore and detaches handlers on disposal', async () => {
@@ -144,3 +145,87 @@ it('recovers a WebGPU frame acquisition failure without throwing into the playba
   expect(renderer.backend).toBe('webgl2');expect(glState.render).toHaveBeenCalledOnce();
   expect(context.unconfigure).toHaveBeenCalledOnce();expect(error).not.toHaveBeenCalled();renderer.dispose();
 });
+
+it('does not recover a budget rejection when the retry instead fails both backends',async()=>{
+  const {renderer,device}=setup();await renderer.prepare([]);
+  const error=vi.fn(),recovered=vi.fn();renderer.onError=error;renderer.onRecovered=recovered;
+  const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+  device.limits.maxBufferSize=256;
+  renderer.render(evaluateScene(scene,0),scene.options);
+  expect(error.mock.calls[0][0].name).toBe('VertexBufferLimitError');
+  expect(recovered).not.toHaveBeenCalled();
+  device.limits.maxBufferSize=268435456;
+  Object.assign(device,{queue:{writeBuffer:()=>{}},createCommandEncoder:()=>{throw new Error('GPU stopped');}});
+  glState.render.mockImplementationOnce(()=>{throw new Error('GL stopped');});
+  renderer.render(evaluateScene(scene,0),scene.options);
+  expect(error.mock.calls.at(-1)![0].message).toBe('GL stopped');
+  expect(recovered).not.toHaveBeenCalled();
+  renderer.render(evaluateScene(scene,0),scene.options);
+  expect(glState.render).toHaveBeenCalledOnce();expect(recovered).not.toHaveBeenCalled();renderer.dispose();
+});
+
+function allowGPUFrames({device,context}:ReturnType<typeof setup>) {
+  const pass={setPipeline(){},setBindGroup(){},setVertexBuffer(){},setIndexBuffer(){},drawIndexed(){},draw(){},end(){}};
+  Object.assign(device,{queue:{writeBuffer(){},submit:vi.fn()},createCommandEncoder:()=>({beginRenderPass:()=>pass,finish:()=>({})})});
+  Object.assign(context,{getCurrentTexture:()=>({createView:()=>({})})});
+  for(const result of device.createTexture.mock.results)Object.assign(result.value,{createView:()=>({})});
+}
+function uncaptured(device:ReturnType<typeof setup>['device'],message='GPU validation failed') {
+  device.addEventListener.mock.calls.find(([type])=>type==='uncapturederror')![1]({error:{message}});
+}
+it.each(['budget first','backend first','reentrant backend failure'])(
+  'preserves uncaptured backend errors across successful frames: %s',async order=>{
+    const state=setup(),{renderer,device}=state;await renderer.prepare([]);allowGPUFrames(state);
+    const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+    const errors:Error[]=[],recovered=vi.fn();renderer.onRecovered=recovered;
+    const render=()=>renderer.render(evaluateScene(scene,0),scene.options);
+    renderer.onError=error=>{
+      errors.push(error);
+      if(order==='reentrant backend failure'&&error.name==='VertexBufferLimitError'){
+        uncaptured(device);device.limits.maxBufferSize=268435456;render();
+      }
+    };
+    if(order==='backend first')uncaptured(device);
+    device.limits.maxBufferSize=256;render();
+    if(order==='budget first')uncaptured(device);
+    device.limits.maxBufferSize=268435456;render();render();
+    expect(errors.at(-1)?.message).toBe('GPU validation failed');
+    expect(recovered).not.toHaveBeenCalled();
+    renderer.dispose();
+  },
+);
+it('acknowledges a budget-only retry once before a reentrant refresh',async()=>{
+  const state=setup(),{renderer,device}=state;await renderer.prepare([]);allowGPUFrames(state);
+  const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+  const render=()=>renderer.render(evaluateScene(scene,0),scene.options);
+  const recovered=vi.fn(()=>render());renderer.onRecovered=recovered;
+  device.limits.maxBufferSize=256;render();device.limits.maxBufferSize=268435456;render();
+  expect(recovered).toHaveBeenCalledOnce();renderer.dispose();
+});
+it.each(['success','render failure','reentrant context loss'])(
+  'requires actual backend recovery after budget plus uncaptured errors: %s',async outcome=>{
+    const state=setup(),{renderer,device,canvas,lose}=state;await renderer.prepare([]);
+    const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+    const errors:Error[]=[],recovered=vi.fn();renderer.onError=e=>errors.push(e);renderer.onRecovered=recovered;
+    device.limits.maxBufferSize=256;renderer.render(evaluateScene(scene,0),scene.options);uncaptured(device);
+    if(outcome==='render failure')glState.render.mockImplementationOnce(()=>{throw new Error('GL render failed');});
+    if(outcome==='reentrant context loss')glState.render.mockImplementationOnce(()=>{
+      const replacement=canvas.cloneNode.mock.results[0].value;
+      replacement.addEventListener.mock.calls.find(([type]:[string])=>type==='webglcontextlost')[1](new Event('webglcontextlost',{cancelable:true}));
+    });
+    lose();await Promise.resolve();
+    if(outcome==='success')expect(recovered).toHaveBeenCalledOnce();
+    else{
+      expect(recovered).not.toHaveBeenCalled();
+      expect(errors.at(-1)?.message).toContain(outcome==='render failure'?'GL render failed':'WebGL2 context lost');
+    }
+    // Events from the released WebGPU device must not supersede GL's state.
+    const count=errors.length;uncaptured(device,'stale GPU error');expect(errors).toHaveLength(count);
+    if(outcome==='reentrant context loss'){
+      const replacement=canvas.cloneNode.mock.results[0].value;
+      replacement.addEventListener.mock.calls.find(([type]:[string])=>type==='webglcontextrestored')[1]();
+      expect(recovered).toHaveBeenCalledOnce();
+    }
+    renderer.dispose();
+  },
+);

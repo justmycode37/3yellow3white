@@ -21,7 +21,9 @@ export function project(point: Vec3, camera: CameraState, width: number, height:
   const depth = camera.distance-z;
   const perspective = Math.min(1, Math.max(0, camera.perspective));
   const divisor = (1-perspective) + perspective * depth / camera.distance;
-  const scale = height/camera.height / Math.max(0.01, divisor);
+  // Match the shaders throughout the visible depth range. Clamping a positive
+  // divisor shrinks near-camera geometry and sends anchor rays to the wrong pixel.
+  const scale = height/camera.height / (divisor > 0 ? divisor : 0.01);
   return { x: width/2+x*scale, y: height/2-y*scale, depth, visible: depth > 0.01 && depth < camera.distance*100 && divisor > 0, scale };
 }
 export function outline(geometry: Geometry, tolerance = 0.002): { points: Vec3[]; closed: boolean } | null {

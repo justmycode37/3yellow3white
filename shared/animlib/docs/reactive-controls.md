@@ -1,4 +1,4 @@
-# Reactive slider prototype
+# Retained reactive controls and surfaces
 
 See the [before/after validation report](reactive-validation.md) for compatibility,
 pixel comparisons, authoring limits, and the mixed-control ordering fix.
@@ -23,20 +23,27 @@ export default scene({ mode: '3d', end: 'hold' }, s => {
 
 `reactive: true` returns a slider handle. Arithmetic on that handle throws; the
 callback receives its current numeric value. Multiple dependencies work as
-`s.bind(ball, [x, y], (x, y) => ({ position: [x, y] }))`. Each target has one
-binding, which can return several properties. Existing numeric sliders, toggles,
+`s.bind(ball, [x, y], (x, y) => ({ position: [x, y] }))`. A target may have several bindings with disjoint property ownership; each
+binding can return several properties. Existing numeric sliders, toggles,
 and selects retain their current behavior without source changes.
 
 Bindings run once after the builder and whenever a declared dependency changes.
+Add `s.time` to opt into scene-local time sampling; see the
+[deformation and time reference](reference.md#fixed-topology-deformation-and-scene-time).
 They return absolute values for a fixed set of keys: `radius` (circle/sphere),
-`position`, `rotation`, `scale`, `opacity`, and `fill`. Coordinates and rotations
+`position`, `rotation`, `scale`, `opacity`, `fill`, `vertices`, `normals`,
+`material`, `texture`, and `scalarColors`. Coordinates and rotations
 use the existing authoring conventions; fills must belong to the host palette.
-Texture and material settings are geometry data: use ordinary controls to rebuild
-them, together with any dependent labels. Values are validated before commit. Bindings do not create objects, modify
-timelines, receive time, or run each animation frame in this prototype.
+Vertices retain their original count and triangle connectivity; `s.deform` maps
+captured rest vertices without rebuilding the scene. Material/texture patches
+replace whole settings, and `null` removes them. Scalar ramp patches retain one
+value per mesh vertex. Values are validated before commit. Bindings cannot create
+objects or modify timelines. Time-dependent callbacks run inside the retained
+compiler sandbox; rendering receives only validated data.
 
 A binding and timeline cannot write the same property on the same object.
-Reactive radius also conflicts with morphing that object. Reactive position
+Reactive radius, vertices, normals, material, texture, and scalar colors also
+conflict with morphing that object. Vertices implicitly own generated normals. Reactive position
 cannot share a target with an attachment, connector, or behavior. Other
 properties can coexist: the example animates position while a slider owns radius.
 Reactive values apply after timeline evaluation and before attachments/connectors,
@@ -44,7 +51,7 @@ so a surface connector follows the updated radius. Removed objects stay removed.
 
 Callbacks must be synchronous, pure functions of their arguments and immutable
 captured data. Do not increment closure counters or consume random values inside
-them. Purity is an authoring contract, **not enforced by the prototype**; closure
+them. Purity is an authoring contract, **not enforced by the runtime**; closure
 mutations cannot be rolled back if an update fails. Pure bindings produce the same
 frame when seeking away and back under the same current control values.
 
@@ -74,9 +81,27 @@ request's completion or rejection. Source submissions, seeks, and ordinary contr
 changes are ordering barriers. The headless sequence itself serializes every
 request without coalescing.
 
+A Play request made while a seek is queued is recorded and applied after the last
+queued seek completes; its promise acknowledges that intent immediately. A later
+Pause or seek cancels that intent. An unknown seek target rejects without stopping
+the running clock, including a target removed by a preceding queued submission.
+When reconstruction or source replacement waits for a refreshed frame, automatic
+resume checks the playback generation and pending seeks. A newer Play, Pause, or
+seek takes precedence over the playback state captured before sampling.
+
+`SceneSequence` calls `prepare` once per newly compiled scene, before sampling its
+outgoing frame or compiling its successor. Hosts can resolve audio duration there;
+reused prefix scenes are already prepared. Retained worker updates receive that
+prepared duration, so scene-time callbacks continue through longer audio and batch
+loading uses the same endpoint as appending scenes.
+
 Compiled scenes still contain plain JSON data, including the latest binding
-values. `evaluateScene` can evaluate that snapshot anywhere. `compileSource`
-returns a snapshot and disposes its runtime; use `SceneSequence` or the player
+values. `evaluateScene` can evaluate that snapshot anywhere, using its already-sampled
+outputs. For exact time callbacks use `await sequence.evaluate(index, time)`;
+`await sequence.sample(index, time)` returns an exportable snapshot tagged with
+`reactiveTime`. Canonical compiled scenes retain time-zero outputs. `compileSource`
+returns a snapshot (optionally `{ sampleTime: seconds | 'end' }` in its third
+argument) and disposes its runtime; use `SceneSequence` or the player
 when values need to change through retained callbacks.
 
 ## Measured result
@@ -99,7 +124,8 @@ from 584.6 ms to 7.8 ms. Work remaining after the input ended fell from 598.9 ms
 to below timer resolution. The reactive workload kept up with this input rate;
 unit tests separately force a slow callback to verify queue coalescing.
 
-Geometry preparation still accounts for most of the remaining time. Orbit
+These historical measurements predate dynamic mesh/time bindings. Geometry
+preparation still accounts for most of the remaining time. Orbit
 rendering, vertex caching, and triangulation-cache capacity are unchanged.
 This prototype addresses the slider execution path; the earlier
 [orbit profile](performance.md) remains relevant.
@@ -115,3 +141,39 @@ Tests cover callback validation and limits, seeking, dependency selection,
 downstream rollback, runtime disposal, playback/audio and behavior preservation,
 queue coalescing, and submission barriers. Real-browser checks also exercised
 the native slider, playback, and the minified production worker build.
+
+## Dynamic surface validation
+
+`?surfaces` demonstrates time-dependent waves in two clipped views with isolated
+groups and independent amplitude/roughness sliders. Tests compare both evaluated
+geometry and real GPU pixels with rebuilt static waves at the same time/inputs,
+including seek-away/back and paused controls. WebGL2 uses actual browser GLSL and
+pixel readback; the native WebGPU suite uses Vulkan render targets. Mocked player
+tests cover ordering and failures only, not visual correctness.
+
+Run `npm run build && node shared/animlib/bench/dynamic-surfaces.mjs` from the repo
+root for CPU-only end-to-end control measurements on a 1,089-vertex / 2,048-triangle
+wave. The benchmark asserts zero compiles for 30 retained updates versus 30 for
+ordinary controls and checks scene identity. It excludes rendering, GPU time,
+browser worker round trips, and downstream reconstruction. Retained updates still
+serialize complete changed vertex arrays; this is not a sparse vertex upload API.
+The separate retained GPU cache must invalidate from effective geometry/appearance
+contents, even while scene and element identities remain unchanged.
+
+On 2026-10-10, Node 24.19.0 on Linux x64 measured 20.76 ms median / 21.40 ms p95
+for reconstruction versus 4.55 ms / 5.05 ms for retained updates (5 warmups,
+30 samples per path). These are CPU API timings, not frame-rate claims. The
+validation run after the second review fix passed 503 unit tests, 215 backend tests,
+and 65 Chrome 154 WebGL2/SwiftShader browser checks; the first-review head also passed
+64 native Vulkan WebGPU checks. Browser coverage includes exact dynamic/static wave
+pixel matches. The minified production worker demo also passed repeatable seeks,
+paused amplitude/material updates, and playback/pause checks. The production-worker
+audio regression decodes a real six-second WAV with a four-second authored timeline:
+seeking to second five samples geometry at five, and batch/append handoffs both use
+six (or twelve after doubling amplitude). Delaying a real worker result during
+reconstruction and source replacement also confirms that a newer Pause leaves zero
+scheduled playback frames; production WebGL2 pixels match an explicit seek to the
+same time. The ordering probes freeze the presentation clock and RAF scheduler,
+but use the actual compiler worker and renderer. Combined rendering
+with the parallel clipping/scalar-color, lighting/shadow, and retained-GPU changes
+requires integration validation after those changes land.

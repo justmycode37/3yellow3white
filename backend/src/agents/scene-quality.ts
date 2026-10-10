@@ -2,11 +2,12 @@ import { detectSceneOverlaps, validateRenderableScene } from 'animlib/core';
 import type { CompiledScene } from 'animlib/core';
 
 /** Reuse the renderer's projected glyph geometry; repairs remain authored source. */
-export function validateSceneQuality(compiled: CompiledScene): void {
+export function validateSceneQuality(compiled: CompiledScene, options: { legacyOrbit?: boolean } = {}): void {
   validateRenderableScene(compiled);
-  if (compiled.options.orbit) throw new Error('Disable whole-scene orbit with orbit:false. Put the visual model in an orbitable s.view with orbitHitTest:"geometry"; text and empty canvas must not be rotation handles.');
+  // Saved pre-policy lessons retain their approved orbit contract.
+  if (!options.legacyOrbit && compiled.options.orbit) throw new Error('Disable whole-scene orbit with orbit:false. Put the visual model in an orbitable s.view with orbitHitTest:"geometry"; text and empty canvas must not be rotation handles.');
   for (const view of compiled.views ?? []) {
-    if (view.orbit && view.orbitHitTest !== 'geometry') throw new Error(`Orbitable view ${JSON.stringify(view.id)} must use orbitHitTest:"geometry" so text and empty space cannot rotate the model.`);
+    if (!options.legacyOrbit && view.orbit && view.orbitHitTest !== 'geometry') throw new Error(`Orbitable view ${JSON.stringify(view.id)} must use orbitHitTest:"geometry" so text and empty space cannot rotate the model.`);
   }
   const samples = detectSceneOverlaps(compiled, { width: 1280, height: 720, sampleRate: 2 });
   const pairs = new Map<string, string>();

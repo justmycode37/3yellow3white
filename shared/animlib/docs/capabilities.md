@@ -22,7 +22,10 @@ Keep these instructions in nonspoken planning; they are not narration.
   round lines and arrows, and groups. Use these for spatial vectors, curved sheets,
   flower petals, stems, and schematic molecules. Meshes support flat or smooth
   directional shading; raw meshes remain unlit unless shading is requested.
-  Labels can face the camera and remain attached to objects.
+  Labels can face the camera and remain attached to objects. Static opaque objects
+  retain GPU geometry during navigation; repeated spheres and matching round bonds
+  and arrows share indexed geometry. Orbit and pan input render once per animation
+  frame. Transparency and morphs still require more per-frame geometry work.
 - **Molecular coordinates:** `s.molecule` batches coordinate-centered display
   beads into meshes for efficient protein/RNA structures. An offline legacy-PDB
   importer selects deposited heavy atoms or CA/P residue anchors and preserves
@@ -36,8 +39,27 @@ Keep these instructions in nonspoken planning; they are not narration.
   object transforms. Adjustable procedural bump perturbs lighting normals for
   raised or recessed detail without changing silhouettes. Metalness, roughness, specular highlights, and emissive
   color/intensity create stylized metal, matte, plastic, and luminous surfaces.
-  These settings can be explored with ordinary controls. Emission does not cast
+  These settings can be explored with ordinary controls or retained bindings
+  without rebuilding geometry. Emission does not cast
   light or create bloom, and metallic reflections do not show other scene objects.
+- **Lighting and contact:** scene ambient and directional lights, with an explicit
+  world-fixed or camera-relative direction. Optional deterministic soft shadows from
+  opaque mesh/sphere fills fall onto a finite horizontal receiving plane. Overlapping
+  casters keep one silhouette's darkness. Transparent objects and labels do not cast;
+  `castShadow: false` excludes an element. There is no self-shadowing or arbitrary
+  mesh receiver. Omitted lighting preserves the original studio default.
+
+- **Explanatory 3D tools:** up to four object-local clipping planes can expose
+  interiors. Optional section contours trace the actual sampled intersection;
+  optional colored caps fill closed nonbranching loops, preserving holes. Open
+  surfaces show contours without invented solid caps. Boundary, crease, and
+  camera-dependent silhouette outlines reveal shape without full wireframes.
+  Scalar values on mesh vertices or sampled surface positions map through 2–16
+  named palette colors on an explicit clamped domain. Colors interpolate across
+  triangles; author a legend when needed. World labels can preserve default
+  glyph depth testing or use whole-label overlay, hiding, or 20% fading based on
+  their anchor's visibility against opaque fills in the same view. These options
+  update with geometry, transforms, seeking, and orbit; screen labels stay fixed.
 - **Views:** a main camera plus clipped rectangular regions with independent
   cameras. Side-by-side views can compare the same construction from different
   angles. Screen-space labels can remain fixed while world geometry moves.
@@ -64,8 +86,10 @@ one-to-one correspondence between named parts; unmatched parts fade in or out.
 Mesh morphs need corresponding vertices and compatible topology. Other
 incompatible representations crossfade.
 Sampled surfaces, solids, and tubes are ordinary meshes with the same rules;
-changing sample counts, holes, or caps can break correspondence. Shape callbacks
-are sampled during compilation, not evaluated as a per-frame animation.
+changing sample counts, holes, or caps can break correspondence. Shape construction callbacks
+are sampled during compilation. Retained deformations can update the existing
+vertices from absolute scene time and controls while preserving triangle connectivity;
+lighting normals follow the changed shape.
 
 A geometric morph does not establish a mathematical or physical transformation.
 If intermediate states matter, ask for geometry calculated from the underlying
@@ -132,8 +156,9 @@ what the viewer should discover. The current lesson-plan contract permits
 preserve the measured scene duration.
 
 An ordinary slider can resample a surface or rebuild a solid/tube together with
-its dependent labels, or vary texture/material parameters. Retained property
-bindings do not rebuild mesh geometry or change textures/materials.
+its dependent labels, or vary texture/material parameters. Retained bindings can deform fixed-topology meshes and independently update
+material/texture settings. They can respond to scene time and paused controls.
+Changing sample counts, holes, or connectivity still requires reconstruction.
 Keep sampling modest so planned controls remain responsive.
 
 Animlib also supports requested orbit rotation in 3D, independent rotation of
@@ -173,7 +198,7 @@ run asynchronous builders.
 ## Current boundaries
 
 - No image/video textures, UV mapping, imported 3D models, photorealistic materials,
-  image bump/normal maps, displacement, environment maps, shadows, bloom, configurable lights,
+  image bump/normal maps, displacement, environment maps, self-shadowing, arbitrary mesh shadow receivers, bloom, point/spot lights,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
 - SVG support accepts path geometry, not complete SVG files or their styling.
   Filled contours must be closed, simple, and nonintersecting; nested contours
@@ -201,7 +226,11 @@ run asynchronous builders.
 - No branching lesson navigation, infinite scenes, playback-rate controls, or
   built-in video export. Interactive controls vary visuals within the lesson.
 - Target modest explanatory scenes rather than dense particle simulations or
-  huge datasets. There is no large-scene performance guarantee. Compiler
+  huge datasets. There is no large-scene performance guarantee.
+  Section caps require closed nonbranching contours and do not repair
+  self-intersections/nonmanifold meshes. Fine outlines follow finite tessellation.
+  Anchor label modes ignore translucent occluders and do not place labels
+  automatically. Scalar ramps require sufficient surface sampling for detail. Compiler
   ceilings include 2,000 object IDs per builder and 32 view regions; these are
   hard limits, not recommended scene sizes.
 

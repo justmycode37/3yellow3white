@@ -191,6 +191,30 @@ For API examples, behavior details, architecture, limits, and native GPU checks,
 see the [full reference](docs/reference.md). Public types live in
 [src/types.ts](src/types.ts).
 
+### Object bounds
+
+Hosts can query any element or group through `animlib` or `animlib/core`:
+
+```js
+import { getLocalBounds, getWorldBounds, getCameraBounds, getScreenBounds } from 'animlib/core';
+
+const local = getLocalBounds(endState, 'object');     // { min: [x,y,z], max: [x,y,z] }
+const world = getWorldBounds(endState, 'object');
+const camera = getCameraBounds(endState, 'object');  // Z is depth from the camera
+const pixels = getScreenBounds(endState, 'object', { width: 1280, height: 720 });
+// pixels: { left, top, right, bottom }, in full-canvas CSS pixels
+
+const displayed = player.getBounds('object');        // selected view's CSS pixels
+const displayedWorld = player.getBounds('object', { space: 'world' });
+```
+
+Queries use the renderer's current tessellated paint, including strokes, text,
+LaTeX, morphs, and group descendants. Missing or empty objects return `undefined`.
+Use `includeInvisible: true` to measure hidden paint for layout; use
+`includeStroke: false` to exclude strokes. Player queries include viewer orbit,
+pan, and live presentation changes. See [object bounds](docs/reference.md#object-bounds)
+for coordinate conventions, clipping, and limits.
+
 ### Text overlap detection
 
 Hosts can inspect a frame or sample an animation through either `animlib` or
@@ -239,3 +263,13 @@ Canvas attributes are preserved, native controls are rebound, and disposal resto
 the original canvas. `player.backend` reports `webgpu` or `webgl2` once prepared.
 WebGL context loss pauses playback/audio; restoration redraws at the retained time
 and allows Play to resume. Antialiasing quality depends on the WebGL implementation.
+
+Scene `lighting` configures ambient/directional intensity and world-fixed versus
+camera-relative light direction. Optional soft planar shadows add contact cues
+from opaque meshes/spheres on a finite receiving floor. The original studio
+appearance remains the default. See the [authoring reference](docs/reference.md#scene-lighting-and-planar-shadows)
+and interactive [lighting study](demo/lighting.html) (`/lighting.html` in the dev server).
+
+Explanatory 3D studies: run `npm run dev` and open `/explanatory.html` for clipping
+planes with hole-preserving section caps, scalar fields, feature outlines, and
+depth-aware labels. See [authoring details](docs/reference.md#sections-feature-edges-scalar-fields-and-label-depth).

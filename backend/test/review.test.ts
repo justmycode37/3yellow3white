@@ -20,6 +20,17 @@ test('rendered review validates a complete repair and forbids timing/audio chang
   await expect(validateReview(JSON.stringify({ approved: true, findings: [finding] }), input)).rejects.toThrow('no findings');
 });
 
+test('scene repairs obey the saved mode and preserve pre-policy compatibility', async () => {
+  const repair = JSON.stringify({ approved: false, findings: [finding], source: source.replace('s.wait(2)', "s.toggle('compare',{default:false});s.wait(2)") });
+  await expect(validateReview(repair, { ...input, videoMode: 'classic', legacyPlan: false })).rejects.toThrow('Classic scenes');
+  expect(await validateReview(repair, { ...input, videoMode: 'interactive', legacyPlan: false })).toMatchObject({ approved: false });
+  expect(await validateReview(repair, { ...input, videoMode: 'classic', legacyPlan: true })).toMatchObject({ approved: false });
+  const orbitRepair = repair.replace('scene({', 'scene({orbit:true,');
+  expect(await validateReview(orbitRepair, { ...input, videoMode: 'classic', legacyPlan: true })).toMatchObject({ approved: false });
+  expect(await validateReview(orbitRepair, { ...input, videoMode: 'interactive', legacyPlan: false, instructionVersion: 1 })).toMatchObject({ approved: false });
+  await expect(validateReview(orbitRepair, { ...input, videoMode: 'interactive', legacyPlan: false, instructionVersion: 2 })).rejects.toThrow('whole-scene orbit');
+});
+
 let root: string | undefined;
 afterEach(async () => { if (root) await rm(root, { recursive: true, force: true }); root = undefined; });
 test('review sends actual screenshot attachments and saves a draft without changing published source', async () => {

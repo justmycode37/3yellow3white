@@ -1,3 +1,4 @@
+import { captureDraws } from './gpu-capture.js';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { initialSources } from "../demo/scenes.js";
 import { project, rotate, sphereTriangles } from "../src/geometry.js";
@@ -53,6 +54,7 @@ async function captureRenderer() {
   vi.stubGlobal("GPUTextureUsage", { RENDER_ATTACHMENT: 1 });
   vi.stubGlobal("devicePixelRatio", 1);
   const writes: Float32Array[] = [];
+  const capture = captureDraws(writes);
   let stride = 0;
   const device = {
     limits: { maxTextureDimension2D: 8192 }, lost: new Promise(() => {}), addEventListener() {}, destroy() {},
@@ -61,10 +63,10 @@ async function captureRenderer() {
       stride = descriptor.vertex.buffers[0].arrayStride / 4;
       return { getBindGroupLayout: () => ({}) };
     },
-    createBuffer: () => ({ destroy() {} }), createBindGroup: () => ({}),
+    createBuffer: capture.createBuffer, createBindGroup: capture.createBindGroup,
     createTexture: ({ size }: { size: number[] }) => ({ width: size[0], height: size[1], createView: () => ({}), destroy() {} }),
-    queue: { writeBuffer: (_buffer: unknown, _offset: number, data: Float32Array) => writes.push(data.slice()), submit() {} },
-    createCommandEncoder: () => ({ beginRenderPass: () => ({ setPipeline() {}, setBindGroup() {}, setVertexBuffer() {}, draw() {}, end() {} }), finish: () => ({}) }),
+    queue: capture.queue,
+    createCommandEncoder: () => ({ beginRenderPass: () => capture.pass, finish: () => ({}) }),
   };
   vi.stubGlobal("navigator", { gpu: { requestAdapter: async () => ({ requestDevice: async () => device }), getPreferredCanvasFormat: () => "bgra8unorm" } });
   const canvas = { width: 1280, height: 720, style: {}, getBoundingClientRect: () => ({ width: 1280, height: 720 }),

@@ -5,11 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { authorReviewedLesson, parseEditorialReview } from '../src/agents/editorial.js';
 import type { EditorialReview } from '../src/agents/editorial.js';
-import type { PlannedLesson } from '../src/agents/planning.js';
+import { PLANNING_CONTRACT, type PlannedLesson } from '../src/agents/planning.js';
 import type { AgentTask } from '../src/agents/runtime.js';
 import { createPiGenerator } from '../src/agents/generator.js';
 import { NarrationService } from '../src/narration/service.js';
-import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
+import { loadPrompt, instructionSnapshot, INSTRUCTION_VERSION } from '../src/agents/prompts.js';
 import { settingsFromEnv } from '../src/narration/elevenlabs.js';
 
 const roots: string[] = [];
@@ -39,9 +39,9 @@ test.each(['classic', 'interactive', undefined] as const)('viewing preference %s
   tasks.forEach((task, index) => {
     const payload = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
     expect((index === 0 ? payload : payload.request).videoMode).toBe(videoMode);
-    expect(task.systemPrompt).toContain('Use `classic` when the field is absent');
-    expect(task.systemPrompt).toContain('classic scenes use empty `interactions` arrays');
-    expect(task.systemPrompt).toContain('interactive scenes may plan meaningful supported controls');
+    expect(task.systemPrompt).toContain('Missing mode means `classic`');
+    expect(task.systemPrompt).toContain('Every planned `interactions` array is empty');
+    expect(task.systemPrompt).toContain('No minimum count or quota applies');
   });
 });
 
@@ -68,17 +68,22 @@ test('editorial repairs update speech and plan together, forward sources, and pr
   tasks.forEach(task => expect(task.images).toEqual([image]));
   expect(tasks[1].prompt).toContain('Sixteen, eight, four.');
   expect(tasks[1].prompt).toContain('parsedScenes');
-  const originalPlanning = await scenegenPrompt('planning');
-  for (const task of [tasks[0], tasks[2]]) {
-    expect(task.systemPrompt).toContain(originalPlanning);
-    expect(task.systemPrompt.indexOf('# Current animation quality policy')).toBeGreaterThan(task.systemPrompt.indexOf(originalPlanning));
+  for (const task of tasks) {
+    expect(task.systemPrompt).toContain(await loadPrompt('guidance'));
+    expect(task.systemPrompt).toContain(await loadPrompt('viewing-mode'));
+    expect(task.systemPrompt).toContain(PLANNING_CONTRACT);
+    expect(task.systemPrompt).toContain('## Visual model planning');
+    expect(task.systemPrompt).toContain('# Current animation quality policy');
+    expect(task.systemPrompt).not.toContain('3D is the default');
   }
-  tasks.forEach(task => expect(task.systemPrompt).toContain('# Current animation quality policy'));
   expect(tasks[1].systemPrompt).toContain('Visual plans and reveal guards belong in nonspoken context');
   const capabilities = await readFile(new URL('../../shared/animlib/docs/capabilities.md', import.meta.url), 'utf8');
   tasks.forEach(task => expect(task.systemPrompt).toContain(capabilities));
   expect(tasks[2].prompt).toContain('Correct speech and all plan values');
+  expect(approved.instructionVersion).toBe(INSTRUCTION_VERSION);
   const run = join(root, 'editorial', approved.editorialReview.runId);
+  expect(JSON.parse(await readFile(join(run, 'lesson-draft-1.instructions.json'), 'utf8'))).toEqual(instructionSnapshot(tasks[2].systemPrompt));
+  expect(JSON.parse(await readFile(join(run, 'lesson-review-1.instructions.json'), 'utf8'))).toEqual(instructionSnapshot(tasks[3].systemPrompt));
   expect(JSON.parse(await readFile(join(run, 'lesson-review-0.json'), 'utf8')).verdict).toBe('revise');
   expect(JSON.parse(await readFile(join(run, 'lesson-draft-1.json'), 'utf8')).markdown).toContain('four');
   expect(JSON.parse(await readFile(join(run, 'lesson-review-1.json'), 'utf8')).verdict).toBe('pass');
@@ -125,7 +130,7 @@ test('restarts isolate partial audit pairs and link approval to the exact saved 
   const approvedDirectory = join(root, 'editorial', runId);
   const draft = await readFile(join(approvedDirectory, `lesson-draft-${attempt}.json`), 'utf8');
   expect(createHash('sha256').update(draft).digest('hex')).toBe(draftSha256);
-  const { editorialReview: _provenance, ...committedLesson } = approved;
+  const { editorialReview: _provenance, instructionVersion: _version, ...committedLesson } = approved;
   expect(JSON.parse(draft)).toEqual(committedLesson);
   expect(JSON.parse(await readFile(join(approvedDirectory, `lesson-review-${attempt}.json`), 'utf8')).verdict).toBe('pass');
   expect(await readdir(approvedDirectory)).not.toContain('lesson-review-1.json');

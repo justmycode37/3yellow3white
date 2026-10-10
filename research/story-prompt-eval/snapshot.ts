@@ -8,10 +8,10 @@ const read = (p: string) => readFile(new URL(`../../${p}`, import.meta.url), 'ut
 const guidance = await read('backend/prompts/guidance.md');
 const review = await read('backend/prompts/story-review.md');
 const capabilities = await read('shared/animlib/docs/capabilities.md');
-const planning = await read('backend/prompts/scenegen/planning.md');
+const viewingMode = await read('backend/prompts/viewing-mode.md');
 const quality = await read('backend/prompts/animation-quality.md');
 await writeFile(`${base}/${tag}/guidance.md`, guidance);
 await writeFile(`${base}/${tag}/story-review.md`, review);
-await writeFile(`${base}/${tag}-system.txt`, `${guidance}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${planning}\n\n${quality}`);
-await writeFile(`${base}/${tag}-review-system.txt`, `${review}\n\nExplanation guidance:\n${guidance}\n\n${capabilities}\n\n${quality}\n\nReturn only the editorial review JSON, not the authoring format.`);
+await writeFile(`${base}/${tag}-system.txt`, `${guidance}\n\n${viewingMode}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${quality}`);
+await writeFile(`${base}/${tag}-review-system.txt`, `${review}\n\nExplanation guidance:\n${guidance}\n\n${viewingMode}\n\n${capabilities}\n\nAuthoring contract to check (do not return its format):\n${PLANNING_CONTRACT}\n\n${quality}\n\nThe review response contract takes priority over all authoring output formats and return instructions above.`);
 console.log(`Saved ${tag} author and reviewer prompt snapshots.`);

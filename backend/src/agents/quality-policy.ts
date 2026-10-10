@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
+import { loadPrompt } from './prompts.js';
 
 export function animationQualityPolicy(): Promise<string> {
-  return readFile(new URL('../../prompts/animation-quality.md', import.meta.url), 'utf8');
+  return loadPrompt('animation-quality');
 }

@@ -1,7 +1,7 @@
 # Current animation quality policy
 
-This policy overrides conflicting style defaults in the imported scenegen prompts.
-It does not override the user's request, narration timing, output schema, or the
+This policy refines the active visual planning and scene construction guidance.
+It does not override the user's request, shared viewing-mode policy, narration timing, output schema, or the
 animlib API. Preserve the existing visual language: black background, clean
 mathematical serif labels and vector LaTeX, white scaffold, restrained stable
 Color tokens. Improve composition within that style; do not redesign it as cards,
@@ -96,9 +96,9 @@ Prefer a genuine 3D model for spatial setup, introductions and relevant closing
 context when it clarifies the subject. A camera tilt alone does not make a flat
 diagram a useful 3D model. Use 2D for the explanatory step when relationships read
 better flat. There is no quota requiring most scenes to be 3D or every ending to
-return to 3D. Preserve the existing visualDescription prefix and view contract:
-describe a scene containing useful spatial setup as 3D, and state any later
-flattening explicitly; use 2D (because ...) for wholly planar explanations.
+return to 3D. Record dimensionality and its reason in the scene view contract,
+and describe any later flattening explicitly in visualDescription. Preserve
+existing visualDescription prefixes when resuming saved plans.
 
 Rotation targets visual models only. Do not put text, formulas, or the entire
 annotated canvas inside a rotating group. Prefer a geometry-only s.group and
@@ -109,7 +109,8 @@ so only pickable model surfaces start orbit (spheres, circles, rectangles, meshe
 Standalone text and empty space do not start rotation. Labels belonging to model parts may use billboard
 text with stable anchors, but text is never a rotation handle. Set whole-scene
 orbit:false explicitly (mode:'3d' otherwise defaults to whole-scene orbit).
-Use targeted views for all viewer rotation. Only offer manipulation
+Use targeted views for all viewer rotation in new version 2 lessons; preserve
+the approved orbit contract of saved unversioned/version 1 lessons. Only offer manipulation
 that supports the lesson and the requested interaction mode.
 
 When transitioning 3D to 2D, retain the selected meaningful parts, show how they
@@ -169,3 +170,28 @@ regions and state that live-player inspection was not performed. Reduced contact
 sheets do not establish native-size sampling quality or every contact interval.
 Keep style, readability, scientific reasoning and technical validity as separate judgments.
 Use evaluated previousFrame as the actual handoff; planned prose is not state.
+
+## Visual model planning
+
+Use the existing planning envelope, preserving requested coverage, the running
+example, and classic/interactive mode. Describe the model's important parts,
+relationships, proportions, fidelity, coordinate/scale convention and the
+operation that supports the claim. Detailed subjects can use overview, selected
+region and mechanism views while preserving identity and required geometry.
+
+Put supplied coordinates, topology, dimensions, formulas, units and sourceRefs
+in the available planning context. Distinguish verified structures from idealized
+teaching models; never promise atomic precision, mechanical fidelity or provenance
+unsupported by the request/materials. Describe missing-data limits without
+replacing the user's topic. A high-dimensional quantity represented as a height
+surface needs a stated slice/projection, fixed parameters, axis meanings and
+objective/update rule, so surface, path and readout share one model.
+
+For articulated actions, plan drivers, pivots, rigid links, contact events and
+causal sequence. Preserve stable part IDs and useful groups across scenes;
+shared entities represent core semantic objects, not every atom or triangle.
+When requested texture or material identity matters, describe the relevant parts,
+primary/secondary color roles, local pattern direction/scale and restrained
+relief or reflectance in visualDescription. Include it in initial construction;
+first rendered verification still precedes any repair. Distinguish lighting-only
+bump from real geometry and follow the installed API for lighting and finish.

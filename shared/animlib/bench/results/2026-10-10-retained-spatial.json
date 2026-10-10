@@ -1,0 +1,2557 @@
+{
+  "baselineCommit": "aaf8249ebd15e4522968c1e1a49cc6d4b0115446",
+  "baseline": {
+    "environment": {
+      "node": "v24.19.0",
+      "platform": "linux",
+      "arch": "x64",
+      "cpu": "AMD Ryzen 9 7950X3D 16-Core Processor",
+      "frames": 30,
+      "warmup": 5,
+      "compileRuns": 3,
+      "width": 1280,
+      "height": 800
+    },
+    "methodology": "Production QuickJS defaults; CPU renderer with GPU/DOM stubs and cache counter overhead. Orbit reuses a frame; freshFrames includes separately timed timeline evaluation. Cold render is one empty-cache sample after renderer setup. Cache bytes are estimates, not heap measurements. No GPU execution, presentation, or browser FPS measured.",
+    "quickjsStartupMs": 40.177,
+    "results": [
+      {
+        "scene": "textured-metal",
+        "compile": {
+          "count": 3,
+          "medianMs": 11.672,
+          "p95Ms": 16.956,
+          "maxMs": 16.956
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 384,
+          "triangles": 768,
+          "compiledJsonBytes": 34058
+        },
+        "coldRender": {
+          "ms": 8.418,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 738048,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.54,
+          "p95Ms": 1.054,
+          "maxMs": 2.072,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22141440,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.158,
+            "p95Ms": 0.181,
+            "maxMs": 1.51
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.353,
+            "p95Ms": 0.925,
+            "maxMs": 1.107
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.515,
+            "p95Ms": 1.269,
+            "maxMs": 1.895
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22141440,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "textured-surface",
+        "compile": {
+          "count": 3,
+          "medianMs": 22.467,
+          "p95Ms": 23.133,
+          "maxMs": 23.133
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66170
+        },
+        "coldRender": {
+          "ms": 4.133,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 761856,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.887,
+          "p95Ms": 1.092,
+          "maxMs": 2.735,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.385,
+            "p95Ms": 0.491,
+            "maxMs": 4.154
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.871,
+            "p95Ms": 1.029,
+            "maxMs": 1.055
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 1.262,
+            "p95Ms": 1.519,
+            "maxMs": 5.042
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 20.069,
+          "p95Ms": 20.418,
+          "maxMs": 20.418
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66071
+        },
+        "coldRender": {
+          "ms": 2.215,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 761856,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.824,
+          "p95Ms": 0.888,
+          "maxMs": 0.902,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.398,
+            "p95Ms": 0.616,
+            "maxMs": 1.687
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.441,
+            "p95Ms": 0.466,
+            "maxMs": 2.005
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.838,
+            "p95Ms": 1.083,
+            "maxMs": 3.694
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "parametric-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 20.452,
+          "p95Ms": 21.512,
+          "maxMs": 21.512
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 68114
+        },
+        "coldRender": {
+          "ms": 3.043,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 761856,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.422,
+          "p95Ms": 0.823,
+          "maxMs": 0.827,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 988514,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.381,
+            "p95Ms": 0.422,
+            "maxMs": 0.434
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.428,
+            "p95Ms": 0.442,
+            "maxMs": 0.46
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.809,
+            "p95Ms": 0.851,
+            "maxMs": 0.865
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 988514,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "box-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 3.966,
+          "p95Ms": 5.574,
+          "maxMs": 5.574
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 24,
+          "triangles": 12,
+          "compiledJsonBytes": 2427
+        },
+        "coldRender": {
+          "ms": 0.128,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 4464,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.012,
+          "p95Ms": 0.021,
+          "maxMs": 0.024,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 133920,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 7156,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.01,
+            "p95Ms": 0.011,
+            "maxMs": 0.018
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.013,
+            "p95Ms": 0.02,
+            "maxMs": 0.021
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.023,
+            "p95Ms": 0.032,
+            "maxMs": 0.032
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 133920,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 7156,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "cylinder-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 4.917,
+          "p95Ms": 4.951,
+          "maxMs": 4.951
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 130,
+          "triangles": 128,
+          "compiledJsonBytes": 8719
+        },
+        "coldRender": {
+          "ms": 0.223,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 47616,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.069,
+          "p95Ms": 0.073,
+          "maxMs": 0.074,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 1428480,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 71048,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.034,
+            "p95Ms": 0.046,
+            "maxMs": 0.057
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.07,
+            "p95Ms": 0.08,
+            "maxMs": 0.171
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.106,
+            "p95Ms": 0.116,
+            "maxMs": 0.207
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 1428480,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 71048,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "cone-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 3.989,
+          "p95Ms": 4.006,
+          "maxMs": 4.006
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 66,
+          "triangles": 64,
+          "compiledJsonBytes": 5317
+        },
+        "coldRender": {
+          "ms": 0.182,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 23808,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.044,
+          "p95Ms": 0.121,
+          "maxMs": 0.121,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 714240,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 35588,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.021,
+            "p95Ms": 0.029,
+            "maxMs": 0.033
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.044,
+            "p95Ms": 0.051,
+            "maxMs": 0.052
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.065,
+            "p95Ms": 0.077,
+            "maxMs": 0.078
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 714240,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 35588,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "torus-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 9.073,
+          "p95Ms": 9.159,
+          "maxMs": 9.159
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 384,
+          "triangles": 768,
+          "compiledJsonBytes": 33637
+        },
+        "coldRender": {
+          "ms": 1.317,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 285696,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.349,
+          "p95Ms": 0.383,
+          "maxMs": 0.407,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 8570880,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.141,
+            "p95Ms": 0.183,
+            "maxMs": 1.109
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.315,
+            "p95Ms": 0.359,
+            "maxMs": 0.554
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.46,
+            "p95Ms": 0.698,
+            "maxMs": 1.309
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 8570880,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "tube-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 8.372,
+          "p95Ms": 8.892,
+          "maxMs": 8.892
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 326,
+          "triangles": 600,
+          "compiledJsonBytes": 29540
+        },
+        "coldRender": {
+          "ms": 0.663,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 223200,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.134,
+          "p95Ms": 0.143,
+          "maxMs": 0.144,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 6696000,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 306498,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.114,
+            "p95Ms": 0.161,
+            "maxMs": 1.167
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.138,
+            "p95Ms": 0.17,
+            "maxMs": 0.378
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.254,
+            "p95Ms": 0.495,
+            "maxMs": 1.338
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 6696000,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 306498,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "mixed-modest",
+        "compile": {
+          "count": 3,
+          "medianMs": 19.618,
+          "p95Ms": 19.999,
+          "maxMs": 19.999
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 7,
+          "vertices": 1015,
+          "triangles": 1788,
+          "compiledJsonBytes": 73979
+        },
+        "coldRender": {
+          "ms": 3.397,
+          "hits": 0,
+          "misses": 7,
+          "sets": 7,
+          "oversize": 0,
+          "vertexUploadBytes": 665136,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.606,
+          "p95Ms": 1.057,
+          "maxMs": 1.47,
+          "totals": {
+            "hits": 210,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 19954080,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 892174,
+              "entries": 7
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.37,
+            "p95Ms": 0.498,
+            "maxMs": 0.813
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.481,
+            "p95Ms": 0.915,
+            "maxMs": 2.814
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.851,
+            "p95Ms": 1.361,
+            "maxMs": 3.306
+          },
+          "totals": {
+            "hits": 210,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 19954080,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 892174,
+              "entries": 7
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-holes",
+        "compile": {
+          "count": 3,
+          "medianMs": 18.109,
+          "p95Ms": 18.831,
+          "maxMs": 18.831
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1008,
+          "triangles": 1840,
+          "compiledJsonBytes": 59733
+        },
+        "coldRender": {
+          "ms": 3.391,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 684480,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.781,
+          "p95Ms": 0.922,
+          "maxMs": 1.153,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 20534400,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 886688,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.348,
+            "p95Ms": 0.472,
+            "maxMs": 0.565
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.386,
+            "p95Ms": 0.408,
+            "maxMs": 0.421
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.734,
+            "p95Ms": 0.876,
+            "maxMs": 0.987
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 20534400,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 886688,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "tube-closed",
+        "compile": {
+          "count": 3,
+          "medianMs": 9.841,
+          "p95Ms": 12.809,
+          "maxMs": 12.809
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 384,
+          "triangles": 768,
+          "compiledJsonBytes": 35354
+        },
+        "coldRender": {
+          "ms": 0.888,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 285696,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.169,
+          "p95Ms": 0.181,
+          "maxMs": 0.182,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 8570880,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 386342,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.135,
+            "p95Ms": 0.144,
+            "maxMs": 0.148
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.169,
+            "p95Ms": 0.18,
+            "maxMs": 0.192
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.307,
+            "p95Ms": 0.318,
+            "maxMs": 0.329
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 8570880,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 386342,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-transparent",
+        "compile": {
+          "count": 3,
+          "medianMs": 19.205,
+          "p95Ms": 19.57,
+          "maxMs": 19.57
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66085
+        },
+        "coldRender": {
+          "ms": 6.572,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 761856,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.998,
+          "p95Ms": 1.886,
+          "maxMs": 1.924,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.371,
+            "p95Ms": 0.397,
+            "maxMs": 0.43
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.867,
+            "p95Ms": 1.064,
+            "maxMs": 1.939
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 1.24,
+            "p95Ms": 1.463,
+            "maxMs": 2.306
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-stroked",
+        "compile": {
+          "count": 3,
+          "medianMs": 19.124,
+          "p95Ms": 19.752,
+          "maxMs": 19.752
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66078
+        },
+        "coldRender": {
+          "ms": 14.148,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 5332992,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 9.225,
+          "p95Ms": 13.702,
+          "maxMs": 14.892,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 159989760,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.423,
+            "p95Ms": 0.619,
+            "maxMs": 0.619
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 8.074,
+            "p95Ms": 14.213,
+            "maxMs": 14.809
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 8.52,
+            "p95Ms": 14.638,
+            "maxMs": 15.218
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 159989760,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "mesh-morph",
+        "compile": {
+          "count": 3,
+          "medianMs": 13.925,
+          "p95Ms": 14.25,
+          "maxMs": 14.25
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 289,
+          "triangles": 512,
+          "compiledJsonBytes": 39843
+        },
+        "coldRender": {
+          "ms": 1.632,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 190464,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.173,
+          "p95Ms": 0.228,
+          "maxMs": 0.256,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 5713920,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 247178,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.389,
+            "p95Ms": 0.433,
+            "maxMs": 0.471
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.467,
+            "p95Ms": 0.757,
+            "maxMs": 2.02
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.855,
+            "p95Ms": 1.144,
+            "maxMs": 2.409
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 30,
+            "sets": 30,
+            "oversize": 0,
+            "vertexUploadBytes": 5713920,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 8893804,
+              "entries": 36
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "retained": {
+    "environment": {
+      "node": "v24.19.0",
+      "platform": "linux",
+      "arch": "x64",
+      "cpu": "AMD Ryzen 9 7950X3D 16-Core Processor",
+      "frames": 30,
+      "warmup": 5,
+      "compileRuns": 3,
+      "width": 1280,
+      "height": 800
+    },
+    "methodology": "Production QuickJS defaults; CPU renderer with GPU/DOM stubs and cache counter overhead. Orbit reuses a frame; freshFrames includes separately timed timeline evaluation. Cold render is one empty-cache sample after renderer setup. Cache bytes are estimates, not heap measurements. No GPU execution, presentation, or browser FPS measured.",
+    "quickjsStartupMs": 25.068,
+    "results": [
+      {
+        "scene": "textured-metal",
+        "compile": {
+          "count": 3,
+          "medianMs": 12.331,
+          "p95Ms": 16.926,
+          "maxMs": 16.926
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 384,
+          "triangles": 768,
+          "compiledJsonBytes": 34058
+        },
+        "coldRender": {
+          "ms": 19.447,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 129456,
+          "vertexBufferAllocations": 2,
+          "draws": 2
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.143,
+          "p95Ms": 0.2,
+          "maxMs": 0.39,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 60
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.153,
+            "p95Ms": 0.173,
+            "maxMs": 0.175
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.141,
+            "p95Ms": 0.163,
+            "maxMs": 0.362
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.3,
+            "p95Ms": 0.34,
+            "maxMs": 0.516
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 60
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "textured-surface",
+        "compile": {
+          "count": 3,
+          "medianMs": 21.578,
+          "p95Ms": 22.285,
+          "maxMs": 22.285
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66170
+        },
+        "coldRender": {
+          "ms": 19.39,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 135036,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.299,
+          "p95Ms": 0.425,
+          "maxMs": 0.761,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.403,
+            "p95Ms": 0.451,
+            "maxMs": 0.465
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.284,
+            "p95Ms": 0.302,
+            "maxMs": 0.459
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.69,
+            "p95Ms": 0.753,
+            "maxMs": 0.874
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 19.961,
+          "p95Ms": 20.535,
+          "maxMs": 20.535
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66071
+        },
+        "coldRender": {
+          "ms": 9.134,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 135036,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.259,
+          "p95Ms": 0.292,
+          "maxMs": 0.938,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.378,
+            "p95Ms": 0.438,
+            "maxMs": 0.441
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.27,
+            "p95Ms": 0.288,
+            "maxMs": 0.49
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.649,
+            "p95Ms": 0.72,
+            "maxMs": 0.876
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "parametric-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 19.502,
+          "p95Ms": 19.718,
+          "maxMs": 19.718
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 68114
+        },
+        "coldRender": {
+          "ms": 8.865,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 135036,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.265,
+          "p95Ms": 0.291,
+          "maxMs": 0.978,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 988514,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.37,
+            "p95Ms": 0.38,
+            "maxMs": 0.437
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.271,
+            "p95Ms": 0.291,
+            "maxMs": 0.658
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.642,
+            "p95Ms": 0.73,
+            "maxMs": 1.026
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 988514,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "box-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 3.442,
+          "p95Ms": 3.682,
+          "maxMs": 3.682
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 24,
+          "triangles": 12,
+          "compiledJsonBytes": 2427
+        },
+        "coldRender": {
+          "ms": 0.276,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 2976,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.018,
+          "p95Ms": 0.026,
+          "maxMs": 0.028,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 7156,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.01,
+            "p95Ms": 0.011,
+            "maxMs": 0.013
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.019,
+            "p95Ms": 0.032,
+            "maxMs": 0.032
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.03,
+            "p95Ms": 0.044,
+            "maxMs": 0.044
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 7156,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "cylinder-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 4.627,
+          "p95Ms": 4.716,
+          "maxMs": 4.716
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 130,
+          "triangles": 128,
+          "compiledJsonBytes": 8719
+        },
+        "coldRender": {
+          "ms": 0.714,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 16120,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.041,
+          "p95Ms": 0.051,
+          "maxMs": 0.051,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 71048,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.035,
+            "p95Ms": 0.045,
+            "maxMs": 0.066
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.044,
+            "p95Ms": 0.092,
+            "maxMs": 0.254
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.078,
+            "p95Ms": 0.158,
+            "maxMs": 0.291
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 71048,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "cone-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 3.941,
+          "p95Ms": 3.963,
+          "maxMs": 3.963
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 66,
+          "triangles": 64,
+          "compiledJsonBytes": 5317
+        },
+        "coldRender": {
+          "ms": 0.395,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 8184,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.026,
+          "p95Ms": 0.034,
+          "maxMs": 0.034,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 35588,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.02,
+            "p95Ms": 0.026,
+            "maxMs": 0.027
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.027,
+            "p95Ms": 0.036,
+            "maxMs": 0.05
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.047,
+            "p95Ms": 0.059,
+            "maxMs": 0.073
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 35588,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "torus-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 8.762,
+          "p95Ms": 8.841,
+          "maxMs": 8.841
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 384,
+          "triangles": 768,
+          "compiledJsonBytes": 33637
+        },
+        "coldRender": {
+          "ms": 3.894,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 47616,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.104,
+          "p95Ms": 0.12,
+          "maxMs": 0.134,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.137,
+            "p95Ms": 0.156,
+            "maxMs": 0.173
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.114,
+            "p95Ms": 0.122,
+            "maxMs": 0.125
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.251,
+            "p95Ms": 0.278,
+            "maxMs": 0.29
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 382912,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "tube-default",
+        "compile": {
+          "count": 3,
+          "medianMs": 8.32,
+          "p95Ms": 8.62,
+          "maxMs": 8.62
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 326,
+          "triangles": 600,
+          "compiledJsonBytes": 29540
+        },
+        "coldRender": {
+          "ms": 2.627,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 40424,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.091,
+          "p95Ms": 0.099,
+          "maxMs": 0.14,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 306498,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.114,
+            "p95Ms": 0.12,
+            "maxMs": 0.123
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.097,
+            "p95Ms": 0.104,
+            "maxMs": 0.113
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.21,
+            "p95Ms": 0.224,
+            "maxMs": 0.229
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 306498,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "mixed-modest",
+        "compile": {
+          "count": 3,
+          "medianMs": 18.936,
+          "p95Ms": 20.234,
+          "maxMs": 20.234
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 7,
+          "vertices": 1015,
+          "triangles": 1788,
+          "compiledJsonBytes": 73979
+        },
+        "coldRender": {
+          "ms": 8.58,
+          "hits": 0,
+          "misses": 7,
+          "sets": 7,
+          "oversize": 0,
+          "vertexUploadBytes": 125860,
+          "vertexBufferAllocations": 7,
+          "draws": 7
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.378,
+          "p95Ms": 0.401,
+          "maxMs": 0.405,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 210
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 892174,
+              "entries": 7
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.361,
+            "p95Ms": 0.477,
+            "maxMs": 0.483
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.313,
+            "p95Ms": 0.393,
+            "maxMs": 0.398
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.681,
+            "p95Ms": 0.87,
+            "maxMs": 0.873
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 210
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 892174,
+              "entries": 7
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-holes",
+        "compile": {
+          "count": 3,
+          "medianMs": 17.864,
+          "p95Ms": 18.314,
+          "maxMs": 18.314
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1008,
+          "triangles": 1840,
+          "compiledJsonBytes": 59733
+        },
+        "coldRender": {
+          "ms": 9.42,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 124992,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.22,
+          "p95Ms": 0.231,
+          "maxMs": 0.238,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 886688,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.339,
+            "p95Ms": 0.346,
+            "maxMs": 0.347
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.233,
+            "p95Ms": 0.242,
+            "maxMs": 0.29
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.573,
+            "p95Ms": 0.586,
+            "maxMs": 0.635
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 886688,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "tube-closed",
+        "compile": {
+          "count": 3,
+          "medianMs": 9.533,
+          "p95Ms": 10.509,
+          "maxMs": 10.509
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 384,
+          "triangles": 768,
+          "compiledJsonBytes": 35354
+        },
+        "coldRender": {
+          "ms": 2.513,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 47616,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.108,
+          "p95Ms": 0.115,
+          "maxMs": 0.135,
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 386342,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.135,
+            "p95Ms": 0.141,
+            "maxMs": 0.144
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.111,
+            "p95Ms": 0.119,
+            "maxMs": 0.119
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.247,
+            "p95Ms": 0.259,
+            "maxMs": 0.261
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 0,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 386342,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-transparent",
+        "compile": {
+          "count": 3,
+          "medianMs": 18.954,
+          "p95Ms": 18.972,
+          "maxMs": 18.972
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66085
+        },
+        "coldRender": {
+          "ms": 5.119,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 761856,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 1.394,
+          "p95Ms": 2.201,
+          "maxMs": 3.527,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.392,
+            "p95Ms": 1.001,
+            "maxMs": 1.575
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.931,
+            "p95Ms": 1.38,
+            "maxMs": 2.559
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 1.334,
+            "p95Ms": 2.937,
+            "maxMs": 2.951
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 22855680,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "surface-stroked",
+        "compile": {
+          "count": 3,
+          "medianMs": 19.385,
+          "p95Ms": 20.373,
+          "maxMs": 20.373
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 1089,
+          "triangles": 2048,
+          "compiledJsonBytes": 66078
+        },
+        "coldRender": {
+          "ms": 18.503,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 5332992,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 10.311,
+          "p95Ms": 16.476,
+          "maxMs": 17.548,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 159989760,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.435,
+            "p95Ms": 1.794,
+            "maxMs": 1.852
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 8.617,
+            "p95Ms": 15.664,
+            "maxMs": 16.526
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 9.199,
+            "p95Ms": 16.185,
+            "maxMs": 17.076
+          },
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 159989760,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 984420,
+              "entries": 1
+            }
+          ]
+        }
+      },
+      {
+        "scene": "mesh-morph",
+        "compile": {
+          "count": 3,
+          "medianMs": 12.718,
+          "p95Ms": 13.839,
+          "maxMs": 13.839
+        },
+        "compileFailures": [],
+        "geometry": {
+          "meshes": 1,
+          "vertices": 289,
+          "triangles": 512,
+          "compiledJsonBytes": 39843
+        },
+        "coldRender": {
+          "ms": 1.718,
+          "hits": 0,
+          "misses": 1,
+          "sets": 1,
+          "oversize": 0,
+          "vertexUploadBytes": 190464,
+          "vertexBufferAllocations": 1,
+          "draws": 1
+        },
+        "warmOrbit": {
+          "count": 30,
+          "medianMs": 0.181,
+          "p95Ms": 0.192,
+          "maxMs": 0.193,
+          "totals": {
+            "hits": 30,
+            "misses": 0,
+            "sets": 0,
+            "oversize": 0,
+            "vertexUploadBytes": 5713920,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 247178,
+              "entries": 1
+            }
+          ]
+        },
+        "freshFrames": {
+          "evaluate": {
+            "count": 30,
+            "medianMs": 0.415,
+            "p95Ms": 0.563,
+            "maxMs": 2.142
+          },
+          "render": {
+            "count": 30,
+            "medianMs": 0.455,
+            "p95Ms": 0.662,
+            "maxMs": 0.702
+          },
+          "combined": {
+            "count": 30,
+            "medianMs": 0.863,
+            "p95Ms": 1.183,
+            "maxMs": 2.776
+          },
+          "totals": {
+            "hits": 0,
+            "misses": 30,
+            "sets": 30,
+            "oversize": 0,
+            "vertexUploadBytes": 5713920,
+            "vertexBufferAllocations": 0,
+            "draws": 30
+          },
+          "cache": [
+            {
+              "limitBytes": 16777216,
+              "retainedBytesEstimate": 8893804,
+              "entries": 36
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

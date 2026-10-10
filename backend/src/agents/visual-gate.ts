@@ -9,6 +9,7 @@ import { applyVisualEdits, parseVisualVerification, sourceHash } from './visual-
 import type { VisualVerification } from './visual-edits.js';
 import type { ReviewInput } from './review.js';
 import { animationQualityPolicy } from './quality-policy.js';
+import { loadPrompt } from './prompts.js';
 import { atomicWrite } from '../narration/service.js';
 import { logStage } from '../logging.js';
 
@@ -42,8 +43,8 @@ export async function reviewGeneratedScene(options: VisualGateInput): Promise<st
   const {runner,input,directory,index,videoId,signal}=options;
   signal.throwIfAborted();
   const [guidance, repairGuidance, quality, style] = await Promise.all([
-    readFile(new URL('../../prompts/scene-verify.md',import.meta.url),'utf8'),
-    readFile(new URL('../../prompts/scene-repair.md',import.meta.url),'utf8'),
+    loadPrompt('scene-verify'),
+    loadPrompt('scene-repair'),
     animationQualityPolicy(),
     readFile(new URL('../../prompts/visual-style-reference.jpg',import.meta.url)),
   ]);

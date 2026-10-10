@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { parsePlanDocument, parseTopicPlan, generateStudyPlan, sourceMaterial, COURSE_CLASSIFICATION, MAX_TOPICS } from '../src/agents/study-plan.js';
-import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
+import { loadPrompt } from '../src/agents/prompts.js';
 import { studyPlanRoutes } from '../src/study-plans.js';
 
 const document = { name: 'Lecture.pdf', pages: 2, lines: [
@@ -54,8 +54,8 @@ test('course planning accepts source text and line counts above the former limit
 
 test('model receives the original prompts plus course grouping requirements, final response validated again', async () => {
   const plan = await generateStudyPlan({ run: async task => {
-    expect(task.systemPrompt).toBe(await scenegenPrompt('topics-system'));
-    expect(task.prompt).toBe((await scenegenPrompt('topics-format')).replace('{max_topics}', String(MAX_TOPICS)) + '\n\n' + COURSE_CLASSIFICATION + '\n\nSOURCE MATERIAL:\n<<<\n' + sourceMaterial(document) + '\n>>>');
+    expect(task.systemPrompt).toBe(await loadPrompt('topics-system'));
+    expect(task.prompt).toBe((await loadPrompt('topics-format')).replace('{max_topics}', String(MAX_TOPICS)) + '\n\n' + COURSE_CLASSIFICATION + '\n\nSOURCE MATERIAL:\n<<<\n' + sourceMaterial(document) + '\n>>>');
     await expect(task.validate!('{}')).rejects.toThrow();
     return JSON.stringify(output());
   } }, document, new AbortController().signal);
@@ -130,15 +130,25 @@ test('async planning returns before inference finishes and survives upload disco
 });
 
 test('async cancellation reaches the model and releases capacity; results expire', async () => {
+  let startedCount = 0, abortedCount = 0, bothStarted!: () => void;
+  const started = new Promise<void>(resolve => { bothStarted = resolve; });
   const route = studyPlanRoutes(() => ({ run: async task => new Promise((_resolve, reject) => {
-    task.signal!.addEventListener('abort', () => reject(task.signal!.reason), { once: true });
+    task.signal!.addEventListener('abort', () => { abortedCount++; reject(task.signal!.reason); }, { once: true });
+    if (++startedCount === 2) bothStarted();
   }) }));
   const req = () => new Request('http://localhost/api/study-plans', { method: 'POST', headers: { Prefer: 'respond-async' }, body: JSON.stringify(document) });
   const a = await (await route(req())).json(), b = await (await route(req())).json();
   expect((await route(req())).status).toBe(429);
+  await started; // Prompt file reads must finish before testing cancellation inside the model.
   for (const job of [a, b]) expect((await route(new Request(`http://localhost/api/study-plans/${job.id}`, { method: 'DELETE' }))).status).toBe(204);
-  await Bun.sleep(0);
-  const c = await route(req()); expect(c.status).toBe(202);
+  expect(abortedCount).toBe(2);
+  let c!: Response;
+  for (let i = 0; i < 100; i++) {
+    c = await route(req());
+    if (c.status !== 429) break;
+    await Bun.sleep(1);
+  }
+  expect(c.status).toBe(202);
   await route(new Request(`http://localhost/api/study-plans/${(await c.json()).id}`, { method: 'DELETE' }));
   let now = 0;
   const expiring = studyPlanRoutes(() => ({ run: async () => JSON.stringify(output()) }), { now: () => now, resultTtlMs: 10 });

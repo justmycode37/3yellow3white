@@ -1,11 +1,20 @@
+import {integrationPlayerRegression} from './integration-player.browser.js';
+import {integrationCases} from './integration-cases.js';
+import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
+import { audioDurationRegression } from './time-audio.browser.js';
+import { pauseDuringRefreshRegression } from './playback-intent.browser.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
+import { waveSource } from './dynamic-surface-cases.js';
 import { reactiveCases } from './reactive-cases.js';
+import { lightingCases } from './lighting-cases.js';
 import { materialCases, materialSource, bumpSource } from './material-cases.js';
 import { textureCases, texturePixelIssues } from './texture-cases.js';
+import { retainedPrecisionCases,retainedCases, occlusionGateSource, occlusionGateFrames } from './retained-cases.js';
+import { RetainedGeometry } from '../src/retained-geometry.js';
 import { transparencyCases } from './transparency-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
 import { initialSources } from '../demo/scenes.js';
@@ -75,11 +84,133 @@ export async function runWebGLTests() {
     return pixels(renderer.canvasElement);
   };
   try {
+    await test('explanatory morph pixels after backwards seek',async()=>{
+      await load(explanatoryMorphSource);const a=draw(0),b=draw(1),c=draw(2),again=draw(1);
+      assert(different(a,b)&&different(b,c),'Scalar and clipping morph must change pixels');
+      assert(!different(b,again),'Backwards seek must reproduce identical pixels');
+    });
+    for(const fixture of labelProjectionCases) await test(`explanatory projection: ${fixture.name}`,async()=>{
+      const images:Uint8Array[]=[];
+      for(const source of fixture.sources){await load(source);images.push(draw());}
+      const issues=labelProjectionIssues(images.map(image=>(x,y)=>at(image,canvas,x,y)));
+      assert(issues.length===0,issues.join('; '));
+    });
+    for(const dpr of [1,2])for(const fixture of capClippingCases)await test(`explanatory DPR ${dpr}: ${fixture.name}`,async()=>{
+      Object.defineProperty(window,'devicePixelRatio',{value:dpr,configurable:true});
+      (renderer as unknown as {resize():void}).resize();
+      try {
+        const images:Uint8Array[]=[];
+        for(const source of fixture.sources){await load(source);images.push(draw());}
+        assert(canvas.width===640*dpr&&canvas.height===480*dpr,'Cap target must match requested DPR');
+        assert(renderer.backend==='webgl2','Cap checks must use WebGL2');
+        const issues=capClippingIssues(images.map(image=>(x,y)=>at(image,canvas,x*dpr,y*dpr)),fixture.laterCut);
+        assert(issues.length===0,issues.join('; '));artifact(canvas,`DPR ${dpr}: ${fixture.name}`);
+      } finally {
+        Object.defineProperty(window,'devicePixelRatio',{value:1,configurable:true});
+        (renderer as unknown as {resize():void}).resize();
+      }
+    });
+    for(const fixture of explanatoryCases) await test(`explanatory: ${fixture.name}`,async()=>{
+      await load(fixture.source);const image=draw();
+      const issues=fixture.check((x,y)=>at(image,canvas,x,y));
+      assert(issues.length===0,issues.join('; '));artifact(canvas,fixture.name);
+    });
+    for (const {name,source} of retainedCases) await test('retained/reference pixels: '+name,async()=>{
+      await load(source);
+      for (const [yaw,pitch,time] of [[0,0,0],[0.7,0.35,0.5],[-0.8,-0.4,1]]) {
+        const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+        renderer.render(frame,sequence.compiled[0].options);const optimized=pixels(renderer.canvasElement);
+        const get=RetainedGeometry.prototype.get;RetainedGeometry.prototype.get=()=>undefined;
+        try {renderer.render(frame,sequence.compiled[0].options);} finally {RetainedGeometry.prototype.get=get;}
+        const reference=pixels(renderer.canvasElement);
+        assert(foreground(optimized)>200,'Retained scene was empty');
+        assert(optimized.filter((v,i)=>Math.abs(v-reference[i])>3).length<optimized.length*0.002,'Retained and CPU world geometry diverged');
+      }
+    });
+    for (const {name,source,retained,orbit} of retainedPrecisionCases) await test('retained precision/reference pixels: '+name,async()=>{
+      await load(source);
+      (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
+      let warm=false;
+      for (const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
+        const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw:orbit===false?0:yaw,pitch:orbit===false?0:pitch};
+        const gl=renderer.canvasElement.getContext('webgl2')!,indexed=gl.drawElementsInstanced;
+        let indexedCalls=0,geometryUploads=0;
+        const allocate=gl.bufferData,upload=gl.bufferSubData;
+        gl.bufferData=new Proxy(allocate,{apply(target,receiver,args){geometryUploads++;return Reflect.apply(target,receiver,args);}});
+        gl.bufferSubData=new Proxy(upload,{apply(target,receiver,args){geometryUploads++;return Reflect.apply(target,receiver,args);}});
+        gl.drawElementsInstanced=new Proxy(indexed,{apply(target,receiver,args){indexedCalls++;return Reflect.apply(target,receiver,args);}});
+        try {renderer.render(frame,sequence.compiled[0].options);} finally {gl.drawElementsInstanced=indexed;gl.bufferData=allocate;gl.bufferSubData=upload;}
+        const optimized=pixels(renderer.canvasElement);
+        const get=RetainedGeometry.prototype.get;RetainedGeometry.prototype.get=()=>undefined;
+        try {renderer.render(frame,sequence.compiled[0].options);} finally {RetainedGeometry.prototype.get=get;}
+        const reference=pixels(renderer.canvasElement);
+        assert(foreground(reference)>200,'Precision reference scene was empty');
+        assert(!optimized.some((v,i)=>Math.abs(v-reference[i])>3),'Precision-sensitive geometry diverged from CPU world packing');
+        assert((indexedCalls>0)===retained,'Unexpected precision fallback/indexed submission');
+        if(warm&&retained)assert(geometryUploads===0,'Warm precision control uploaded geometry');
+        renderer.render(frame,sequence.compiled[0].options);pixels(renderer.canvasElement);warm=true;
+      }
+    });
+    await test('label occlusion integration gate keeps transformed occluders in world space',async()=>{
+      await load(occlusionGateSource);
+      const frame=sequence.frame(0,0),options=sequence.compiled[0].options;
+      const gl=renderer.canvasElement.getContext('webgl2')!,indexed=gl.drawElementsInstanced;
+      let indexedCalls=0;
+      gl.drawElementsInstanced=new Proxy(indexed,{apply(target,receiver,args){indexedCalls++;return Reflect.apply(target,receiver,args);}});
+      try {
+        renderer.render(frame,options);pixels(renderer.canvasElement);assert(indexedCalls>0,'Ordinary scene did not use indexed geometry');
+        for(const dependent of occlusionGateFrames(frame)) {
+          indexedCalls=0;renderer.render(dependent,options);
+          assert(foreground(pixels(renderer.canvasElement))>200,'Occlusion gate scene was empty');
+          assert(indexedCalls===0,'Label visibility received retained local-space occluders');
+        }
+      } finally {gl.drawElementsInstanced=indexed;}
+    });
+    await test('retained indexed instances skip geometry uploads on camera movement',async()=>{
+      await load(`export default scene({mode:'3d'},s=>{for(let i=0;i<8;i++)s.sphere('s'+i,{radius:0.2,position:[i/2-2,0,0],fill:'BLUE'});s.wait(2);});`);
+      draw();
+      const gl=renderer.canvasElement.getContext('webgl2')!,upload=gl.bufferSubData,allocate=gl.bufferData,instanced=gl.drawElementsInstanced;
+      let uploads=0,allocations=0,maxInstances=0;
+      gl.bufferSubData=new Proxy(upload,{apply(target,receiver,args){uploads++;return Reflect.apply(target,receiver,args);}});
+      gl.bufferData=new Proxy(allocate,{apply(target,receiver,args){allocations++;return Reflect.apply(target,receiver,args);}});
+      gl.drawElementsInstanced=function(...args:Parameters<typeof instanced>){maxInstances=Math.max(maxInstances,args[4]);return instanced.apply(this,args);};
+      try {
+        const frame=sequence.frame(0,1);frame.camera.yaw=0.4;renderer.render(frame,sequence.compiled[0].options);
+        assert(foreground(pixels(renderer.canvasElement))>100,'Retained spheres were empty');
+        assert(uploads===0&&allocations===0,'Camera movement uploaded geometry');
+        assert(maxInstances===8,'Repeated spheres did not instance');
+      } finally {gl.bufferSubData=upload;gl.bufferData=allocate;gl.drawElementsInstanced=instanced;}
+    });
     await test('missing WebGPU: real WebGL2 triangle colors', async () => {
       await load(`export default scene({},s=>{s.rectangle('r',{width:3,height:2,fill:'PURE_RED',stroke:'none'});s.wait(1)});`);
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');
       assert(at(draw(), canvas, 320, 240).join() === '255,0,0', 'Center must be pure red');
       assert(foreground(draw()) > 15000, 'Expected a filled rectangle');
+    });
+    await test('combined production-player seek/control/end/append handoffs',async()=>{await integrationPlayerRegression(createPlayer);});
+    for(const entry of integrationCases)await test('cross-feature: '+entry.name,async()=>{
+      renderer.resetInteraction();
+      await entry.run({sequence,draw:async(frame,options,reference=false)=>{
+        const get=RetainedGeometry.prototype.get,gl=renderer.canvasElement.getContext('webgl2')!;
+        const allocate=gl.bufferData,upload=gl.bufferSubData,draw=gl.drawElementsInstanced;
+        let uploads=0,indexed=0;if(reference)RetainedGeometry.prototype.get=()=>undefined;
+        gl.bufferData=new Proxy(allocate,{apply(fn,self,args){uploads++;return Reflect.apply(fn,self,args);}});
+        gl.bufferSubData=new Proxy(upload,{apply(fn,self,args){uploads++;return Reflect.apply(fn,self,args);}});
+        gl.drawElementsInstanced=new Proxy(draw,{apply(fn,self,args){indexed++;return Reflect.apply(fn,self,args);}});
+        try {renderer.render(frame,options);return {pixels:pixels(renderer.canvasElement),indexed,uploads,
+          resources:(renderer as unknown as {gl:{meshes:Map<unknown,unknown>}}).gl.meshes.size};}
+        finally{RetainedGeometry.prototype.get=get;gl.bufferData=allocate;gl.bufferSubData=upload;gl.drawElementsInstanced=draw;}
+      }});
+    });
+    for(const entry of lightingCases) await test('lighting: '+entry.name,async()=>{
+      await entry.run(async(source,yaw=0,time=0)=>{
+        (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
+        await load(source);renderer.setOrbit({yaw,pitch:0});
+        const image=draw(time),flipped=new Uint8Array(image.length);
+        for(let y=0;y<480;y++)flipped.set(image.subarray(y*640*4,(y+1)*640*4),(479-y)*640*4);
+        return flipped;
+      });
+      artifact(canvas,'lighting: '+entry.name);
     });
     for(const metal of [false,true]) await test(`bump normals with constant albedo, metal=${metal}`,async()=>{
       const images:Uint8Array[]=[];
@@ -112,6 +243,29 @@ export async function runWebGLTests() {
         assert(a.every((value,i)=>Math.abs(value-b[i])<=2),'Texture slipped during translation');
       }
       assert(!different(draw(),original),'Texture changed after seeking');
+    });
+    await test('real audio duration controls worker sampling and batch/append handoffs',async()=>{
+      await audioDurationRegression(createPlayer);
+    });
+    await test('Pause during reconstruction/replacement beats automatic resume after a real worker sample',async()=>{
+      await pauseDuringRefreshRegression(createPlayer);
+    });
+    await test('retained wave seeks and paused input match rebuilt pixels in clipped isolated views',async()=>{
+      const reference=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+      renderer.resetInteraction();
+      try {
+        await load(waveSource());const original=sequence.compiled[0];let first:Uint8Array|undefined;
+        for(const [time,amplitude,roughness] of [[0.5,0.6,0.45],[2,1,0.15],[0.5,0.6,0.45]]) {
+          await sequence.setControl('test','amplitude',amplitude);await sequence.setControl('test','roughness',roughness);
+          assert((await reference.submit({type:'load',scenes:[{id:'reference',source:waveSource(time,amplitude,roughness)}]})).ok,'Reference compilation failed');
+          renderer.render(reference.frame(0,time),reference.compiled[0].options);const expected=pixels(canvas);
+          renderer.render(await sequence.evaluate(0,time),original.options);const actual=pixels(canvas);
+          assert(!different(actual,expected),'Dynamic wave differs from static reference');assert(foreground(actual)>1000,'Wave is empty');
+          if(first && time===0.5)assert(!different(actual,first),'Wave seek is not deterministic');first??=actual;
+          assert(sequence.compiled[0]===original,'Wave rebuilt the scene');
+        }
+        artifact(canvas,'Retained dynamic wave, clipped independent views');
+      }finally{reference.dispose();}
     });
     for (const fixture of reactiveCases) await test(`reactive/rebuilt pixels: ${fixture.name}`, async () => {
       const legacy = new SceneSequence({ prepare: scenes => renderer.prepare(scenes) });

@@ -11,13 +11,13 @@ for (const name of files) {
   if (!(await Bun.file(destination).exists())) await writeFile(destination, await readFile(new URL(name, prompts), 'utf8'));
 }
 const capabilities = await readFile(new URL('../../shared/animlib/docs/capabilities.md', import.meta.url), 'utf8');
-const planning = await readFile(new URL('scenegen/planning.md', prompts), 'utf8');
+const viewingMode = await readFile(new URL('viewing-mode.md', prompts), 'utf8');
 const quality = await readFile(new URL('animation-quality.md', prompts), 'utf8');
 const old = await readFile(`${base}/baseline/guidance.md`, 'utf8');
 if (!(await Bun.file(`${base}/baseline-system.txt`).exists()))
-  await writeFile(`${base}/baseline-system.txt`, `${old}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${planning}\n\n${quality}`);
+  await writeFile(`${base}/baseline-system.txt`, `${old}\n\n${viewingMode}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${quality}`);
 if (!(await Bun.file(`${base}/control-system.txt`).exists()))
-  await writeFile(`${base}/control-system.txt`, `Write an accurate original explanatory video script and plan for the user's request.\n\n## Output contract\n${old.split('## Output contract')[1]}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${planning}\n\n${quality}`);
+  await writeFile(`${base}/control-system.txt`, `Write an accurate original explanatory video script and plan for the user's request.\n\n## Output contract\n${old.split('## Output contract')[1]}\n\n${viewingMode}\n\n${capabilities}\n\n${PLANNING_CONTRACT}\n\n${quality}`);
 const cases = [
   { id: 'bayes', title: 'Why a positive screen is not a diagnosis', topic: 'Write a roughly 3-minute lesson in exactly 3 scenes for adults who know percentages but not conditional probability. Explain why a positive test need not mean the condition is likely. Use a hypothetical population of 1,000: 10 have the condition; the test is positive for 9 of them and for 99 of the 990 without it. Derive the positive-test probability of actually having the condition, then explain how changing prevalence while keeping sensitivity and false-positive rate fixed changes the result. Include one brief thinking pause. This is a toy probability example, not medical guidance.', videoMode: 'classic' },
   { id: 'leaf', title: 'A leaf trades water for carbon', topic: 'Write a roughly 2-minute lesson in exactly 3 scenes for a curious 12-year-old. Explain how opening stomata lets carbon dioxide enter for photosynthesis while water vapor escapes, and why closing them in dry conditions protects water but restricts carbon uptake. Show the causal tradeoff rather than list plant parts. No equations and no scripted pauses. Do not imply plants consciously decide, that stomata are one-way valves, or that closing instantly stops all water loss.', videoMode: 'classic' },

@@ -13,10 +13,11 @@ import type { AgentRunner, AgentTask } from "./runtime.js";
 import { parsePlannedLesson, scenePlanningContext, validateStory } from './planning.js';
 import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
-import { validateScenePlan } from './scene-plan.js';
 import { validateSceneQuality } from './scene-quality.js';
 import { animationQualityPolicy } from './quality-policy.js';
-import { scenegenPrompt } from './scenegen-prompts.js';
+import { validateScenePlan, validateViewingMode } from './scene-plan.js';
+import { instructionSnapshot, loadPrompt } from './prompts.js';
+import { buildAuthoringReference } from './authoring-reference.js';
 import { validationMessage } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
 import { buildSubtitlePackage } from '../narration/subtitles.js';
@@ -53,13 +54,20 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const cachedLesson = await saved(lessonPath);
     let plan: LessonPlan | undefined;
     let markdown: string | undefined;
+    let legacyPlan = false;
+    let instructionVersion: number | undefined;
     if (cachedLesson) {
-      const lesson = parsePlannedLesson(cachedLesson, request);
+      instructionVersion = JSON.parse(cachedLesson).instructionVersion;
+      legacyPlan = instructionVersion === undefined;
+      const lesson = parsePlannedLesson(cachedLesson, request, { legacy: legacyPlan });
       markdown = lesson.markdown; plan = lesson.plan;
-    } else markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
+    } else {
+      markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
+      legacyPlan = !!markdown;
+    }
     if (!markdown) {
       const lesson = await logStage({ videoId, stage: 'script' }, () => authorReviewedLesson(runner, request, directory, signal, context.images, videoId));
-      markdown = lesson.markdown; plan = lesson.plan;
+      markdown = lesson.markdown; plan = lesson.plan; instructionVersion = lesson.instructionVersion;
       signal.throwIfAborted();
       await atomicWrite(join(directory, 'storyline.prompt.md'), await readFile(join(directory, 'editorial', lesson.editorialReview.runId,
         `lesson-draft-${lesson.editorialReview.attempt}.prompt.md`), 'utf8'));
@@ -102,7 +110,8 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const { instructions, ...input } = buildSceneAgentInput(pkg, scene.id, previousFrame);
     const planning = scenePlanningContext(story, index, plan);
     // Preserve explicit visual preferences even when a saved plan omitted them.
-    const sceneInput = { ...input, planning, request: { title: request.title, topic: request.topic, videoMode: request.videoMode ?? 'classic' } };
+    const packet = { ...input, planning, videoMode: request.videoMode ?? 'classic', legacyPlan, instructionVersion,
+      request: { title: request.title, topic: request.topic, videoMode: request.videoMode ?? 'classic' } };
     const assemble = (output: string) => options.timingMode === 'host'
       ? attachTimingPrelude(sceneSource(output), input) : sceneSource(output);
     const diagnostics: string[] = [];
@@ -118,8 +127,9 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       try {
         const { compiled, finalFrame } = await validateSceneAgainstNarration(normalizedSource, pkg, scene.id, previousFrame);
         if (Math.abs(compiled.duration - scene.durationSec) > 1e-6) throw new Error(`The scene must last ${scene.durationSec} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
+        if (!legacyPlan) validateViewingMode(compiled, packet.videoMode);
         if (plan) validateScenePlan(compiled, finalFrame, plan.scenes[index]);
-        if (checkQuality) validateSceneQuality(compiled);
+        if (checkQuality) validateSceneQuality(compiled, { legacyOrbit: instructionVersion === undefined || instructionVersion < 2 });
         if (verifiedSources.size >= 4) verifiedSources.delete(verifiedSources.keys().next().value!);
         verifiedSources.set(key, structuredClone(finalFrame));
         return finalFrame;
@@ -134,20 +144,21 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const path = join(directory, subtitles ? `scene-${index}.subtitles.js` : `scene-${index}.js`);
     let source = await saved(path);
     if (!source) {
-      const reference = await readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
-      const craft = await readFile(new URL('../../prompts/scene-craft.md', import.meta.url), 'utf8');
-      const visualization = await scenegenPrompt('visualization');
-      const quality = await animationQualityPolicy();
+      const [reference, craft, viewingMode, quality] = await Promise.all([
+        readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8").then(buildAuthoringReference),
+        loadPrompt('scene-craft'), loadPrompt('viewing-mode'), animationQualityPolicy(),
+      ]);
       const task = {
         outputMode: options.outputMode ?? 'text',
-        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${quality}\n\n${reference}`,
-        prompt: `Generate this scene using the authoritative timing packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify(sceneInput)}`, validate, signal,
+        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing. The host output/timing contract and viewing-mode policy take priority over illustrative API examples; implement the approved plan within those constraints.\n\n${viewingMode}\n\n${craft}\n\n${quality}\n\n${reference}`,
+        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify(packet)}`, validate, signal,
         logContext: { videoId, sceneIndex: index, stage: 'scene' as const },
       };
+      await atomicWrite(join(directory, `scene-${index}.instructions.json`), JSON.stringify(instructionSnapshot(task.systemPrompt)));
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
-      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify(sceneInput));
+      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify(packet));
       source = assemble(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
-      source = await (options.visualGate ?? reviewGeneratedScene)({ runner, source, input: sceneInput, task,
+      source = await (options.visualGate ?? reviewGeneratedScene)({ runner, source, input: packet, task,
         directory, index, videoId, signal, validate: validateSource });
       const finalFrame = await validateSource(source);
       signal.throwIfAborted();

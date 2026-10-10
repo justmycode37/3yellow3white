@@ -73,6 +73,7 @@ test("guidance production example is accepted by the actual parser", async () =>
   const parsed = parseStoryline(example);
   expect(parsed.beats).toHaveLength(2);
   expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(2);
+  expect(parsed.beats[1].blocks.filter(b => b.kind === "pause")).toHaveLength(0);
   const messages = await buildStorylineMessages("Explain binary search.");
   const capabilities = await readFile(new URL("../../shared/animlib/docs/capabilities.md", import.meta.url), "utf8");
   expect(messages[0].role).toBe("system");
@@ -164,6 +165,12 @@ test("packages preserve original notes and compile synchronized demo scenes", as
   expect(packet.scene.context).toContain("Two dots"); expect(packet.endMode).toBe("advance");
   expect(packet.audioSha256).toHaveLength(64);
   expect(await service.artifact("a", job.id, "scene-agent.md")).toContain("Silent pause");
+  const wave = await validateSceneAgainstNarration(`export default scene({audio:${JSON.stringify(packet.audioAssetId)},end:'advance'},s=>{
+    const mesh=s.surface('wave',{fn:()=>0,xSegments:2,ySegments:2});
+    s.deform(mesh,[s.time],([x,y],i,t)=>[x,y,t]);s.keep(mesh);s.wait(${packet.scene.durationSec});
+  });`, pkg, 'beat-1');
+  expect(wave.compiled.reactiveTime).toBe(packet.scene.durationSec);
+  expect(wave.finalFrame.elements[0].geometry.vertices!.every(v=>v[2]===packet.scene.durationSec)).toBe(true);
   const preview = buildNarrationPreview(pkg);
   let previous;
   for (const scene of preview.scenes) previous = (await validateSceneAgainstNarration(scene.source, pkg, scene.id, previous)).finalFrame;

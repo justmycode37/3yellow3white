@@ -20,6 +20,8 @@ test('new orbitable views require geometry-only interaction', async () => {
   expect(() => validateSceneQuality(good)).not.toThrow();
   const wholeCanvas = await compileSource(`export default scene({mode:'3d'},s=>{s.sphere('ball');s.text('label',{text:'DNA'});s.wait(1);});`);
   expect(() => validateSceneQuality(wholeCanvas)).toThrow(/whole-scene orbit/);
+  expect(() => validateSceneQuality(wholeCanvas, { legacyOrbit: true })).not.toThrow();
+  expect(() => validateSceneQuality(bad, { legacyOrbit: true })).not.toThrow();
 });
 
 test('settled glyph collisions return bounded, actionable library diagnostics', async () => {
@@ -30,6 +32,7 @@ test('settled glyph collisions return bounded, actionable library diagnostics', 
   expect(() => validateSceneQuality(compiled)).toThrow(/template-label/);
   expect(() => validateSceneQuality(compiled)).toThrow(/rna-label/);
   expect(() => validateSceneQuality(compiled)).toThrow(/seconds/);
+  expect(() => validateSceneQuality(compiled, { legacyOrbit: true })).toThrow(/Text overlap/);
 });
 
 test('separated text and intentionally overlapping geometry pass', async () => {

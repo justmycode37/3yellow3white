@@ -4,27 +4,27 @@ The narration stage normalizes AI-written Markdown, synthesizes the requested Al
 
 ## Give the storyline writer its instructions
 
-`backend/prompts/guidance.md` contains the explanation guidance and the production Markdown contract in section 16. `buildStorylineMessages(material)` from `backend/src/storyline-prompt.ts` loads this file into a system message and places the source material in a separate user message. Pass those messages to the future storyline writer, then pass its Markdown response to `NarrationService.submit(owner, markdown)`. Release packaging includes the prompt, and the smoke check verifies it is present.
+`backend/prompts/guidance.md` owns explanation guidance and the Markdown **Output contract**. `buildStorylineMessages(material)` loads it with the shared viewing-mode policy and animation capabilities, keeping source material in a separate user message. The production lesson author returns a structured plan and Markdown script; a separate editorial review must pass before the host calls `NarrationService.submit(owner, markdown)`. See [instruction architecture](instruction-architecture.md) for prompt ownership and precedence. Release smoke checks verify that the prompts ship.
 
 Preferred output:
 
 ```md
-# A lesson title
+# Guessing a hidden card
 
-## Beat 1 — A question
+## Beat 1 — Narrow the possibilities
 
-Content needed: The facts and running example available to the viewer.
+Content needed: Show eight cards, split them into two equal groups, and retain the four candidates consistent with the answer. During the pause, show only those four; reveal the remaining two with the confirmation.
 
 Narration:
-These are the exact words to read aloud.
+Imagine guessing a hidden card from eight cards. A yes-or-no question divides them into two equal groups. Its answer leaves four possible cards.
 
 Invitation (spoken):
-What do you think happens next?
+How many remain if our next question divides those four equally? Take a moment to work it out.
 
 Pause: 5s
 
 Reveal (spoken):
-If you guessed this result, you are right.
+Two remain. The answer rules out half because we split the candidates into two equal groups.
 ```
 
 `Hint (spoken):` and `Credit (spoken):` are also supported. Formatting is normalized through the Markdown syntax tree, with GFM table support; the parser does not ask another model to rewrite the script. Common variations are accepted:

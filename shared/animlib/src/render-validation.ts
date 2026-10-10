@@ -14,6 +14,9 @@ export function validateRenderableScene(scene: CompiledScene, hostPalette?: Colo
     prepareGeometry(element.geometry); palette.resolve(element.fill); palette.resolve(element.stroke);
   };
   palette.resolve(scene.options.background);
+  if (scene.options.lighting && scene.options.lighting !== 'studio' && scene.options.lighting.receiver) {
+    palette.resolve(scene.options.lighting.receiver.fill ?? 'GREY_D');
+  }
   for (const element of [...scene.initial, ...scene.lifecycle.flatMap(event => event.elements ?? [])]) prepareElement(element);
   for (const track of scene.tracks) {
     if (track.action.geometry) prepareGeometry(track.action.geometry);

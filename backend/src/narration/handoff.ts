@@ -28,7 +28,7 @@ export function buildSceneAgentInput(pkg: NarrationScenePackage, sceneId: string
 }
 export async function validateSceneAgainstNarration(source: string, pkg: NarrationScenePackage, sceneId: string, previousFrame?: Frame) {
   const input = buildSceneAgentInput(pkg, sceneId, previousFrame);
-  const compiled = await compileSource(source, { previous: previousFrame });
+  const compiled = await compileSource(source, { previous: previousFrame }, { sampleTime: "end" });
   if (compiled.options.audio !== input.audioAssetId || compiled.options.end !== input.endMode) {
     throw new NarrationError("SCENE_AUDIO", "Scene must use its assigned narration asset and end mode.");
   }

@@ -178,8 +178,9 @@ export class VideoService {
       if (!initial.ok) throw new Error('Stored scenes could not be restored')
       while (!this.stopped) {
         const priorIndex = manifest.scenes.length - 1
+        const previousFrame = priorIndex >= 0 ? await sequence.evaluate(priorIndex, manifest.scenes[priorIndex].duration) : undefined
         const next = await withTokenUsage(usage, () => generate(input, manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
-          previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal, images }))
+          previousFrame, signal, images }))
         if (this.stopped || !this.row(row.id)) break
         if (!next) {
           await thumbnailWork

@@ -1,5 +1,7 @@
 # Independent scene-speed visual review
 
+Historical experiment record. Its prompts, style criteria, and test counts describe that experiment; current production rules are in [instruction architecture](instruction-architecture.md).
+
 Reviewed 2026-10-10 by the independent visual-review agent. Evidence is actual CanvasRenderer/player output for the identical frozen RNA transcription, binary-search, and derivative-of-x² lessons. This report evaluates teaching and visual quality, not generation speed. It does not establish universal losslessness or endorse a candidate on latency alone.
 
 ## Method and limits

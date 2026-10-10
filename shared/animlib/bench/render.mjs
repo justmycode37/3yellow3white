@@ -28,7 +28,7 @@ const { interactionSource } = await loadDemo('interaction');
 // preparation and serialization; they exclude timeline evaluation and GPU work.
 globalThis.ResizeObserver = class { observe() {} disconnect() {} };
 globalThis.devicePixelRatio = 1;
-globalThis.GPUBufferUsage = { UNIFORM: 1, COPY_DST: 2, VERTEX: 4 };
+globalThis.GPUBufferUsage = { UNIFORM: 1, COPY_DST: 2, VERTEX: 4, INDEX: 8 };
 globalThis.GPUTextureUsage = { RENDER_ATTACHMENT: 1 };
 const device = {
   limits: { maxTextureDimension2D: 8192 }, lost: new Promise(() => {}),
@@ -39,7 +39,7 @@ const device = {
   createTexture: ({ size }) => ({ width: size[0], height: size[1], createView: () => ({}), destroy() {} }),
   queue: { writeBuffer() {}, submit() {} },
   createCommandEncoder: () => ({
-    beginRenderPass: () => ({ setPipeline() {}, setBindGroup() {}, setVertexBuffer() {}, setViewport() {}, setScissorRect() {}, draw() {}, end() {} }),
+    beginRenderPass: () => ({ setPipeline() {}, setBindGroup() {}, setVertexBuffer() {}, setIndexBuffer() {}, setViewport() {}, setScissorRect() {}, draw() {}, drawIndexed() {}, end() {} }),
     finish: () => ({}),
   }),
 };
