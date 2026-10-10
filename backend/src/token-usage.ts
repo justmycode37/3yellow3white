@@ -50,29 +50,77 @@ export const withTokenUsage = <T>(tracker: TokenUsageTracker, run: () => T): T =
 
 interface UsageEvent {
   type: string
-  message?: { role: string; usage?: unknown }
+  message?: { role: string; usage?: unknown; stopReason?: string }
   assistantMessageEvent?: { type: string; delta?: string }
 }
 
 /** Capture the job's tracker now; SDK callbacks may run from their own async context. */
 export function createAgentUsageObserver() {
   const tracker = tracking.getStore()
-  let id = crypto.randomUUID(), characters = 0
-  return (event: UsageEvent) => {
-    if (!tracker) return
-    if (event.type === 'message_start' && event.message?.role === 'assistant') {
-      id = crypto.randomUUID(); characters = 0
-    }
+  let id = crypto.randomUUID(), characters = 0, estimate = 0
+  let active = false, requestPending = false, disposed = false, limit = Infinity
+  let projectionStarted = 0, projectionBase = 1
+  let timer: ReturnType<typeof setInterval> | undefined
+  let removeAbortListener: (() => void) | undefined
+  const stopRequest = () => {
+    active = false
+    clearInterval(timer); timer = undefined
+    removeAbortListener?.(); removeAbortListener = undefined
+    tracker?.flush()
+  }
+  const reset = () => { id = crypto.randomUUID(); characters = 0; estimate = 0 }
+  const updateEstimate = () => {
+    if (!tracker || disposed) return
+    const now = performance.now()
+    // This is a provisional activity estimate, not provider-reported usage. Some
+    // reasoning models emit no events until their response is nearly complete.
+    // Advance at 20 tokens/second, lifting the projection when visible output is
+    // ahead. The model's output limit bounds it; final usage replaces it exactly.
+    const projected = active ? Math.floor(projectionBase + (now - projectionStarted) * 20 / 1000) : 0
+    const visible = Math.ceil(characters / 4)
+    if (active && visible > projected) { projectionBase = visible; projectionStarted = now }
+    const next = Math.min(limit, Math.max(estimate, visible, projected))
+    if (next === estimate) return
+    estimate = next
+    tracker.update(id, { ...emptyTokenUsage(), estimatedOutputTokens: estimate })
+  }
+  const observe = (event: UsageEvent) => {
+    if (!tracker || disposed) return
+    // A provider's first event may arrive well after its request starts. Keep the
+    // request's existing projection when Pi eventually emits message_start.
+    if (event.type === 'message_start' && event.message?.role === 'assistant' && !requestPending) reset()
     const delta = event.assistantMessageEvent
     if (event.type === 'message_update' && delta && ['text_delta', 'thinking_delta', 'toolcall_delta'].includes(delta.type) && typeof delta.delta === 'string') {
       characters += delta.delta.length
-      // Visible output is only an estimate; hidden reasoning/input arrives in final usage.
-      tracker.update(id, { ...emptyTokenUsage(), estimatedOutputTokens: Math.ceil(characters / 4) })
+      updateEstimate()
     }
     if (event.type === 'message_end' && event.message?.role === 'assistant') {
+      stopRequest()
+      requestPending = false
       const usage = reportedTokenUsage(event.message.usage)
-      // Failed/aborted responses can omit usage: retain their estimate instead of erasing it.
-      if (usage && (usage.totalTokens > 0 || characters === 0)) tracker.update(id, usage, true)
+      // Failed/aborted responses can omit usage or return placeholder zeroes;
+      // retain their last provisional estimate, but never continue its timer.
+      const completed = ['stop', 'toolUse', 'length'].includes(event.message.stopReason ?? '')
+      if (usage && (usage.totalTokens > 0 || estimate === 0 || completed)) tracker.update(id, usage, true)
     }
   }
+  return Object.assign(observe, {
+    startRequest(maxTokens: number, signal?: AbortSignal) {
+      stopRequest()
+      if (!tracker || disposed || signal?.aborted) return
+      reset()
+      limit = Math.max(1, count(maxTokens))
+      active = true; requestPending = true; projectionStarted = performance.now(); projectionBase = 1
+      updateEstimate()
+      tracker.flush()
+      timer = setInterval(updateEstimate, 500)
+      timer.unref?.()
+      if (signal) {
+        signal.addEventListener('abort', stopRequest, { once: true })
+        removeAbortListener = () => signal.removeEventListener('abort', stopRequest)
+      }
+    },
+    stopRequest,
+    dispose() { stopRequest(); disposed = true },
+  })
 }

@@ -22,7 +22,7 @@ export interface VideoScene {
   words?: { id: string; text: string; start: number; end: number }[]
 }
 
-/** Provider totals plus a separate estimate of output still being streamed. */
+/** Provider totals plus provisional output estimates, including silent reasoning. */
 export interface VideoTokenUsage {
   inputTokens: number
   outputTokens: number
