@@ -36,6 +36,7 @@ const headings = [
   '### Playback after successful changes',
   '### Execution environment',
   '## 8. One audio track per scene',
+  '## Overlap inspection',
   '## 9. Engine structure and verification',
   '## 10. Current boundaries and next steps',
 ];
