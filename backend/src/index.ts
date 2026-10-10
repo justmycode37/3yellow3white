@@ -5,14 +5,16 @@ import { agentConfig } from './agents/config.js';
 import { PiAgentRunner } from './agents/runtime.js';
 import { createPiGenerator } from './agents/generator.js';
 import { createThumbnailGenerator, thumbnailAgentConfig } from './agents/thumbnail.js';
+import { ChromiumScenePreview } from './agents/scene-preview.js';
 
 const generation = process.env.VIDEO_GENERATOR ?? 'pi';
 if (generation !== 'pi' && generation !== 'simulated') throw new Error('VIDEO_GENERATOR must be pi or simulated.');
 const narration = new NarrationService();
 const config = generation === 'pi' ? agentConfig() : undefined;
+const preview = config && process.env.SCENE_PREVIEW !== '0' ? new ChromiumScenePreview() : undefined;
 const videos = new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite',
   config ? createPiGenerator(new PiAgentRunner(config), narration, config.dataDir,
-    { outputMode: config.sceneOutputMode, timingMode: config.sceneTimingMode }) : undefined, generation,
+    { outputMode: config.sceneOutputMode, timingMode: config.sceneTimingMode, preview }) : undefined, generation,
   config ? createThumbnailGenerator(new PiAgentRunner(thumbnailAgentConfig())) : undefined);
 
 const localNarration = process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1";
@@ -45,6 +47,7 @@ async function shutdown() {
   stopping = true;
   server.stop(true);
   await videos.close();
+  await preview?.close();
   process.exit(0);
 }
 process.on("SIGTERM", shutdown);

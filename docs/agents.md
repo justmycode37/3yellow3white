@@ -184,7 +184,68 @@ the agent's validation tool and repair turns. Repairs must preserve established
 facts, IDs, inherited state and measured audio timing. These files contain lesson
 material and source; keep the existing private job-directory permissions.
 
-### Optional rendered review
+### Scene inspection before submission
+
+Scene authors have two nonterminal tools. `inspect_scene` checks up to 24 local
+timestamps for text/LaTeX glyph collisions, paint outside its view, and potentially
+undersized text at 960×540. It can also return unclipped bounds for up to 20 named
+objects, including hidden paint for layout. Default overlap checks skip moving
+text; `includeAnimating` includes it. These are advisory warnings: entrances,
+exits, and intentional overlaps are not automatic validation failures. Reports
+cap warning output at 60 and automatic bounds checks at 200 elements per frame;
+`truncated` indicates incomplete reporting. Expensive inspection runs in a worker
+with a 15-second timeout and cancellation.
+
+`preview_scene` renders up to six PNG frames at requested local times, or samples
+timeline boundaries and transition midpoints. It returns image content directly
+to the author, with timestamps. `focusObjectId` requests a padded crop. The author
+is prompted to inspect, preview, repair concrete defects, and verify a repair;
+limits are four inspection calls and two preview batches per scene-agent run,
+including provider retries. Calls that fail consume that budget. These limits
+bound tool work; use of the tools is prompted, not a new submission requirement.
+
+Both tools accept either complete `output` or a `candidateId` returned by a prior
+check. Sources must pass the existing narration/plan validator first. Successful
+`validate_output` calls now return candidate IDs for scene tasks in text mode too;
+text-mode completion still returns source. Validated-reference completion can
+select candidates from inspection without retransmitting the source. Planning,
+editorial review and thumbnail conversations do not receive these tools.
+
+The host reuses validated compilation, samples the actual inherited frame and
+default controls, and reevaluates time-dependent bindings at each timestamp.
+Generated code executes only in the existing QuickJS sandbox. A warm, serial
+Chromium worker uses animlib's production WebGL2 renderer with SwiftShader;
+only validated scene/frame data enters its isolated browser context. Requests
+from the page are blocked, and no audio is loaded. Batches have no overall
+execution deadline, and browser commands have no time limit. Chromium startup
+retains its 15-second timeout. At most four batches may be active/queued.
+Active cancellation terminates and discards the browser process without waiting
+for a browser response; the next batch launches a replacement. Shutdown also
+terminates the browser. Queued cancellation does not interrupt another batch.
+
+`npm run build` also bundles the trusted browser renderer. Docker installs
+Chromium; the release smoke test renders frames and checks actual colored pixels,
+seeking and cropping under the deployed Compose restrictions. The container uses
+`SCENE_PREVIEW_NO_SANDBOX=1` because its existing dropped capabilities and
+`no-new-privileges` disallow a nested Chromium sandbox. It remains an unprivileged,
+read-only container; `/tmp` has a 512 MiB limit for Chromium's profile/shared data.
+Do not load arbitrary pages or generated JavaScript into this browser.
+
+Locally, install Chromium and set `SCENE_PREVIEW_CHROMIUM` to its executable
+(default `/usr/bin/chromium`). Keep Chromium's sandbox enabled where supported.
+Set `SCENE_PREVIEW=0` to expose only analytical inspection. Missing Chromium or a
+render failure returns a tool error; the author may finish using analytical
+feedback. Private `scene-inspection/SCENE_INDEX-RUN_UUID/` job folders preserve
+inspected sources, reports, preview PNGs, sample times, and elapsed milliseconds.
+Structured logs contain counts/timing, not source or images.
+
+Still samples cannot certify continuous motion, occlusion, control extremes, or
+audio synchronization. Bounds are not a visibility test, and small-text warnings
+are heuristic. These checks do not rewrite existing saved scenes. Quality and
+end-to-end latency gains still require comparing generated lessons; the smoke
+test measures rendering correctness and overhead only.
+
+### Optional rendered review after generation
 
 After capturing 1-5 screenshots or timestamped contact sheets of a scene, run:
 

@@ -17,7 +17,7 @@
     "agents:review": "npm run agents:review --workspace @aha/backend --",
     "agents:thumbnails": "npm run agents:thumbnails --workspace @aha/backend --",
     "dev": "npm run dev --workspace animlib",
-    "build": "npm run build --workspace animlib",
+    "build": "npm run build --workspace animlib && npm run build:preview --workspace @aha/backend",
     "test": "npm run test --workspace animlib",
     "typecheck": "npm run typecheck --workspace animlib",
     "demo:build": "npm run demo:build --workspace animlib",
