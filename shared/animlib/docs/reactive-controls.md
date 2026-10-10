@@ -85,6 +85,9 @@ A Play request made while a seek is queued is recorded and applied after the las
 queued seek completes; its promise acknowledges that intent immediately. A later
 Pause or seek cancels that intent. An unknown seek target rejects without stopping
 the running clock, including a target removed by a preceding queued submission.
+When reconstruction or source replacement waits for a refreshed frame, automatic
+resume checks the playback generation and pending seeks. A newer Play, Pause, or
+seek takes precedence over the playback state captured before sampling.
 
 `SceneSequence` calls `prepare` once per newly compiled scene, before sampling its
 outgoing frame or compiling its successor. Hosts can resolve audio duration there;
@@ -160,12 +163,17 @@ contents, even while scene and element identities remain unchanged.
 On 2026-10-10, Node 24.19.0 on Linux x64 measured 20.76 ms median / 21.40 ms p95
 for reconstruction versus 4.55 ms / 5.05 ms for retained updates (5 warmups,
 30 samples per path). These are CPU API timings, not frame-rate claims. The
-validation run after the first review fixes passed 491 unit tests, 215 backend tests, 64 native Vulkan WebGPU
-checks, and 64 Chrome 154 WebGL2/SwiftShader browser checks, including exact dynamic/static wave
+validation run after the second review fix passed 503 unit tests, 215 backend tests,
+and 65 Chrome 154 WebGL2/SwiftShader browser checks; the first-review head also passed
+64 native Vulkan WebGPU checks. Browser coverage includes exact dynamic/static wave
 pixel matches. The minified production worker demo also passed repeatable seeks,
 paused amplitude/material updates, and playback/pause checks. The production-worker
 audio regression decodes a real six-second WAV with a four-second authored timeline:
 seeking to second five samples geometry at five, and batch/append handoffs both use
-six (or twelve after doubling amplitude). Combined rendering
+six (or twelve after doubling amplitude). Delaying a real worker result during
+reconstruction and source replacement also confirms that a newer Pause leaves zero
+scheduled playback frames; production WebGL2 pixels match an explicit seek to the
+same time. The ordering probes freeze the presentation clock and RAF scheduler,
+but use the actual compiler worker and renderer. Combined rendering
 with the parallel clipping/scalar-color, lighting/shadow, and retained-GPU changes
 requires integration validation after those changes land.

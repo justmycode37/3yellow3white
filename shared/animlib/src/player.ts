@@ -232,6 +232,7 @@ export class Player {
       const wasPlaying = this.status === "playing";
       // Read the old clock before changing active ID, even if the active scene moved.
       this.stopClock(this.clockTime(oldCompiled[oldIndex]));
+      const resumeGeneration = this.playbackGeneration;
       // Reconstruction can replace the active instance even when only a later source changed.
       if (affected || oldCompiled[oldIndex] !== this.currentScene()) { this.input.cancel(); this.behaviors.reset(); }
       this.error = undefined;
@@ -245,8 +246,11 @@ export class Player {
       }
       this.status = this.sceneId ? "paused" : "empty";
       await this.refresh();
+      // Sampling can await a worker. A newer Play/Pause or queued seek owns
+      // transport now; only resume the playback this operation interrupted.
       // Compilation success is separate from browser playback permission.
-      if (wasPlaying && change.type !== "load" && this.sceneId) await this.startPlayback().catch(() => {});
+      if (wasPlaying && resumeGeneration === this.playbackGeneration && !this.queuedSeeks && !this.disposed
+        && change.type !== "load" && this.sceneId) await this.startPlayback().catch(() => {});
       return result;
     });
   }
@@ -393,11 +397,15 @@ export class Player {
       }
       const wasPlaying = this.status === "playing";
       this.stopClock(this.clockTime(oldScenes.get(this.sceneId ?? "")));
+      const resumeGeneration = this.playbackGeneration;
       this.input.cancel(); this.behaviors.reset();
       this.time = Math.min(this.time, this.currentScene()?.duration ?? 0);
       this.status = this.sceneId ? "paused" : "empty";
       this.error = undefined;
       await this.refresh();
+      // Do not resume or mark ended over a newer transport request made while
+      // the reconstructed scene's worker sample was in flight.
+      if (resumeGeneration !== this.playbackGeneration || this.queuedSeeks || this.disposed) return;
       if (wasPlaying && this.time < (this.currentScene()?.duration ?? 0)) await this.startPlayback().catch(() => {});
       else if (wasPlaying) { this.status = "ended"; this.refresh(); }
     });

@@ -583,6 +583,39 @@ describe('time-dependent retained player frames', () => {
       expect(player.getState().status).toBe('paused');
     } finally {player.dispose();}
   });
+  describe.each(['control reconstruction', 'source replacement'] as const)('%s playback intent', operation => {
+    it.each(['pause', 'pause-play', 'play-pause', 'seek', 'seek-play', 'unchanged'] as const)('honors %s while the refreshed frame awaits a sample', async intent => {
+      const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+      let release: (()=>void)|undefined;
+      try {
+        const source=wave.replace('reactive:true,','').replace('[s.time,a]','[s.time]').replace('i,t,a)=>','i,t)=>');
+        expect((await player.submit({type:'load',scenes:[{id:'a',source},{id:'b',source:wait(1)}]})).ok).toBe(true);
+        await player.seek({scene:'a',time:1});await player.play();
+        const real=SourceCompiler.prototype.update;
+        vi.spyOn(SourceCompiler.prototype,'update').mockImplementation(async function(this:SourceCompiler,...args){
+          const result=await real.apply(this,args);
+          if(args[4]===1 && !release)await new Promise<void>(resolve=>{release=resolve;});
+          return result;
+        });
+        const changing=operation==='control reconstruction'
+          ?player.setControl({scene:'a',id:'a',value:2})
+          :player.submit({type:'replace',scene:'b',source:wait(2)});
+        await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+        const later: Promise<unknown>[]=[];
+        if(intent==='pause' || intent==='pause-play')player.pause();
+        if(intent==='pause-play' || intent==='play-pause')later.push(player.play());
+        if(intent==='play-pause')player.pause();
+        if(intent==='seek' || intent==='seek-play')later.push(player.seek({scene:'a',time:2}));
+        if(intent==='seek-play')later.push(player.play());
+        release!();await changing;await Promise.all(later);
+        const playing=['pause-play','seek-play','unchanged'].includes(intent);
+        const time=intent.startsWith('seek')?2:1;
+        expect(player.getState()).toMatchObject({status:playing?'playing':'paused',time});
+        expect(frames.size).toBe(playing?1:0);
+        expect(z()).toBe(time*(operation==='control reconstruction'?2:1));
+      } finally {release?.();player.dispose();}
+    });
+  });
   it('preserves a Play request issued while a seek waits behind a control update', async () => {
     const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
     let release: (()=>void)|undefined;
