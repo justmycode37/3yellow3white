@@ -22,7 +22,7 @@ test('retains every authoring section verbatim while excluding host and developm
   }
   expect(output.length).toBeLessThan(reference.length);
   expect(output).toContain(between('### Procedural textures and materials', '### Function and parametric surfaces'));
-  expect(output).toContain('### Reactive sliders (prototype)');
+  expect(output).toContain('### Retained reactive bindings');
   expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
 });
 
@@ -74,4 +74,13 @@ test('retains the complete lighting API, example, casting policy and limits verb
     'arbitrary mesh receivers',
     'Use medium quality and modest caster counts for interactive scenes.',
   ]) expect(lighting).toContain(prose);
+});
+
+test('retains deformation topology, sandbox, and snapshot authoring rules verbatim', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('### Fixed-topology deformation and scene time', '### Control appearance'));
+  expect(output).toContain('s.deform(wave, [s.time, amplitude]');
+  expect(output).toContain('triangle indices, order, and winding never change');
+  expect(output).toContain('Callbacks remain synchronous and sandboxed');
+  expect(output).toContain('await sequence.evaluate(index, time)');
 });

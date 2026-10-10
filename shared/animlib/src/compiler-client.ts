@@ -5,7 +5,7 @@ import type { CompileInput, CompiledScene, ControlValue, Diagnostic, ReactiveUpd
 export interface CompileLimits { executionLimitMs?: number }
 export type CompilerRequest =
   | { id: number; type?: 'compile'; source: string; input: CompileInput; limits: CompileLimits }
-  | { id: number; type: 'update'; session: number; values: Record<string, ControlValue>; changed: string[]; limits: CompileLimits }
+  | { id: number; type: 'update'; session: number; values: Record<string, ControlValue>; changed: string[]; time?: number; duration: number; limits: CompileLimits }
   | { id: number; type: 'release'; sessions: number[] };
 export type CompilerResponse =
   | { id: number; ok: true; scene: CompiledScene }
@@ -107,13 +107,13 @@ export class SourceCompiler {
 
   canUpdate(scene: CompiledScene): boolean { return this.sessions.has(scene); }
 
-  update(scene: CompiledScene, values: Record<string, ControlValue>, changed: string[], limits: CompileLimits = {}): Promise<ReactiveUpdate[]> {
+  update(scene: CompiledScene, values: Record<string, ControlValue>, changed: string[], limits: CompileLimits = {}, time?: number): Promise<ReactiveUpdate[]> {
     const session = this.sessions.get(scene);
     if (session === undefined) return Promise.reject(new Error('Reactive runtime is unavailable'));
-    return this.request({ id: ++this.nextId, type: 'update', session, values, changed, limits: { executionLimitMs: limits.executionLimitMs } }, 'updates', async () => {
+    return this.request({ id: ++this.nextId, type: 'update', session, values, changed, duration: scene.duration, ...(time !== undefined ? { time } : {}), limits: { executionLimitMs: limits.executionLimitMs } }, 'updates', async () => {
       const program = this.programs.get(session);
       if (!program) throw new Error('Reactive runtime is unavailable');
-      return program.update(values, changed);
+      return program.update(values, changed, time, scene.duration);
     }) as Promise<ReactiveUpdate[]>;
   }
 

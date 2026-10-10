@@ -1,8 +1,11 @@
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
+import { audioDurationRegression } from './time-audio.browser.js';
+import { pauseDuringRefreshRegression } from './playback-intent.browser.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
+import { waveSource } from './dynamic-surface-cases.js';
 import { reactiveCases } from './reactive-cases.js';
 import { lightingCases } from './lighting-cases.js';
 import { materialCases, materialSource, bumpSource } from './material-cases.js';
@@ -122,6 +125,29 @@ export async function runWebGLTests() {
         assert(a.every((value,i)=>Math.abs(value-b[i])<=2),'Texture slipped during translation');
       }
       assert(!different(draw(),original),'Texture changed after seeking');
+    });
+    await test('real audio duration controls worker sampling and batch/append handoffs',async()=>{
+      await audioDurationRegression(createPlayer);
+    });
+    await test('Pause during reconstruction/replacement beats automatic resume after a real worker sample',async()=>{
+      await pauseDuringRefreshRegression(createPlayer);
+    });
+    await test('retained wave seeks and paused input match rebuilt pixels in clipped isolated views',async()=>{
+      const reference=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+      renderer.resetInteraction();
+      try {
+        await load(waveSource());const original=sequence.compiled[0];let first:Uint8Array|undefined;
+        for(const [time,amplitude,roughness] of [[0.5,0.6,0.45],[2,1,0.15],[0.5,0.6,0.45]]) {
+          await sequence.setControl('test','amplitude',amplitude);await sequence.setControl('test','roughness',roughness);
+          assert((await reference.submit({type:'load',scenes:[{id:'reference',source:waveSource(time,amplitude,roughness)}]})).ok,'Reference compilation failed');
+          renderer.render(reference.frame(0,time),reference.compiled[0].options);const expected=pixels(canvas);
+          renderer.render(await sequence.evaluate(0,time),original.options);const actual=pixels(canvas);
+          assert(!different(actual,expected),'Dynamic wave differs from static reference');assert(foreground(actual)>1000,'Wave is empty');
+          if(first && time===0.5)assert(!different(actual,first),'Wave seek is not deterministic');first??=actual;
+          assert(sequence.compiled[0]===original,'Wave rebuilt the scene');
+        }
+        artifact(canvas,'Retained dynamic wave, clipped independent views');
+      }finally{reference.dispose();}
     });
     for (const fixture of reactiveCases) await test(`reactive/rebuilt pixels: ${fixture.name}`, async () => {
       const legacy = new SceneSequence({ prepare: scenes => renderer.prepare(scenes) });

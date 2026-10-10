@@ -448,7 +448,7 @@ compatible topology. Morphs without authored normals recompute lighting from the
 intermediate geometry. If either endpoint supplies normals, normalized endpoint
 normals interpolate instead; the missing endpoint is derived from its geometry.
 Exactly opposite normals use a finite fallback at their ambiguous midpoint.
-Nonuniform changes of shape require new mesh geometry.
+Nonuniform changes of shape can use fixed-topology `s.deform` or vertex bindings below.
 
 ### Scene lighting and planar shadows
 
@@ -636,9 +636,11 @@ the entire mesh uses the existing transparent-triangle sorting path; intersectin
 transparent triangles retain its limitations. Picking uses geometry rather than pattern transparency. Overlap inspection
 remains limited to text/LaTeX relationships.
 
-Use ordinary sliders/selects to rebuild texture or material parameters at the
-current time, including while paused. They are not `animate` or reactive `s.bind`
-properties. Settings persist with kept geometry and JSON frames. Compatible
+Use `s.bind(meshOrSphere, [control], value => ({ material: { roughness: value } }))`
+to replace material parameters without rebuilding geometry. `texture` works the
+same way; return `null` to remove either setting. These are whole-object
+replacements, not nested merges, and are not `animate` properties. Ordinary
+controls can still rebuild them together with dependent labels. Settings persist with kept geometry and JSON frames. Compatible
 mesh/sphere morphs use the source settings at progress zero and target settings
 for the interior and endpoint; settings do not interpolate. Keep identical
 settings for a continuous finish, or crossfade separate objects deliberately.
@@ -672,9 +674,10 @@ Use this inside a `scene({ mode: '3d', orbit: true }, s => { ... })` builder,
 or create the surface in an `s.view` callback. This ordinary numeric slider
 recompiles the sampled geometry at the current playback time, including while
 paused. Derive dependent labels from the same value and keep duration stable.
-Do not use `reactive: true` or `s.bind` to change a surface callback, vertices,
-segment count, solid dimensions, or tube points: retained bindings do not rebuild
-mesh geometry. An ordinary control is also needed if a size change updates text.
+Use `s.deform` below for retained changes to existing vertices. Segment counts,
+connectivity, holes, surface sampling callbacks, solid construction parameters, and
+tube centerline sampling still require reconstruction. An ordinary control is
+also needed if a size change updates text.
 
 `s.parametricSurface(id, { fn: (u, v) => [x, y, z], uRange?, vRange?,
 uSegments?, vSegments?, closedU?, closedV?, shading?, ...style })` supports shapes
@@ -1369,7 +1372,7 @@ Do not recreate the host's controls on every frame if that would lose focus.
 The built-in overlay maintains keyed native widgets and reconciles pending input
 updates after they finish.
 
-### Reactive sliders (prototype)
+### Retained reactive bindings
 
 Opt into retained JavaScript bindings for property changes:
 
@@ -1381,22 +1384,87 @@ s.bind(ball, [size], value => ({ radius: 0.45 * value }));
 
 The slider returns a handle, and the callback receives its numeric value.
 Callbacks must be pure and synchronous, returning a fixed set of supported
-properties: radius, position, rotation, scale, opacity, or fill. A binding and
+properties: radius, position, rotation, scale, opacity, fill, vertices, normals,
+material, texture, or scalarColors. Multiple bindings may target one element if
+they own disjoint properties. A binding and
 timeline cannot own the same property. The changed builder and earlier scenes
 are reused; downstream scenes still rebuild transactionally. Callbacks remain
 inside a retained QuickJS sandbox, with a fresh execution deadline per update;
 compiled snapshots contain only their validated results. See the
-[prototype contract, limitations, and measurements](reactive-controls.md).
+[reactive contract, limitations, and measurements](reactive-controls.md).
 
 Use this opt-in path only when every value driven by the slider can be expressed
 with supported properties. Keep an ordinary numeric slider when a control changes
-text, LaTeX numbers, path/mesh geometry, object counts, camera settings, animation
+text, LaTeX numbers, path geometry, mesh topology, object counts, camera settings, animation
 targets, or timing. For example, a vector-length slider that also updates a formula
 should continue using the ordinary builder path so both remain consistent. Both
 styles may coexist in one scene; this prototype does not replace or restrict the
 existing authoring API. Do not simplify a planned explanation to fit the fast path.
 Reactive callbacks must use their supplied values and immutable captured data;
 mutation of closure state or consuming random values breaks reproducibility.
+
+### Fixed-topology deformation and scene time
+
+```js
+const amplitude = s.slider('amplitude', { reactive: true, default: 0.6, min: 0, max: 1.2 });
+const roughness = s.slider('roughness', { reactive: true, default: 0.45, min: 0.05, max: 1 });
+const wave = s.surface('wave', { fn: () => 0, xSegments: 24, ySegments: 24, fill: Color.TEAL });
+s.deform(wave, [s.time, amplitude], ([x, y], index, t, a) =>
+  [x, y, a * Math.sin(2 * x - t) * Math.cos(2 * y - t / 2)]);
+s.bind(wave, [roughness], r => ({ material: { roughness: r } }));
+s.wait(10);
+```
+
+`s.deform(mesh, dependencies, callback)` captures the mesh's local rest vertices
+at declaration. Each invocation receives a fresh rest `Vec3`, its vertex index,
+and dependency values in declared order. It must return a finite `Vec3` within
+±1,000,000. It works on sampled surfaces, solids, tubes, and explicit meshes.
+`s.time` is a handle for absolute scene-local seconds clamped to `[0, duration]`;
+it is available inside views too. It can also drive ordinary `s.bind` properties,
+including materials and textures. A time-only binding may use `[s.time]`.
+
+For full array control, `s.bind` may return `vertices: Position[]` and optional
+`normals: Vec3[] | null`. Vertex count must equal the original mesh's count;
+triangle indices, order, and winding never change. New holes, sampling counts,
+and connectivity require ordinary controls/source reconstruction. Nonfinite
+updates are rejected, rather than turning into new holes. Existing holes and
+omitted pole triangles stay as compiled, even if deformation uncovers them.
+Collapsed triangles remain connected and use finite fallback normals.
+
+Vertex updates discard old normals unless the same patch supplies new ones;
+smooth/flat shading then derives normals from the deformed positions. Explicit
+normals must be nonzero and match the vertex count. Vertices implicitly own
+normals, so a separate binding cannot also own them. Geometry bindings cannot
+coexist with a morph on the target. Independent transform animation, grouping,
+isolated group opacity, and clipped views continue to work. Removed objects are
+not resurrected. Other geometry fields, including clipping/outline settings,
+are preserved; downstream geometry processing receives the deformed mesh.
+`scalarColors` can replace the explanatory renderer's full `{values, domain,
+colors}` ramp (or `null` to remove it), with one finite scalar per retained vertex,
+an increasing domain, and 2–16 palette tokens; its rendering belongs to the
+explanatory geometry feature.
+
+Callbacks remain synchronous and sandboxed, with the existing per-invocation
+execution/memory limits. They must be pure functions of arguments and immutable
+captured data; purity is an authoring contract, not mechanically enforced. Same
+time and controls therefore produce the same shape without integrating deltas.
+The player awaits sampling on seeks and paused input changes, discards stale
+worker results, and keeps at most one playback sample in flight. Slow callbacks
+reduce displayed frame rate; they do not reset the audio clock. A failed time
+sample keeps the last rendered frame, stops playback, and reports a blocked
+player; a valid seek or input can recover. End-frame handoffs sample the outgoing
+scene at its duration before compiling the next scene.
+
+Headless callers use `await sequence.evaluate(index, time)` for an exact frame or
+`await sequence.sample(index, time)` for a serializable `CompiledScene` snapshot.
+The latter records `reactiveTime`. `evaluateScene(snapshot, time)` and synchronous
+`sequence.frame` never execute callbacks: they evaluate tracks using the binding
+outputs already in the snapshot (canonical scenes and `compileSource` hold
+time-zero outputs by default). For a one-shot export use
+`compileSource(source, input, { sampleTime: seconds })` or `{ sampleTime: 'end' }`;
+it samples inside the sandbox and disposes the runtime. Snapshots cannot resample
+callbacks after JSON export. Use these APIs before exporting a desired time. Open `?surfaces` for the
+wave demo with independent material controls and two cameras.
 
 ### Control appearance
 
@@ -1659,11 +1727,13 @@ export default scene({ mode: "2d", end: "hold", audio: "narration" }, s => {
 });
 ```
 
-Audio is prepared and decoded before a candidate is committed. A scene's duration
-is the greater of its visual timeline and audio duration. Shorter audio ends while
-visual playback continues; longer audio holds the final visual frame until the
-track ends. The track starts at local scene time zero. There is no cross-scene
-audio carry, mixing, or separate audio timeline.
+Audio is prepared and decoded before sampling a candidate's outgoing frame or
+compiling its successor. A scene's duration is the greater of its visual timeline
+and audio duration. Shorter audio ends while visual playback continues; longer
+audio holds completed timeline animations while `s.time` bindings continue sampling
+until the track ends. Retained workers use this prepared duration, including for
+seeks and handoffs. The track starts at local scene time zero. There is no
+cross-scene audio carry, mixing, or separate audio timeline.
 
 Playback with audio uses the Web Audio clock as its local time source. Pause stops
 the source; resume creates a source at the stored offset. Seeking pauses both

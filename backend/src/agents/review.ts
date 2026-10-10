@@ -31,7 +31,7 @@ export async function validateReview(output: string, input: ReviewInput): Promis
     if (review.findings.length || review.source !== undefined) throw new Error('An approved review has no findings or replacement source.');
   } else {
     if (!review.findings.length || typeof review.source !== 'string' || !review.source.trim()) throw new Error('A repair needs findings and complete corrected source.');
-    const compiled = await compileSource(review.source, { previous: input.previousFrame });
+    const compiled = await compileSource(review.source, { previous: input.previousFrame }, { sampleTime: "end" });
     if (compiled.options.audio !== input.audioAssetId || compiled.options.end !== input.endMode || Math.abs(compiled.duration - input.scene.durationSec) > 1e-6) throw new Error('Review repairs must preserve the audio asset, end mode, and exact measured duration.');
     if (input.planning.current) validateScenePlan(compiled, evaluateScene(compiled, compiled.duration), input.planning.current);
   }

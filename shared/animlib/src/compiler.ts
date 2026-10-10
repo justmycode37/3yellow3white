@@ -1,3 +1,4 @@
+import { validateSurfaceAppearance } from "./appearance-validation.js";
 import { parse } from "acorn";
 import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
@@ -46,34 +47,7 @@ function geometry(g: Geometry) {
   if (g.kind === "group") check(Array.isArray(g.children) && g.children.length <= 2000 && g.children.every(id => typeof id === "string"), "Invalid group children");
   if (g.isolated !== undefined) check(g.kind === "group" && typeof g.isolated === "boolean", "Only groups support isolation");
   if (g.shading !== undefined) check(g.kind === "mesh" && ["unlit", "flat", "smooth"].includes(g.shading), "Invalid mesh shading");
-  if (g.material !== undefined) {
-    const m = g.material;
-    check((g.kind === "mesh" || g.kind === "sphere") && m && typeof m === "object" && !Array.isArray(m), "Materials require mesh or sphere geometry");
-    check(Object.keys(m).every(key => ["metalness", "roughness", "specular", "emissive", "emissiveIntensity"].includes(key)), "Unknown material option");
-    for (const key of ["metalness", "roughness", "specular", "emissiveIntensity"] as const) if (m[key] !== undefined) {
-      number(m[key], `material ${key}`);
-      check(m[key]! >= (key === "roughness" ? 0.05 : 0) && m[key]! <= (key === "emissiveIntensity" ? 4 : 1), `Invalid material ${key} range`);
-    }
-    if (m.emissive !== undefined) validateColor(m.emissive);
-  }
-  if (g.texture !== undefined) {
-    const t = g.texture;
-    check((g.kind === "mesh" || g.kind === "sphere") && t && typeof t === "object" && !Array.isArray(t), "Textures require mesh or sphere geometry");
-    check(Object.keys(t).every(key => ["pattern", "color", "scale", "offset", "seed", "bumpStrength"].includes(key)), "Unknown texture option");
-    check(["checker", "stripes", "noise", "marble", "wood"].includes(t.pattern), "Invalid texture pattern");
-    validateColor(t.color);
-    if (t.scale !== undefined) {
-      const scales = typeof t.scale === "number" ? [t.scale] : t.scale;
-      if (typeof t.scale !== "number") vec(t.scale, "texture scale");
-      for (const value of scales) { number(value, "texture scale"); check(value > 0 && value <= 1000, "Texture scale must be in (0, 1000]"); }
-    }
-    if (t.offset !== undefined) vec(t.offset, "texture offset");
-    if (t.bumpStrength !== undefined) {
-      number(t.bumpStrength, "texture bumpStrength");
-      check(Math.abs(t.bumpStrength) <= 1, "Texture bumpStrength must be between -1 and 1");
-    }
-    if (t.seed !== undefined) check(Number.isInteger(t.seed) && t.seed >= 0 && t.seed <= 65535, "Texture seed must be an integer 0–65535");
-  }
+  validateSurfaceAppearance(g);
   if (g.normals !== undefined) {
     check(g.kind === "mesh" && Array.isArray(g.normals) && g.normals.length === g.vertices?.length, "Mesh normals must match vertices");
     for (const normal of g.normals) { vec(normal, "mesh normal"); check(Math.hypot(...normal) > 0, "Mesh normals must be nonzero"); }
@@ -277,7 +251,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
 
 export interface SceneProgram {
   scene: CompiledScene;
-  update(values: Record<string, ControlValue>, changed: string[]): ReactiveUpdate[];
+  update(values: Record<string, ControlValue>, changed: string[], time?: number, duration?: number): ReactiveUpdate[];
   dispose(): void;
 }
 
@@ -337,13 +311,17 @@ export async function createSceneProgram(source: string, input: CompileInput = {
     retained = true;
     return {
       scene: compiled,
-      update(values, changed) {
+      update(values, changed, time, duration = compiled.duration) {
         if (!vm) throw new Error('Scene runtime is disposed');
+        // Audio preparation can extend the host scene after this worker program
+        // was compiled. Clamp against the authoritative duration sent by the host.
+        check(Number.isFinite(duration) && duration >= 0 && duration <= 1e6, 'Invalid reactive duration');
+        if (time !== undefined) { check(Number.isFinite(time), 'Reactive time must be finite'); time = Math.max(0, Math.min(duration, time)); }
         deadline = Date.now() + (limits.executionLimitMs ?? 200);
-        const json = execute(`JSON.stringify(globalThis.__animlibUpdate(JSON.parse(${JSON.stringify(JSON.stringify(values))}), JSON.parse(${JSON.stringify(JSON.stringify(changed))})))`, 'bindings.js');
+        const json = execute(`JSON.stringify(globalThis.__animlibUpdate(JSON.parse(${JSON.stringify(JSON.stringify(values))}), JSON.parse(${JSON.stringify(JSON.stringify(changed))}), ${time === undefined ? "undefined" : time}))`, 'bindings.js');
         check(json && json.length <= 1024 * 1024, 'Invalid or oversized reactive update');
         const updates = JSON.parse(json) as ReactiveUpdate[];
-        mergeReactiveUpdates(compiled, updates, changed);
+        mergeReactiveUpdates(compiled, updates, changed, time);
         return updates;
       },
       dispose() { vm?.dispose(); vm = undefined; },
@@ -356,7 +334,15 @@ export async function createSceneProgram(source: string, input: CompileInput = {
 }
 
 /** Standalone compilation remains serializable; runtime callbacks are disposed. */
-export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<CompiledScene> {
+export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number; sampleTime?: number | "end" } = {}): Promise<CompiledScene> {
   const program = await createSceneProgram(source, input, limits);
-  try { return program.scene; } finally { program.dispose(); }
+  try {
+    const scene = program.scene;
+    const requested = limits.sampleTime === 'end' ? scene.duration : limits.sampleTime ?? 0;
+    check(Number.isFinite(requested), 'Sample time must be finite');
+    const time = Math.max(0, Math.min(scene.duration, requested));
+    if (time === 0 || !scene.reactiveBindings?.some(b => b.time)) return scene;
+    const updates = program.update(Object.fromEntries(scene.controls.map(c => [c.id, c.value])), [], time);
+    return { ...scene, reactiveBindings: mergeReactiveUpdates(scene, updates, [], time), reactiveTime: time };
+  } finally { program.dispose(); }
 }

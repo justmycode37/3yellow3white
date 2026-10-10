@@ -17,6 +17,7 @@ import type {PaletteColor} from '../src/types.js';
 import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
+import {waveSource} from './dynamic-surface-cases.js';
 import {reactiveCases} from './reactive-cases.js';
 import {lightingCases} from './lighting-cases.js';
 import {materialCases,materialSource,bumpSource} from './material-cases.js';
@@ -199,6 +200,25 @@ describe('native Vulkan WebGPU rendering',()=> {
       if(t===time)for(const [x,y,rgb] of samples)for(let c=0;c<3;c++)expect(Math.abs(image[(y*width+x)*4+c]-rgb[c])).toBeLessThanOrEqual(2);
     }
     expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('retained wave seeks and paused input match rebuilt pixels in clipped isolated views',async()=>{
+    const reference=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+    renderer.resetInteraction();
+    try {
+      expect((await sequence.submit({type:'load',scenes:[{id:'wave',source:waveSource()}]})).ok).toBe(true);
+      const original=sequence.compiled[0];let first:Buffer|undefined;
+      for(const [time,amplitude,roughness] of [[0.5,0.6,0.45],[2,1,0.15],[0.5,0.6,0.45]]) {
+        await sequence.setControl('wave','amplitude',amplitude);await sequence.setControl('wave','roughness',roughness);
+        expect((await reference.submit({type:'load',scenes:[{id:'reference',source:waveSource(time,amplitude,roughness)}]})).ok).toBe(true);
+        renderer.render(reference.frame(0,time),reference.compiled[0].options);const expected=Buffer.from(await pixels());
+        renderer.render(await sequence.evaluate(0,time),original.options);const actual=Buffer.from(await pixels());
+        expect(actual.equals(expected)).toBe(true);expect(changedPixels(actual)).toBeGreaterThan(1000);
+        if(first && time===0.5)expect(actual.equals(first)).toBe(true);first??=actual;
+        expect(sequence.compiled[0]).toBe(original);
+      }
+      expect(errors).toEqual([]);
+    }finally{reference.dispose();}
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it.each(reactiveCases)('reactive/rebuilt pixels: $name',async fixture=>{
