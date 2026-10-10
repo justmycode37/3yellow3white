@@ -155,6 +155,19 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       viewCameras.set(id, clone(viewCamera));
       currentView = id;
       const { view: _view, ...scoped } = context;
+      // A captured view builder must retain its ownership after this callback
+      // returns (and when used inside another view). Do not let it add objects to
+      // whichever view happens to be active at call time.
+      for (const key of Object.keys(scoped)) {
+        const value = (scoped as unknown as Record<string, unknown>)[key];
+        if (typeof value !== "function") continue;
+        (scoped as unknown as Record<string, unknown>)[key] = (...args: unknown[]) => {
+          const priorView = currentView;
+          currentView = id;
+          try { return value(...args); }
+          finally { currentView = priorView; }
+        };
+      }
       scoped.camera = {
         animate: properties => ({ type: "camera", ids: [], view: id, properties }),
         to3D: properties => ({ type: "camera", ids: [], view: id, properties: { perspective: 1, yaw: 0.55, pitch: 0.35, ...properties } }),
