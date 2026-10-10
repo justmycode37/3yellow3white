@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import { createHandler } from "../backend/src/server.js";
 import { compileSource, evaluateScene } from "animlib/core";
+import { buildStorylineMessages } from "../backend/src/storyline-prompt.js";
+import { parseStoryline } from "../backend/src/narration/markdown.js";
 
 const revision = (await Bun.file(new URL("../REVISION", import.meta.url)).text()).trim();
 assert.equal(process.env.APP_REVISION, revision);
+const guidance = (await buildStorylineMessages("Release verification"))[0].content;
+assert(guidance.includes("PRODUCTION HANDOFF"), "Storyline guidance is missing from the release");
+assert.equal(parseStoryline("Narration: A working release.").beats.length, 1);
 const scene = await compileSource(`export default scene({}, s => {
   const dot = s.circle('dot', { position: [2, 0] });
   s.keep(dot); s.wait(1);

@@ -1,6 +1,6 @@
 # Aha! — VISCon Hackathon
 
-Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page reads PDF, Word, text, or Markdown files in the browser and suggests colour-coded chapters and video topics. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. AI explanation and speech providers are not connected yet.
+Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page reads PDF, Word, text, or Markdown files in the browser and suggests colour-coded chapters and video topics. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. AI explanation and speech are not yet connected to this preview flow.
 
 ## Repository layout
 
@@ -56,8 +56,15 @@ consumers can import scene compilation and state evaluation from `animlib/core`
 without loading the renderer. See the library's
 [shared evaluation example](shared/animlib/README.md#shared-scene-evaluation).
 See [video delivery](docs/video-delivery.md) for the request API, streaming contract,
-interactive playback, persistence and generator integration. The current generator
-produces sample animations with a test tone; LLM and TTS providers are not connected.
+interactive playback, persistence and generator integration. The video generator
+currently produces sample animations with a test tone.
+
+A separate `/api/narrations` endpoint accepts labelled storyline Markdown,
+generates ElevenLabs narration with word timings and explicit pauses, and provides
+a validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
+This narration service is not yet connected to the video-generation queue.
+The storyline writer should receive `backend/prompts/guidance.md`; its section 16
+specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent.
 
 ## Automatic deployment
 
