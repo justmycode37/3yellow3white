@@ -20,3 +20,14 @@ const server = Bun.serve({
 });
 
 console.log(`Aha! backend listening on ${server.url}`);
+
+let stopping = false;
+async function shutdown() {
+  if (stopping) return;
+  stopping = true;
+  server.stop(true);
+  await videos.close();
+  process.exit(0);
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

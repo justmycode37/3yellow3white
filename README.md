@@ -64,7 +64,9 @@ specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent
 
 ## Automatic deployment
 
-GitHub Actions builds and tests pull requests, then deploys successful `main`
-updates directly over SSH. The app ships its pinned Bun runtime and production
-dependencies, verifies a candidate release before restarting the service, and
-rolls back if the new revision is unhealthy. See [deployment setup and recovery](docs/deployment.md).
+GitHub Actions builds and tests pull requests, including Docker startup, shutdown,
+and persistence checks, then deploys successful `main` updates over SSH. The app
+runs in a non-root Docker Compose container with persistent SQLite/narration bind
+mounts. Candidate images are tested before replacing production; failed activation
+restores the previous container or legacy systemd service. See
+[deployment setup, container commands, and recovery](docs/deployment.md).

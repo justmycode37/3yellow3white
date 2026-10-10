@@ -1,0 +1,42 @@
+services:
+  app:
+    image: ${AHA_IMAGE:?Set AHA_IMAGE to the tested release image}
+    pull_policy: never
+    user: "${AHA_UID:-1001}:${AHA_GID:-1001}"
+    init: true
+    restart: ${AHA_RESTART_POLICY:-unless-stopped}
+    stop_grace_period: 30s
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    env_file:
+      - path: ${AHA_RUNTIME_ENV:-./runtime.env}
+        format: raw
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "8080"
+      APP_REVISION: ${AHA_REVISION:?Set AHA_REVISION}
+      VIDEO_DB_PATH: /data/videos/${AHA_VIDEO_DB_NAME:-videos.sqlite}
+      NARRATION_DATA_DIR: /data/narration
+      NARRATION_ALLOW_LOCAL: "0"
+    ports:
+      - "${AHA_BIND_ADDRESS:-0.0.0.0}:${AHA_PORT:-8080}:8080"
+    volumes:
+      - type: bind
+        source: ${AHA_VIDEO_DATA_DIR:?Set AHA_VIDEO_DATA_DIR}
+        target: /data/videos
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${AHA_NARRATION_DATA_DIR:?Set AHA_NARRATION_DATA_DIR}
+        target: /data/narration
+        bind:
+          create_host_path: false
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
