@@ -192,6 +192,11 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
   const tasks: AgentTask[] = [];
   const runner = { async run(task: AgentTask) {
     agentCalls++; tasks.push(task);
+    if (task.prompt.startsWith("Review")) {
+      expect(speechCalls).toBe(0);
+      const output = JSON.stringify({ schemaVersion: 1, verdict: "pass", summary: "Sound counting example", issues: [], checks: ["One plus another makes two."] });
+      await task.validate!(output); return output;
+    }
     if (task.prompt.startsWith("Write")) { const output = planned(script); await task.validate!(output); return output; }
     const packet = JSON.parse(task.prompt.slice(task.prompt.indexOf("\n") + 1));
     const source = `export default scene({audio:${JSON.stringify(packet.audioAssetId)},end:${JSON.stringify(packet.endMode)}},s=>{s.circle('dot');s.wait(${packet.scene.durationSec});});`;
@@ -213,9 +218,9 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
       expect(audio.status).toBe(200);
       expect((await audio.arrayBuffer()).byteLength).toBe(48044);
     }
-    expect(agentCalls).toBe(3); expect(speechCalls).toBe(2);
-    expect(tasks[2].prompt).toContain('"previousFrame"');
-    const packet = JSON.parse(tasks[1].prompt.slice(tasks[1].prompt.indexOf('\n') + 1));
+    expect(agentCalls).toBe(4); expect(speechCalls).toBe(2);
+    expect(tasks[3].prompt).toContain('"previousFrame"');
+    const packet = JSON.parse(tasks[2].prompt.slice(tasks[2].prompt.indexOf('\n') + 1));
     expect(packet.planning.lesson.learningGoal).toBe('Count dots');
     expect(packet.planning.outline.map((scene: { id: string }) => scene.id)).toEqual(['beat-1', 'beat-2']);
     expect(packet.planning.next.id).toBe('beat-2');
@@ -225,7 +230,7 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     const reopened = createPiGenerator(runner, narration, settings.dataDir);
     const result = await reopened(request, 0, { videoId: video.id, owner: "user:demo", signal: new AbortController().signal });
     expect(result?.scene.source).toBe(video.scenes[0].source);
-    expect(agentCalls).toBe(3); expect(speechCalls).toBe(2);
+    expect(agentCalls).toBe(4); expect(speechCalls).toBe(2);
     // A process replacement resumes interrupted speech from the persisted chunk cache.
     const narrationId = await readFile(join(settings.dataDir, video.id, 'narration-id'), 'utf8');
     const job = await narration.get('user:demo', narrationId);
@@ -235,7 +240,7 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     expect((await resumed(request, 0, { videoId: video.id, owner: 'user:demo', signal: new AbortController().signal }))?.scene.source).toBe(video.scenes[0].source);
     await restartedNarration.idle();
     expect((await restartedNarration.get('user:demo', narrationId)).status).toBe('complete');
-    expect(agentCalls).toBe(3); expect(speechCalls).toBe(2);
+    expect(agentCalls).toBe(4); expect(speechCalls).toBe(2);
   } finally { await service.close(); await narration.idle(); }
 });
 
@@ -254,6 +259,7 @@ test('scene one streams before later TTS finishes and scene two receives its eva
     },
   } });
   const runner = { async run(task: AgentTask) {
+    if (task.prompt.startsWith('Review')) return JSON.stringify({ schemaVersion: 1, verdict: 'pass', summary: 'Sound example', issues: [], checks: ['The same dot continues into beat-2.'] });
     if (task.prompt.startsWith('Write')) {
       const base = JSON.parse(planned(script)) as { plan: LessonPlan };
       base.plan.entities = [{ id: 'dot', meaning: 'The original dot', color: 'BLUE' }];

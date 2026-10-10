@@ -1,0 +1,66 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import type { VideoRequest } from '../../../shared/video/contract.js';
+import { parseStoryline } from '../narration/markdown.js';
+import { atomicWrite } from '../narration/service.js';
+import { buildStorylineMessages } from '../storyline-prompt.js';
+import { AgentError } from './config.js';
+import { PLANNING_CONTRACT, parsePlannedLesson } from './planning.js';
+import type { PlannedLesson } from './planning.js';
+import type { AgentRunner, AgentTask } from './runtime.js';
+
+export interface EditorialReview {
+  schemaVersion: 1; verdict: 'pass' | 'revise'; summary: string;
+  issues: { severity: 'error' | 'warning'; sceneId: string | null; detail: string }[];
+  checks: string[];
+}
+
+export function parseEditorialReview(output: string, lesson: PlannedLesson): EditorialReview {
+  const review = JSON.parse(output) as EditorialReview;
+  const text = (value: unknown) => typeof value === 'string' && !!value.trim() && value.length <= 4000;
+  if (!review || review.schemaVersion !== 1 || !['pass', 'revise'].includes(review.verdict) || !text(review.summary)
+    || !Array.isArray(review.issues) || review.issues.length > 20 || !Array.isArray(review.checks)
+    || !review.checks.length || review.checks.length > 20 || !review.checks.every(text)) throw new Error('Return review schemaVersion 1, verdict, summary, at most 20 issues and 1-20 specific checks.');
+  const ids = new Set(lesson.plan.scenes.map(scene => scene.id));
+  for (const issue of review.issues) {
+    if (!issue || !['error', 'warning'].includes(issue.severity) || !text(issue.detail)
+      || !(issue.sceneId === null || ids.has(issue.sceneId))) throw new Error('Every issue needs error/warning severity, an actual sceneId or null, and a concrete correction.');
+  }
+  if ((review.verdict === 'revise') !== review.issues.some(issue => issue.severity === 'error')) throw new Error('Use revise exactly when material error issues remain; warnings alone pass.');
+  return review;
+}
+
+/** Only newly authored lessons enter this bounded gate; no speech starts until it passes. */
+export async function authorReviewedLesson(runner: AgentRunner, request: VideoRequest, directory: string,
+  signal: AbortSignal, images?: AgentTask['images']): Promise<PlannedLesson> {
+  const messages = await buildStorylineMessages(JSON.stringify(request));
+  const guidance = await readFile(new URL('../../prompts/story-review.md', import.meta.url), 'utf8');
+  let repair: { lesson: PlannedLesson; issues: EditorialReview['issues'] } | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    signal.throwIfAborted();
+    const task: AgentTask = {
+      systemPrompt: `${messages[0].content}\n\n${PLANNING_CONTRACT}`,
+      prompt: repair
+        ? `Revise the complete lesson and plan to correct the material editorial errors below. Preserve sound content, requested scope, stable entity IDs/meanings, and scene IDs where possible. Update narration and nonspoken planning together. Return the full planning envelope.\n${JSON.stringify({ request, draft: repair.lesson, issues: repair.issues })}`
+        : `Write a concise visual lesson and its plan from this request:\n${messages[1].content}`,
+      signal, images, validate: async output => { parsePlannedLesson(output, request); },
+    };
+    await atomicWrite(join(directory, `lesson-draft-${attempt}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
+    if (attempt === 0) await atomicWrite(join(directory, 'storyline.prompt.md'), `${task.systemPrompt}\n\n${task.prompt}`);
+    const lesson = parsePlannedLesson(await runner.run(task), request);
+    signal.throwIfAborted();
+    await atomicWrite(join(directory, `lesson-draft-${attempt}.json`), JSON.stringify(lesson, null, 2));
+    const reviewTask: AgentTask = {
+      systemPrompt: `${guidance}\n\nExplanation guidance:\n${messages[0].content}\n\nThe review response contract above takes priority over the guidance's authoring output format.`,
+      prompt: `Review this complete lesson before speech synthesis. Source images are attached in the same order as the authoring call.\n${JSON.stringify({ request, draft: lesson, parsedScenes: parseStoryline(lesson.markdown).beats })}`,
+      signal, images, validate: async output => { parseEditorialReview(output, lesson); },
+    };
+    await atomicWrite(join(directory, `lesson-review-${attempt}.prompt.md`), `${reviewTask.systemPrompt}\n\n${reviewTask.prompt}`);
+    const review = parseEditorialReview(await runner.run(reviewTask), lesson);
+    signal.throwIfAborted();
+    await atomicWrite(join(directory, `lesson-review-${attempt}.json`), JSON.stringify(review, null, 2));
+    if (review.verdict === 'pass') return lesson;
+    repair = { lesson, issues: review.issues.filter(issue => issue.severity === 'error') };
+  }
+  throw new AgentError('EDITORIAL', 'The lesson did not pass editorial review after three drafts. No speech was generated.');
+}

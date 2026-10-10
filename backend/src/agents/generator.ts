@@ -2,14 +2,14 @@ import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import type { Generator, GenerationContext } from "../videos.js";
-import { buildStorylineMessages } from "../storyline-prompt.js";
 import { parseStoryline } from "../narration/markdown.js";
 import { buildSceneAgentInput, validateSceneAgainstNarration } from "../narration/handoff.js";
 import { atomicWrite } from "../narration/service.js";
 import type { NarrationService } from "../narration/service.js";
 import { AgentError } from "./config.js";
 import type { AgentRunner } from "./runtime.js";
-import { PLANNING_CONTRACT, parsePlannedLesson, scenePlanningContext, validateStory } from './planning.js';
+import { parsePlannedLesson, scenePlanningContext, validateStory } from './planning.js';
+import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
 import { validateScenePlan } from './scene-plan.js';
 import { validationMessage } from './runtime.js';
@@ -47,14 +47,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       markdown = lesson.markdown; plan = lesson.plan;
     } else markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
     if (!markdown) {
-      const messages = await buildStorylineMessages(JSON.stringify(request));
-      const validate = async (output: string) => {
-        parsePlannedLesson(output, request);
-      };
-      const task = { systemPrompt: `${messages[0].content}\n\n${PLANNING_CONTRACT}`,
-        prompt: `Write a concise visual lesson and its plan from this request:\n${messages[1].content}`, signal, images: context.images, validate };
-      await atomicWrite(join(directory, 'storyline.prompt.md'), `${task.systemPrompt}\n\n${task.prompt}`);
-      const lesson = parsePlannedLesson(await runner.run(task), request);
+      const lesson = await authorReviewedLesson(runner, request, directory, signal, context.images);
       markdown = lesson.markdown; plan = lesson.plan;
       signal.throwIfAborted();
       // The atomic envelope is authoritative; script.md is a readable export for local review.
