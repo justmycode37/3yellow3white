@@ -117,6 +117,9 @@ Interactivity:
   are declared: so NEVER pass `position` to `s.slider`, `s.toggle` or `s.select`.
   `width` is optional and at most 220. Declare a control that also exists in the
   previous scene first, so it keeps its place.
+- A control must keep working for as long as it is shown, above all on the final
+  held frame, where viewers pause and play with it: the end picture and its numbers
+  are computed from the control's value too, not only one stretch in the middle.
 - The top right corner belongs to the controls: no formula, label or geometry in the
   top third of the right-hand text area, whether or not this scene has a control.
 
