@@ -156,7 +156,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     {(connection || (state.ready && state.generationError)) && <p className="player-notice" role="status">{state.generationError || connection}</p>}
     <div className="player-stage">
       <div ref={canvasHost} className="lesson-canvas-host"/>
-      {generating && !error && <GenerationProgress usage={manifest.tokenUsage} queued={manifest.status === 'queued'} compact={state.ready && !state.buffering} buffering={state.ready && state.buffering}/>}
+      {generating && !state.ready && !error && <GenerationProgress usage={manifest.tokenUsage} queued={manifest.status === 'queued'}/>}
       {!generating && !state.ready && !error && <p className="player-status" role="status">{manifest?.error || state.generationError || 'Loading your lesson…'}</p>}
       {!generating && state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}
       {error && <div className="player-status player-error" role="alert"><strong>This lesson couldn’t play.</strong><p>{error}</p><button className="secondary-button" onClick={() => setAttempt(old => old + 1)}>Try again</button></div>}

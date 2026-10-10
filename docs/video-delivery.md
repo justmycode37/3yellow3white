@@ -140,7 +140,10 @@ This uses a heuristic of 20 tokens per second, bounded by the model's output lim
 streamed text, reasoning summaries, and tool arguments also establish a lower bound at
 roughly four characters per token. These are activity-based estimates, not measured hidden
 reasoning tokens. The UI displays the sum in the DynaPuff title font with a small “tokens”
-label below and a visible `~` while estimates remain. The tooltip and accessible label
+label below and a visible `~` while estimates remain. Digits roll upward as usage increases
+(downward for confirmed corrections), with immediate updates when reduced motion is requested.
+The counter appears only before the first playable scene and stays hidden during playback
+and later buffering. The tooltip and accessible label
 also identify estimates. Provider-reported usage replaces each response's estimate,
 including hidden reasoning and input; this can adjust the number downward.
 
