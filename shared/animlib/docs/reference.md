@@ -1634,11 +1634,13 @@ export default scene({ mode: "2d", end: "hold", audio: "narration" }, s => {
 });
 ```
 
-Audio is prepared and decoded before a candidate is committed. A scene's duration
-is the greater of its visual timeline and audio duration. Shorter audio ends while
-visual playback continues; longer audio holds the final visual frame until the
-track ends. The track starts at local scene time zero. There is no cross-scene
-audio carry, mixing, or separate audio timeline.
+Audio is prepared and decoded before sampling a candidate's outgoing frame or
+compiling its successor. A scene's duration is the greater of its visual timeline
+and audio duration. Shorter audio ends while visual playback continues; longer
+audio holds completed timeline animations while `s.time` bindings continue sampling
+until the track ends. Retained workers use this prepared duration, including for
+seeks and handoffs. The track starts at local scene time zero. There is no
+cross-scene audio carry, mixing, or separate audio timeline.
 
 Playback with audio uses the Web Audio clock as its local time source. Pause stops
 the source; resume creates a source at the stored offset. Seeking pauses both

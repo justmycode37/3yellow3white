@@ -65,6 +65,22 @@ describe('retained fixed-topology deformation',()=>{
   await expect(s.setControl('a','a',3)).rejects.toThrow('suffix failed');
   expect(s.compiled).toEqual(before);expect((await s.evaluate(0,2)).elements[0].geometry.vertices![2]).toEqual([0,1,4]);
  });
+ it('prepares authoritative duration before batch and appended handoffs, including later control updates',async()=>{
+  const prepare=async(scenes:import('../src/types.js').CompiledScene[])=>{for(const scene of scenes)if(scene.options.audio)scene.duration=6;};
+  const a={id:'a',source:source.replace("scene({mode:'3d'}", "scene({mode:'3d',audio:'voice'}")};
+  const b={id:'b',source:`export default scene({},s=>{s.previous.get('m');s.wait(1);});`};
+  const batch=new SceneSequence({prepare}),appended=new SceneSequence({prepare});sequences.push(batch,appended);
+  expect((await batch.submit({type:'load',scenes:[a,b]})).ok).toBe(true);
+  expect((await appended.submit({type:'load',scenes:[a]})).ok).toBe(true);
+  expect((await appended.submit({type:'insert',after:'a',scenes:[b]})).ok).toBe(true);
+  expect(batch.compiled[0].duration).toBe(6);
+  expect(batch.frame(1,0)).toEqual(appended.frame(1,0));
+  expect(batch.frame(1,0).elements[0].geometry.vertices![2]).toEqual([0,1,6]);
+  for(const s of [batch,appended]) {
+    expect((await s.evaluate(0,5)).elements[0].geometry.vertices![2]).toEqual([0,1,5]);
+    await s.setControl('a','a',2);expect(s.frame(1,0).elements[0].geometry.vertices![2]).toEqual([0,1,12]);
+  }
+ });
  it('does not resurrect removed meshes and clamps time',async()=>{
   const s=await load(source.replace('s.keep(m);s.wait(3);','s.wait(1);s.remove(m);s.wait(2);'));
   expect((await s.evaluate(0,-1)).elements[0].geometry.vertices![2]).toEqual([0,1,0]);

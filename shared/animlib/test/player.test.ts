@@ -414,8 +414,10 @@ describe("player navigation and live source updates", () => {
     await sequence.submit({ type: 'insert', after: 'a', scenes: [{ id: 'b', source: second }] });
     expect(sequence.compiled[0]).toBe(interactive);
     expect(prepare.mock.calls.at(-1)![0]).toHaveLength(1);
+    prepare.mockClear();
     await sequence.setControl('a', 'scale', 3);
-    expect(prepare.mock.calls.at(-1)![0]).toHaveLength(2);
+    expect(prepare.mock.calls.map(([scenes]) => scenes.length)).toEqual([1, 1]);
+    expect(prepare.mock.calls.map(([scenes]) => scenes[0])).toEqual(sequence.compiled);
     expect(sequence.compiled[0]).not.toBe(original);
     expect(sequence.frame(1, 0).elements.find(element => element.id === 'dot')?.geometry.radius).toBe(3);
     sequence.dispose();
@@ -579,6 +581,63 @@ describe('time-dependent retained player frames', () => {
       advance(0.5);advance(0.5);expect(update).toHaveBeenCalledTimes(1);
       const seek=player.seek({scene:'a',time:3});release();await seek;expect(z()).toBe(3);
       expect(player.getState().status).toBe('paused');
+    } finally {player.dispose();}
+  });
+  it('preserves a Play request issued while a seek waits behind a control update', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    let release: (()=>void)|undefined;
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const real=SourceCompiler.prototype.update;
+      vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this:SourceCompiler,...args){
+        await new Promise<void>(resolve=>{release=resolve;});return real.apply(this,args);
+      });
+      const input=player.setControl({scene:'a',id:'a',value:2});
+      await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+      const seeking=player.seek({scene:'a',time:3});
+      await player.play(); // Must record intent without waiting for the stalled input.
+      release!();await input;await seeking;
+      expect(player.getState()).toMatchObject({status:'playing',time:3});
+      expect(frames.size).toBe(1);expect(z()).toBe(6);
+    } finally {release?.();player.dispose();}
+  });
+  it('rejects an unknown seek without stopping a playing clock or its scheduled frame', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const stop=vi.spyOn(AudioClock.prototype,'stop');
+      await expect(player.seek({scene:'missing',time:2})).rejects.toThrow('Unknown scene');
+      expect(player.getState().status).toBe('playing');expect(frames.size).toBe(1);expect(stop).not.toHaveBeenCalled();
+      advance(0.5);await vi.waitFor(()=>expect(z()).toBe(0.5));
+    } finally {player.dispose();}
+  });
+  it.each(['pause','seek'] as const)('a later %s cancels a recorded Play intent', async intent => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    let release: (()=>void)|undefined;
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const real=SourceCompiler.prototype.update;
+      vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this:SourceCompiler,...args){
+        await new Promise<void>(resolve=>{release=resolve;});return real.apply(this,args);
+      });
+      const input=player.setControl({scene:'a',id:'a',value:2});
+      await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+      const seeking=player.seek({scene:'a',time:3});await player.play();
+      const later=intent==='seek'?player.seek({scene:'a',time:1}):Promise.resolve(player.pause());
+      release!();await input;await seeking;await later;
+      expect(player.getState()).toMatchObject({status:'paused',time:intent==='seek'?1:3});
+      expect(frames.size).toBe(0);
+    } finally {release?.();player.dispose();}
+  });
+  it('revalidates a seek after a queued load removes its target, without breaking later playback', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const loading=player.submit({type:'load',scenes:[{id:'b',source:wave}]});
+      const rejection=expect(player.seek({scene:'a',time:2})).rejects.toThrow('Unknown scene');
+      await loading;await rejection;
+      expect(player.getState()).toMatchObject({scene:'b',status:'paused'});
+      await player.play();expect(player.getState().status).toBe('playing');expect(frames.size).toBe(1);
     } finally {player.dispose();}
   });
   it('a bad time sample keeps the last rendered frame and reports a blocked player', async () => {

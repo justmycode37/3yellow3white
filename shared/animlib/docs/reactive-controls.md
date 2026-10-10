@@ -81,6 +81,17 @@ request's completion or rejection. Source submissions, seeks, and ordinary contr
 changes are ordering barriers. The headless sequence itself serializes every
 request without coalescing.
 
+A Play request made while a seek is queued is recorded and applied after the last
+queued seek completes; its promise acknowledges that intent immediately. A later
+Pause or seek cancels that intent. An unknown seek target rejects without stopping
+the running clock, including a target removed by a preceding queued submission.
+
+`SceneSequence` calls `prepare` once per newly compiled scene, before sampling its
+outgoing frame or compiling its successor. Hosts can resolve audio duration there;
+reused prefix scenes are already prepared. Retained worker updates receive that
+prepared duration, so scene-time callbacks continue through longer audio and batch
+loading uses the same endpoint as appending scenes.
+
 Compiled scenes still contain plain JSON data, including the latest binding
 values. `evaluateScene` can evaluate that snapshot anywhere, using its already-sampled
 outputs. For exact time callbacks use `await sequence.evaluate(index, time)`;
@@ -149,9 +160,12 @@ contents, even while scene and element identities remain unchanged.
 On 2026-10-10, Node 24.19.0 on Linux x64 measured 20.76 ms median / 21.40 ms p95
 for reconstruction versus 4.55 ms / 5.05 ms for retained updates (5 warmups,
 30 samples per path). These are CPU API timings, not frame-rate claims. The
-validation run passed 484 unit tests, 215 backend tests, 64 native Vulkan WebGPU
-checks, and 63 Chrome 154 WebGL2/SwiftShader browser checks, including exact dynamic/static wave
+validation run after the first review fixes passed 491 unit tests, 215 backend tests, 64 native Vulkan WebGPU
+checks, and 64 Chrome 154 WebGL2/SwiftShader browser checks, including exact dynamic/static wave
 pixel matches. The minified production worker demo also passed repeatable seeks,
-paused amplitude/material updates, and playback/pause checks. Combined rendering
+paused amplitude/material updates, and playback/pause checks. The production-worker
+audio regression decodes a real six-second WAV with a four-second authored timeline:
+seeking to second five samples geometry at five, and batch/append handoffs both use
+six (or twelve after doubling amplitude). Combined rendering
 with the parallel clipping/scalar-color, lighting/shadow, and retained-GPU changes
 requires integration validation after those changes land.

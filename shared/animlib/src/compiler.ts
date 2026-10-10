@@ -248,7 +248,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
 
 export interface SceneProgram {
   scene: CompiledScene;
-  update(values: Record<string, ControlValue>, changed: string[], time?: number): ReactiveUpdate[];
+  update(values: Record<string, ControlValue>, changed: string[], time?: number, duration?: number): ReactiveUpdate[];
   dispose(): void;
 }
 
@@ -308,9 +308,12 @@ export async function createSceneProgram(source: string, input: CompileInput = {
     retained = true;
     return {
       scene: compiled,
-      update(values, changed, time) {
+      update(values, changed, time, duration = compiled.duration) {
         if (!vm) throw new Error('Scene runtime is disposed');
-        if (time !== undefined) { check(Number.isFinite(time), 'Reactive time must be finite'); time = Math.max(0, Math.min(compiled.duration, time)); }
+        // Audio preparation can extend the host scene after this worker program
+        // was compiled. Clamp against the authoritative duration sent by the host.
+        check(Number.isFinite(duration) && duration >= 0 && duration <= 1e6, 'Invalid reactive duration');
+        if (time !== undefined) { check(Number.isFinite(time), 'Reactive time must be finite'); time = Math.max(0, Math.min(duration, time)); }
         deadline = Date.now() + (limits.executionLimitMs ?? 200);
         const json = execute(`JSON.stringify(globalThis.__animlibUpdate(JSON.parse(${JSON.stringify(JSON.stringify(values))}), JSON.parse(${JSON.stringify(JSON.stringify(changed))}), ${time === undefined ? "undefined" : time}))`, 'bindings.js');
         check(json && json.length <= 1024 * 1024, 'Invalid or oversized reactive update');

@@ -1,6 +1,7 @@
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
+import { audioDurationRegression } from './time-audio.browser.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
 import { waveSource } from './dynamic-surface-cases.js';
@@ -113,6 +114,9 @@ export async function runWebGLTests() {
         assert(a.every((value,i)=>Math.abs(value-b[i])<=2),'Texture slipped during translation');
       }
       assert(!different(draw(),original),'Texture changed after seeking');
+    });
+    await test('real audio duration controls worker sampling and batch/append handoffs',async()=>{
+      await audioDurationRegression(createPlayer);
     });
     await test('retained wave seeks and paused input match rebuilt pixels in clipped isolated views',async()=>{
       const reference=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});

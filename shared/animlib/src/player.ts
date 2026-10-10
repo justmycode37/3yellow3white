@@ -33,6 +33,8 @@ export class Player {
   private startedAt = 0;
   private offset = 0;
   private playbackGeneration = 0;
+  private queuedSeeks = 0;
+  private playAfterSeek = false;
   private disposed = false;
   private operations: Promise<unknown> = Promise.resolve();
   private pendingControls = new Map<string, { change: { scene: string; id: string; value: ControlValue }; promise: Promise<void> }>();
@@ -244,12 +246,21 @@ export class Player {
       this.status = this.sceneId ? "paused" : "empty";
       await this.refresh();
       // Compilation success is separate from browser playback permission.
-      if (wasPlaying && change.type !== "load" && this.sceneId) await this.play().catch(() => {});
+      if (wasPlaying && change.type !== "load" && this.sceneId) await this.startPlayback().catch(() => {});
       return result;
     });
   }
 
   async play(): Promise<void> {
+    this.assertAlive();
+    if (this.rendererError) throw this.rendererError;
+    // Accept the later intent without waiting on a control/seek barrier. The
+    // final queued seek starts playback at its resolved destination.
+    if (this.queuedSeeks) { this.playAfterSeek = true; return; }
+    await this.startPlayback();
+  }
+
+  private async startPlayback(): Promise<void> {
     this.assertAlive();
     if (this.rendererError) throw this.rendererError;
     if (!this.sceneId || this.status === "playing") return;
@@ -297,7 +308,7 @@ export class Player {
           this.time = 0;
           this.status = "paused";
           this.refresh();
-          void this.play().catch(() => {});
+          void this.startPlayback().catch(() => {});
         } else {
           this.time = scene.duration;
           this.status = "ended";
@@ -311,6 +322,7 @@ export class Player {
 
   pause(): void {
     this.assertAlive();
+    this.playAfterSeek = false;
     this.stopClock();
     this.status = this.sceneId ? "paused" : "empty";
     this.refresh();
@@ -320,17 +332,29 @@ export class Player {
     this.assertAlive();
     this.pendingControls.clear();
     if (!Number.isFinite(position.time)) throw new Error("Seek time must be finite");
-    this.stopClock();
-    await this.enqueue(async () => {
-      const index = this.sequence.index(position.scene);
-      this.stopClock();
-      this.input.cancel(); this.behaviors.reset();
-      this.sceneId = position.scene;
-      this.time = Math.max(0, Math.min(position.time, this.sequence.compiled[index].duration));
-      this.status = "paused";
-      this.error = undefined;
-      await this.refresh();
-    });
+    // Validate before touching the running clock, and recheck at the queue
+    // boundary because a preceding source submission may remove the target.
+    this.sequence.index(position.scene);
+    this.queuedSeeks++;
+    this.playAfterSeek = false;
+    try {
+      await this.enqueue(async () => {
+        const index = this.sequence.index(position.scene);
+        this.stopClock();
+        this.input.cancel(); this.behaviors.reset();
+        this.sceneId = position.scene;
+        this.time = Math.max(0, Math.min(position.time, this.sequence.compiled[index].duration));
+        this.status = "paused";
+        this.error = undefined;
+        await this.refresh();
+      });
+    } finally {
+      this.queuedSeeks--;
+      if (!this.queuedSeeks && this.playAfterSeek && !this.disposed) {
+        this.playAfterSeek = false;
+        await this.startPlayback();
+      }
+    }
   }
 
   async next(): Promise<void> {
@@ -374,7 +398,7 @@ export class Player {
       this.status = this.sceneId ? "paused" : "empty";
       this.error = undefined;
       await this.refresh();
-      if (wasPlaying && this.time < (this.currentScene()?.duration ?? 0)) await this.play().catch(() => {});
+      if (wasPlaying && this.time < (this.currentScene()?.duration ?? 0)) await this.startPlayback().catch(() => {});
       else if (wasPlaying) { this.status = "ended"; this.refresh(); }
     });
     if (reactive) this.pendingControls.set(key, batch);

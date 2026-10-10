@@ -9,6 +9,10 @@ export interface SequenceOptions {
   palette?: ColorPalette;
   seed?: number;
   executionLimitMs?: number;
+  /** Called once per newly compiled scene, before sampling its outgoing frame.
+   * Resolve host-owned duration (for example decoded audio) here. Reused prefix
+   * scenes are already prepared and are not passed again.
+   */
   prepare?: (scenes: CompiledScene[]) => Promise<void>;
 }
 
@@ -73,13 +77,14 @@ export class SceneSequence {
     for (const source of sources.slice(prefix.length)) {
       try {
         const scene = await this.compiler.compile(source.source, { previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
+        await this.options.prepare?.([scene]);
+        if (this.disposed) throw new Error("Scene sequence is disposed");
         compiled.push(scene); previous = evaluateScene(await this.sampleScene(scene, scene.duration), scene.duration);
       } catch (error) {
         if (error instanceof SceneCompileError) error.diagnostic.scene = source.id;
         throw error;
       }
     }
-    await this.options.prepare?.(compiled.slice(prefix.length));
     if (this.disposed) throw new Error("Scene sequence is disposed");
     const normalized = new Map<string, Record<string, ControlValue>>();
     sources.forEach((s, i) => normalized.set(s.id, Object.fromEntries(compiled[i].controls.map(c => [c.id, c.value]))));
