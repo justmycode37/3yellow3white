@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import { describe, expect, it } from 'vitest';
 import { compileSource } from '../src/compiler.js';
 import { outline, morphOutline } from '../src/geometry.js';
@@ -149,7 +150,7 @@ describe('compiled curved scenes', () => {
     const frame = evaluateScene(scene, 0);
     const items = buildDrawItems(frame, frame.camera, 800, 800, paletteResolver());
     const fill = items.filter(i => i.elementId === 'ring' && i.component === 'fill');
-    const triangles: Vec3[] = fill.flatMap(item => Array.from({ length: item.vertices.length / 15 }, (_, i) => Array.from(item.vertices.subarray(i * 15, i * 15 + 3)) as Vec3));
+    const triangles: Vec3[] = fill.flatMap(item => Array.from({ length: item.vertices.length / VERTEX_FLOATS }, (_, i) => Array.from(item.vertices.subarray(i * VERTEX_FLOATS, i * VERTEX_FLOATS + 3)) as Vec3));
     expect(area(triangles)).toBeCloseTo(12);
     expect(items.filter(i => i.elementId === 'ring' && i.component === 'stroke')).toHaveLength(2);
     expect(items.some(i => i.elementId === 'open' && i.component === 'fill')).toBe(false);

@@ -31,7 +31,8 @@ Bindings run once after the builder and whenever a declared dependency changes.
 They return absolute values for a fixed set of keys: `radius` (circle/sphere),
 `position`, `rotation`, `scale`, `opacity`, and `fill`. Coordinates and rotations
 use the existing authoring conventions; fills must belong to the host palette.
-Values are validated before commit. Bindings do not create objects, modify
+Texture and material settings are geometry data: use ordinary controls to rebuild
+them, together with any dependent labels. Values are validated before commit. Bindings do not create objects, modify
 timelines, receive time, or run each animation frame in this prototype.
 
 A binding and timeline cannot write the same property on the same object.

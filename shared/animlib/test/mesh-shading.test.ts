@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import { describe, expect, it } from 'vitest';
 import { compileSource } from '../src/compiler.js';
 import { rotate } from '../src/geometry.js';
@@ -13,7 +14,7 @@ const state = (geometry: Geometry, extra: Partial<ElementState> = {}): ElementSt
   fill: 'WHITE', stroke: 'none', strokeWidth: 0, opacity: 1, persistent: false, space: 'world', ...extra,
 });
 const render = (elements: ElementState[], view = camera) => buildDrawItems({ elements, camera: view, cameraAnimated: false }, view, 800, 600, paletteResolver());
-const normalAt = (vertices: Float32Array, index = 0): Vec3 => Array.from(vertices.subarray(index * 15 + 8, index * 15 + 11)) as Vec3;
+const normalAt = (vertices: Float32Array, index = 0): Vec3 => Array.from(vertices.subarray(index * VERTEX_FLOATS + 8, index * VERTEX_FLOATS + 11)) as Vec3;
 const expectVector = (actual: Vec3, expected: Vec3) => expected.forEach((value, axis) => expect(actual[axis]).toBeCloseTo(value, 6));
 
 describe('mesh shading', () => {
@@ -22,15 +23,15 @@ describe('mesh shading', () => {
     expect(meshTriangles(geometry).normals).toBeUndefined();
     const items = render([state(geometry)]);
     expect(items).toHaveLength(1);
-    expect(items[0].vertices).toHaveLength(6 * 15);
-    for (let i = 11; i < items[0].vertices.length; i += 15) expect(items[0].vertices[i]).toBe(0);
+    expect(items[0].vertices).toHaveLength(6 * VERTEX_FLOATS);
+    for (let i = 11; i < items[0].vertices.length; i += VERTEX_FLOATS) expect(items[0].vertices[i]).toBe(0);
   });
 
   it('uses counterclockwise unit face normals for flat lighting', () => {
     const geometry: Geometry = { ...triangle(), shading: 'flat', vertices: [[0, 0, 0], [2, 0, 0], [0, 2, 0], [0, 0, 1]], triangles: [[0, 1, 2], [0, 3, 1]] };
     expect(meshTriangles(geometry).normals).toEqual([[0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]);
     const item = render([state(geometry)])[0];
-    for (let i = 11; i < item.vertices.length; i += 15) expect(item.vertices[i]).toBe(2);
+    for (let i = 11; i < item.vertices.length; i += VERTEX_FLOATS) expect(item.vertices[i]).toBe(2);
   });
 
   it('weights smooth normals by face area, sharing indices rather than coordinates', () => {
@@ -161,7 +162,7 @@ describe('mesh shading', () => {
     const geometry: Geometry = { ...triangle(), shading: 'smooth', vertices: [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]], triangles: [[0, 1, 2], [0, 3, 1]] };
     const items = render([state(geometry, { opacity: 0.5 })]);
     expect(items).toHaveLength(2);
-    expect(items.every(item => item.transparent && item.vertices.length === 45)).toBe(true);
+    expect(items.every(item => item.transparent && item.vertices.length === (3 * VERTEX_FLOATS))).toBe(true);
   });
 
   it('keeps stroked mesh fills adjacent to their own triangle strokes in depth order', () => {
@@ -173,7 +174,7 @@ describe('mesh shading', () => {
     const items = render([state(geometry, { stroke: 'RED', strokeWidth: 0.1 })]);
     expect(items.map(item => item.component)).toEqual(['fill', 'stroke', 'fill', 'stroke']);
     expect(items.map(item => item.depth)).toEqual([11, 11, 9, 9]);
-    expect(items.filter(item => item.component === 'fill').every(item => item.vertices.length === 45)).toBe(true);
+    expect(items.filter(item => item.component === 'fill').every(item => item.vertices.length === (3 * VERTEX_FLOATS))).toBe(true);
   });
 
   it('validates mesh lighting at the compilation boundary', async () => {

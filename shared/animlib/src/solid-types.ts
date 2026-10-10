@@ -1,6 +1,8 @@
-import type { ElementStyle, Vec3 } from './types.js';
+import type { ElementStyle, Material, ProceduralTexture, Vec3 } from './types.js';
 
 interface SolidStyle extends ElementStyle {
+  texture?: ProceduralTexture;
+  material?: Material;
   /** Smooth lighting by default; boxes default to flat lighting. */
   shading?: 'unlit' | 'flat' | 'smooth';
 }

@@ -124,7 +124,7 @@ After a restart, queued/running jobs become `interrupted`; an explicit retry reu
 
 Production runs Bun in the Docker Compose app container and reads `/etc/3yellow3white/environment`. Create a persistent directory owned by `deploy`, such as `/var/lib/3yellow3white/narration`, outside the immutable release directories. Set the key, pinned voice, data directory, and public origin there. No external queue/database is required. Artifacts are retained until explicitly removed by an operator; monitor disk use. Horizontal workers and automatic retention are not part of this version.
 
-The existing storyline and scene AI services are not yet implemented on main. This change defines their boundary, makes the guidance loadable, and supplies executable validation/demo integration without replacing the production mock creation flow.
+The storyline and scene services use the Pi agent pipeline described in [agent setup](agents.md). Narration packets feed scene generation and progressive playback through the boundaries above; [video delivery](video-delivery.md) describes the integrated production flow.
 
 ## Verification
 

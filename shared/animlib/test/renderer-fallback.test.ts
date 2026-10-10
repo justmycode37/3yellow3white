@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import { afterEach, expect, it, vi } from 'vitest';
 import { compileSource } from '../src/compiler.js';
 import { evaluateScene } from '../src/timeline.js';
@@ -105,7 +106,7 @@ it('submits shared lit geometry, opacity ordering, and viewport offsets to WebGL
   expect(data).toBeInstanceOf(Float32Array);
   expect(batches[0].opaqueVertices).toBeGreaterThan(100);
   expect(data[11]).toBe(1); expect(data[13]).toBeCloseTo(0.2);
-  expect(data[batches[0].opaqueVertices * 15 + 6]).toBe(0.5);
+  expect(data[batches[0].opaqueVertices * VERTEX_FLOATS + 6]).toBe(0.5);
   renderer.dispose();
 });
 it('reports loss once, rebuilds WebGL resources on restore and detaches handlers on disposal', async () => {

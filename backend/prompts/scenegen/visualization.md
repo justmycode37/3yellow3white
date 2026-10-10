@@ -184,6 +184,21 @@ How to build 3D with animlib:
   place a small sphere marker on it and pulse the marker.
 
 Alignment (strict; misplaced parts are the most visible kind of jank):
+- Spheres and meshes (including all spatial helpers) accept `texture` with
+  `pattern: 'checker' | 'stripes' | 'noise' | 'marble' | 'wood'`, a secondary palette
+  `color`, optional positive `scale` (scalar or Vec3), `offset` Vec3, and integer
+  `seed`. The fill is the first color; patterns sample local XYZ per pixel.
+  `texture.bumpStrength` (-1 to 1, default 0) perturbs lighting normals: try
+  0.02–0.15 for raised relief or negative values for grooves. It requires lit
+  geometry and changes neither mesh vertices nor silhouettes. Matching fill and
+  texture colors give bump detail without color variation.
+- Add `material: { metalness, roughness, specular, emissive, emissiveIntensity }`
+  for stylized metal, matte/plastic highlights, or luminous surfaces. Metalness
+  and specular are 0–1, roughness 0.05–1, emission intensity 0–4; emissive is a
+  palette color. Raw meshes need flat/smooth shading for lit material effects.
+  Use ordinary controls for these parameters. Omit material to keep simple shading.
+  Choose patterns that clarify the subject, with enough contrast for labels.
+  There are no image textures, image normal maps or displacement, scene reflections, or bloom.
 - Everything that belongs to a 3D model lives in the SAME 3D view as the model:
   create it inside that `s.view(...)` builder callback (with `opacity: 0` if it
   appears later, then fade it in). Never save the view handle and create objects

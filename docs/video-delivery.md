@@ -109,7 +109,8 @@ been set; fixture delays are not estimates of real generation performance.
 ## Renderer fallback and verification
 
 WebGL2 preserves scene colors, triangulated text/LaTeX, 2D/3D geometry, lighting,
-transparency, regional cameras and orbit controls. Playback, source recompilation,
+procedural textures, configurable materials (metalness, roughness, highlights,
+and emission), transparency, regional cameras and orbit controls. Playback, source recompilation,
 handoffs, audio clocks and progressive append are shared above the rendering layer.
 A canvas context type is permanent: failed WebGPU surfaces are replaced, with
 controls and resize observation rebound. The React player mounts an imperative

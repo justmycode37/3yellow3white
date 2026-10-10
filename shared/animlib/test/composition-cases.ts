@@ -14,3 +14,17 @@ export const compositionCases: { name: string; source: string; time: number; sam
   { name: 'isolated fade completes fully opaque', source: `export default scene({},s=>{${rectangles}const g=s.group('g',[a,b],{isolated:true});s.play(g.fadeIn(),{duration:2});});`, time: 2, samples: [[260,240,[255,255,255]],[320,240,[255,255,255]]] },
   { name: 'isolated fade completes fully hidden', source: `export default scene({},s=>{${rectangles}const g=s.group('g',[a,b],{isolated:true});s.play(g.fadeOut(),{duration:2});});`, time: 2, samples: [[260,240,[0,0,0]],[320,240,[0,0,0]]] },
 ];
+
+for (const isolated of [false, true]) compositionCases.push({
+  name: `procedural secondary alpha${isolated ? ' with isolated fade' : ''}`,
+  source: `export default scene({},s=>{
+    s.rectangle('back',{width:5,height:5,position:[0,0,-1],fill:'PURE_GREEN'});
+    const sheet=s.mesh('sheet',{vertices:[[-2,-2,0],[2,-2,0],[2,2,0],[-2,2,0]],
+      triangles:[[0,1,2],[0,2,3]],fill:'PURE_RED',
+      texture:{pattern:'stripes',color:{color:'PURE_BLUE',opacity:0.5},scale:2,offset:[0.25,0.25,0.5]}});
+    ${isolated ? "s.group('fade',[sheet],{isolated:true,opacity:0.5});" : ''}
+    s.wait(1);
+  });`,
+  time: 1,
+  samples: [[335,225,isolated ? [128,128,0] : [255,0,0]], [365,225,isolated ? [0,191,64] : [0,128,128]]],
+});

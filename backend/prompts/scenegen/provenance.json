@@ -8,10 +8,19 @@
       "sha256": "67196ff37ceb11ac7c338e4affd47c04ffa0ccbe46bcdd412bafa602ef373af7",
       "revisions": [
         {
+      "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
+      "sha256": "0488945b54b82902f679cec01d04a0e17950ce60899c587810d367f1e9b788a3",
+      "revisions": [
+        {
           "reason": "Update spatial authoring guidance for mesh shading, function and parametric surfaces, basic solids, and swept tubes."
         },
         {
-          "reason": "Controls top right, formula budget and spacing, minimal objects, focus frame and pulse, layering (PR 65)."
+          "reason": "Add procedural texture and material guidance (PR 73)."
+        },
+        {
+          "reason": "Controls top right, formula budget and spacing, minimal objects, focus frame and pulse, layering, true 3D shapes (PR 74)."
+        }
+      ]
         }
       ]
     },
