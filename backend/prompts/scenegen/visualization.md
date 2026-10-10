@@ -8,12 +8,21 @@
 ## Visual style (scenegen)
 
 Where a rule below is about time, the measured narration timing always wins: fit the
-motion inside the given audio cues and durationSec.
+motion inside the given audio cues and durationSec. Where a rule below differs from
+the scene-craft guidance above (explanatory text, the fixed layout, 3D by default,
+highlighting), the rule below wins.
 
 Visual style: 3Blue1Brown-like explanatory animation.
 - Dark background, few bright colours. Each colour means ONE concept for the whole
   film (e.g. green = first basis vector, red = second). Never recolour an object
-  to mean something else.
+  to mean something else. Use the colour the lesson plan gives each entity, in every
+  scene and for every form of it (the block of a metal and its atoms share one
+  colour); anything the plan gives no colour is WHITE or GREY. Never use YELLOW or
+  GOLD for an object or text: yellow is reserved for the focus frame.
+- Intuition first. The opening scene, and the start of every new idea, shows the
+  thing itself behaving (an object moving, a shape changing, a comparison) with no
+  formula and no numbers on screen. Symbols and details come only after the viewer
+  has seen what they describe.
 - Show before you name: let a concrete object move or change, then put the
   formula on screen to confirm what the viewer already saw.
 - Every "therefore" needs a visible reason: a moving vector, a sliding value, a
@@ -82,6 +91,9 @@ Focus (strict; the viewer must always know where to look):
   1.15 times its size and returns, about 1.2 s in total (`obj.scaleTo(1.15)` for
   0.6 s, then `obj.scaleTo(1)` for 0.6 s). For a line or arrow, thicken it instead:
   stroke width to 2 times and back, same timing. Nothing else moves during a pulse.
+  Scaling happens about the object's own `position`, so only pulse an object whose
+  position is its centre (a sphere, or a mesh or group built around its position);
+  otherwise it jumps sideways. Pulse a group through a group positioned at its centre.
 - The focus frame is the only frame allowed anywhere, and it is always temporary:
   it never stays on screen after its sentence, is never kept into the next scene, and
   never has a fill. Permanent boxes or panels around text remain forbidden. YELLOW is
@@ -93,6 +105,34 @@ Focus (strict; the viewer must always know where to look):
   picture to create focus.
 - When a formula states what the geometry just showed, pulse the geometry first and
   then frame the matching formula, so the eye is led from one to the other.
+
+Equations (strict; a formula nobody is explaining is clutter):
+- A formula is on screen only while the narration is explaining THAT formula, and it
+  appears at the sentence that starts explaining it, never earlier as a preview and
+  never as a title or a summary of what is coming.
+- Show a formula only if the narration explains every part of it. If the narration
+  only mentions a result in passing, show the picture, not the formula.
+- When the narration moves on, the formula leaves (fade it out) unless the very next
+  sentence builds on it. A scene normally ends with at most one formula on screen:
+  the one result the next scene needs. No formula is kept "for reference".
+- One formula at a time is the norm; two only while they are being compared. Prefer
+  the short form the narration actually says over a longer derivation.
+- Readouts tied to a control (a value that follows a slider) count as formulas: show
+  one only when the narration talks about that value.
+- A LaTeX morph needs an explicit part map: write both formulas with `\animpart`
+  names and pass `map`, or fade the old formula out and the new one in instead.
+
+Building shapes (strict):
+- Curves are smooth: give a path `curve: 'smooth'` or at least 40 sampled points, and
+  a tube at least 24 points along its centre line. Never draw a curve the lesson
+  calls curved as two or three straight segments.
+- Regular arrangements (a lattice, a ring, a chain, a grid of atoms) are computed in
+  loops from their spacing, lattice vectors or angles, never typed in point by
+  point and never randomised unless the idea is disorder.
+- Everything a scene adds as a helper (a marker, a guide line, a bracket, a trail) is
+  removed in the same scene once it has done its job. Nothing may remain on screen
+  that the narration has not talked about, and no "schematic" or "not to scale"
+  notes.
 
 On-screen text (strict):
 - Only necessary text: short object labels (e.g. v, î, A), formulas, matrices and
@@ -148,13 +188,22 @@ Interactivity:
 How to build 3D with animlib:
 - Follow the plan: if the scene's visualDescription starts with "3D:", the scene must
   be 3D; if it starts with "2D (because ...):", keep it flat.
-- For a 3D scene use `mode: "3d"` with `orbit: true`, or put the 3D objects in an
-  `s.view(id, { rect, camera }, v => { ... })` region (its camera is 3D and rotatable by
-  default) and keep formulas outside it. Use `sphere`, `line3D`, `arrow3D`, shaded
-  `mesh`, `surface`, `parametricSurface`, `box`, `cylinder`, `cone`, `torus`, or
-  `tube` with real depth. Move between flat and spatial views with `s.camera.to3D(...)` /
-  `s.camera.to2D(...)` (or the view's camera) as an animated transition. See reference
-  section 6 and the chemistry scene in the demo.
+- ALL 3D goes in ONE view region on the left: `s.view("model", { rect: [0.02, 0.1,
+  0.64, 0.8], orbit: true, camera: { ... } }, v => { ... })`, with every 3D object
+  created through `v`. Never rely on `mode: "3d"` for the main scene and never call
+  `s.camera.to3D`: a scene inherits the previous scene's main camera, so from the
+  second scene on the main scene is silently flat and cannot be rotated, and a
+  tilted main camera also tilts every formula. The main scene stays flat and holds
+  only formulas and controls; reuse the same view id and rect in every scene.
+- Use `sphere`, `line3D`, `arrow3D`, shaded `mesh`, `surface`, `parametricSurface`,
+  `box`, `cylinder`, `cone`, `torus`, or `tube` with real depth.
+- Frame the model with the view camera: `target` at the model's centre, `height`
+  about 1.5 times the model's largest extent (height is the zoom; the viewer cannot
+  zoom), `distance` at least 3 times that extent (distance only changes perspective),
+  and a three-quarter angle such as `yaw: 0.6, pitch: 0.35`. The whole model, with
+  its labels, must be inside the view at every moment, also after it moves or grows.
+- Text inside a 3D view is always `billboard: true` (labels and axis titles alike)
+  and never has a `rotation`, so it faces the viewer upright.
 - `s.surface(id, { fn: (x, y) => z, ... })` is a height graph; use
   `s.parametricSurface(id, { fn: (u, v) => [x, y, z], ... })` for curved petals,
   lobes, and other spatial sheets. Closed parameter axes share seam indices and

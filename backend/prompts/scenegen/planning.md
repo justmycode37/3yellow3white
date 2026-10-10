@@ -37,27 +37,41 @@ When writing the plan:
   rock, metal, something that emits light), or to tell two identical bodies apart.
   Say which pattern and why in the visualDescription. Otherwise leave bodies plain;
   never plan a pattern as decoration, and at most two patterned objects per scene.
+- **Intuition first.** The first scene (the first two in a longer lesson) builds
+  intuition only: the thing itself behaving, a concrete example, a comparison the
+  student can see. Plan no formula, no symbols and no numeric detail there; the
+  narration of those scenes describes what is seen, in plain words. Each later idea
+  also starts with what happens before its notation. Details, exact values and
+  formulas come after the student already has the picture.
+- **Equations only while they are explained.** Plan a formula in a scene only if
+  that scene's narration explains every part of it, and say at which sentence it
+  appears. It leaves when the narration moves on, unless the next sentence builds on
+  it. Never plan a formula as a title, a preview, a reminder "for reference" or a
+  list of results so far; if the narration only mentions a result, plan the picture
+  instead. Aim for one formula on screen at a time (two only while they are being
+  compared), and carry at most one formula into the next scene: the one it starts
+  from. Every planned formula is an entity with an id, listed under cleanup in the
+  scene where it leaves. No boxed results and no panels around text.
 - **Show little (2D and 3D alike):** a scene shows only what the student needs to
-  see for its one idea: the objects being talked about, short labels, and at most
-  three formulas or matrices at a time. Do not plan a growing list of results. When
-  a scene introduces a new formula, say in its description which earlier one leaves
-  or turns into it. Carry at most three formulas into the next scene, and list the
-  others under cleanup. Fewer, larger, well-spaced things beat a full screen.
+  see for its one idea: the objects being talked about and short labels. Fewer,
+  larger, well-spaced things beat a full screen.
   Plan only objects the concept itself is about: no illustrative props such as
   hands, people, icons or scenery, unless the idea is about that object (a hand for
   the right-hand rule). List as entities only what the explanation cannot do without.
-- **Focus:** for every scene, say in its visualDescription which object the student
-  should be looking at for each sentence of the narration, in order. The scene marks
-  each one as it is mentioned: text, formulas and flat 2D things get a temporary thin
-  yellow frame around them (3Blue1Brown style), 3D objects, lines and arrows get a
-  brief pulse. Plan one clear focus per sentence, not several at once, and do not
-  list the frame as an entity or use yellow as a concept colour.
-- **Interactions:** plan an interactive element in every scene where playing with a
-  value deepens that scene's idea (a slider for a quantity, a toggle to compare with
-  and without, a select between a few named cases). Most lessons should have
-  interactions in at least half of their scenes. Leave a scene without one only when
-  interaction would distract. Each control must drive the real geometry and have
-  something to discover. Rotating a 3D view needs no control.
-  Controls are always shown stacked in the top right corner of the animation, in
-  every scene; formulas go below them on the right. Do not plan a control anywhere
-  else, and do not describe on-screen content in that corner.
+- **Colours.** Give each entity one colour and keep it for every form of that thing
+  in every scene (a block of copper and its atoms are the same colour). Never use
+  YELLOW or GOLD as an entity colour: yellow is reserved for the highlight frame.
+- **Focus:** end every visualDescription with a short list, `Focus: <entity id>;
+  <entity id>; ...`, one entry per narration sentence in order, naming the one
+  object the student should look at during that sentence. The scene marks each as
+  it is mentioned (a temporary thin yellow frame for text and flat things, a brief
+  pulse for 3D objects, lines and arrows). One focus per sentence; do not list the
+  frame as an entity.
+- **Interactions (interactive mode only; in classic mode plan none):** plan a control
+  in a scene where playing with a value deepens that scene's idea (a slider for a
+  quantity, a toggle to compare with and without, a select between a few named
+  cases), and leave a scene without one when it would distract. Each control must
+  drive the real geometry and have something to discover. The objects a control
+  drives must still be on screen in endsWith and are never listed under cleanup, so
+  the control still works on the final held picture. Rotating a 3D view needs no
+  control. Plan nothing for the top right corner of the picture: controls live there.

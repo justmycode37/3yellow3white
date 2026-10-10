@@ -108,6 +108,52 @@ test("a dot drawn behind the line it sits on is rejected", async () => {
   expect(results[1]).toBe("ok");
 });
 
+test("3D on the main scene and flat text in a 3D view are rejected", async () => {
+  const visualization = await scenegenPrompt("visualization");
+  const main3d = `export default scene({ mode: "3d", orbit: true, end: "hold" }, s => { s.sphere("ball", { radius: 0.5, position: [0, 0, 0], fill: Color.RED }); s.wait(1); });`;
+  const inView = (billboard: boolean) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    s.view("model", { rect: [0, 0, 0.6, 1], orbit: true, camera: { target: [0, 0, 0], height: 6, distance: 12, yaw: 0.6, pitch: 0.35 } }, v => {
+      v.sphere("ball", { radius: 0.5, position: [0, 0, 0], fill: Color.RED });
+      v.text("label", { text: "A", position: [1, 0, 0]${billboard ? ", billboard: true" : ""} });
+    });
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new CheckedRunner({ run: async task => {
+    for (const output of [main3d, inView(false), inView(true)]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({ planning: { current: { visualDescription: "3D: a ball" } } })}`, validate: async () => {} });
+  expect(results[0]).toContain("Keep the main scene flat");
+  expect(results[1]).toContain("billboard: true");
+  expect(results[2]).toBe("ok");
+});
+
+test("the previous frame's bulk geometry is left out of the scene prompt", async () => {
+  const visualization = await scenegenPrompt("visualization");
+  const vertices = Array.from({ length: 500 }, (_, i) => [i, 0, 0]);
+  const packet = { previousFrame: { elements: [{ id: "bowl", geometry: { kind: "mesh", vertices } }, { id: "dot", geometry: { kind: "circle", radius: 0.2 } }] }, planning: {} };
+  let sent = "";
+  await new CheckedRunner({ run: async task => { sent = task.prompt; return ""; } })
+    .run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify(packet)}`, validate: async () => {} });
+  expect(sent.length).toBeLessThan(400);
+  expect(sent).toContain("[500 entries omitted]");
+  expect(sent).toContain('"radius":0.2');
+});
+
+test("a lesson plan may not use yellow or gold as an entity colour", async () => {
+  const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
+  const plan = (color: string) => JSON.stringify({ plan: { entities: [{ id: "sun", color }], scenes: [{ id: "beat-1", visualDescription: "3D: the sun" }] } });
+  const results: string[] = [];
+  const runner = new CheckedRunner({ run: async task => {
+    for (const output of [plan("GOLD"), plan("ORANGE")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: PLANNING_CONTRACT, prompt: "lesson", validate: async () => {} });
+  expect(results[0]).toContain("sun");
+  expect(results[1]).toBe("ok");
+});
+
 test("a lesson plan must mark every scene as 3D or 2D with a reason", async () => {
   const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
   const plan = (description: string) => JSON.stringify({ plan: { scenes: [{ id: "beat-1", visualDescription: description }] } });

@@ -77,6 +77,7 @@ export function renderProblems(compiled: CompiledScene): string[] {
   if (layout.length) problems.push(`${layout.join("\n")}\n${LAYOUT_HINT}`);
   const buried = buriedMarkers(frames as never);
   if (buried.length) problems.push(`Markers hidden behind lines: ${buried.slice(0, 8).join(", ")}.\n${LAYER_HINT}`);
+  problems.push(...viewProblems(frames as never));
   const placed = compiled.controls.filter(control => control.position).map(control => control.id);
   if (placed.length) problems.push(`Controls with a position: ${placed.join(", ")}.\n${CONTROLS_HINT}`);
   return problems;
@@ -198,3 +199,28 @@ export function buriedMarkers(frames: { camera: { yaw: number; pitch: number }; 
 export const LAYER_HINT = "A point or marker must be drawn in front of the line or curve it sits on. Elements created later are drawn on " +
   "top, and an object carried from the previous scene is older than anything this scene creates. Put markers on a higher layer with z: " +
   "lines and curves at z = 0, points and markers at z = 0.05 (position: [x, y, 0.05], also in moveTo), labels at z = 0.1.";
+
+interface ViewFrame {
+  camera: { yaw: number; pitch: number; perspective: number };
+  views?: { id: string }[];
+  elements: (FrameElement & { billboard?: boolean; rotation?: number[]; geometry: { kind: string } })[];
+}
+
+/**
+ * How 3D is set up. A scene inherits the previous scene's main camera, so 3D on the
+ * main scene is silently flat from the second scene on, and a tilted main camera tilts
+ * every formula. 3D therefore lives in an s.view region and the main camera stays flat.
+ */
+export function viewProblems(frames: ViewFrame[]): string[] {
+  const problems: string[] = [];
+  const tilted = frames.some(({ camera }) => Math.abs(camera.yaw) > 1e-3 || Math.abs(camera.pitch) > 1e-3 || camera.perspective > 1e-3);
+  if (tilted) problems.push("The main scene's camera is tilted or in perspective, which tilts every formula and is lost in the next scene. " +
+    "Keep the main scene flat (no mode: \"3d\", no s.camera.to3D) and put all 3D objects in one s.view(\"model\", { rect, orbit: true, camera }, v => { ... }) on the left.");
+  const text = new Set<string>();
+  for (const frame of frames) for (const element of frame.elements) {
+    if (!element.view || element.opacity <= 0.05 || !["text", "latex"].includes(element.geometry.kind)) continue;
+    if (!element.billboard || (element.rotation ?? []).some(angle => Math.abs(angle) > 1e-3)) text.add(element.id);
+  }
+  if (text.size) problems.push(`Text inside a 3D view must be billboard: true and have no rotation, so it faces the viewer upright: ${[...text].slice(0, 8).join(", ")}.`);
+  return problems;
+}

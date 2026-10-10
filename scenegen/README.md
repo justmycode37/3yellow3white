@@ -7,7 +7,7 @@ are the backend's own (`backend/prompts/scenegen/`). Nothing here is used by the
 ```
 cd backend
 bun ../scenegen/backend/dev.ts                 # the app, with the checks below
-bun test ../scenegen/backend/dev.test.ts       # 8 tests
+bun test ../scenegen/backend/dev.test.ts       # 11 tests
 ```
 
 ## Checks
@@ -19,6 +19,9 @@ the message. All in `backend/scene-checks.ts`.
 |---|---|
 | LaTeX render | A formula uses a command the player cannot render |
 | Plan view tags | A planned scene is not marked `3D:` or `2D (because ...):` |
+| Plan colours | An entity is coloured YELLOW or GOLD (reserved for the highlight) |
+| 3D in a view | A scene planned as 3D has no view region, or the main camera is tilted |
+| Upright text | Text inside a 3D view is not a billboard or is rotated |
 | 3D parts in their view | A 3D object is drawn outside the view that holds its model |
 | Controls top right | A control is given its own position |
 | Controls work at the end | A control changes nothing on the final held frame |
@@ -39,3 +42,12 @@ bun ../scenegen/backend/scan.ts <videoId>                              # run the
 quick way to try a prompt edit. `--apply` replaces the scene in the saved video once
 every later scene still compiles on top of it; the previous source is kept under
 `out/visualization-tests/`.
+
+## Prompt size
+
+The wrapper also trims the previous scene's frame in each scene prompt: bulk geometry
+(mesh vertices, triangles, normals, long point lists) is replaced by its size. The
+model fetches earlier objects with `s.previous.get(id)` and never needs those numbers,
+and they were often most of the prompt. Validation still uses the full frame.
+
+Check failures are logged to `out/scenegen-check-failures.log`.
