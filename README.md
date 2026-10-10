@@ -72,3 +72,15 @@ runs in a non-root Docker Compose container with persistent SQLite, narration,
 and agent-state bind mounts. Candidate images are tested before replacing production; failed activation
 restores the previous container or legacy systemd service. See
 [deployment setup, container commands, and recovery](docs/deployment.md).
+
+The Plan page can organize extracted course text into AI-suggested topics with
+learning goals, visual ideas, prerequisites, and original source excerpts. Review
+and edit topic titles and learning goals before saving. The same Pi login used for
+video generation powers `POST /api/study-plans`; narration credentials are not
+needed for planning. Requests accept up to 200,000 source characters, run for at
+most three minutes, and are limited to two concurrent plans per server. Long
+paragraphs are split into numbered spans for source references; page numbers are
+preserved. Reference validation checks that excerpts exist, not that every model
+claim follows from them. Saved plans remain in browser storage. Turn off
+“Organize topics with AI” to use the existing local document-outline method;
+this is also available when AI planning fails or the server runs in simulated mode.
