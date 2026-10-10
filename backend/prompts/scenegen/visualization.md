@@ -166,6 +166,13 @@ rotation supports the plan. Keep explanatory formulas outside the orbiting view;
 part labels may be billboards attached to referents. Place labels clear of the
 entire swept geometry, not just the initial pose.
 
+### Molecular display style
+
+Use touching, space-filling atoms without bond lines for molecular context and
+overviews where bonding is not the teaching focus. Use ball-and-stick with bond
+lines when explaining connectivity, bond order or molecular structure explicitly;
+preserve atom positions and element colors when switching representations.
+
 ## Accuracy at different scales
 
 For molecular/atomic detail, use available atom coordinates and explicit bond

@@ -7,7 +7,7 @@ import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 // are maintained spatial authoring guidance, including textures/materials at 076f017.
 // Hashes pin reviewed bytes; provenance records both imported and revised hashes.
 const hashes = {
-  visualization: 'a6180bf65c8a769dbb449d7bd6f3863d38d801af68802cb7e50d75e51f46b2e3',
+  visualization: 'e7378c4958fd4a47d65b0062b5f298161f8cf2c542f140d26635b41b2569dd56',
   planning: '2693bda1f04d8943b027ed108c0b2d35949388391628ed467a69f853f9276907',
   'topics-system': 'ad3bcf9c7c1351f28c6f80b6fd2c8cfbb15655ebdb587d2d623af2d94eb37131',
   'topics-format': '260ba64060e06134c8208ba90533bdfeccbe28cff6d92bdb07d9d8e79a03afb7',

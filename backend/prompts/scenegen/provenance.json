@@ -5,9 +5,9 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md",
-      "sha256": "a6180bf65c8a769dbb449d7bd6f3863d38d801af68802cb7e50d75e51f46b2e3",
+      "sha256": "e7378c4958fd4a47d65b0062b5f298161f8cf2c542f140d26635b41b2569dd56",
       "importedSha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3",
-      "revision": "2026-10-10: spatial authoring plus procedural textures, bump and stylized materials reviewed against animlib 076f017; scale/frequency-aware bump refined from initial proof frames"
+      "revision": "2026-10-10: spatial authoring plus procedural textures, bump and stylized materials reviewed against animlib 076f017; scale/frequency-aware bump refined from initial proof frames; user molecular display preference: space filling for context, bonds for structural explanation"
     },
     {
       "file": "planning.md",
