@@ -5,6 +5,38 @@ import type { CameraState, Vec3 } from './types.js';
 import type { GeometryDrawItem } from './render-geometry.js';
 export interface LabelAnchor { point: Vec3; offset: number[]; mode: 'overlay'|'hide'|'fade'; }
 
+/** Screen-packed labels bypass GPU clipping. Interpolate the same homogeneous
+ * clip distances as the shaders before dividing by w, including painter bias. */
+function clipLabelDepth(data: Float32Array, camera: CameraState, width:number, height:number): Float64Array {
+  type Vertex={values:Float64Array;z:number;w:number};
+  const vertices:Vertex[]=[];
+  for(let i=0;i<data.length;i+=stride) {
+    const depth=project([data[i],data[i+1],data[i+2]],camera,width,height).depth;
+    const w=1-camera.perspective+camera.perspective*depth/camera.distance;
+    const z=((depth-0.01)/(camera.distance*100-0.01)-data[i+12]*0.00000002)*w;
+    vertices.push({values:Float64Array.from(data.subarray(i,i+stride)),z,w});
+  }
+  if(vertices.every(v=>v.z>=0&&v.z<=v.w))return Float64Array.from(data);
+  const result:number[]=[];
+  for(let i=0;i<vertices.length;i+=3) {
+    let poly=vertices.slice(i,i+3);
+    for(const distance of [(v:Vertex)=>v.z,(v:Vertex)=>v.w-v.z]) {
+      const next:Vertex[]=[];
+      for(let j=0;j<poly.length;j++) {
+        const a=poly[j],b=poly[(j+1)%poly.length],da=distance(a),db=distance(b);
+        if(da>=0)next.push(a);
+        if((da<0&&db>0)||(da>0&&db<0)) {
+          const t=da/(da-db);
+          next.push({values:a.values.map((v,k)=>v+(b.values[k]-v)*t),z:a.z+(b.z-a.z)*t,w:a.w+(b.w-a.w)*t});
+        }
+      }
+      poly=next;
+    }
+    for(let j=2;j<poly.length;j++)result.push(...poly[0].values,...poly[j-1].values,...poly[j].values);
+  }
+  return new Float64Array(result);
+}
+
 /** Whole-label visibility at its anchor against opaque fill triangles in this view. */
 export function applyLabelOcclusion(items: GeometryDrawItem[], labels: Map<string,LabelAnchor>, camera: CameraState, width: number,height:number): GeometryDrawItem[] {
   if(!labels.size)return items;
@@ -31,12 +63,13 @@ export function applyLabelOcclusion(items: GeometryDrawItem[], labels: Map<strin
   return items.flatMap(item=> {
     if(item.component!=='content')return [item];
     const factor=factors.get(item.elementId);if(factor===undefined)return [item];if(!factor)return [];
-    const vertices=item.vertices.slice();
+    const vertices=clipLabelDepth(item.vertices,camera,width,height);
+    if(!vertices.length)return [];
     for(let i=0;i<vertices.length;i+=stride) {
       const p=project([vertices[i],vertices[i+1],vertices[i+2]],camera,width,height);
       vertices[i]=p.x-width/2;vertices[i+1]=height/2-p.y;vertices[i+2]=0;
       vertices[i+6]*=factor;vertices[i+7]=1;
     }
-    return [{...item,vertices,depth:-1e9,transparent:item.transparent||factor<1,cameraDependentGeometry:true}];
+    return [{...item,vertices:Float32Array.from(vertices),depth:-1e9,transparent:item.transparent||factor<1,cameraDependentGeometry:true}];
   });
 }

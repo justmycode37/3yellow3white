@@ -9,8 +9,46 @@ const blue=(p:number[])=>p[2]>100&&p[0]<30&&p[1]<30;
 const black=(p:number[])=>p.every(v=>v<10);
 const label=(mode:string)=>scene(`s.box('occluder',{width:3,height:2,depth:1,fill:'PURE_BLUE',shading:'unlit'});s.text('label',{text:'MMMM',fontSize:1,position:[0,0,-2],fill:'PURE_RED',billboard:true,labelOcclusion:'${mode}'})`);
 const labelRedCount=(at:(x:number,y:number)=>number[])=>{let n=0;for(let y=210;y<270;y++)for(let x=240;x<400;x++)if(red(at(x,y)))n++;return n;};
+type PixelReader=(x:number,y:number)=>number[];
+const labelModes=['depth','overlay','hide','fade'];
+// Compare each anchor mode to actual shader-projected text, including clipped
+// triangles. These fixtures are shared by the two real graphics backends.
+export const labelProjectionCases=[
+  {name:'off-center near-camera text',props:"text:'MMMM',fontSize:0.005,position:[0.006,0.002,9.95]"},
+  {name:'text just inside near plane',props:"text:'MMMM',fontSize:0.0011,position:[0,0,9.989]"},
+  {name:'tilted text crossing near plane',props:"text:'MMMM',fontSize:0.01,position:[0,0,9.985],rotation:[0,1,0]"},
+  {name:'tilted text crossing far plane',props:"text:'MMMM',fontSize:50,position:[0,0,-989.9],rotation:[0,1,0]"},
+  {name:'blended perspective near-camera text',props:"text:'MMMM',fontSize:0.005,position:[0.006,0.002,9.95]",perspective:0.995},
+  {name:'regional near-camera text',props:"text:'MMMM',fontSize:0.003,position:[0,0,9.95]",view:true},
+  {name:'near-camera LaTeX',props:"tex:'x^2',fontSize:0.005,position:[0.003,0,9.95]",kind:'latex'},
+].map(({name,props,perspective=1,view=false,kind='text'})=>({name,sources:labelModes.map(mode=>{
+  const camera=`{yaw:0,pitch:0,distance:10,height:8,perspective:${perspective}}`;
+  const label=`s.${kind}('label',{${props},fill:'PURE_RED',labelOcclusion:'${mode}'})`;
+  return scene(view?`s.view('region',{rect:[0.5,0,0.5,1],camera:${camera}},s=>{${label}})`:`s.play(s.camera.to3D(${camera}),{duration:0});${label}`);
+})}));
+export function labelProjectionIssues(images:PixelReader[]):string[] {
+  const mask=(at:PixelReader)=>{const pixels=new Set<number>();let minX=640,maxX=-1,minY=480,maxY=-1;
+    for(let y=0;y<480;y++)for(let x=0;x<640;x++)if(at(x,y)[0]>30){pixels.add(y*640+x);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
+    return {pixels,bounds:[minX,maxX,minY,maxY]};};
+  const reference=mask(images[0]),issues:string[]=[];
+  if(reference.pixels.size<10)issues.push('depth reference must be visibly rendered');
+  images.slice(1).forEach((image,i)=>{const actual=mask(image);
+    if(actual.bounds.some((v,j)=>Math.abs(v-reference.bounds[j])>1))issues.push(`${labelModes[i+1]} bounds ${actual.bounds} differ from depth projection ${reference.bounds}`);
+    let delta=0;for(const p of actual.pixels)if(!reference.pixels.has(p))delta++;for(const p of reference.pixels)if(!actual.pixels.has(p))delta++;
+    if(delta>Math.max(8,reference.pixels.size*0.02))issues.push(`${labelModes[i+1]} glyph mask differs from depth projection (${delta} pixels)`);
+  });return issues;
+}
 export const explanatoryMorphSource=scene("const g={kind:'mesh',vertices:[[-2,-1,0],[2,-1,0],[2,1,0],[-2,1,0]],triangles:[[0,1,2],[0,2,3]],scalarColors:{values:[0,0,0,0],domain:[0,1],colors:['PURE_BLUE','PURE_RED']},clipPlanes:[{normal:[1,0,0],offset:0,section:{color:'WHITE'}}]};const m=s.mesh('m',g);s.play(m.morphTo({...g,scalarColors:{...g.scalarColors,values:[1,1,1,1]},clipPlanes:[{normal:[1,0,0],offset:1,section:{color:'WHITE'}}]}),{duration:2,ease:'linear'})");
 export const explanatoryCases:ExplanatoryCase[]=[
+  {name:'cap survives a cut through existing box edges',source:scene("s.play(s.camera.to3D({yaw:Math.PI/4,pitch:0,height:8,perspective:0}),{duration:0});s.box('b',{width:2,height:2,depth:2,fill:'PURE_BLUE',clipPlanes:[{normal:[1,0,1],offset:0,section:{color:'none',cap:'PURE_RED'}}]})"),check:at=>red(at(320,240))?[]:['edge-aligned cut must still have a cap']},
+  {name:'cap survives a cut through existing box vertices',source:scene("s.play(s.camera.to3D({yaw:Math.PI/4,pitch:-Math.asin(1/Math.sqrt(3)),target:[1/3,1/3,1/3],height:8,perspective:0}),{duration:0});s.box('b',{width:2,height:2,depth:2,fill:'PURE_BLUE',clipPlanes:[{normal:[1,1,1],offset:1,section:{color:'none',cap:'PURE_RED'}}]})"),check:at=>red(at(320,240))?[]:['vertex-aligned cut must still have a cap']},
+  {name:'tangent torus cut has no phantom disk',source:scene("s.play(s.camera.to3D({yaw:0,pitch:-Math.PI/2,height:8,perspective:0}),{duration:0});s.torus('t',{radius:2,tubeRadius:0.5,clipPlanes:[{normal:[0,1,0],offset:-0.5,section:{color:'none',cap:'PURE_RED'}}]})"),check:at=>{for(let y=0;y<480;y++)for(let x=0;x<640;x++)if(!black(at(x,y)))return ['tangent cut must leave background only'];return [];}},
+  {name:'anchor modes suppress labels outside the near plane',source:scene("s.play(s.camera.to3D({yaw:0,pitch:0,distance:10,height:8,perspective:1}),{duration:0});['overlay','hide','fade'].forEach((mode,i)=>s.text('label'+i,{text:'MMMM',fontSize:0.001,position:[(i-1)*0.004,0,9.995],fill:'PURE_RED',labelOcclusion:mode}))"),check:at=>{for(let y=0;y<480;y++)for(let x=0;x<640;x++)if(!black(at(x,y)))return ['anchors outside near plane must not be screen-projected'];return [];}},
+  {name:'near-camera anchor rays respect independent viewport offsets',source:scene("s.play(s.camera.to3D({yaw:0,pitch:0,distance:10,height:8,perspective:1}),{duration:0});s.rectangle('occluder',{width:0.001,height:0.03,position:[0.01,0,9.975],viewportOffset:[-0.05,0],fill:'PURE_BLUE'});s.text('label',{text:'MMMM',fontSize:0.005,position:[0.012,0,9.95],viewportOffset:[0.1,0],fill:'PURE_RED',labelOcclusion:'hide'})"),check:at=>{for(let y=0;y<480;y++)for(let x=0;x<640;x++)if(red(at(x,y)))return ['offset anchor ray must hit the independently offset occluder'];return [];}},
+  ...['hide','fade'].map(mode=>({name:`off-center near-camera ${mode} anchor ray hits narrow occluder`,source:scene(`s.play(s.camera.to3D({yaw:0,pitch:0,distance:10,height:8,perspective:1}),{duration:0});s.rectangle('occluder',{width:0.001,height:0.03,position:[0.006,0,9.975],fill:'PURE_BLUE'});s.text('label',{text:'MMMM',fontSize:0.005,position:[0.012,0,9.95],fill:'PURE_RED',labelOcclusion:'${mode}'})`),check:(at:PixelReader)=>{
+    let bright=0,dim=0;for(let y=0;y<480;y++)for(let x=0;x<640;x++){const p=at(x,y);if(p[0]>100)bright++;if(p[0]>30&&p[0]<65)dim++;}
+    return bright===0&&(mode==='hide'?dim===0:dim>300)?[]:[`${mode} must use the actual projected anchor ray`];
+  }})),
   {name:'transformed opaque group occludes world label anchor',source:scene("const b=s.box('b',{width:3,height:2,depth:1,fill:'PURE_BLUE',shading:'unlit'});s.group('g',[b],{position:[1,0,0],scale:1.4,rotation:[0,0,0.4]});s.text('label',{text:'MMMM',fontSize:1,position:[1,0,-2],billboard:true,fill:'PURE_RED',labelOcclusion:'hide'})"),check:at=>labelRedCount(at)===0?[]:['transformed fill must hide label anchor']},
   {name:'sphere outlines preserve original interior lighting',source:scene("s.sphere('plain',{radius:1,position:[-2,0,0],fill:'PURPLE'});s.sphere('outlined',{radius:1,position:[2,0,0],fill:'PURPLE',outline:{color:'WHITE',creaseAngle:Math.PI}})"),check:at=>{const a=at(200,220),b=at(440,220);return a.every((v,i)=>Math.abs(v-b[i])<2)?[]:['outline must preserve sphere normals and lighting'];}},
   {name:'annular cap preserves the central hole',source:scene("s.play(s.camera.to3D({yaw:0,pitch:-Math.PI/2,height:8,perspective:0}),{duration:0});s.torus('t',{radius:2,tubeRadius:0.5,fill:'PURE_BLUE',clipPlanes:[{normal:[0,1,0],offset:0,section:{color:'WHITE',cap:'PURE_RED'}}]})"),check:at=>black(at(320,240))&&red(at(440,240))?[]:['annular cap must leave a black center and red ring']},

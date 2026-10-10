@@ -1,4 +1,4 @@
-import { explanatoryCases, explanatoryMorphSource } from './explanatory-cases.js';
+import { explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {create,globals} from 'webgpu';
@@ -99,6 +99,15 @@ describe('native Vulkan WebGPU rendering',()=> {
     const captures:Uint8Array[]=[];
     for(const time of [0,1,2,1]){renderer.render(sequence.frame(0,time),sequence.compiled[0].options);captures.push(await pixels());}
     expect(captures[0]).not.toEqual(captures[1]);expect(captures[1]).not.toEqual(captures[2]);expect(captures[3]).toEqual(captures[1]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for (const fixture of labelProjectionCases) it(`explanatory projection: ${fixture.name}`,async()=>{
+    const images:Uint8Array[]=[];
+    for(const source of fixture.sources) {
+      expect((await sequence.submit({type:'load',scenes:[{id:'projection',source}]})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);images.push(await pixels());
+    }
+    expect(labelProjectionIssues(images.map(image=>(x,y)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3))))).toEqual([]);
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   for (const fixture of explanatoryCases) it(`explanatory: ${fixture.name}`,async()=>{

@@ -84,10 +84,12 @@ export function explainMesh(corners: Corner[], planes: ClipPlane[] = []): Explai
   const epsilon=1e-8*magnitude;
   // Sequential caps participate in subsequent cuts, closing multi-plane solids.
   for(let planeIndex=0;planeIndex<planes.length;planeIndex++) {
-    const plane=planes[planeIndex],segments:Vec3[][]=[],unique=new Set<string>();
+    const plane=planes[planeIndex];
+    const intersections=new Map<string,{points:Vec3[];sides:number}>();
     for(const source of [result,...caps.map(c=>c.corners)])for(let i=0;i<source.length;i+=3) {
       const tri=source.slice(i,i+3),d=tri.map(c=>distance(c.p,plane));
-      if(!d.some(v=>v>epsilon)||!d.some(v=>v<=epsilon))continue;
+      const sides=(d.some(v=>v>epsilon)?1:0)|(d.some(v=>v<-epsilon)?2:0);
+      if(!sides)continue;
       const hits:Vec3[]=[];
       for(let j=0;j<3;j++) {
         const k=(j+1)%3;
@@ -96,8 +98,15 @@ export function explainMesh(corners: Corner[], planes: ClipPlane[] = []): Explai
       }
       const distinct=[...new Map(hits.map(p=>[key(p,epsilon),p])).values()];
       if(distinct.length!==2)continue;
-      const id=distinct.map(p=>key(p,epsilon)).sort().join('|');if(unique.has(id))continue;unique.add(id);segments.push(distinct);
+      const id=distinct.map(p=>key(p,epsilon)).sort().join('|');
+      const existing=intersections.get(id);
+      if(existing)existing.sides|=sides;
+      else intersections.set(id,{points:distinct,sides});
     }
+    // An edge on the plane is a cut only when its incident surface reaches both
+    // half-spaces. Touching edges on a discarded torus otherwise invent a disk.
+    // Straddling triangles supply both sides directly, including vertex cuts.
+    const segments=[...intersections.values()].filter(edge=>edge.sides===3).map(edge=>edge.points);
     result=clipTriangles(result,[plane]);
     for(const cap of caps)cap.corners=clipTriangles(cap.corners,[plane]);
     if(plane.section) {

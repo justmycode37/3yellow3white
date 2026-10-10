@@ -6,10 +6,11 @@ import { evaluateScene } from '../src/timeline.js';
 import { buildDrawItems } from '../src/render-geometry.js';
 import { explainMesh, scalarVertexColors, outlineEdges, type Corner } from '../src/explanatory.js';
 import { meshTriangles } from '../src/mesh-shading.js';
+import { project, rotate } from '../src/geometry.js';
 import { createSolidBuilders } from '../src/solids.js';
 import { paletteResolver } from '../src/palette.js';
 import { VERTEX_FLOATS } from '../src/texture-shader.js';
-import { cross, sub } from '../src/spatial.js';
+import { add, cameraRay, cross, planePoint, sub } from '../src/spatial.js';
 import type { CompileInput, Geometry, Vec3 } from '../src/types.js';
 const solids=createSolidBuilders();
 const corners=(g:Geometry):Corner[]=>meshTriangles(g).points.map(p=>({p}));
@@ -102,6 +103,46 @@ describe('explanatory geometry',()=>{
     expect(explainMesh(box,[{normal:[1,0,0],offset:-2,section:{color:'RED',cap:'BLUE'}}]).corners).toHaveLength(0);
     expect(explainMesh(box,[{normal:[1,0,0],offset:1,section:{color:'RED',cap:'BLUE'}}]).sections[0].points).toHaveLength(0);
     expect(explainMesh([{p:[0,0,0]},{p:[0,0,0]},{p:[0,0,0]}],[{normal:[1,0,0],offset:0}]).corners.every(c=>c.p.every(Number.isFinite))).toBe(true);
+  });
+  it.each([1,-1])('does not invent contours or caps at either tangent torus edge (normal %s)',sign=>{
+    const torus=corners(solids.torus({radius:2,tubeRadius:0.5,radialSegments:32,tubularSegments:16}));
+    const cut=(offset:number)=>explainMesh(torus,[{normal:[0,sign,0],offset,section:{color:'RED',cap:'BLUE'}}]);
+    for(const offset of [-0.5,0.5]) {
+      const r=cut(offset);
+      expect(r.caps[0].corners).toHaveLength(0);
+      expect(r.sections[0].points).toHaveLength(0);
+      if(offset<0)expect(area(r.corners)).toBe(0);
+    }
+    // The immediately adjacent genuine cut remains an annulus, not a disk.
+    const adjacent=cut(-0.5+1e-4);
+    expect(area(adjacent.caps[0].corners)).toBeGreaterThan(0);
+    expect(area(adjacent.caps[0].corners)).toBeLessThan(0.1);
+  });
+  it('distinguishes tangent contact from a real cut in another disconnected component',()=>{
+    const torus=corners(solids.torus({radius:2,tubeRadius:0.5,radialSegments:32,tubularSegments:16}));
+    const box=corners(solids.box({width:2,height:2,depth:2})).map(c=>({...c,p:add(c.p,[5,0,0])}));
+    const r=explainMesh([...torus,...box],[{normal:[0,1,0],offset:-0.5,section:{color:'RED',cap:'BLUE'}}]);
+    expect(area(r.caps[0].corners)).toBeCloseTo(4);
+    expect(r.sections[0].points.every(p=>p[0]>=4)).toBe(true);
+  });
+  it.each([
+    {normal:[1,1,0] as Vec3,offset:0,expected:4*Math.SQRT2},
+    {normal:[1,1,1] as Vec3,offset:1,expected:2*Math.sqrt(3)},
+  ])('preserves actual box cuts through edges or vertices: $normal',({normal,offset,expected})=>{
+    const r=explainMesh(corners(solids.box({width:2,height:2,depth:2})),[{normal,offset,section:{color:'RED',cap:'BLUE'}}]);
+    expect(area(r.caps[0].corners)).toBeCloseTo(expected);
+    expect(r.sections[0].points.length).toBeGreaterThan(0);
+  });
+  it.each([0,0.5,1])('projects and unprojects visible near-plane anchors at perspective %s',perspective=>{
+    const camera={yaw:0.7,pitch:-0.3,distance:10,height:8,target:[1,2,3] as Vec3,perspective};
+    for(const depth of [0.0101,0.05,0.1]) {
+      const local:Vec3=[0.003,-0.002,camera.distance-depth];
+      const point=add(rotate(local,[camera.pitch,camera.yaw,0]),camera.target);
+      const p=project(point,camera,320,480),scale=60/(1-perspective+perspective*depth/10);
+      expect(p.visible).toBe(true);expect(p.x).toBeCloseTo(160+local[0]*scale,6);expect(p.y).toBeCloseTo(240-local[1]*scale,6);
+      const hit=planePoint(cameraRay(p.x,p.y,camera,320,480),point,rotate([0,0,1],[camera.pitch,camera.yaw,0]))!;
+      hit.forEach((v,i)=>expect(v).toBeCloseTo(point[i],8));
+    }
   });
   it('shows creases without triangulation diagonals, welding split normal seams',()=>{
     const g=solids.box({width:2,height:2,depth:2});g.outline={color:'WHITE',silhouette:false};

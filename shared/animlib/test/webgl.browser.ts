@@ -1,4 +1,4 @@
-import { explanatoryCases, explanatoryMorphSource } from './explanatory-cases.js';
+import { explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
@@ -80,6 +80,12 @@ export async function runWebGLTests() {
       await load(explanatoryMorphSource);const a=draw(0),b=draw(1),c=draw(2),again=draw(1);
       assert(different(a,b)&&different(b,c),'Scalar and clipping morph must change pixels');
       assert(!different(b,again),'Backwards seek must reproduce identical pixels');
+    });
+    for(const fixture of labelProjectionCases) await test(`explanatory projection: ${fixture.name}`,async()=>{
+      const images:Uint8Array[]=[];
+      for(const source of fixture.sources){await load(source);images.push(draw());}
+      const issues=labelProjectionIssues(images.map(image=>(x,y)=>at(image,canvas,x,y)));
+      assert(issues.length===0,issues.join('; '));
     });
     for(const fixture of explanatoryCases) await test(`explanatory: ${fixture.name}`,async()=>{
       await load(fixture.source);const image=draw();
