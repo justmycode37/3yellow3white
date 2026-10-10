@@ -75,7 +75,8 @@ visual holds do not require scripted silence.
 
 `shared/animlib/docs/capabilities.md` is the compact visual-capability brief for
 the top-level storyboard planner and its editorial reviewer. It covers supported
-geometry, motion, math, 3D views, interaction, scene continuity, diagrams assembled
+geometry, sampled 3D surfaces/solids, procedural textures and materials, motion,
+math, 3D views, interaction, scene continuity, diagrams assembled
 from primitives, and current limitations. The host adds it to the system guidance
 on every draft and review, including repairs; the reviewer checks visual feasibility
 before speech synthesis. Scene authors continue to receive the full API reference.

@@ -22,6 +22,32 @@ export interface ColorPalette {
 /** A named color, optionally with separate alpha; arbitrary CSS is not accepted. */
 export type ColorValue = Color | { readonly color: PaletteColor; readonly opacity: number };
 
+/** Two palette colors mixed by a deterministic, object-space 3D pattern. */
+export interface ProceduralTexture {
+  pattern: "checker" | "stripes" | "noise" | "marble" | "wood";
+  /** Secondary color; the element fill is the primary color. */
+  color: ColorValue;
+  /** Pattern coordinates = local position * scale + offset. Default 1. */
+  scale?: number | Vec3;
+  offset?: Vec3;
+  /** Integer 0–65535, default 0. Varies noise, marble, and wood. */
+  seed?: number;
+}
+
+/** Stylized surface lighting; omitted keeps the original directional shading. */
+export interface Material {
+  /** 0–1, default 0. Metals tint reflections with the fill. */
+  metalness?: number;
+  /** 0.05–1, default 0.45. Larger values broaden and soften highlights. */
+  roughness?: number;
+  /** Nonmetal base highlight strength, 0–1, default 0.5. */
+  specular?: number;
+  /** Adds surface color; no bloom or illumination of neighboring objects. */
+  emissive?: ColorValue;
+  /** 0–4, default 1. Emissive color alpha also scales the emission. */
+  emissiveIntensity?: number;
+}
+
 export interface Geometry {
   kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
   radius?: number;
@@ -42,6 +68,10 @@ export interface Geometry {
   shading?: "unlit" | "flat" | "smooth";
   /** Optional per-vertex local normals for smooth mesh shading; normalized when rendered. */
   normals?: Vec3[];
+  /** Procedural fill on meshes and spheres only. */
+  texture?: ProceduralTexture;
+  /** Configurable lighting on spheres and meshes. */
+  material?: Material;
   children?: string[];
   /** Composite this group's children before applying its opacity. */
   isolated?: boolean;

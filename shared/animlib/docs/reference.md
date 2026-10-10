@@ -189,7 +189,8 @@ continuously. This internal interpolation does not allow invalid authored colors
 The renderer resolves tokens to RGB at the drawing boundary for every view.
 
 Enforcement applies to base drawing colors. Lighting, opacity blending,
-antialiasing, and morph crossfades still produce intermediate pixel colors;
+antialiasing, procedural textures, emissive surfaces, and morph crossfades still
+produce intermediate pixel colors;
 this is not a posterization filter. Backgrounds remain opaque. Native DOM controls
 and surrounding application CSS are outside the scene palette.
 
@@ -241,7 +242,15 @@ await player.submit({
 
 The host assigns stable scene IDs. Source code supplies the scene's options and
 builder, without duplicating its host-assigned ID. Element and control IDs are
-specified inside scene code.
+specified inside scene code. The host can read `player.canvas` after recovery and
+observe replacements through `onCanvasChange`. `player.backend` reports the active
+backend after initialization. `registerAssets` adds audio assets for progressive
+lessons; `unlockAudio` lets a host unlock audio during a user gesture.
+`setDisplayPalette` remaps the existing palette slots for rendering and controls
+without recompiling or changing authored scene state. It must retain all slot names from
+the original palette. `resetView` clears live navigation and behavior offsets.
+Navigation, camera snapshots, projection and rays are described under
+[canvas navigation](#canvas-navigation-and-camera-access).
 
 ### TypeScript surface
 
@@ -268,7 +277,6 @@ type Diagnostic = {
   scene?: SceneId;
   line?: number;
   column?: number;
-  element?: string;
   hint?: string;
 };
 
@@ -282,6 +290,8 @@ type PlayerState = {
   time: number;
   duration: number;
   status: "empty" | "paused" | "playing" | "ended" | "blocked";
+  scenes: { id: SceneId; duration: number }[];
+  error?: string;
   controls: ControlDefinition[];
   orbitEnabled: boolean;
   views: { id: string; rect: [number, number, number, number]; orbitEnabled: boolean }[];
@@ -299,7 +309,18 @@ interface Player {
     id: string;
     value: number | boolean | string;
   }): Promise<void>;
+  readonly canvas: HTMLCanvasElement; // Current surface; recovery can replace it.
+  readonly backend: 'webgpu' | 'webgl2' | undefined;
   setMuted(muted: boolean): void;
+  registerAssets(assets: Record<string, Asset>): void;
+  unlockAudio(): Promise<void>;
+  setDisplayPalette(palette: ColorPalette): void;
+  resetView(): void;
+  setNavigationMode(mode: 'orbit' | 'pan'): void;
+  getPan(view?: string): Vec3;
+  setPan(value: Vec3, view?: string): void;
+  getInteractionSnapshot(view?: string): InteractionSnapshot | undefined;
+  invalidateFrame(): void;
   getState(): PlayerState;
   subscribe(listener: (state: PlayerState) => void): () => void;
   dispose(): void;
@@ -390,7 +411,7 @@ together. Surface callbacks run during scene compilation and produce plain mesh 
 
 ### Shaded meshes
 
-`s.mesh(id, { vertices, triangles, shading?, normals?, ...style })` accepts local
+`s.mesh(id, { vertices, triangles, shading?, normals?, texture?, material?, ...style })` accepts local
 positions and zero-based triangle index triples. Omitted `shading` preserves the
 existing unlit appearance. Choose `"flat"` for a normal per triangle or `"smooth"`
 for area-weighted normals averaged at shared vertex indices. Duplicate positions
@@ -410,11 +431,13 @@ s.mesh('facet', {
 Flat and smooth meshes use the same simple directional lighting as spheres and
 round 3D strokes on both WebGPU and WebGL2. They support element/group transforms,
 independent views, depth testing, opacity, and palette colors. This is not a
-material or light-source API. Prefer opaque bodies when surfaces intersect;
+light-source API. Optional textures and materials are described below.
+Prefer opaque bodies when surfaces intersect;
 triangle transparency sorting does not solve every intersection. Ordinary 2D
 fills and raw meshes without a shading option retain their existing appearance.
 
-`vertices`, `triangles`, `shading`, and `normals` are geometry, while `fill`,
+`vertices`, `triangles`, `shading`, `normals`, `texture`, and `material` are
+geometry, while `fill`,
 `stroke`, `strokeWidth`, `position`, `rotation`, `scale`, and `opacity` are element
 style/transform properties. The surface and solid helpers below return ordinary
 mesh element handles; their sampled callbacks and construction parameters are not
@@ -425,6 +448,101 @@ intermediate geometry. If either endpoint supplies normals, normalized endpoint
 normals interpolate instead; the missing endpoint is derived from its geometry.
 Exactly opposite normals use a finite fallback at their ambiguous midpoint.
 Nonuniform changes of shape require new mesh geometry.
+
+### Procedural textures and materials
+
+Spheres and meshes (including every surface, solid, and tube helper) accept
+`texture` and `material` geometry options. Both backends evaluate textures per
+fragment: a two-triangle sheet can display detailed patterns without a denser
+mesh. No UV maps, downloads, images, or callbacks are needed.
+
+```js
+export default scene({ mode: '3d', orbit: true }, s => {
+  const roughness = s.slider('roughness', {
+    label: 'Roughness', default: 0.25, min: 0.05, max: 1,
+  });
+  s.sphere('gold', {
+    radius: 1, position: [-1.6, 0, 0], fill: Color.GOLD,
+    material: { metalness: 1, roughness },
+  });
+  s.box('marble', {
+    position: [1.6, 0, 0], fill: Color.BLUE_A,
+    texture: {
+      pattern: 'marble', color: Color.BLUE_E,
+      scale: [2, 3, 2], offset: [0.25, 0.25, 0.25], seed: 17,
+    },
+    material: { roughness, specular: 0.6 },
+  });
+  s.wait(1);
+});
+```
+
+`ProceduralTexture` is exported as a TypeScript type from both package entry points:
+
+- `pattern` (required): `'checker'`, `'stripes'`, `'noise'`, `'marble'`, or `'wood'`.
+  Checker alternates 3D cells; stripes run across local X; noise is smooth 3D
+  value noise; marble distorts X bands with noise; wood distorts rings around
+  local Y. These are stylized color patterns, not simulated physical materials.
+- `color` (required): the secondary `ColorValue`. The element's `fill` supplies
+  the primary color. Both accept palette tokens or `{ color, opacity }`.
+- `scale`: positive scalar or three positive components, default `1`.
+  Each component must be at most `1000`. Larger values give finer patterns;
+  checker cells and stripe bands are `1 / scale` local units wide.
+- `offset`: three finite components within ±1,000,000, default `[0, 0, 0]`.
+  Pattern coordinates are `localPosition * scale + offset`. Use a fractional
+  offset when a flat sheet coincides with a checker boundary; at a boundary the
+  antialiasing filter blends the neighboring colors.
+- `seed`: integer `0`–`65535`, default `0`. Varies noise, marble, and wood;
+  checker and stripes ignore it. Independent of the scene's random seed.
+
+Patterns follow element/group translation, rotation, and uniform scale. They use
+local XYZ, not surface UV parameters or distance along a tube. Rebuilding or
+morphing vertex positions resamples the pattern at the new local positions.
+Very fine patterns fade toward their average using approximate pixel-footprint
+filtering; extreme scale/coordinate values can lose floating-point detail.
+
+`Material` is also exported from both entry points:
+
+- `metalness`: `0`–`1`, default `0`. Metals reduce diffuse color and tint
+  reflections with the textured fill. Use `1` with `GOLD`, a brown/copper palette
+  slot, or `GREY_A` for gold, copper, or silver-like finishes.
+- `roughness`: `0.05`–`1`, default `0.45`. Low values give tight highlights;
+  high values broaden and soften them.
+- `specular`: `0`–`1`, default `0.5`. Controls the base highlight strength of
+  nonmetals; metallic reflectance comes from the fill and `metalness`.
+- `emissive`: a palette `ColorValue`, default no emission. Adds surface color
+  independently of the lighting. Its optional color opacity scales emission.
+- `emissiveIntensity`: `0`–`4`, default `1`. Multiplies the emissive color;
+  `0` disables emission. Bright values saturate the output. Emission keeps the
+  fill/texture alpha; it neither creates a halo nor lights neighboring objects.
+
+Omitting `material` preserves the original simple directional shading. Supplying
+`material: {}` enables the configurable model with the defaults above. Spheres
+are lit automatically; raw meshes need `shading: 'flat'` or `'smooth'` for
+metalness, roughness, and specular to affect them. Unlit meshes still show the
+texture and emission. Helpers already supply lit shading.
+
+Both colors are validated against the host palette, including morph targets and
+inherited geometry. Lighting and pattern interpolation can produce intermediate
+pixel colors. Textures/materials affect fills only; outlines keep their own style.
+`fill: Color.NONE` hides the filled surface. If either texture color is translucent,
+the entire mesh uses the existing transparent-triangle sorting path; intersecting
+transparent triangles retain its limitations. Picking uses geometry rather than pattern transparency. Overlap inspection
+remains limited to text/LaTeX relationships.
+
+Use ordinary sliders/selects to rebuild texture or material parameters at the
+current time, including while paused. They are not `animate` or reactive `s.bind`
+properties. Settings persist with kept geometry and JSON frames. Compatible
+mesh/sphere morphs use the source settings at progress zero and target settings
+for the interior and endpoint; settings do not interpolate. Keep identical
+settings for a continuous finish, or crossfade separate objects deliberately.
+
+The material model uses the renderer's camera-relative directional light and a
+procedural studio reflection approximation. It does not reflect other scene
+objects. No configurable lights, environment maps, shadows, image/video textures,
+normal/bump maps, displacement, physically based material guarantees, or bloom
+are provided. Try the **Textures** study in `/spatial.html` for pattern, palette,
+frequency, seed, metalness, roughness, highlight, and emission controls.
 
 ### Function and parametric surfaces
 
@@ -1333,8 +1451,9 @@ sphere with simple directional shading. Circles and text remain planar unless
 rotation. `billboardOffset: [x, y, z]` displaces a billboard along camera right,
 up, and toward the viewer in scene units; this keeps an atom label beside or in
 front of its sphere while orbiting. The molecule demo supplies tetrahedral spatial
-layout and surface-to-surface bond meshes. Physically based materials, model
-loading are not yet implemented. Object interaction uses the behavior API above.
+layout and surface-to-surface bond meshes. Procedural textures and configurable
+metalness, roughness, highlights, and emission work on spheres and meshes.
+Physically based materials and model loading are not implemented. Object interaction uses the behavior API above.
 
 ## 7. Live source submissions
 
@@ -1582,6 +1701,11 @@ The main implementation files are:
   reconstruction, transactions, and deterministic time evaluation.
 - [src/renderer.ts](../src/renderer.ts), [src/render-geometry.ts](../src/render-geometry.ts), [src/geometry.ts](../src/geometry.ts), and
   [src/latex.ts](../src/latex.ts): GPU drawing, outline matching, and vector formula layout.
+- [src/surfaces.ts](../src/surfaces.ts), [src/solids.ts](../src/solids.ts), and
+  [src/mesh-shading.ts](../src/mesh-shading.ts): sampled geometry and mesh normals.
+- [src/texture-shader.ts](../src/texture-shader.ts) and
+  [src/material-shader.ts](../src/material-shader.ts): shared vertex layout and
+  equivalent WGSL/GLSL procedural textures and material lighting.
 - [src/path.ts](../src/path.ts): shared SVG parsing and bounded curve tessellation
   (also used by glyph layout), smooth-point curves, and path control-point morphing.
 - [src/overlap.ts](../src/overlap.ts): projected geometry intersections and sampled
@@ -1589,6 +1713,8 @@ The main implementation files are:
 - [src/player.ts](../src/player.ts), [src/audio.ts](../src/audio.ts), and
   [src/controls.ts](../src/controls.ts): transport, audio, and optional native widgets.
 - [demo/scenes.ts](../demo/scenes.ts): application-level demo helpers and scene sources.
+- [demo/spatial.ts](../demo/spatial.ts): function graphs, a spatial flower, solids,
+  swept tubes, and interactive textures/materials.
 - [demo/plant.ts](../demo/plant.ts): curved leaf shapes, smooth roots, grouped
   growth, and coordinated blade/vein bending.
 
@@ -1630,11 +1756,14 @@ for each view. This preserves front/back blending and lets other translucent sur
 sort between an object's faces. Intersecting triangles still use approximate sorting
 and can render incorrectly; isolated groups remain atomic compositing units.
 Default strokes are tessellated ribbons; opt-in round strokes use lit tubes
-and cones. The renderer does not provide a comprehensive material system. Shape matching cannot infer semantic
+and cones. Materials provide stylized metallic reflection, roughness, highlights,
+and emission; procedural textures mix two palette colors. This is not a
+comprehensive physically based material system. Shape matching cannot infer semantic
 part correspondence or arbitrary mesh topology.
 
 Not yet included: custom fonts and general text shaping, images/video textures,
-general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
+environment maps, bump/normal maps, displacement, bloom, configurable lights,
+shadows, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
 infinite scenes, branching navigation, playback-rate controls,
 video export, or mobile-browser support guarantees. The initial control surface
 is sliders, toggles, selects, and requested orbit rotation.

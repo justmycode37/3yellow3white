@@ -71,8 +71,16 @@ examples, periodic seams, invalid-sample holes, segment defaults, and geometry
 budgets. Start with modest sampling; the 20,000-vertex/20,000-triangle per-mesh
 limits are validation ceilings, not frame-rate guarantees.
 
+Spheres and all mesh builders accept `texture` for checker, stripes, noise,
+marble, and wood patterns, plus `material` for metalness, roughness, specular
+highlights, and emissive color/intensity. Patterns use local XYZ and two palette
+colors on both GPU backends; metal reflections approximate a studio environment.
+Ordinary controls can rebuild their parameters. There are no image textures,
+bump maps, scene reflections, or bloom. See
+[textures and materials](docs/reference.md#procedural-textures-and-materials).
+
 Open `http://localhost:5173/spatial.html` for interactive function, flower, and
-solid/tube studies. The [scene sources](demo/spatial.ts) use the production player
+solid/tube and texture/material studies. The [scene sources](demo/spatial.ts) use the production player
 and support orbit, shading comparisons, and parameter controls. After building,
 run `node shared/animlib/bench/spatial.mjs --json` from the repository root for
 compilation and CPU rendering measurements (GPU calls are stubbed).

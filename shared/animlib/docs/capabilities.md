@@ -23,6 +23,12 @@ Keep these instructions in nonspoken planning; they are not narration.
   flower petals, stems, and schematic molecules. Meshes support flat or smooth
   directional shading; raw meshes remain unlit unless shading is requested.
   Labels can face the camera and remain attached to objects.
+- **Surface appearance:** spheres and meshes support checker, stripe, noise,
+  marble, and wood patterns using two palette colors. Patterns stay attached under
+  object transforms. Metalness, roughness, specular highlights, and emissive
+  color/intensity create stylized metal, matte, plastic, and luminous surfaces.
+  These settings can be explored with ordinary controls. Emission does not cast
+  light or create bloom, and metallic reflections do not show other scene objects.
 - **Views:** a main camera plus clipped rectangular regions with independent
   cameras. Side-by-side views can compare the same construction from different
   angles. Screen-space labels can remain fixed while world geometry moves.
@@ -117,7 +123,8 @@ what the viewer should discover. The current lesson-plan contract permits
 preserve the measured scene duration.
 
 An ordinary slider can resample a surface or rebuild a solid/tube together with
-its dependent labels. Retained property bindings do not rebuild mesh geometry.
+its dependent labels, or vary texture/material parameters. Retained property
+bindings do not rebuild mesh geometry or change textures/materials.
 Keep sampling modest so planned controls remain responsive.
 
 Animlib also supports requested orbit rotation in 3D, independent rotation of
@@ -156,7 +163,8 @@ run asynchronous builders.
 
 ## Current boundaries
 
-- No images or video textures, imported 3D models, photorealistic materials,
+- No image/video textures, UV mapping, imported 3D models, photorealistic materials,
+  bump/normal maps, displacement, environment maps, shadows, bloom, configurable lights,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
 - SVG support accepts path geometry, not complete SVG files or their styling.
   Filled contours must be closed, simple, and nonintersecting; nested contours

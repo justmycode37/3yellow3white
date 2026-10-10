@@ -7,6 +7,11 @@ The baseline experiments below only install temporary profiling hooks and restor
 them afterward. A subsequent [reactive slider prototype](reactive-controls.md)
 implements and measures a callback path; the baseline results here predate it.
 
+The measurements are historical, not current performance promises. Procedural
+texture/material support now packs 30 floats (120 bytes) per vertex instead of
+15 floats (60 bytes), including for plain geometry. The CPU benchmark should be
+rerun for current workloads; textures add fragment work without extra triangles.
+
 ## Measurement conditions
 
 Baseline commit: `73a57be8806eee0dc29ef6d4802e521be0cbc637`.
@@ -105,7 +110,7 @@ Removing them in a controlled source variant reduces median orbit CPU work from
 with that removal, so this is an attribution experiment, not a replacement
 for the original scene.
 
-[`triangulateContours`](../src/renderer.ts) serializes each glyph's contours to
+[`triangulateContours`](../src/render-geometry.ts) serializes each glyph's contours to
 construct a content key on every frame. Its [`GeometryCache`](../src/cache.ts)
 defaults to 1 MiB. The demo's 68 entries have an estimated working set of
 **1,452,214 bytes**, exceeding that capacity. Repeated traversal evicts entries

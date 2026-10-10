@@ -21,6 +21,7 @@ test('retains every authoring section verbatim while excluding host and developm
     expect(output).not.toContain(heading);
   }
   expect(output.length).toBeLessThan(reference.length);
+  expect(output).toContain(between('### Procedural textures and materials', '### Function and parametric surfaces'));
   expect(output).toContain('### Reactive sliders (prototype)');
   expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
 });

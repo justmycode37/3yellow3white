@@ -177,6 +177,8 @@ export function enforceScenePalette(scene: CompiledScene, resolver: PaletteResol
   };
   const element = (e: ElementState) => {
     validate(e.fill, `${e.id} fill`); validate(e.stroke, `${e.id} stroke`);
+    if (e.geometry.material?.emissive !== undefined) validate(e.geometry.material.emissive, `${e.id} emissive color`);
+    if (e.geometry.texture) validate(e.geometry.texture.color, `${e.id} texture color`);
   };
   scene.options.palette = resolver.palette;
   validate(scene.options.background, "Scene background");
@@ -186,6 +188,8 @@ export function enforceScenePalette(scene: CompiledScene, resolver: PaletteResol
   for (const event of scene.lifecycle) event.elements?.forEach(element);
   for (const track of scene.tracks) {
     Object.values(track.from).forEach(element);
+    if (track.action.type === "morph" && track.action.geometry?.material?.emissive !== undefined) validate(track.action.geometry.material.emissive, "Morph emissive color");
+    if (track.action.type === "morph" && track.action.geometry?.texture) validate(track.action.geometry.texture.color, "Morph texture color");
     if (track.action.type === "animate") {
       const props = track.action.properties as Partial<ElementState>;
       for (const key of ["fill", "stroke"] as const) if (props?.[key] !== undefined) validate(props[key]!, `Animation ${key}`);

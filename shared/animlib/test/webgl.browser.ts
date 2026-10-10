@@ -4,6 +4,8 @@ import { SceneSequence } from '../src/sequence.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
 import { reactiveCases } from './reactive-cases.js';
+import { materialCases, materialSource } from './material-cases.js';
+import { textureCases, texturePixelIssues } from './texture-cases.js';
 import { transparencyCases } from './transparency-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
 import { initialSources } from '../demo/scenes.js';
@@ -78,6 +80,26 @@ export async function runWebGLTests() {
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');
       assert(at(draw(), canvas, 320, 240).join() === '255,0,0', 'Center must be pure red');
       assert(foreground(draw()) > 15000, 'Expected a filled rectangle');
+    });
+    for(const {name,a,b} of materialCases) await test(`material ${name} changes real shaded pixels`,async()=>{
+      await load(materialSource(a));const first=draw();await load(materialSource(b));const second=draw();
+      assert(first.filter((v,i)=>Math.abs(v-second[i])>5).length>100,`${name} did not change pixels`);
+    });
+    await test('emission adds exact color to unlit geometry',async()=>{
+      await load(materialSource('{emissive:"PURE_BLUE",emissiveIntensity:0.5}','mesh'));
+      const rgb=at(draw(),canvas,320,240);
+      assert(rgb[0]===0&&rgb[1]===0&&Math.abs(rgb[2]-128)<=1,'Wrong emission color/intensity');
+    });
+    for(const {pattern,source} of textureCases) await test(`procedural ${pattern} fragments and translation`,async()=>{
+      await load(source);const original=draw();
+      assert(texturePixelIssues(pattern,(x,y)=>at(original,canvas,x,y)).length===0,
+        texturePixelIssues(pattern,(x,y)=>at(original,canvas,x,y)).join('; '));
+      const moved=draw(1);
+      for(let y=160;y<320;y+=9)for(let x=240;x<390;x+=9) {
+        const a=at(original,canvas,x,y),b=at(moved,canvas,x+60,y);
+        assert(a.every((value,i)=>Math.abs(value-b[i])<=2),'Texture slipped during translation');
+      }
+      assert(!different(draw(),original),'Texture changed after seeking');
     });
     for (const fixture of reactiveCases) await test(`reactive/rebuilt pixels: ${fixture.name}`, async () => {
       const legacy = new SceneSequence({ prepare: scenes => renderer.prepare(scenes) });

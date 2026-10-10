@@ -1,3 +1,5 @@
+import { materialGLSL } from './material-shader.js';
+import { VERTEX_FLOATS, textureGLSL } from './texture-shader.js';
 import type { CameraState } from './types.js';
 import type { RenderCommand } from './composition.js';
 import { GLCompositor } from './gl-compositor.js';
@@ -22,12 +24,25 @@ layout(location=3) in vec3 normal;
 layout(location=4) in float lit;
 layout(location=5) in float layer;
 layout(location=6) in vec2 viewportOffset;
+layout(location=7) in vec3 texPosition;
+layout(location=8) in float texKind;
+layout(location=9) in vec4 texColor;
+layout(location=10) in float texSeed;
+layout(location=11) in vec3 material;
+layout(location=12) in vec3 emission;
 uniform vec4 focus;
 uniform vec4 angles;
 uniform vec4 viewport;
 out vec4 vColor;
 out vec3 vNormal;
 out float vLit;
+out vec3 vTexPosition;
+out float vTexKind;
+out vec4 vTexColor;
+out float vTexSeed;
+out vec3 vViewDirection;
+out vec3 vMaterial;
+out vec3 vEmission;
 void main() {
   vec3 p=world-focus.xyz;
   float cy=cos(-angles.x), sy=sin(-angles.x);
@@ -47,21 +62,36 @@ void main() {
   vec3 n=vec3(normal.x*cy+normal.z*sy,normal.y,-normal.x*sy+normal.z*cy);
   vNormal=vec3(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
   vLit=lit; vColor=color;
+  vTexPosition=texPosition;vTexKind=texKind;vTexColor=texColor;vTexSeed=texSeed;
+  vMaterial=material;vEmission=emission;vViewDirection=mix(vec3(0.,0.,1.),vec3(-p.x,-p.y,depth),angles.w);
 }`;
 const fragment = `#version 300 es
 precision highp float;
 in vec4 vColor;
 in vec3 vNormal;
 in float vLit;
+in vec3 vTexPosition;
+in float vTexKind;
+in vec4 vTexColor;
+in float vTexSeed;
+in vec3 vViewDirection;
+in vec3 vMaterial;
+in vec3 vEmission;
 out vec4 outputColor;
+${textureGLSL}
+${materialGLSL}
 void main() {
   vec4 color=vColor;
+  vec3 footprint=fwidth(vTexPosition);
+  if(vTexKind>0.5){color=mix(color,vTexColor,textureMix(vTexPosition,vTexKind,vTexSeed,footprint));}
+  if(color.a<=0.){discard;}
   if(vLit>0.5) {
     vec3 n=vNormal;if(vLit>1.5&&!gl_FrontFacing){n=-n;}
-    float amount=0.32+0.68*max(0.,dot(n/max(length(n),0.000001),normalize(vec3(-0.4,0.65,1.))));
-    color=vec4(color.rgb*amount,color.a);
+    if(vMaterial.y>0.){color=vec4(materialColor(color.rgb,n/max(length(n),0.000001),normalize(vViewDirection),vMaterial),color.a);}
+    else {float amount=0.32+0.68*max(0.,dot(n/max(length(n),0.000001),normalize(vec3(-0.4,0.65,1.))));
+    color=vec4(color.rgb*amount,color.a);}
   }
-  outputColor=color;
+  outputColor=vec4(color.rgb+vEmission,color.a);
 }`;
 
 /** WebGL2 submission only; scene evaluation, tessellation and ordering live in CanvasRenderer. */
@@ -103,8 +133,8 @@ export class WebGLBackend {
       };
       this.focus = uniform('focus'); this.angles = uniform('angles'); this.viewport = uniform('viewport');
       gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52]]) {
-        gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, 60, offset);
+      for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108]]) {
+        gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, VERTEX_FLOATS*4, offset);
       }
       gl.bindVertexArray(null);
       const viewportLimits = gl.getParameter(gl.MAX_VIEWPORT_DIMS) as Int32Array;
@@ -146,7 +176,7 @@ export class WebGLBackend {
       gl.uniform4f(this.focus, ...c.target, 0);
       gl.uniform4f(this.angles, c.yaw, c.pitch, c.distance, c.perspective);
       gl.uniform4f(this.viewport, batch.width, batch.height, c.height, 0);
-      const count = batch.floatCount / 15;
+      const count = batch.floatCount / VERTEX_FLOATS;
       const commands = batch.commands ?? [{ first, count: batch.opaqueVertices, opaque: true }, { first: first+batch.opaqueVertices, count: count-batch.opaqueVertices, opaque: false }];
       const draw = (command: Extract<RenderCommand,{first:number}>) => {
         gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.depthMask(command.opaque);

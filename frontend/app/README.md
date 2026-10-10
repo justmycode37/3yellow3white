@@ -1,6 +1,6 @@
 # Aha!
 
-A React and Vite frontend for turning learning material into visual explanations. Served by the Bun backend and integrated with the shared animlib player. AI video generation is not connected.
+A React and Vite frontend for turning learning material into visual explanations. Served by the Bun backend and integrated with the shared animlib player. Server generation delivers narrated animlib scenes progressively.
 
 ```sh
 cd ../..
@@ -18,7 +18,7 @@ npm run app:test
 - Courses: `/courses` (legacy `/plan` links still work). A left-hand course list sits beside a two-by-two video grid. Three video slots show recent playback, filled with examples when needed, in the listed course’s colour; the fourth plus tile opens Workspace. Add course appears below the list with a name and colour form. A delete button at the bottom of the selected course, above the footer, confirms removal of the course and its material while keeping videos in Library. Courses and playback order persist locally; opening a course retains its material upload and topic-to-video flow. Material appears as topics containing short lessons with estimated durations. Library keeps its existing subject-list styling and only shows subjects that have videos; empty courses remain on Courses.
 - Settings: `/settings`, light and dark appearance cards. Dark mode uses a pure-black page background.
 - Navigation: a left drawer with workspace, library, Courses, and creation links at the top; a quick Light/Dark switch stays at the bottom.
-- Player: `/watch/:id`, full-viewport animlib WebGPU/WebGL2 lesson canvas, play/pause, scrubbing, keyboard shortcuts, replay, and fullscreen. The canvas is white in light mode and black in dark mode, with contrasting menu and playback controls on transparent backgrounds and no title/subtitle panel. The bold progress bar fills over a grey unplayed track. Theme changes recolor the existing renderer while preserving playback position and scene interactions. Navigation and dialogs temporarily pause playback. The scrubber and timer follow animlib's timeline.
+- Player: `/watch/:id`, full-viewport animlib WebGPU/WebGL2 lesson canvas, play/pause, scrubbing, keyboard shortcuts, replay, and fullscreen. The canvas is white in light mode and black in dark mode, with contrasting menu and playback controls on transparent backgrounds and no title/subtitle panel. The bold progress bar fills over a grey unplayed track. Theme changes recolor the existing renderer while preserving playback position and scene interactions. Navigation and dialogs temporarily pause playback. The scrubber and timer follow animlib's timeline. Both renderers support shaded meshes, sampled surfaces, procedural textures and configurable materials; see the [animlib reference](../../shared/animlib/docs/reference.md).
 - Light is the initial theme. Theme preference and curriculum context are stored locally; generated video jobs are saved on the server. Dark mode uses darker versions of each pastel.
 
 ## Integration points
