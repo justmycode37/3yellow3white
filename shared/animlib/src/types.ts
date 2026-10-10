@@ -221,25 +221,18 @@ export interface Frame {
 
 /** Canvas CSS pixels, with x increasing rightwards and y increasing downwards. */
 export interface OverlapBounds { left: number; top: number; right: number; bottom: number; }
-export type OverlapComponent = "content" | "fill" | "stroke";
-export type OverlapSeverity = "unacceptable" | "undesirable";
-export interface OverlapContact {
-  /** Components in the same order as OverlapDiagnostic.elements. */
-  components: [OverlapComponent, OverlapComponent];
-  bounds: OverlapBounds;
-  /** A point inside an actual intersection, suitable for a debug marker. */
-  witness: Vec2;
-}
+export type OverlapSeverity = "unacceptable";
 export interface OverlapDiagnostic {
-  /** Leaf element IDs, sorted lexically for stable pair identity. */
+  /** Distinct text/LaTeX element IDs, sorted lexically for stable pair identity. */
   elements: [string, string];
-  /** Content (text/LaTeX) collisions are unacceptable; other collisions undesirable. */
+  /** Only text-against-text collisions are reported. */
   severity: OverlapSeverity;
-  kind: "text-overlap" | "shape-overlap";
+  kind: "text-overlap";
   /** Bounding box of actual intersections, not just intersecting element boxes. */
   bounds: OverlapBounds;
   elementBounds: [OverlapBounds, OverlapBounds];
-  contacts: OverlapContact[];
+  /** A point inside an actual glyph intersection, suitable for a debug marker. */
+  witness: Vec2;
 }
 export interface OverlapOptions {
   /** Logical canvas size in CSS pixels. Required: projection depends on aspect ratio. */

@@ -3,9 +3,9 @@ import { paletteResolver } from './palette.js';
 import { buildDrawItems } from './render-geometry.js';
 import { SpatialFrame } from './spatial.js';
 import { evaluateScene } from './timeline.js';
-import type { CameraState, CompiledScene, Frame, OverlapBounds, OverlapComponent, OverlapContact, OverlapDiagnostic, OverlapOptions, SceneOverlapOptions, SceneOverlapSample, Vec2, Vec3 } from './types.js';
+import type { CameraState, CompiledScene, Frame, OverlapBounds, OverlapDiagnostic, OverlapOptions, SceneOverlapOptions, SceneOverlapSample, Vec2, Vec3 } from './types.js';
 
-interface Primitive { points: Vec2[]; bounds: OverlapBounds; component: OverlapComponent; }
+interface Primitive { points: Vec2[]; bounds: OverlapBounds; }
 interface Footprint { id: string; ancestors: Set<string>; bounds: OverlapBounds; primitives: Primitive[]; }
 const AREA_EPSILON = 1e-7; // CSS pixels squared; excludes edge contact and floating-point slivers.
 const MAX_SAMPLES = 100_000;
@@ -79,7 +79,7 @@ function validateOptions(options: OverlapOptions): number {
   return minOpacity;
 }
 
-/** Pure, opt-in inspection of clipped projected ink. Does not alter a frame or correct layout. */
+/** Pure, opt-in glyph intersection checks between distinct text/LaTeX elements. */
 export function detectOverlaps(frame: Frame, options: OverlapOptions): OverlapDiagnostic[] {
   const minOpacity = validateOptions(options), palette = paletteResolver(options.palette), space = new SpatialFrame(frame);
   const footprints = new Map<string, Footprint>();
@@ -88,7 +88,8 @@ export function detectOverlaps(frame: Frame, options: OverlapOptions): OverlapDi
   for (const region of regions) {
     const [left, top, w, h] = region.rect, width = w * options.width, height = h * options.height;
     if (width <= 0 || height <= 0) continue;
-    for (const item of buildDrawItems(frame, region.camera, width, height, palette, region.id)) {
+    for (const item of buildDrawItems(frame, region.camera, width, height, palette, region.id, true)) {
+      if (item.component !== 'content') continue;
       const data = item.vertices, opacity = data[6] * (item.groups ?? []).reduce((n, group) => n * group.opacity, 1);
       if (opacity <= 0 || opacity < minOpacity) continue;
       for (let i = 0; i < data.length; i += 45) {
@@ -97,7 +98,7 @@ export function detectOverlaps(frame: Frame, options: OverlapOptions): OverlapDi
           .map(([x, y]): Vec2 => [x + left * options.width, y + top * options.height]);
         points = clip(clip(clip(clip(points, p => p[0]), p => options.width - p[0]), p => p[1]), p => options.height - p[1]);
         if (!points.every(p => p.every(Number.isFinite)) || Math.abs(signedArea(points)) <= AREA_EPSILON) continue;
-        const box = bounds(points), primitive = { points, bounds: box, component: item.component };
+        const box = bounds(points), primitive = { points, bounds: box };
         const footprint = footprints.get(item.elementId);
         if (footprint) { footprint.primitives.push(primitive); footprint.bounds = union(footprint.bounds, box); }
         else footprints.set(item.elementId, { id: item.elementId, ancestors: new Set(space.chain(item.elementId).map(e => e.id)), bounds: box, primitives: [primitive] });
@@ -110,23 +111,19 @@ export function detectOverlaps(frame: Frame, options: OverlapOptions): OverlapDi
     const a = ordered[i], b = ordered[j];
     if (!intersects(a.bounds, b.bounds) || options.ignorePairs?.some(([x, y]) =>
       a.ancestors.has(x) && b.ancestors.has(y) || a.ancestors.has(y) && b.ancestors.has(x))) continue;
-    const contacts = new Map<string, OverlapContact>();
+    let overlapBounds: OverlapBounds | undefined, witness: Vec2 | undefined;
     for (const pa of a.primitives) for (const pb of b.primitives) {
       if (pb.bounds.left >= pa.bounds.right) break;
       if (!intersects(pa.bounds, pb.bounds)) continue;
       const polygon = intersection(pa.points, pb.points);
       if (Math.abs(signedArea(polygon)) <= AREA_EPSILON) continue;
-      const key = `${pa.component}:${pb.component}`, box = bounds(polygon), contact = contacts.get(key);
-      if (contact) contact.bounds = union(contact.bounds, box);
-      else contacts.set(key, { components: [pa.component, pb.component], bounds: box,
-        witness: polygon.reduce<Vec2>((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]) });
+      const box = bounds(polygon);
+      overlapBounds = overlapBounds ? union(overlapBounds, box) : box;
+      witness ??= polygon.reduce<Vec2>((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]);
     }
-    if (!contacts.size) continue;
-    const list = [...contacts.values()].sort((a, b) => a.components.join(':').localeCompare(b.components.join(':')));
-    const content = list.some(contact => contact.components.includes('content'));
-    diagnostics.push({ elements: [a.id, b.id], severity: content ? 'unacceptable' : 'undesirable', kind: content ? 'text-overlap' : 'shape-overlap',
-      bounds: list.slice(1).reduce((box, contact) => union(box, contact.bounds), list[0].bounds),
-      elementBounds: [a.bounds, b.bounds], contacts: list });
+    if (!overlapBounds || !witness) continue;
+    diagnostics.push({ elements: [a.id, b.id], severity: 'unacceptable', kind: 'text-overlap',
+      bounds: overlapBounds, elementBounds: [a.bounds, b.bounds], witness });
   }
   return diagnostics;
 }

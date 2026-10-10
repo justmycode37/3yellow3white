@@ -1183,8 +1183,11 @@ state alongside its transport. See the [browser autoplay guide](https://develope
 
 `detectOverlaps(frame, options)` and `detectSceneOverlaps(compiled, options)` are
 host inspection APIs exported from both `animlib` and `animlib/core`. They work in
-Node/Bun and browsers without initializing a canvas, DOM, or GPU. They do not
-change scene data, reposition objects, or run automatically during playback.
+Node/Bun and browsers without initializing a canvas, DOM, or GPU. They report
+**only intersections between glyphs belonging to distinct text or LaTeX
+elements**. Shapes may overlap other shapes or text without producing reports.
+These APIs do not change scene data, reposition objects, or run automatically
+during playback.
 
 ```js
 import { evaluateScene, detectOverlaps, detectSceneOverlaps } from 'animlib/core';
@@ -1194,7 +1197,7 @@ const overlaps = detectOverlaps(frame, {
   width: 1280,
   height: 720,
   minOpacity: 0.01,
-  ignorePairs: [['highlight', 'matrix']],
+  ignorePairs: [['outgoing-title', 'incoming-title']],
 });
 const samples = detectSceneOverlaps(compiled, {
   width: 1280,
@@ -1216,43 +1219,43 @@ otherwise uses the compiled scene's palette.
 
 Each `OverlapDiagnostic` contains:
 
-- `elements`: two leaf IDs in lexical order. Groups apply transforms and opacity
-  but are not reported as separate colliding shapes. Group membership alone does
-  not suppress collisions between siblings.
-- `severity` and `kind`: a collision involving actual text or LaTeX glyph ink is
-  `unacceptable` / `text-overlap`; a collision between other fills or strokes is
-  `undesirable` / `shape-overlap`. This is a default layout policy, not an
-  inference about the author's intent.
+- `elements`: two distinct text/LaTeX element IDs in lexical order. Groups apply
+  transforms and opacity; separate text elements within the same group are still
+  checked against each other.
+- `severity` and `kind`: always `unacceptable` / `text-overlap`.
 - `bounds`: `{ left, top, right, bottom }`, the bounding box of actual
   intersections in canvas pixels, with origin at the top left. Multiple disjoint
   intersections can share this bounding box.
-- `elementBounds`: the clipped visible footprint bounds for the two leaf IDs.
-- `contacts`: intersections grouped by component pair (`content`, `fill`, or
-  `stroke`), with bounds and a `witness` point inside an actual intersection.
+- `elementBounds`: the clipped glyph bounds for the two text elements.
+- `witness`: a point inside an actual glyph intersection.
 
-Reports are JSON-serializable. One report aggregates all intersecting primitives
-for a pair of distinct elements; an element's own glyphs, fills, and strokes do
-not collide with themselves. Pair ordering and component ordering are stable.
-`ignorePairs` suppresses intentional pairs in either order. A group ID matches
-all descendants, so `['highlight', 'matrix']` can exclude a highlight against an
-entire matrix group. `['matrix', 'matrix']` excludes collisions within that group.
+Reports are JSON-serializable and pair ordering is stable. One report aggregates
+all glyph intersections for a pair of distinct elements. Glyphs and named parts
+inside one formula or text element are never compared with each other, including
+old/new glyphs overlapping during a morph of that element. Only the text portion
+of a shape/text morph participates in detection.
 
-The detector reuses the renderer's tessellation, including MathJax glyph holes,
-LaTeX anchors/numeric slots, arrowheads, round strokes, current morph geometry,
-nested transforms, billboards, and viewport offsets. Broad bounding-box checks
-are followed by positive-area polygon intersections. Containment inside an
-unfilled border, empty glyph holes, separated diagonal strokes, and edge-only
-contact therefore do not trigger a report. Geometry is clipped at the camera's
-near/far planes, each view rectangle, and the canvas. View-local results are
-translated to common canvas coordinates, including collisions with screen labels.
+Separate text elements intentionally crossfading can still produce reports.
+`ignorePairs` optionally excludes such pairs in either order. A group ID matches
+all its descendants; `['labels', 'labels']` excludes internal text pairs in that
+group while preserving checks against other text. Group membership by itself
+does not imply an exclusion.
 
-This measures **projected overlap**, including objects at different depths. It
-does not remove geometry hidden by another object's depth or by compositing, and
-does not infer acceptable connections, highlights, backgrounds, or containment
-inside filled objects; use `ignorePairs` for those. Bounds use logical viewport
-dimensions; device-pixel rounding and raster antialiasing can differ slightly at
-edges. No minimum-clearance/near-miss check or continuous collision solver is
-included.
+The detector reuses the renderer's text tessellation, including MathJax glyph
+holes, LaTeX anchors/numeric slots, current morph geometry, nested transforms,
+billboards, and viewport offsets. Broad bounding-box checks are followed by
+positive-area glyph intersections. Overlapping text bounding boxes, empty glyph
+holes, and edge-only contact therefore do not by themselves trigger a report.
+Geometry is clipped at the camera's near/far planes, each view rectangle, and the
+canvas. View-local results are translated to common canvas coordinates, including
+collisions with screen labels. Non-text shapes are skipped during tessellation.
+
+This measures **projected text overlap**, including text at different depths.
+It does not remove glyphs hidden by another object's depth or by compositing.
+Text crossing a border and intersecting shapes are outside the detection scope.
+Bounds use logical viewport dimensions; device-pixel rounding and raster
+antialiasing can differ slightly at edges. No minimum-clearance/near-miss check
+or continuous collision solver is included.
 
 Scene inspection returns `{ time, overlaps }[]` for **only samples with
 collisions**. By default it samples at 10 Hz and includes scene endpoints,

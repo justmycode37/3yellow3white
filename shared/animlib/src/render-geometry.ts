@@ -3,7 +3,7 @@ import earcut from 'earcut';
 import { GeometryCache } from './cache.js';
 import { parseColor } from './palette.js';
 import type { PaletteResolver } from './palette.js';
-import type { CameraState, ColorValue, ElementState, Frame, Geometry, OverlapComponent, Vec3 } from './types.js';
+import type { CameraState, ColorValue, ElementState, Frame, Geometry, Vec3 } from './types.js';
 import type { DrawItem } from './composition.js';
 import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles, tubeTriangles, coneTriangles } from './geometry.js';
 import { layoutLatex, layoutLatexGeometry } from './latex.js';
@@ -37,9 +37,12 @@ export function triangulateContours(contours:Vec3[][]):Vec3[] {
   // a triangulation retained for a previous frame or scene.
   return triangulations.set(key,result.map(p=>[...p] as Vec3),result.length*64);
 }
-export interface GeometryDrawItem extends DrawItem { elementId: string; component: OverlapComponent; }
+type DrawComponent = 'content' | 'fill' | 'stroke';
+export interface GeometryDrawItem extends DrawItem { elementId: string; component: DrawComponent; }
+const isText = (geometry: Geometry): boolean => geometry.kind === 'text' || geometry.kind === 'latex';
 
-export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string):GeometryDrawItem[] {
+/** textOnly skips shape tessellation while retaining groups and the text portions of mixed morphs. */
+export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string,textOnly=false):GeometryDrawItem[] {
   const parents=new Map<string,ElementState>();
   for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
   const items:GeometryDrawItem[]=[];
@@ -50,6 +53,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     -(x-camera.target[0])*sy*cp+(y-camera.target[1])*sp-(z-camera.target[2])*cy*cp;
   for(const [elementIndex,element] of frame.elements.entries()) {
     if(element.geometry.kind==='group'||element.view!==view)continue;
+    if(textOnly && !(element.morph ? isText(element.morph.from)||isText(element.morph.to) : isText(element.geometry)))continue;
     const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
     while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
     const viewportOffset=[0,1].map(axis=>chain.reduce((sum,e)=>sum+(e.viewportOffset?.[axis]??0),0));
@@ -80,7 +84,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     const basis=element.billboard&&element.space!=='screen'
       ?axes.map(axis=>rotate(rotate(axis.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]),[camera.pitch,camera.yaw,0]))
       :normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
-    const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:OverlapComponent='fill'):void=> {
+    const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:DrawComponent='fill'):void=> {
       const rgba=parseColor(palette.resolve(color));if(!points.length||rgba[3]*opacity*alpha<=0)return;
       const vertices=new Float32Array(points.length*15),screen=element.space==='screen',a=rgba[3]*opacity*alpha;
       let sumX=0,sumY=0,sumZ=0;
@@ -113,7 +117,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
         items.push({depth,vertices,transparent,screen,groups,elementId:element.id,component});
       }
     };
-    const contours=(paths:Vec3[][],alpha=1,color=element.fill,component:OverlapComponent='fill'):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha,undefined,component);};
+    const contours=(paths:Vec3[][],alpha=1,color=element.fill,component:DrawComponent='fill'):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha,undefined,component);};
     const stroke=(points:Vec3[],closed:boolean,alpha=1,capEnd=true):void=> {
       if(element.stroke==='none'||element.strokeWidth<=0)return;
       if(element.strokeProfile==='round') {
@@ -131,6 +135,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       for(const indices of geometry.triangles??[]){const triangle=indices.map(i=>vertices[i]).filter(Boolean);if(triangle.length===3){addTriangles(triangle,element.fill,alpha);stroke(triangle,true,alpha);}}
     };
     const drawGeometry=(geometry:Geometry,alpha=1):void=> {
+      if(textOnly&&!isText(geometry))return;
       if(geometry.kind==='text'||geometry.kind==='latex'){latexPaths((geometry.kind==='text'?layoutLatex(textTex(geometry.text??'')):layoutLatexGeometry(geometry)).paths,geometry.fontSize??(element.space==='screen'?(geometry.kind==='text'?16:24):(geometry.kind==='text'?0.4:0.6)),alpha);return;}
       if(geometry.kind==='mesh'){addMesh(geometry,alpha);return;}
       if(geometry.kind==='sphere'){const sphere=sphereTriangles(geometry.radius??1);addTriangles(sphere.points,element.fill,alpha,sphere.normals);return;}

@@ -146,7 +146,7 @@ For API examples, behavior details, architecture, limits, and native GPU checks,
 see the [full reference](docs/reference.md). Public types live in
 [src/types.ts](src/types.ts).
 
-### Overlap detection
+### Text overlap detection
 
 Hosts can inspect a frame or sample an animation through either `animlib` or
 `animlib/core`, without a browser or GPU:
@@ -157,17 +157,19 @@ import { detectOverlaps, detectSceneOverlaps } from 'animlib/core';
 const overlaps = detectOverlaps(endState, { width: 1280, height: 720 });
 const samples = detectSceneOverlaps(compiled, {
   width: 1280, height: 720, sampleRate: 10,
-  ignorePairs: [['intentional-highlight', 'highlighted-object']],
+  ignorePairs: [['outgoing-title', 'incoming-title']],
 });
 ```
 
-Detection uses the same glyphs, fills, strokes, transforms, and morph geometry as
-rendering. Text/LaTeX collisions are classified as `unacceptable`; other shape
-collisions as `undesirable`. Reports contain stable element pairs, canvas bounds,
-and collision points for later correction. Detection is opt-in and leaves layouts
-unchanged. Scene inspection is sampled, so brief collisions between samples can
-be missed. See [overlap inspection](docs/reference.md#overlap-inspection) for the
-full contract and limits.
+Detection reports intersections between the rendered glyphs of **distinct text
+or LaTeX elements**. Shapes may overlap each other or text freely. Glyphs within
+one text element or formula are never compared against each other; separate text
+elements are checked even when they share a group. Reports contain stable element
+pairs, canvas bounds, and a collision point for later correction. Detection is
+opt-in and leaves layouts unchanged. Scene inspection is sampled, so brief
+collisions between samples can be missed. See
+[overlap inspection](docs/reference.md#overlap-inspection) for the full contract
+and limits.
 
 ### WebGL2 browser checks
 
