@@ -18,6 +18,12 @@ When writing the plan:
   "Simpler to draw" is not a reason. For a subject that has a 3D shape, plan the flat
   step as a visible transformation of the same 3D object, and plan the return to 3D.
   A lesson about a spatial subject should be 3D in most of its scenes.
+- **Show little (2D and 3D alike):** a scene shows only what the student needs to
+  see for its one idea: the objects being talked about, short labels, and at most
+  three formulas or matrices at a time. Do not plan a growing list of results. When
+  a scene introduces a new formula, say in its description which earlier one leaves
+  or turns into it. Carry at most three formulas into the next scene, and list the
+  others under cleanup. Fewer, larger, well-spaced things beat a full screen.
 - **Interactions:** plan an interactive element in every scene where playing with a
   value deepens that scene's idea (a slider for a quantity, a toggle to compare with
   and without, a select between a few named cases). Most lessons should have

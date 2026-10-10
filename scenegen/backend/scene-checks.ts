@@ -69,6 +69,8 @@ export function renderProblems(compiled: CompiledScene): string[] {
   const frames = Array.from({ length: 13 }, (_, i) => evaluateScene(compiled, compiled.duration * i / 12));
   const stray = strayModelParts(frames as never);
   if (stray.length) problems.push(`Outside the 3D view: ${stray.slice(0, 12).join(", ")}${stray.length > 12 ? ", ..." : ""}.\n${STRAY_HINT}`);
+  const layout = layoutProblems(frames as never);
+  if (layout.length) problems.push(`${layout.join("\n")}\n${LAYOUT_HINT}`);
   const placed = compiled.controls.filter(control => control.position).map(control => control.id);
   if (placed.length) problems.push(`Controls with a position: ${placed.join(", ")}.\n${CONTROLS_HINT}`);
   return problems;
@@ -78,3 +80,62 @@ export function renderProblems(compiled: CompiledScene): string[] {
 // in declaration order: the same place in every scene.
 export const CONTROLS_HINT = "Controls must sit in the top right corner in every scene. Remove `position` from s.slider / s.toggle / " +
   "s.select: the player then stacks them top right by itself. Keep formulas below them on the right.";
+
+// The narrowest window the layout must survive: width = 1.5 x height.
+const SAFE_ASPECT = 1.5;
+const MAX_FORMULAS = 7;
+
+interface Box { id: string; left: number; right: number; bottom: number; top: number }
+interface LayoutFrame {
+  camera: { yaw: number; pitch: number; target: number[]; height: number };
+  elements: (FrameElement & { scale: number; space?: string; billboard?: boolean; rotation?: number[];
+    geometry: { kind: string; tex?: string; fontSize?: number } })[];
+}
+
+/** Boxes of the flat formulas drawn by the main camera, in scene units. */
+function formulaBoxes(frame: LayoutFrame): Box[] {
+  if (Math.abs(frame.camera.yaw) > 1e-3 || Math.abs(frame.camera.pitch) > 1e-3) return [];
+  const boxes: Box[] = [];
+  for (const element of frame.elements) {
+    if (element.geometry.kind !== "latex" || element.view || element.billboard || element.space === "screen" || element.opacity <= 0.05) continue;
+    if ((element.rotation ?? []).some(angle => Math.abs(angle) > 1e-3)) continue;
+    let points: number[][];
+    try { points = layoutLatexGeometry(element.geometry as never).paths.flatMap(path => path.contours.flat()); } catch { continue; }
+    if (!points.length) continue;
+    const size = (element.geometry.fontSize ?? 0.6) * element.scale;
+    const xs = points.map(point => point[0] * size + element.position[0]), ys = points.map(point => point[1] * size + element.position[1]);
+    boxes.push({ id: element.id, left: Math.min(...xs), right: Math.max(...xs), bottom: Math.min(...ys), top: Math.max(...ys) });
+  }
+  return boxes;
+}
+
+/** Formulas that overlap each other, leave the frame, or pile up, as the viewer would see them. */
+export function layoutProblems(frames: LayoutFrame[]): string[] {
+  const overlaps = new Map<string, number>(), outside = new Set<string>();
+  let most = 0;
+  frames.forEach((frame, index) => {
+    const boxes = formulaBoxes(frame), last = index === frames.length - 1;
+    most = Math.max(most, boxes.length);
+    const halfHeight = frame.camera.height / 2, halfWidth = halfHeight * SAFE_ASPECT, [cx, cy] = frame.camera.target;
+    for (const box of boxes) {
+      if (box.left < cx - halfWidth || box.right > cx + halfWidth || box.bottom < cy - halfHeight || box.top > cy + halfHeight) outside.add(box.id);
+    }
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i], b = boxes[j];
+      const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.top, b.top) - Math.max(a.bottom, b.bottom);
+      if (w <= 0.02 || h <= 0.02) continue;
+      const key = `${a.id} and ${b.id}`;
+      overlaps.set(key, (overlaps.get(key) ?? 0) + (last ? 2 : 1)); // passing through each other once mid-motion is fine
+    }
+  });
+  const problems: string[] = [];
+  const overlapping = [...overlaps].filter(([, count]) => count >= 2).map(([pair]) => pair);
+  if (overlapping.length) problems.push(`Formulas overlap: ${overlapping.slice(0, 8).join("; ")}.`);
+  if (outside.size) problems.push(`Formulas leave the frame (it can be as narrow as ${SAFE_ASPECT} x its height): ${[...outside].slice(0, 8).join(", ")}.`);
+  if (most > MAX_FORMULAS) problems.push(`Too much text: ${most} formulas and labels are visible at once (at most ${MAX_FORMULAS}).`);
+  return problems;
+}
+
+export const LAYOUT_HINT = "Show less at once: fade out formulas that are no longer needed before adding the next, keep at most three " +
+  "formulas in the right-hand column, leave a clear gap (at least half a line) between neighbours, and make each fit inside the frame " +
+  "(smaller fontSize or a shorter formula). A 2x2 matrix at fontSize 0.46 is about 1.1 units tall, so stack matrices at least 1.5 units apart.";

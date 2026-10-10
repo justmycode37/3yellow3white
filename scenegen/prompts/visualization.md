@@ -163,6 +163,21 @@ Layout (keep it identical in every scene):
 - The right third from top to bottom: controls in the top third (kept empty when
   there are none), formulas and matrices in the middle and lower part, starting
   below the controls. The same in every scene, so nothing jumps between scenes.
+- Formula column budget (strict, checked): at most THREE formulas or matrices in the
+  column at once, and at most 7 formulas and labels on screen in total. Before a new
+  formula comes in, fade out one the viewer no longer needs, or morph the old one
+  into the new one. Do not keep a growing list of every result so far.
+- Formulas never overlap or touch (strict, checked). Place them from their real
+  size: a 2x2 matrix at fontSize 0.46 is about 1.1 units tall and 2.6 wide, a single
+  line about 0.5 tall. Stack with a clear gap of at least half a line: matrices at
+  least 1.5 units apart centre to centre, single lines at least 0.8.
+- Everything stays inside the frame (strict, checked). The window can be as narrow
+  as 1.5 times its height, so with the usual camera height 8 keep all text within
+  x from -5.6 to 5.6 and y from -3.6 to 3.6. Centre the column near x = 4 and make
+  wide formulas smaller or shorter rather than letting them run off the edge.
+- Show only what the student needs for THIS step. One idea on screen at a time: the
+  objects being talked about, their labels, and the one formula that states the
+  point. Fade out the rest, including dimmed "ghost" copies of earlier formulas.
 - Labels sit beside what they name with a visible gap and move with it; nothing
   touches or overlaps, including during motion.
 - Minimum text height about 0.35 scene units; keep 0.4+ margin from the frame edge.

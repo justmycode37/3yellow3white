@@ -91,6 +91,23 @@ test("a control with its own position is rejected, so controls stay top right", 
   expect(results[1]).toBe("ok");
 });
 
+test("overlapping formulas are rejected", async () => {
+  const craft = await readFile(new URL("../../backend/prompts/scene-craft.md", import.meta.url), "utf8");
+  const scene = (gap: number) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    s.latex("a", { tex: "A=\\\\begin{bmatrix}1&1\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [4, 1] });
+    s.latex("b", { tex: "B=\\\\begin{bmatrix}2&0\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [4, ${1 - gap}] });
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new VisualizationPromptRunner({ run: async task => {
+    for (const output of [scene(0.9), scene(1.6)]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: craft, prompt: `Generate this scene:\n${JSON.stringify({ planning: { current: { visualDescription: "2D (because it is a plane): two matrices" } } })}`, validate: async () => {} });
+  expect(results[0]).toContain("Formulas overlap: a and b");
+  expect(results[1]).toBe("ok");
+});
+
 test("a lesson plan must mark every scene as 3D or 2D with a reason", async () => {
   const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
   const plan = (description: string) => JSON.stringify({ plan: { scenes: [{ id: "beat-1", visualDescription: description }] } });
