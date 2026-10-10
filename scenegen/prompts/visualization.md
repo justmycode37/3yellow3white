@@ -74,9 +74,19 @@ Focus (strict; the viewer must always know where to look):
 - FOCUS FRAME, for text and flat 2D things (a term, a label, a formula, a matrix, a
   number, a small flat shape): a thin yellow rectangle drawn around it, in the style
   of 3Blue1Brown. `s.rectangle(id, { width, height, position, fill: Color.NONE,
-  stroke: Color.YELLOW, strokeWidth: 0.03, opacity: 0 })`. Fade it in over 0.4 s,
-  hold it for at least 1 s while the thing is being talked about, fade it out over
-  0.4 s and remove it.
+  stroke: Color.YELLOW, strokeWidth: 0.02, opacity: 0 })`: a thin line, never
+  thicker than 0.03. Fade it in over 0.4 s, hold it for at least 1 s while the thing
+  is being talked about, fade it out over 0.4 s and remove it.
+- A frame always wraps ONE WHOLE thing, cleanly (strict, checked glyph by glyph):
+  the whole formula, the whole label, the whole matrix, or one complete term that
+  is its own element. It is centred on that thing with the same padding on all four
+  sides, and its line never crosses or touches any glyph, of that element or of a
+  neighbour. Never frame an arbitrary slice such as "m x n =" out of `A_{m x n} =
+  ...`: frame the whole of `A_{m x n}`, or the whole equation. If the term you want
+  has close neighbours and a frame with padding would cut into them, the layout is
+  too tight: give that term its own `s.latex` element with a clear gap around it
+  (at least 0.35 to the next glyph), or frame the larger whole instead. When in
+  doubt, frame the bigger complete element rather than a tighter partial one.
 - The frame sits tight and centred on its text. A formula is centred exactly on its
   own `position`, so give the frame that SAME position (never a separately guessed
   one) and size it from the formula, with f = its fontSize:
@@ -86,8 +96,9 @@ Focus (strict; the viewer must always know where to look):
   capital, 1.15 f with brackets, 1.8 f for a fraction and 2.4 f for a two-row matrix
   (a 2x2 matrix written as `A=[...]` is about 4.9 f wide). Examples at f = 0.5:
   `ab` is 0.46 x 0.35, `a^2+2ab` is 1.8 x 0.5, `(a+b)^2` is 1.6 x 0.57.
-  To frame one term of a longer formula, make that term its own `s.latex` element,
-  so its position and size are known.
+  To frame one term of a longer formula, make that term its own `s.latex` element
+  (or a named `\animpart`), so its position and size are known and it is a whole
+  target.
 - Size every frame from MEASURED bounds, not from the estimate alone. The scene code
   cannot measure text, but you can: call inspect_scene on your candidate and ask
   for the bounds of the text a frame surrounds, then set the frame to those bounds
@@ -366,7 +377,10 @@ Layout (keep it identical in every scene):
   formula 8 f wide needs f <= 0.5) or break a long formula into two lines. Size a
   diagram to fit: scale the whole thing down before letting any part reach the edge.
 - Lines and arrows never run through text (strict, checked). An arrow starts and
-  ends about 0.15 clear of the label or number it points from or to, and no line,
+  ends about 0.15 clear of the label or number it points from or to: the arrowhead
+  is drawn at the arrow's end point, so that end point itself must stop before the
+  label's edge with a visible gap, never on or inside the label. An arrow also
+  starts inside the frame, not beyond its edge. No line,
   arrow or stem passes through any label, number or formula. Put a label BESIDE its
   line, offset perpendicular to it, never on it; when several arrows meet near a
   label, move the label outward. Leave empty space around a diagram for its labels
