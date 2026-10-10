@@ -61,3 +61,5 @@ Final reviewed SHA-256 values:
 ## Delivery follow-up
 
 Main owns the final frozen browser playback, new MP4 export/decode, timing/audio/subtitle checks, and encoded frame inspection. Append those actual results here or link their final verification record. No source/library edits were made by the reviewer.
+
+Coordinator follow-up: final frozen sources passed three deterministic sequence checks, uninterrupted browser playback reached the 161-second hold, and the native MP4 decoded all 3,864 frames at 1280×720/24 fps with no audio stream. All 19 embedded subtitle texts matched the manifest. Encoded frames at 122.5 and 160 seconds were visually inspected. Exact artifact hash, logs, screenshots and scientific limitations are recorded in [smooth-revision.md](smooth-revision.md). Final comparison page and player were left open.
