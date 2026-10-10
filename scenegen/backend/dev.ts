@@ -1,6 +1,7 @@
-// The team's backend, unchanged, with two prompt hooks: scene agents get
-// scenegen/prompts/visualization.md instead of backend/prompts/scene-craft.md, and the
-// lesson-planning step gets scenegen/prompts/planning.md appended.
+// The team's backend, unchanged, with two prompt hooks. Main ships a frozen copy of the
+// scenegen prompts in backend/prompts/scenegen/; this wrapper swaps those copies for the
+// current scenegen/prompts/visualization.md and planning.md, so prompt edits can be
+// tried without touching backend/, and adds the scenegen render checks.
 // Planning, script review, ElevenLabs narration, word timings, captions, validation
 // and delivery all run through the backend's own modules.
 //
@@ -18,10 +19,14 @@ import type { Frame } from "animlib/core";
 import { createPiGenerator, sceneSource } from "../../backend/src/agents/generator.js";
 import { renderProblems } from "./scene-checks.ts";
 import { PLANNING_CONTRACT } from "../../backend/src/agents/planning.js";
+import { createThumbnailGenerator, thumbnailAgentConfig } from "../../backend/src/agents/thumbnail.js";
 
 const CRAFT = new URL("../../backend/prompts/scene-craft.md", import.meta.url);
 const VISUALIZATION = new URL("../prompts/visualization.md", import.meta.url);
 const PLANNING = new URL("../prompts/planning.md", import.meta.url);
+const MAIN_VISUALIZATION = new URL("../../backend/prompts/scenegen/visualization.md", import.meta.url);
+const MAIN_PLANNING = new URL("../../backend/prompts/scenegen/planning.md", import.meta.url);
+const optional = (url: URL) => readFile(url, "utf8").catch(() => "");
 const LOG = new URL("../../out/visualization-prompts/", import.meta.url);
 
 /** Swaps the scene-craft section of scene tasks for the scenegen visualization prompt. */
@@ -32,18 +37,23 @@ export class VisualizationPromptRunner implements AgentRunner {
     const craft = await readFile(CRAFT, "utf8");
     if (task.systemPrompt.includes(PLANNING_CONTRACT)) { // lesson authoring: plan + script
       const planning = await readFile(PLANNING, "utf8");
-      console.log("[scenegen] lesson planning: appending scenegen/prompts/planning.md");
+      const frozen = await optional(MAIN_PLANNING);
+      console.log("[scenegen] lesson planning: using scenegen/prompts/planning.md");
       // Every scene must state its view, so "3D by default" is a checked decision.
       const validate = task.validate && (async (output: string) => {
         await task.validate!(output);
         const unmarked = planScenes(output).filter(scene => !VIEW_MARK.test(scene.visualDescription ?? "")).map(scene => scene.id);
         if (unmarked.length) throw new Error(`Start each scene's visualDescription with "3D:" or "2D (because <reason>):". Missing in: ${unmarked.join(", ")}. 3D is the default; 2D needs a real reason.`);
       });
-      return this.inner.run({ ...task, validate, systemPrompt: `${task.systemPrompt}\n\n${planning}` });
+      const systemPrompt = frozen && task.systemPrompt.includes(frozen)
+        ? task.systemPrompt.replace(frozen, () => planning) : `${task.systemPrompt}\n\n${planning}`;
+      return this.inner.run({ ...task, validate, systemPrompt });
     }
-    if (!task.systemPrompt.includes(craft)) return this.inner.run(task); // review
+    const frozen = await optional(MAIN_VISUALIZATION);
+    const target = frozen && task.systemPrompt.includes(frozen) ? frozen : craft; // older backends only have scene-craft
+    if (!task.systemPrompt.includes(target)) return this.inner.run(task); // review, thumbnails, ...
     const visualization = await readFile(VISUALIZATION, "utf8"); // re-read: edits apply to the next scene
-    const systemPrompt = task.systemPrompt.replace(craft, visualization);
+    const systemPrompt = task.systemPrompt.replace(target, () => visualization);
     await mkdir(LOG, { recursive: true });
     const name = `scene-task-${String(++this.count).padStart(3, "0")}.prompt.md`;
     await writeFile(new URL(name, LOG), `${systemPrompt}\n\n${task.prompt}`);
@@ -79,14 +89,21 @@ if (import.meta.main) {
   const narration = new NarrationService();
   const config = agentConfig();
   const videos = new VideoService(process.env.VIDEO_DB_PATH ?? "data/videos.sqlite",
-    createPiGenerator(new VisualizationPromptRunner(new PiAgentRunner(config)), narration, config.dataDir), "pi");
+    createPiGenerator(new VisualizationPromptRunner(new PiAgentRunner(config)), narration, config.dataDir,
+      { outputMode: config.sceneOutputMode, timingMode: config.sceneTimingMode }), "pi",
+    createThumbnailGenerator(new PiAgentRunner(thumbnailAgentConfig())));
+  const handler = createHandler(undefined, videos, narration);
   const localNarration = process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1";
   const server = Bun.serve({
     hostname: process.env.HOST ?? (localNarration ? "127.0.0.1" : "0.0.0.0"),
     port: Number(process.env.PORT ?? 8080),
     idleTimeout: 30,
     maxRequestBodySize: 101 * 1024 * 1024,
-    fetch: createHandler(undefined, videos, narration),
+    fetch(request, server) {
+      // Planning is a bounded model request and can exceed the default idle timeout.
+      if (new URL(request.url).pathname === "/api/study-plans") server.timeout(request, 210);
+      return handler(request);
+    },
     error(error) { console.error(error); return Response.json({ detail: "Internal Server Error" }, { status: 500 }); },
   });
   console.log(`Aha! backend (scenegen visualization prompt) listening on ${server.url}`);

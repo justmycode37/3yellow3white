@@ -13,6 +13,20 @@ test("scene tasks get the scenegen visualization prompt; other tasks pass throug
   expect(seen[1]).toBe("write the lesson plan");
 });
 
+test("main's frozen scenegen prompts are swapped for the current ones", async () => {
+  const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
+  const read = (path: string) => readFile(new URL(path, import.meta.url), "utf8");
+  const [craft, frozenScene, frozenPlan, visualization, planning] = await Promise.all([
+    read("../../backend/prompts/scene-craft.md"), read("../../backend/prompts/scenegen/visualization.md"),
+    read("../../backend/prompts/scenegen/planning.md"), read("../prompts/visualization.md"), read("../prompts/planning.md")]);
+  const seen: string[] = [];
+  const runner = new VisualizationPromptRunner({ run: async task => { seen.push(task.systemPrompt); return "ok"; } });
+  await runner.run({ systemPrompt: `handoff\n\n${craft}\n\n${frozenScene}\n\nreference`, prompt: "scene" });
+  await runner.run({ systemPrompt: `guidance\n\n${PLANNING_CONTRACT}\n\n${frozenPlan}`, prompt: "lesson" });
+  expect(seen[0]).toBe(`handoff\n\n${craft}\n\n${visualization}\n\nreference`);
+  expect(seen[1]).toBe(`guidance\n\n${PLANNING_CONTRACT}\n\n${planning}`);
+});
+
 test("lesson planning tasks get the scenegen planning additions appended", async () => {
   const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
   const planning = await readFile(new URL("../prompts/planning.md", import.meta.url), "utf8");
@@ -61,7 +75,7 @@ test("a 3D part created outside its model's view is rejected", async () => {
       v.sphere("atom", { radius: 0.5, position: [0, 0, 0], fill: Color.RED });
       ${late ? "" : 'v.sphere("corner", { radius: 0.1, position: [1, 1, 1], fill: Color.GREY });'}
     });
-    ${late ? 'view.sphere("corner", { radius: 0.1, position: [1, 1, 1], fill: Color.GREY });' : ""}
+    ${late ? 's.sphere("corner", { radius: 0.1, position: [1, 1, 1], fill: Color.GREY });' : ""}
     s.wait(1);
   });`;
   const results: string[] = [];

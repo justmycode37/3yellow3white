@@ -107,7 +107,8 @@ if (restore >= 0) {
 } else {
   const reference = await readFile(new URL("../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
   const visualization = await readFile(new URL("../prompts/visualization.md", import.meta.url), "utf8");
-  const systemPrompt = `${SCENE_AGENT_INSTRUCTIONS.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${visualization}\n\n${reference}`;
+  const craft = await readFile(new URL("../../backend/prompts/scene-craft.md", import.meta.url), "utf8");
+  const systemPrompt = `${SCENE_AGENT_INSTRUCTIONS.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${reference}`;
   const prompt = `Generate this scene using the authoritative narration packet and lesson plan:\n${JSON.stringify(input)}`;
   console.log(`Regenerating scene ${index} of ${videoId} with scenegen/prompts/visualization.md ...`);
   let source: string;
