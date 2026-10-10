@@ -341,8 +341,36 @@ export interface Frame {
   views?: (ViewState & { cameraAnimated: boolean })[];
 }
 
+/** Axis-aligned bounds in CSS pixels, with X rightwards and Y downwards. */
+export interface Bounds2D { left: number; top: number; right: number; bottom: number; }
+/** Axis-aligned bounds in local/world units or camera coordinates. */
+export interface Bounds3D { min: Vec3; max: Vec3; }
+export interface BoundsOptions {
+  /** Optional tessellation viewport; defaults to 800 × 450 CSS pixels. */
+  width?: number;
+  height?: number;
+  /** Override the element's authored view camera (also affects billboards). */
+  camera?: CameraState;
+  palette?: ColorPalette;
+  /** Include zero-opacity paint and ancestors for layout. Default false. */
+  includeInvisible?: boolean;
+  /** Include painted strokes and arrowheads. Default true. */
+  includeStroke?: boolean;
+}
+export interface ScreenBoundsOptions extends BoundsOptions {
+  /** Full canvas CSS dimensions; view bounds are translated into canvas coordinates. */
+  width: number;
+  height: number;
+  /** Clip to the view rectangle and canvas. Camera near/far clipping always applies. Default true. */
+  clip?: boolean;
+}
+export type PlayerBoundsOptions = Omit<BoundsOptions, 'width' | 'height' | 'camera' | 'palette'> & {
+  /** Defaults to screen. Screen bounds use pixels relative to the selected view's top-left. */
+  space?: 'local' | 'world' | 'camera' | 'screen';
+  clip?: boolean;
+};
 /** Canvas CSS pixels, with x increasing rightwards and y increasing downwards. */
-export interface OverlapBounds { left: number; top: number; right: number; bottom: number; }
+export interface OverlapBounds extends Bounds2D {}
 export type OverlapSeverity = "unacceptable";
 export interface OverlapDiagnostic {
   /** Distinct text/LaTeX element IDs, sorted lexically for stable pair identity. */

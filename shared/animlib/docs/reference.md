@@ -1777,6 +1777,90 @@ Browsers may require a user gesture to start audio. `play()` can reject and play
 state becomes `blocked`; pressing Play can retry. The host should handle that
 state alongside its transport. See the [browser autoplay guide](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay).
 
+## Object bounds
+
+These synchronous host APIs are exported from both `animlib` and `animlib/core`.
+They inspect an evaluated `Frame` without a browser or GPU. Pass an element ID or
+a group ID; groups include all descendant paint, with nested transforms applied.
+
+```js
+import { evaluateScene, getLocalBounds, getWorldBounds, getCameraBounds, getScreenBounds } from 'animlib/core';
+
+const frame = evaluateScene(compiled, 1.25);
+const local = getLocalBounds(frame, 'object');
+const world = getWorldBounds(frame, 'object');
+const camera = getCameraBounds(frame, 'object');
+const pixels = getScreenBounds(frame, 'object', { width: 1280, height: 720 });
+```
+
+- `getLocalBounds(frame, id, options?)` returns `Bounds3D` with `min` and `max`
+  XYZ tuples in the object's own axes. Its position, rotation, scale, and ancestor
+  transforms are excluded; descendants retain their relative transforms. For
+  screen objects the units are CSS pixels. Local bounds exclude billboard
+  orientation and billboard offsets, as well as viewport offsets.
+- `getWorldBounds(frame, id, options?)` returns `Bounds3D` after all object and
+  ancestor transforms. Billboards use the selected camera. Viewport offsets
+  are excluded because they apply after projection.
+- `getCameraBounds(frame, id, options?)` returns `Bounds3D` in camera coordinates:
+  X increases rightwards, Y upwards, and Z is positive depth from the camera eye.
+  World and camera bounds are not clipped by the camera or viewport.
+- `getScreenBounds(frame, id, { width, height, ...options })` returns `Bounds2D`
+  (`left`, `top`, `right`, `bottom`) in full-canvas CSS pixels, with origin at the
+  top left. An object's view is selected automatically. View rectangles,
+  billboard offsets, and summed ancestor viewport offsets are included.
+
+Screen bounds clip triangles to camera near/far planes **before** perspective
+division, then to the object's view rectangle and the canvas. `clip: false`
+preserves offscreen extents while still applying camera near/far clipping.
+`width` and `height` must be positive finite canvas CSS dimensions. Other queries
+accept optional dimensions for curve tessellation (defaults: 800 × 450).
+
+All four functions accept these `BoundsOptions`:
+
+- `camera`: override the object's authored view camera, including billboard
+  orientation. It must be finite, with positive `height` and `distance`.
+- `palette`: the host color palette, otherwise the default palette.
+- `includeStroke`: defaults to `true`; `false` excludes strokes and arrowheads.
+  Text/LaTeX glyphs remain included even when their ink uses the stroke color.
+- `includeInvisible`: defaults to `false`; `true` ignores object/group opacity
+  and paint alpha for layout. It does not add paint declared as `Color.NONE`,
+  resurrect removed elements, or include an absent morph endpoint.
+
+Bounds enclose the renderer's tessellated paint, including current compatible
+morph geometry, both painted sides of crossfades, glyph holes, LaTeX anchors and
+numeric slots, round strokes, and mesh triangles. Unreferenced mesh vertices are
+excluded. Curves and spheres are sampled, and packed geometry uses float32, so
+these are rendering bounds rather than exact analytic extrema. Raster
+antialiasing can extend slightly beyond them. Queries do not test depth
+occlusion or subtract paint hidden by compositing; a box also includes empty
+space between glyphs or group children.
+
+Missing IDs, empty/no-paint elements, and invisible or collapsed paint return
+`undefined`. Fully clipped or edge-on objects have no screen bounds. An object's
+own zero scale does not remove its local bounds. Screen objects have no world or
+camera bounds and return `undefined` for those queries. Groups mixing world and
+screen paint support screen bounds; other queries throw because the units differ.
+Results are detached values and queries do not modify the frame.
+
+The browser player provides `player.getBounds(id, options?)`, with
+`space: 'screen' | 'local' | 'world' | 'camera'` (default: `'screen'`). It uses the
+displayed frame, live behavior/binding state, active display palette, actual view
+dimensions, and effective camera including viewer orbit and pan. The object's
+view is selected automatically. Screen results use **view-local CSS pixels**,
+matching `player.project(point, view?)` and `player.ray(x, y, view?)`, rather than
+full-canvas coordinates. It accepts `includeInvisible`, `includeStroke`, and
+`clip`, and returns `undefined` before rendering. Queries after disposal throw.
+
+```js
+const pixels = player.getBounds('object');
+const world = player.getBounds('object', { space: 'world' });
+const local = player.getBounds('object', { space: 'local', includeInvisible: true });
+```
+
+These APIs operate on frames or the player; they are not methods on sandboxed
+scene-builder handles. Authors supply geometry and transforms through those
+handles, and hosts can measure any evaluated scene time using the core APIs.
+
 ## Overlap inspection
 
 `detectOverlaps(frame, options)` and `detectSceneOverlaps(compiled, options)` are

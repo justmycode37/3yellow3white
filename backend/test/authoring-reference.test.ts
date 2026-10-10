@@ -24,6 +24,7 @@ test('retains every authoring section verbatim while excluding host and developm
   expect(output).toContain(between('### Procedural textures and materials', '### Function and parametric surfaces'));
   expect(output).toContain('### Retained reactive bindings');
   expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
+  expect(output).toContain(between('## Object bounds', '## Overlap inspection'));
 });
 
 test('normalizes line endings deterministically without changing authoring prose', () => {
