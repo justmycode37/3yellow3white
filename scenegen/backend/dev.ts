@@ -123,7 +123,7 @@ if (import.meta.main) {
     createPiGenerator(new CheckedRunner(new PiAgentRunner(config)), narration, config.dataDir,
       { outputMode: config.sceneOutputMode, timingMode: config.sceneTimingMode, preview }), "pi",
     createThumbnailGenerator(new PiAgentRunner(thumbnailAgentConfig())));
-  const handler = createHandler(undefined, videos, narration);
+  const handler = createHandler(process.env.FRONTEND_DIR || undefined, videos, narration);
   const localNarration = process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1";
   const server = Bun.serve({
     hostname: process.env.HOST ?? (localNarration ? "127.0.0.1" : "0.0.0.0"),
