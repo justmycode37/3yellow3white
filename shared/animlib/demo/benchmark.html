@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101216" />
+    <title>Scene generation · Replay gallery</title>
+    <style>
+      :root { color-scheme: dark; font: 14px/1.5 system-ui, sans-serif; color: #e9edf3; background: #101216; }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      main { max-width: 1600px; margin: auto; padding: 18px 24px 28px; }
+      header, .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      header { justify-content: space-between; margin-bottom: 14px; }
+      h1 { font-size: 20px; margin: 0; font-weight: 600; }
+      p { margin: 5px 0; }
+      .muted { color: #a6aeba; }
+      button, select, input { font: inherit; }
+      button, select { padding: 7px 11px; border: 1px solid #414853; border-radius: 6px; color: inherit; background: #20252e; }
+      button { cursor: pointer; }
+      button:hover:not(:disabled) { background: #343e4e; }
+      button:disabled, input:disabled, select:disabled { opacity: .4; cursor: default; }
+      :focus-visible { outline: 2px solid #82caff; outline-offset: 3px; }
+      #run { max-width: min(700px, 75vw); }
+      #stage { position: relative; width: min(100%, 960px); aspect-ratio: 16/9; background: #000; border: 1px solid #343a44; margin: 14px auto; }
+      canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+      #scrubber { flex: 1; min-width: 180px; accent-color: #83caff; }
+      #clock { min-width: 128px; font-variant-numeric: tabular-nums; text-align: right; }
+      .controls { display: grid; gap: 13px; }
+      #play { min-width: 90px; background: #d8eaff; color: #102436; }
+      #status { font-size: 13px; min-height: 20px; }
+      #error { padding: 12px; color: #ffb3ac; background: #361e22; border: 1px solid #76333c; white-space: pre-wrap; }
+      #metadata { font-variant-numeric: tabular-nums; }
+      .comparison { overflow-x: auto; margin: 14px 0 20px; }
+      table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+      caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
+      th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #303640; vertical-align: top; }
+      thead th { color: #a6aeba; font-weight: 500; white-space: nowrap; }
+      tbody th { white-space: nowrap; font-weight: 600; }
+      td a { color: #a8d7ff; white-space: nowrap; text-underline-offset: 3px; }
+      td a[aria-current="true"] { color: #fff; font-weight: 700; }
+      .review-summary { display: block; color: #a6aeba; max-width: 580px; margin-top: 2px; }
+      #comparison-note { font-size: 12px; max-width: 1100px; }
+      details { margin-top: 18px; }
+      pre { overflow: auto; max-height: 350px; padding: 16px; background: #080a0d; font-size: 12px; }
+      [hidden] { display: none !important; }
+      @media (max-width: 650px) { main { padding: 12px; } #run { max-width: 100%; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header><div><h1>Scene generation · Replay gallery</h1><p class="muted">Saved animations, original narration, actual animlib rendering.</p></div><button id="reload" type="button">Reload manifest</button></header>
+      <section class="comparison" aria-label="Generation timing comparison">
+        <table aria-describedby="comparison-note"><caption>Generation time by variant · seconds</caption><thead><tr><th scope="col">Variant</th><th scope="col">RNA</th><th scope="col">Binary</th><th scope="col">Derivative</th><th scope="col">Total</th><th scope="col">Review verdict</th></tr></thead><tbody id="comparison-body"></tbody></table>
+        <p id="comparison-note" class="muted">Exploratory generation timings, with identical saved narration for each topic across variants. Select a time to replay the full run. Assess visual quality using the review notes and playback; timing alone does not establish equivalent quality. Missing topic results remain pending, and partial totals are labeled.</p>
+      </section>
+      <div class="row"><label for="run">Run</label><select id="run" disabled><option>Loading saved runs…</option></select></div>
+      <p id="metadata" class="muted"></p>
+      <p id="status" role="status" aria-live="polite">Loading manifest…</p>
+      <p id="error" role="alert" hidden></p>
+      <div id="stage"><canvas id="canvas" tabindex="0" aria-label="Saved animation"></canvas></div>
+      <div class="controls">
+        <div class="row"><button id="play" type="button" disabled>Play</button><button id="restart" type="button" disabled>Restart</button><input id="scrubber" type="range" min="0" max="1" value="0" step="0.001" aria-label="Full animation progress" disabled /><output id="clock">0:00 / 0:00</output><label><input id="mute" type="checkbox" /> Mute</label></div>
+        <div class="row"><label for="scene">Scene</label><select id="scene" disabled></select><span id="scene-clock" class="muted"></span></div>
+        <div class="row" id="samples"><label for="sample-scope">Sample</label><select id="sample-scope"><option value="run">Full run</option><option value="scene">Current scene</option></select><button type="button" data-fraction="0" disabled>0%</button><button type="button" data-fraction="0.10" disabled>10%</button><button type="button" data-fraction="0.25" disabled>25%</button><button type="button" data-fraction="0.50" disabled>50%</button><button type="button" data-fraction="0.75" disabled>75%</button><button type="button" data-fraction="0.90" disabled>90%</button><button type="button" data-fraction="1" disabled>100%</button><span class="muted">Samples pause playback.</span></div>
+      </div>
+      <details><summary>Saved scene source</summary><pre id="source"></pre></details>
+    </main>
+    <script type="module" src="./benchmark.ts"></script>
+  </body>
+</html>
