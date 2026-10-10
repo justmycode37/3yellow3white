@@ -178,7 +178,8 @@ export class VideoService {
     if (request.method === 'POST' || request.method === 'DELETE') {
       const origin = request.headers.get('origin')
       const protocol = request.headers.get('x-forwarded-proto') ?? url.protocol.slice(0, -1)
-      if (request.headers.get('sec-fetch-site') === 'cross-site' || (origin && origin !== `${protocol}://${url.host}`)) return json({ detail: 'Invalid origin' }, 403)
+      const publicOrigin = process.env.NARRATION_PUBLIC_ORIGIN ?? `${protocol}://${url.host}`
+      if (request.headers.get('sec-fetch-site') === 'cross-site' || (origin && origin !== publicOrigin)) return json({ detail: 'Invalid origin' }, 403)
     }
     if (parts.length === 3) {
       if (request.method === 'GET') return json(this.list())

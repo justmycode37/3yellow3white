@@ -106,8 +106,9 @@ The three data directories must be separate, without nesting. Paths must be outs
 ownership is not changed. Configured paths should match those used by the old
 service before migration.
 
-Narration additionally requires `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and
-`NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch`. Never run a second writer
+Set `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` for both video and
+narration origin validation behind the gateway. Narration additionally requires
+`ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`. Never run a second writer
 or the narration CLI against the active data directory. See [narration](narration.md).
 
 ## Build and verify without activating production
