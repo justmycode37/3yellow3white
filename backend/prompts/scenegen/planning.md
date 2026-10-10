@@ -29,6 +29,14 @@ When writing the plan:
   x and y, a cost landscape) is better as a rotatable surface: plan it in 3D.
   A slider may reshape a surface (an amplitude, a curvature, a parameter of the
   function); plan that as an ordinary slider.
+- **Surface patterns and materials, only with a reason.** A 3D body can carry a
+  simple pattern (checker, stripes, noise, marble, wood) or look metallic, matte or
+  glowing. Plan one when it shows something a plain body cannot: stripes or a
+  checker so a rotation is visible, a checker on a surface so its stretching or
+  curvature is visible, a material when what the object is made of matters (wood,
+  rock, metal, something that emits light), or to tell two identical bodies apart.
+  Say which pattern and why in the visualDescription. Otherwise leave bodies plain;
+  never plan a pattern as decoration, and at most two patterned objects per scene.
 - **Show little (2D and 3D alike):** a scene shows only what the student needs to
   see for its one idea: the objects being talked about, short labels, and at most
   three formulas or matrices at a time. Do not plan a growing list of results. When

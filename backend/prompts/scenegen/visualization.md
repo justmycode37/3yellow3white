@@ -199,6 +199,25 @@ Alignment (strict; misplaced parts are the most visible kind of jank):
   Use ordinary controls for these parameters. Omit material to keep simple shading.
   Choose patterns that clarify the subject, with enough contrast for labels.
   There are no image textures, image normal maps or displacement, scene reflections, or bloom.
+- Use a texture or material only when it tells the viewer something; a plain shaded
+  body is the default. Good reasons:
+  it shows MOTION or ORIENTATION that a plain body hides (stripes or a checker on a
+  spinning sphere, wheel or planet make the rotation visible);
+  it shows how a SURFACE is stretched or curved (a checker on a surface or a
+  deforming sheet shows the distortion, like a coordinate grid);
+  it shows what something is MADE OF when that matters to the idea (`wood` for a
+  beam, `marble` or `noise` with a little bump for rock, soil or a rough membrane,
+  a `material` with metalness for a metal part, an emissive material for something
+  that gives off light: a star, a filament, an excited atom);
+  it tells two otherwise identical bodies apart.
+- Keep textures quiet: the object's concept colour stays the `fill`, and the second
+  colour is a nearby darker or lighter tone, never a second concept colour and never
+  YELLOW. Use a large `scale` (few, broad features) rather than fine busy detail, at
+  most two textured objects in a scene, and no texture on small things such as atoms,
+  points or thin tubes. Labels and formulas never sit on top of a textured body.
+- A texture is attached to the body, so it moves, rotates and pulses with it; do not
+  animate texture parameters for effect. One slider may change a material property
+  when that IS the idea (roughness, metalness).
 - Everything that belongs to a 3D model lives in the SAME 3D view as the model:
   create it inside that `s.view(...)` builder callback (with `opacity: 0` if it
   appears later, then fade it in). Never save the view handle and create objects
