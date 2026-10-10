@@ -70,7 +70,7 @@ if (import.meta.main) {
     hostname: process.env.HOST ?? (localNarration ? "127.0.0.1" : "0.0.0.0"),
     port: Number(process.env.PORT ?? 8080),
     idleTimeout: 30,
-    maxRequestBodySize: 101 * 1024 * 1024,
+    maxRequestBodySize: Infinity,
     fetch(request, server) {
       // Planning is a bounded model request and can exceed the default idle timeout.
       if (new URL(request.url).pathname === "/api/study-plans") server.timeout(request, 210);
