@@ -14,14 +14,17 @@ import { lessons, formatTime, artworkForTitle } from './data'
 import type { Lesson } from './data'
 import { deleteVideo, listVideos, mergeVideoLessons } from './videos'
 
+// Five colours keep neighbours distinct in the one-, two-, and three-column grids.
+const libraryColors = ['sage', 'lavender', 'butter', 'blue', 'peach'] as const
+
 function readLocal<T,>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback } catch { return fallback }
 }
 
-function VideoThumbnail({ lesson, onOpen }: { lesson: Lesson, onOpen: () => void }) {
+function VideoThumbnail({ lesson, color, onOpen }: { lesson: Lesson, color: string, onOpen: () => void }) {
   const progress = Math.max(0, Math.min(lesson.progress ?? 0, 1))
   const barFill = progress === 0 ? 1 : progress
-  return <button className={`video-thumbnail ${lesson.color}`} aria-label={`Play ${lesson.title}`} onClick={onOpen}>
+  return <button className={`video-thumbnail ${color}`} aria-label={`Play ${lesson.title}`} onClick={onOpen}>
       <span className="thumbnail-art"><ThumbnailArtwork drawing={lesson.thumbnail} fallback={lesson.artwork}/></span>
       <span className="thumbnail-bottom">
         <h4 className="thumbnail-title">{lesson.title}</h4>
@@ -30,9 +33,9 @@ function VideoThumbnail({ lesson, onOpen }: { lesson: Lesson, onOpen: () => void
     </button>
 }
 
-function VideoCard({ lesson, saved, onOpen, onToggleSaved, onDelete, deleting, index = 0 }: { lesson: Lesson, saved: boolean, onOpen: () => void, onToggleSaved: () => void, onDelete?: () => void, deleting?: boolean, index?: number }) {
+function VideoCard({ lesson, color, saved, onOpen, onToggleSaved, onDelete, deleting, index = 0 }: { lesson: Lesson, color: string, saved: boolean, onOpen: () => void, onToggleSaved: () => void, onDelete?: () => void, deleting?: boolean, index?: number }) {
   return <article className="video-card" style={{ animationDelay: `${index * 45}ms` }}>
-    <VideoThumbnail lesson={lesson} onOpen={onOpen}/>
+    <VideoThumbnail lesson={lesson} color={color} onOpen={onOpen}/>
     <button className={`bookmark-button ${saved ? 'saved' : ''}`} onClick={onToggleSaved} aria-label={`${saved ? 'Unsave' : 'Save'} ${lesson.title}`} aria-pressed={saved}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'}/></button>
     {onDelete && <button className="delete-video-button" disabled={deleting} onClick={onDelete} aria-label={`Delete ${lesson.title}`}><X size={14}/></button>}
     {lesson.generationStatus && <span className="video-generation-status">{lesson.generationStatus === 'complete' ? 'Ready' : lesson.generationStatus === 'failed' ? 'Generation failed' : lesson.generationStatus === 'queued' ? 'Queued' : 'Generating…'}</span>}
@@ -143,7 +146,9 @@ export default function App() {
 
   const visible = allLessons.filter(l => (filter === 'All subjects' || l.subject === filter) && (!savedOnly || bookmarks.includes(l.id)) && `${l.title} ${l.subject}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => sort === 'az' ? a.title.localeCompare(b.title) : sort === 'duration' ? a.duration - b.duration : 0)
   const availableSubjects = [...new Set(allLessons.map(lesson => lesson.subject))]
-  const subjects = availableSubjects.filter(subject => visible.some(l => l.subject === subject))
+  const groups = availableSubjects.map(subject => ({ subject, lessons: visible.filter(l => l.subject === subject) })).filter(group => group.lessons.length)
+  // Follow the rendered order across subject groups, after filtering and sorting.
+  const thumbnailColors = new Map(groups.flatMap(group => group.lessons).map((lesson, index) => [lesson.id, libraryColors[index % libraryColors.length]]))
 
   return <>
     {selected ? <LessonPlayer key={selected.id} lesson={selected} overlayOpen={false} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary}/>
@@ -165,9 +170,9 @@ export default function App() {
             <div className="filter-tabs" role="group" aria-label="Filter by subject">{['All subjects', ...availableSubjects].map(subject => <button key={subject} className={filter === subject ? 'active' : ''} aria-pressed={filter === subject} onClick={() => setFilter(subject)}>{subject}</button>)}</div>
             <label className="search-box"><Search size={17}/><input placeholder="Search videos" aria-label="Search your library" value={query} onChange={e => setQuery(e.target.value)}/>{query && <button aria-label="Clear search" onClick={() => setQuery('')}><X size={14}/></button>}</label>
           </div>
-          {subjects.map(subject => <div className="subject-group" key={subject}>
+          {groups.map(({ subject, lessons: groupLessons }) => <div className="subject-group" key={subject}>
             <div className="subject-heading"><span className="subject-symbol">{subject === 'Organic chemistry' ? <Atom size={20}/> : subject === 'Linear algebra' ? <ArrowUpRight size={19}/> : <FileText size={18}/>}</span><h3>{subject}</h3></div>
-            <div className="video-grid">{visible.filter(l => l.subject === subject).map((lesson, index) => <VideoCard key={lesson.id} lesson={lesson} saved={bookmarks.includes(lesson.id)} onOpen={() => openLesson(lesson)} onToggleSaved={() => toggleSaved(lesson.id)} onDelete={customLessons.some(item => item.id === lesson.id) ? () => { void removeLesson(lesson) } : undefined} deleting={deleting.includes(lesson.id)} index={index}/>)}</div>
+            <div className="video-grid">{groupLessons.map((lesson, index) => <VideoCard key={lesson.id} lesson={lesson} color={thumbnailColors.get(lesson.id)!} saved={bookmarks.includes(lesson.id)} onOpen={() => openLesson(lesson)} onToggleSaved={() => toggleSaved(lesson.id)} onDelete={customLessons.some(item => item.id === lesson.id) ? () => { void removeLesson(lesson) } : undefined} deleting={deleting.includes(lesson.id)} index={index}/>)}</div>
           </div>)}
           {!visible.length && <div className="empty-library"><h3>{savedOnly ? 'No saved videos' : 'No videos found'}</h3><button className="secondary-button" onClick={() => { setQuery(''); setFilter('All subjects'); setSavedOnly(false) }}>Clear filters</button></div>}
         </section>
