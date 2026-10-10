@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { addCourse, coursesKey, courseForSubject, loadCourses, loadRecentPlayback, recentLessons, recentPlaybackKey, recordPlayback } from '../src/courses.ts'
+import { addCourse, coursesKey, courseForSubject, loadCourses, loadRecentPlayback, deleteCourse, overviewLessons, recentLessons, recentPlaybackKey, recordPlayback } from '../src/courses.ts'
 import { exampleCurriculum } from '../src/curriculum.ts'
 import { lessons } from '../src/data.ts'
 import { appendSubjectMaterials, loadSubjectPlans, subjectPlansKey } from '../src/subjectPlans.ts'
@@ -55,4 +55,40 @@ test('recent videos use their listed course color without mutating the original 
 test('history restores valid unique IDs and tolerates unavailable storage', () => {
   assert.deepEqual(loadRecentPlayback(storage({ [recentPlaybackKey]: JSON.stringify(['carbon', null, 'carbon', 'vectors', 42]) })), ['carbon', 'vectors'])
   assert.deepEqual(loadRecentPlayback({ getItem() { throw Error('Unavailable') } }), [])
+})
+
+
+test('deleting default and custom courses persists, including an empty course list', () => {
+  const original = addCourse(exampleCurriculum, 'Biology', 'sage')
+  const custom = original.subjects.at(-1)!
+  const withoutDefault = deleteCourse(original, 'analysis')
+  const withoutBoth = deleteCourse(withoutDefault, custom.id)
+  const reload = (courses: typeof original) => loadCourses(storage({ [coursesKey]: JSON.stringify({ version: 2, ...courses }) }))
+  assert.deepEqual(reload(withoutDefault), withoutDefault)
+  assert.deepEqual(reload(withoutBoth), withoutBoth)
+  assert.equal(reload(withoutBoth).subjects.some(course => course.id === 'analysis' || course.id === custom.id), false)
+  assert.deepEqual(reload({ subjects: [] }), { subjects: [] })
+  assert.equal(original.subjects.length, 6)
+  assert.deepEqual(deleteCourse(original, 'missing-course'), original)
+  const addedAfterDeletion = addCourse(reload(withoutBoth), 'Astronomy', 'peach')
+  assert.equal(reload(addedAfterDeletion).subjects.some(course => course.id === 'analysis'), false)
+})
+
+test('deleting a course does not restore its material or remove its videos', () => {
+  const courses = deleteCourse(exampleCurriculum, 'lineare-algebra')
+  const plans = appendSubjectMaterials({ version: 1, subjects: {} }, 'lineare-algebra', [createStudyPlan(exampleDocument)])
+  const saved = storage({ [coursesKey]: JSON.stringify({ version: 2, ...courses }), [subjectPlansKey]: JSON.stringify(plans) })
+  assert.equal(loadSubjectPlans(saved, loadCourses(saved)).subjects['lineare-algebra'], undefined)
+  const recent = overviewLessons(['vectors'], lessons, courses)
+  assert.equal(recent[0].id, 'vectors')
+  assert.equal(recent[0].subject, 'Linear algebra')
+})
+
+test('overview fills three distinct video slots with examples after recent playback', () => {
+  assert.deepEqual(overviewLessons([], lessons, exampleCurriculum).map(lesson => lesson.id), ['vectors', 'carbon', 'orbitals'])
+  const history = ['deleted-video', 'carbon', 'carbon', 'matrices']
+  assert.deepEqual(overviewLessons(history, lessons, exampleCurriculum).map(lesson => lesson.id), ['carbon', 'matrices', 'vectors'])
+  assert.deepEqual(history, ['deleted-video', 'carbon', 'carbon', 'matrices'])
+  const courses = addCourse(exampleCurriculum, 'Organic chemistry', 'peach')
+  assert.deepEqual(overviewLessons([], lessons, courses).map(lesson => lesson.color), ['blue', 'peach', 'peach'])
 })

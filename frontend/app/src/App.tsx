@@ -7,7 +7,7 @@ import SettingsPage from './SettingsPage'
 import CoursesPage from './CoursesPage'
 import WorkspacePage from './WorkspacePage'
 import type { SubjectColor } from './curriculum'
-import { addCourse, coursesKey, courseForSubject, loadCourses, loadRecentPlayback, recentLessons, recentPlaybackKey, recordPlayback } from './courses'
+import { addCourse, coursesKey, courseForSubject, loadCourses, loadRecentPlayback, deleteCourse, overviewLessons, recentPlaybackKey, recordPlayback } from './courses'
 import { appendSubjectMaterials, loadSubjectPlans, subjectPlansKey } from './subjectPlans'
 import type { TopicVideoRequest } from './subjectPlans'
 import type { StudyPlan } from './plan'
@@ -110,9 +110,27 @@ export default function App() {
   const createCourse = (name: string, color: SubjectColor) => {
     const next = addCourse(courses, name, color)
     setCourses(next)
-    try { localStorage.setItem(coursesKey, JSON.stringify({ version: 1, ...next })); setPlanStorageNote('') }
+    try { localStorage.setItem(coursesKey, JSON.stringify({ version: 2, ...next })); setPlanStorageNote('') }
     catch { setPlanStorageNote('Your new course is available for this session, but the browser could not save it. Keep this page open to retain it.') }
     navigate(`/courses/${next.subjects[next.subjects.length - 1].id}`, false)
+  }
+  const removeCourse = (id: string) => {
+    const course = courses.subjects.find(course => course.id === id)
+    if (!course) return
+    const next = deleteCourse(courses, id)
+    const remainingPlans = { ...subjectPlans.subjects }
+    delete remainingPlans[id]
+    const nextPlans = { ...subjectPlans, subjects: remainingPlans }
+    setCourses(next)
+    setSubjectPlans(nextPlans)
+    setFilter('All subjects')
+    try {
+      localStorage.setItem(coursesKey, JSON.stringify({ version: 2, ...next }))
+      localStorage.setItem(subjectPlansKey, JSON.stringify(nextPlans))
+      setPlanStorageNote('')
+    } catch { setPlanStorageNote('The course was removed for this session, but the browser could not save all changes.') }
+    navigate('/courses')
+    setToast(`${course.title} deleted. Your videos are still in Library.`)
   }
   const toggleSaved = (id: string) => setBookmarks(old => old.includes(id) ? old.filter(value => value !== id) : [...old, id])
   const removeLesson = async (lesson: Lesson) => {
@@ -173,7 +191,7 @@ export default function App() {
         <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation and settings" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={goWorkspace}>Aha!</button></div>
         {!settings && !planning && !libraryPage && <button className="workspace-library-link" onClick={goLibrary}>Your library <ArrowUpRight size={15}/></button>}
       </header>
-      {settings ? <SettingsPage theme={theme} onTheme={setTheme}/> : planning ? <CoursesPage curriculum={courses} selectedId={path.split('/')[2]} onSelect={id => navigate(`/courses/${id}`, false)} plans={subjectPlans} onAddMaterial={addPlanMaterial} onMakeVideo={makeTopicVideo} onAddCourse={createCourse} onNewVideo={goWorkspace} recent={recentLessons(playHistory, allLessons, courses)} renderVideo={lesson => <VideoThumbnail lesson={lesson} color={lesson.color} onOpen={() => openLesson(lesson)}/>} storageNote={planStorageNote}/> : libraryPage ? <main className="library-page">
+      {settings ? <SettingsPage theme={theme} onTheme={setTheme}/> : planning ? <CoursesPage curriculum={courses} selectedId={path.split('/')[2]} onSelect={id => navigate(`/courses/${id}`, false)} plans={subjectPlans} onAddMaterial={addPlanMaterial} onMakeVideo={makeTopicVideo} onAddCourse={createCourse} onDeleteCourse={removeCourse} onNewVideo={goWorkspace} recent={overviewLessons(playHistory, allLessons, courses)} renderVideo={lesson => <VideoThumbnail lesson={lesson} color={lesson.color} onOpen={() => openLesson(lesson)}/>} storageNote={planStorageNote}/> : libraryPage ? <main className="library-page">
         <section className="library-section" id="library">
           <div className="section-heading">
             <h1>Library</h1>
@@ -196,7 +214,7 @@ export default function App() {
         {invalidLesson && <div className="not-found"><p>This explanation isn’t in your library yet.</p><button onClick={goLibrary}>Open your library <ArrowRight size={16}/></button></div>}
         <WorkspacePage key={topicRequest ? `${topicRequest.sourceName}:${topicRequest.chapter}:${topicRequest.title}` : 'workspace'} initialTopic={topicRequest} onCreate={createLesson}/>
       </>}
-      {!planning && <footer><span className="footer-logo">Aha!</span></footer>}
+      <footer><span className="footer-logo">Aha!</span></footer>
     </div>}
     {toast && <div className="toast" role="status"><span><Check size={16}/></span>{toast}</div>}
   </>
