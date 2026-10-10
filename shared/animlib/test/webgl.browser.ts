@@ -6,7 +6,7 @@ import { compositionCases } from './composition-cases.js';
 import { reactiveCases } from './reactive-cases.js';
 import { materialCases, materialSource, bumpSource } from './material-cases.js';
 import { textureCases, texturePixelIssues } from './texture-cases.js';
-import { retainedCases, occlusionGateSource, occlusionGateFrames } from './retained-cases.js';
+import { retainedPrecisionCases,retainedCases, occlusionGateSource, occlusionGateFrames } from './retained-cases.js';
 import { RetainedGeometry } from '../src/retained-geometry.js';
 import { transparencyCases } from './transparency-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
@@ -87,6 +87,24 @@ export async function runWebGLTests() {
         const reference=pixels(renderer.canvasElement);
         assert(foreground(optimized)>200,'Retained scene was empty');
         assert(optimized.filter((v,i)=>Math.abs(v-reference[i])>3).length<optimized.length*0.002,'Retained and CPU world geometry diverged');
+      }
+    });
+    for (const {name,source,retained} of retainedPrecisionCases) await test('retained precision/reference pixels: '+name,async()=>{
+      await load(source);
+      for (const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
+        const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+        const gl=renderer.canvasElement.getContext('webgl2')!,indexed=gl.drawElementsInstanced;
+        let indexedCalls=0;
+        gl.drawElementsInstanced=new Proxy(indexed,{apply(target,receiver,args){indexedCalls++;return Reflect.apply(target,receiver,args);}});
+        try {renderer.render(frame,sequence.compiled[0].options);} finally {gl.drawElementsInstanced=indexed;}
+        const optimized=pixels(renderer.canvasElement);
+        assert((indexedCalls>0)===retained,'Unexpected precision fallback/indexed submission');
+        const get=RetainedGeometry.prototype.get;RetainedGeometry.prototype.get=()=>undefined;
+        try {renderer.render(frame,sequence.compiled[0].options);} finally {RetainedGeometry.prototype.get=get;}
+        const reference=pixels(renderer.canvasElement);
+        assert(foreground(reference)>200,'Precision reference scene was empty');
+        assert(!optimized.some((v,i)=>Math.abs(v-reference[i])>3),'Precision-sensitive geometry diverged from CPU world packing');
+        renderer.render(frame,sequence.compiled[0].options);pixels(renderer.canvasElement);
       }
     });
     await test('label occlusion integration gate keeps transformed occluders in world space',async()=>{

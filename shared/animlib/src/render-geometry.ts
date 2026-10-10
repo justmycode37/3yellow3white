@@ -1,5 +1,5 @@
 /** CPU tessellation shared by rendering and overlap inspection; no browser or GPU required. */
-import { RetainedGeometry, retainableElement, canonicalPrimitive } from './retained-geometry.js';
+import { RetainedGeometry, retainableElement, canonicalPrimitive, retainedPrecisionSafe } from './retained-geometry.js';
 import { VERTEX_FLOATS, texturePatterns } from './texture-shader.js';
 import earcut from 'earcut';
 import { GeometryCache } from './cache.js';
@@ -105,9 +105,9 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
         opacity,billboard:false,billboardOffset:undefined,viewportOffset:undefined};
       const key=paletteKey+JSON.stringify([local.geometry,local.fill,local.stroke,local.strokeWidth,local.strokeProfile,local.space,opacity]);
       const meshes=retained.get(key,()=>buildDrawItems({...frame,elements:[local]},camera,width,height,palette),element.geometry.kind==='arrow',JSON.stringify([view,element.id]));
-      if(meshes) {
-        const instanceBasis=primitive.axes.map(p=>p.map((_,axis)=>p.reduce((sum,v,i)=>sum+v*basis[i][axis],0)) as Vec3);
-        const instanceOrigin=origin.map((v,axis)=>v+primitive.origin.reduce((sum,p,i)=>sum+p*basis[i][axis],0)) as Vec3;
+      const instanceBasis=primitive.axes.map(p=>p.map((_,axis)=>p.reduce((sum,v,i)=>sum+v*basis[i][axis],0)) as Vec3);
+      const instanceOrigin=origin.map((v,axis)=>v+primitive.origin.reduce((sum,p,i)=>sum+p*basis[i][axis],0)) as Vec3;
+      if(meshes && retainedPrecisionSafe(meshes,instanceOrigin,instanceBasis,camera,height,element.space==='screen')) {
         const instance=new Float32Array([...instanceBasis[0],0,...instanceBasis[1],0,...instanceBasis[2],0,...instanceOrigin,1,elementIndex,scale*primitive.scale,...viewportOffset]);
         for(const mesh of meshes) {
           const depth=Math.min(...mesh.centers.map(center=>depthAt(...center.map((_,axis)=>instanceOrigin[axis]+center.reduce((sum,v,i)=>sum+v*instanceBasis[i][axis],0)) as Vec3)));

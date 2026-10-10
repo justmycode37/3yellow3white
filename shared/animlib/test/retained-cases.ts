@@ -36,3 +36,35 @@ export function occlusionGateFrames(frame: import('../src/types.js').Frame) {
   }
   return frames;
 }
+
+// R1 precision regressions must compare every channel, not a whole-image error
+// percentage that could hide a missing thin primitive. These also run cold/warm
+// and after orbit/seek on both real backends.
+export const retainedPrecisionCases = [
+  { name:'fine mesh at a large authored origin', retained:false, source:`export default scene({},s=>{
+    s.mesh('m',{vertices:[[999999.98,-1,0],[1000000,-1,0],[1000000,1,0],[999999.98,1,0]],triangles:[[0,1,2],[0,2,3]],position:[-1000000,0,0],fill:'PURE_RED'});
+    s.play(s.camera.animate({height:.5}),{duration:0});s.wait(2);
+  });` },
+  { name:'flat line at a large authored origin', retained:false, source:`export default scene({},s=>{
+    s.line('l',{points:[[999999,-.1,0],[1000000,.1,0]],position:[-999999.5,0,0],stroke:'BLUE',strokeWidth:.02});
+    s.play(s.camera.animate({height:1.5}),{duration:0});s.wait(2);
+  });` },
+  { name:'textured mesh with nested compensating transforms', retained:false, source:`export default scene({},s=>{
+    const m=s.mesh('m',{vertices:[[999999.98,-1,0],[1000000,-1,0],[1000000,1,0],[999999.98,1,0]],triangles:[[0,1,2],[0,2,3]],position:[-500000,0,0],fill:'PURE_RED',texture:{pattern:'checker',color:'PURE_BLUE',scale:[1,4,1],offset:[-1000000,0,0]}});
+    const g=s.group('g',[m],{position:[-250000,0,0],scale:.5});
+    s.group('h',[g],{rotation:[0,0,.15],scale:2});
+    s.play(s.camera.animate({height:.5}),{duration:0});s.wait(2);
+  });` },
+  { name:'flat line with nested compensating transforms', retained:false, source:`export default scene({},s=>{
+    const l=s.line('l',{points:[[999999,-.1,0],[1000000,.1,0]],position:[-500000,0,0],stroke:'BLUE',strokeWidth:.02});
+    const g=s.group('g',[l],{position:[-249999.75,0,0],scale:.5});
+    s.group('h',[g],{rotation:[0,0,.15],scale:2});
+    s.play(s.camera.animate({height:1.5}),{duration:0});s.wait(2);
+  });` },
+  { name:'small local mesh with large canceling group translations', retained:true, source:`export default scene({},s=>{
+    const m=s.mesh('m',{vertices:[[-.02,-1,0],[0,-1,0],[0,1,0],[-.02,1,0]],triangles:[[0,1,2],[0,2,3]],position:[1000000,0,0],fill:'PURE_RED'});
+    const g=s.group('g',[m],{position:[-250000,0,0],scale:.5});
+    s.group('h',[g],{position:[-499999.98,0,0],scale:2});
+    s.play(s.camera.animate({height:.5}),{duration:0});s.wait(2);
+  });` },
+];

@@ -18,7 +18,7 @@ import {compositionCases} from './composition-cases.js';
 import {reactiveCases} from './reactive-cases.js';
 import {materialCases,materialSource,bumpSource} from './material-cases.js';
 import {textureCases,texturePixelIssues} from './texture-cases.js';
-import {retainedCases,occlusionGateSource,occlusionGateFrames} from './retained-cases.js';
+import {retainedPrecisionCases,retainedCases,occlusionGateSource,occlusionGateFrames} from './retained-cases.js';
 import {RetainedGeometry} from '../src/retained-geometry.js';
 import {transparencyCases} from './transparency-cases.js';
 
@@ -92,6 +92,26 @@ describe('native Vulkan WebGPU rendering',()=> {
       const reference=await pixels();
       expect(changedPixels(optimized)).toBeGreaterThan(200);
       expect(optimized.filter((v,i)=>Math.abs(v-reference[i])>3).length).toBeLessThan(optimized.length*0.002);
+    }
+    expect(errors).toEqual([]);
+  });
+  it.each(retainedPrecisionCases)('retained precision/reference pixels: $name',async ({source,retained})=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'precision',source}]})).ok).toBe(true);
+    for(const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
+      const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+      renderer.render(frame,sequence.compiled[0].options);const optimized=await pixels();
+      const resources=(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes;
+      const usedRetained=resources.size>0;
+      const bypass=vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined);
+      try {renderer.render(frame,sequence.compiled[0].options);} finally {bypass.mockRestore();}
+      const reference=await pixels();
+      expect(changedPixels(reference)).toBeGreaterThan(200);
+      expect(optimized.filter((v,i)=>Math.abs(v-reference[i])>3)).toHaveLength(0);
+      expect(usedRetained).toBe(retained);
+      // Leave retained resources warm for the next sample (reference rendering
+      // deliberately releases them), exercising both cold and reused meshes.
+      renderer.render(frame,sequence.compiled[0].options);await pixels();
     }
     expect(errors).toEqual([]);
   });

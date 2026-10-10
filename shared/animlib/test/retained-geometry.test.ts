@@ -1,3 +1,4 @@
+import { retainedPrecisionCases } from './retained-cases.js';
 import { describe, expect, it } from 'vitest';
 import { buildDrawItems } from '../src/render-geometry.js';
 import { composeItems } from '../src/composition.js';
@@ -96,6 +97,28 @@ describe('retained local geometry',()=>{
       label.morph={from:plain,to:dependent,progress:0};expect(retentionForFrame(frame)).toBe(false);
       delete label.morph;label.geometry=dependent;label.space='screen';expect(retentionForFrame(frame)).toBe(true);label.space='world';
     }
+  });
+  it.each(retainedPrecisionCases)('preserves local detail before narrowing: $name',async({source,retained})=>{
+    const scene=await compileSource(source),cache=new RetainedGeometry();
+    for(const yaw of [0,0,0.3,0]) {
+      const frame=evaluateScene(scene,0);frame.camera.yaw=yaw;
+      const items=draw(cache,frame);
+      expect(items.length).toBeGreaterThan(0);
+      expect(items.every(item=>Boolean(item.mesh)===retained)).toBe(true);
+      if(!retained) {
+        const reference=buildDrawItems(frame,frame.camera,800,600,paletteResolver());
+        expect(items.map(item=>item.vertices)).toEqual(reference.map(item=>item.vertices));
+      }
+    }
+  });
+  it('rechecks precision on zoom and transforms without invalidating reusable content',async()=>{
+    const scene=await compileSource(retainedPrecisionCases[0].source),cache=new RetainedGeometry(),frame=evaluateScene(scene,0);
+    frame.camera.height=1000000;
+    const mesh=draw(cache,frame)[0].mesh;expect(mesh).toBeDefined();
+    frame.camera.height=.5;expect(draw(cache,frame).every(item=>!item.mesh)).toBe(true);
+    frame.camera.height=1000000;expect(draw(cache,frame)[0].mesh).toBe(mesh);
+    frame.elements[0].scale=1000000;expect(draw(cache,frame).every(item=>!item.mesh)).toBe(true);
+    frame.elements[0].scale=1;expect(draw(cache,frame)[0].mesh).toBe(mesh);
   });
   it('evicts geometry no longer present rather than retaining every seek/control sample',async()=>{
     const scene=await compileSource(source),cache=new RetainedGeometry(),frame=evaluateScene(scene,0);

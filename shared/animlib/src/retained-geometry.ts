@@ -1,5 +1,5 @@
 import { vec3 } from './geometry.js';
-import type { ElementState, Frame, Geometry, Vec3 } from './types.js';
+import type { CameraState, ElementState, Frame, Geometry, Vec3 } from './types.js';
 import type { GeometryDrawItem } from './render-geometry.js';
 import { VERTEX_FLOATS } from './texture-shader.js';
 
@@ -8,6 +8,8 @@ export interface RetainedMesh {
   vertices: Float32Array<ArrayBuffer>;
   indices: Uint32Array<ArrayBuffer>;
   centers: Vec3[];
+  /** Absolute local position bounds, used before submitting float32 transforms. */
+  magnitude: Vec3;
   component: GeometryDrawItem['component'];
 }
 export const INSTANCE_FLOATS = 20;
@@ -31,7 +33,7 @@ export function retainableElement(element: ElementState): boolean {
 /** Deduplicate complete vertices, including normals/UVs: hard edges remain split. */
 export function indexGeometry(items: GeometryDrawItem[]): RetainedMesh {
   const values: number[] = [], indices: number[] = [], unique = new Map<string, number>();
-  const centers: Vec3[] = [];
+  const centers: Vec3[] = [], magnitude: Vec3 = [0,0,0];
   for (const item of items) {
     const center: Vec3 = [0,0,0];
     let count = 0;
@@ -41,13 +43,45 @@ export function indexGeometry(items: GeometryDrawItem[]): RetainedMesh {
       let index = unique.get(key);
       if (index === undefined) { index = values.length / VERTEX_FLOATS; unique.set(key, index); values.push(...vertex); }
       indices.push(index);
-      for (let axis = 0; axis < 3; axis++) center[axis] += vertex[axis];
+      for (let axis = 0; axis < 3; axis++) {
+        center[axis] += vertex[axis];
+        magnitude[axis] = Math.max(magnitude[axis], Math.abs(vertex[axis]));
+      }
       count++;
     }
     if (count) for (let axis = 0; axis < 3; axis++) center[axis] /= count;
     centers.push(center);
   }
-  return { vertices: new Float32Array(values), indices: new Uint32Array(indices), centers, component: items[0]?.component ?? 'fill' };
+  return { vertices: new Float32Array(values), indices: new Uint32Array(indices), centers, magnitude, component: items[0]?.component ?? 'fill' };
+}
+
+/** Narrowing local coordinates and a compensating transform separately can erase
+ * detail that the double-precision CPU world transform preserves. Bound that
+ * additional error before GPU submission, using cached local magnitudes rather
+ * than walking every vertex on camera-only frames. Precision-sensitive elements
+ * stream through the original world packing path, including authored texture UVs.
+ */
+export function retainedPrecisionSafe(meshes: RetainedMesh[], origin: Vec3, basis: Vec3[], camera: CameraState, height: number, screen: boolean): boolean {
+  const local: Vec3 = [0,0,0];
+  for (const mesh of meshes) for (let axis=0;axis<3;axis++) local[axis]=Math.max(local[axis],mesh.magnitude[axis]);
+  const extent=origin.map((_,axis)=>local.reduce((sum,v,i)=>sum+v*Math.abs(basis[i][axis]),0)) as Vec3;
+  // Eight float32 roundoff units cover input/basis narrowing and the affine
+  // multiply-adds, including a small margin for the already-rounded bounds.
+  const error=8*2**-24*Math.hypot(...extent.map((v,i)=>v+Math.abs(origin[i])));
+  let pixelsPerUnit=1;
+  if (!screen) {
+    const sy=Math.sin(camera.yaw),cy=Math.cos(camera.yaw),sp=Math.sin(camera.pitch),cp=Math.cos(camera.pitch);
+    const depthAxis: Vec3 = [-sy*cp,sp,-cy*cp];
+    const delta=origin.map((v,i)=>v-camera.target[i]);
+    const nearestDepth=camera.distance+delta.reduce((sum,v,i)=>sum+v*depthAxis[i]-extent[i]*Math.abs(depthAxis[i]),0);
+    const perspective=Math.min(1,Math.max(0,camera.perspective));
+    const divisor=Math.max(0.01,1-perspective+perspective*nearestDepth/camera.distance);
+    // Perspective depth error also moves projected x/y; bound that amplification
+    // over the whole local box, including near-plane intersections.
+    const radius=Math.hypot(...delta.map((v,i)=>Math.abs(v)+extent[i]));
+    pixelsPerUnit=height/camera.height/divisor*(1+perspective*radius/(camera.distance*divisor));
+  }
+  return Number.isFinite(error*pixelsPerUnit) && error*pixelsPerUnit <= 1/64;
 }
 
 /** Content keys survive fresh evaluated frames and catch in-place author edits.

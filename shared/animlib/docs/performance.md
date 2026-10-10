@@ -235,7 +235,15 @@ content streams through the CPU path until stable again, avoiding repeated cold
 indexing costs. Only the current frame's working set retains GPU handles. Context
 recovery creates new backend resources. Transparent triangles still sort globally
 per camera, with existing isolated composition and independent view clipping.
-Adaptive paths, morphs, and stroked meshes retain their CPU path.
+Adaptive paths, morphs, and stroked meshes retain their CPU path. A cached local
+coordinate bound also estimates float32 position error after each live transform
+and projection. Above a conservative 1/64-pixel budget, the element uses the
+original double-precision world transform before packing, preserving fine detail
+when large local coordinates cancel against object/group translations. This may
+stream otherwise static geometry at extreme coordinate magnitudes or zoom levels;
+unaffected elements keep retention. Authored texture coordinates are unchanged.
+The measurements below precede this precision guard; they are not a fresh timing
+claim for the review fix.
 
 Integration gates also preserve the CPU path for explanatory geometry fields
 (`clipPlanes`, `outline`, `scalarColors`, `labelOcclusion`). A shadow receiver, or

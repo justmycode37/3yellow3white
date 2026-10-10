@@ -953,7 +953,10 @@ palette contents invalidate automatically, including fresh evaluated frames and
 in-place edits. Continuously changing geometry/style uses the CPU path until a
 stable sample can be retained again. Billboard orientation remains live. Transparent triangles, morphs,
 adaptive curves and stroked meshes use the CPU path to preserve ordering and
-projected stroke/tessellation behavior. GPU handles are rebuilt after recovery;
+projected stroke/tessellation behavior. Precision-sensitive local coordinates and
+transforms also use CPU world-space packing before float32 conversion, preserving
+small details when large authored coordinates cancel through object/group transforms.
+GPU handles are rebuilt after recovery;
 geometry unused by the current frame is released. See [performance](performance.md)
 for measurements and remaining limits.
 
