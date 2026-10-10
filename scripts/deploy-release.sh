@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run over SSH as the existing deploy user, which needs passwordless sudo.
+# Run over SSH as deploy. --check never stops or replaces production.
 set -Eeuo pipefail
 archive=$(realpath -- "${1:?Usage: deploy-release.sh ARCHIVE COMMIT_SHA [--check]}")
 revision=${2:?Usage: deploy-release.sh ARCHIVE COMMIT_SHA [--check]}
@@ -8,92 +8,132 @@ mode=${3:-deploy}
 [[ "$mode" == deploy || "$mode" == --check ]] || { echo 'Unknown deployment mode' >&2; exit 1; }
 [[ $(id -un) == deploy ]] || { echo 'Run this script as deploy' >&2; exit 1; }
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || { echo 'This release requires Linux x86_64' >&2; exit 1; }
+sudo -n docker info >/dev/null
+sudo -n docker compose version --short | python3 -c 'import re,sys; v=tuple(map(int,re.findall(r"\d+",sys.stdin.read())[:3])); assert v >= (2,30,0), "Docker Compose >=2.30.0 is required"'
+[[ $(systemctl is-enabled docker) == enabled ]] || { echo 'Enable Docker at boot before deployment' >&2; exit 1; }
 base=/srv/apps/3yellow3white-actions
-unit=/etc/systemd/system/3yellow3white.service
-mkdir -p "$base/releases" "$base/data"
+service=3yellow3white
+project=3yellow3white
+health_url=http://127.0.0.1:8080/healthz
+mkdir -p "$base/releases"
 exec 9>"$base/deploy.lock"
 flock -w 120 9
-release=$(mktemp -d "$base/releases/$revision.XXXXXX")
+release=$(mktemp -d "$base/releases/$revision.docker.XXXXXX")
+previous=$(readlink -e "$base/docker-current" || true)
+previous_revision=
 activated=false
 complete=false
-had_unit=false
+legacy_active=false
+legacy_enabled=false
+legacy_revision=
+if systemctl is-active --quiet "$service"; then legacy_active=true; fi
+if [[ $(systemctl is-enabled "$service" 2>/dev/null || true) == enabled ]]; then legacy_enabled=true; fi
+compose() {
+  sudo -n docker compose --project-name "$project" --env-file "$1/compose.env" --file "$1/compose.yaml" "${@:2}"
+}
+wait_health() {
+  local expected=$1 attempt
+  for ((attempt=0; attempt<30; attempt++)); do
+    if curl --fail --silent --max-time 2 "$health_url" | \
+      python3 -c 'import json,sys; h=json.load(sys.stdin); assert h.get("ok") is True and (not sys.argv[1] or h.get("revision")==sys.argv[1])' "$expected" 2>/dev/null; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
 cleanup() {
-  local result=$?
+  local result=$? restored=true expected
   trap - EXIT
   if [[ "$activated" == true && "$complete" != true ]]; then
-    echo 'New release failed; restoring the previous service.' >&2
-    if [[ "$had_unit" == true ]]; then
-      sudo -n install -m 644 "$release/previous.service" "$unit"
-      sudo -n systemctl daemon-reload
-      sudo -n systemctl restart 3yellow3white
-    else
-      sudo -n systemctl stop 3yellow3white || true
-      sudo -n systemctl disable 3yellow3white || true
-      sudo -n rm -f "$unit"
-      sudo -n systemctl daemon-reload
+    echo 'New container failed; restoring the previous deployment.' >&2
+    compose "$release" logs --tail 80 || true
+    if ! compose "$release" down --timeout 30; then
+      restored=false
+      # The candidate may still restart at boot; keep legacy from competing then.
+      if [[ "$legacy_enabled" == true ]]; then sudo -n systemctl disable "$service" || true; fi
+    fi
+    # Never start another writer unless the candidate was fully removed.
+    if [[ "$restored" == true && -n "$previous" ]]; then
+      if ! compose "$previous" up --detach --wait --wait-timeout 60; then restored=false; fi
+    fi
+    if [[ "$restored" == true && "$legacy_enabled" == true ]]; then
+      if ! sudo -n systemctl enable "$service"; then restored=false; fi
+    fi
+    if [[ "$restored" == true && "$legacy_active" == true ]]; then
+      if ! sudo -n systemctl start "$service"; then restored=false; fi
+    fi
+    if [[ "$restored" == true && ( -n "$previous" || "$legacy_active" == true ) ]]; then
+      expected=$legacy_revision
+      if [[ -n "$previous" ]]; then expected=$previous_revision; fi
+      if ! wait_health "$expected"; then restored=false; fi
+    fi
+    if [[ "$restored" != true ]]; then
+      echo "ROLLBACK FAILED. Retaining recovery files at $release" >&2
+      result=1
     fi
   fi
-  if [[ "$complete" != true ]]; then rm -rf -- "$release"; fi
+  if [[ "$complete" != true && "$restored" == true ]]; then rm -rf -- "$release"; fi
   exit "$result"
 }
 trap cleanup EXIT
+if [[ -n "$previous" ]]; then
+  [[ "$previous" == "$base/releases/"* && -f "$previous/compose.env" && -f "$previous/compose.yaml" ]]
+  previous_revision=$(cat "$previous/REVISION")
+  [[ "$previous_revision" =~ ^[0-9a-f]{40}$ ]]
+  [[ "$legacy_active" != true ]] || { echo 'Both Docker and legacy service are active; resolve before deployment' >&2; exit 1; }
+else
+  [[ -z $(sudo -n docker ps -aq --filter "label=com.docker.compose.project=$project") ]] || {
+    echo 'Found unmanaged production Compose containers without docker-current; resolve before deployment' >&2; exit 1;
+  }
+fi
 tar --extract --gzip --file "$archive" --directory "$release" --no-same-owner
 [[ $(cat "$release/REVISION") == "$revision" ]] || { echo 'Archive revision mismatch' >&2; exit 1; }
-(cd "$release" && APP_REVISION="$revision" ./bin/bun scripts/smoke-release.ts)
-cat > "$release/app.service" <<EOF
-[Unit]
-Description=3yellow3white Bun application
-After=network.target
-
-[Service]
-Type=simple
-User=deploy
-Group=deploy
-WorkingDirectory=$release
-Environment=NODE_ENV=production
-Environment=HOST=0.0.0.0
-Environment=PORT=8080
-Environment=APP_REVISION=$revision
-Environment=VIDEO_DB_PATH=$base/data/videos.sqlite
-EnvironmentFile=-/srv/apps/3yellow3white/.env
-EnvironmentFile=-/etc/3yellow3white/environment
-ExecStart=$release/bin/bun backend/src/index.ts
-Restart=on-failure
-RestartSec=3
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemd-analyze verify "$release/app.service"
+image_tag=$(cat "$release/IMAGE_TAG")
+[[ "$image_tag" == "3yellow3white:$revision" ]] || { echo 'Invalid image tag' >&2; exit 1; }
+sudo -n docker image load --input "$release/image.tar.gz"
+# Resolve on the VM: image IDs can differ between classic and containerd stores.
+image_id=$(sudo -n docker image inspect --format '{{.Id}}' "$image_tag")
+[[ "$image_id" =~ ^sha256:[0-9a-f]{64}$ ]]
+[[ $(sudo -n docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image_id") == "$revision" ]]
+# All candidate jobs and narration writes use temporary, isolated directories.
+bash "$release/scripts/smoke-container.sh" "$image_id" "$revision"
+python3 "$release/scripts/container-config.py" "$release" "$base" "$revision" "$image_id"
+compose "$release" config --quiet
+# The archive is no longer needed; preserve the image and small recovery files.
+rm -- "$release/image.tar.gz"
 if [[ "$mode" == --check ]]; then
-  echo 'Candidate verified; the running service was not changed.'
+  echo 'Container lifecycle verified; production was not changed.'
   exit 0
 fi
-sudo -n true
-if sudo -n test -f "$unit"; then
-  had_unit=true
-  sudo -n cat "$unit" > "$release/previous.service"
-fi
-
-activated=true
-sudo -n install -m 644 "$release/app.service" "$unit"
-sudo -n systemctl daemon-reload
-sudo -n systemctl restart 3yellow3white
-healthy=false
-for attempt in {1..30}; do
-  if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:8080/healthz > "$release/health.json" &&
-    python3 -c 'import json,sys; h=json.load(open(sys.argv[1])); sys.exit(0 if h.get("ok") is True and h.get("revision")==sys.argv[2] else 1)' "$release/health.json" "$revision" &&
-    systemctl is-active --quiet 3yellow3white; then
-    healthy=true
-    break
+mapfile -t directories < <(python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); print(p["video"]); print(p["narration"])' "$release/paths.json")
+[[ ${#directories[@]} == 2 ]]
+for directory in "${directories[@]}"; do
+  if [[ ! -d "$directory" ]]; then
+    sudo -n install -d -o deploy -g deploy -m 750 "$directory"
   fi
-  sleep 1
+  [[ -w "$directory" && -x "$directory" ]] || { echo "deploy cannot write $directory" >&2; exit 1; }
 done
-[[ "$healthy" == true ]] || { echo 'New revision did not become healthy' >&2; exit 1; }
-sudo -n systemctl enable 3yellow3white
-ln -sfn "$release" "$base/current.next"
-mv -Tf "$base/current.next" "$base/current"
+if [[ -n "$previous" ]]; then ln -s "$previous" "$release/previous-docker"; fi
+if sudo -n test -f "/etc/systemd/system/$service.service"; then
+  # Redirect as deploy: the saved recovery file must be owned by deploy.
+  # shellcheck disable=SC2024
+  sudo -n cat "/etc/systemd/system/$service.service" > "$release/previous.service"
+fi
+printf '%s\n' "$legacy_active" > "$release/legacy-active"
+printf '%s\n' "$legacy_enabled" > "$release/legacy-enabled"
+if [[ "$legacy_active" == true ]]; then
+  legacy_revision=$(curl --fail --silent --show-error --max-time 5 "$health_url" | python3 -c 'import json,sys; h=json.load(sys.stdin); assert h.get("ok") is True; print(h.get("revision", ""))')
+fi
+activated=true
+# Stop the single writer before giving the container the persistent database.
+if [[ "$legacy_active" == true ]]; then sudo -n systemctl stop "$service"; fi
+compose "$release" up --detach --wait --wait-timeout 60
+curl --fail --silent --show-error --max-time 5 "$health_url" | \
+  python3 -c 'import json,sys; h=json.load(sys.stdin); assert h.get("ok") is True and h.get("revision")==sys.argv[1]' "$revision"
+# Docker's restart policy now owns reboot recovery. Leave the old unit for rollback.
+if [[ "$legacy_enabled" == true ]]; then sudo -n systemctl disable "$service"; fi
+ln -sfn "$release" "$base/docker-current.next"
+mv -Tf "$base/docker-current.next" "$base/docker-current"
 complete=true
-printf 'Deployed and verified %s\n' "$revision"
+printf 'Deployed and verified Docker revision %s\n' "$revision"

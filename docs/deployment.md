@@ -1,90 +1,179 @@
-# Deployment
+# Docker deployment
 
-The app repository owns `.github/workflows/ci.yml` and `scripts/*release*`.
-Deployment uses SSH directly; it does not check out or run another infrastructure
-repository.
+The app repository owns `.github/workflows/ci.yml`, `Dockerfile`, `compose.yaml`,
+and `scripts/*release*`. GitHub Actions builds and tests a Linux x86_64 Docker
+image, then uploads that exact image over SSH. No container registry, GitHub
+credentials on the VM, or infrastructure repository is required.
 
 ## After merging to main
 
-Pull requests run the library, frontend, and backend checks, build the site, and
-smoke-test a production release. A push to `main` runs those same checks and then
-deploys their release artifact. `workflow_dispatch` can redeploy the current
-`main`. Other branches never deploy. Superseded main revisions are skipped, and
+Pull requests run the library, frontend, backend, and deployment configuration
+checks. They also build the image and run the container lifecycle test. A push to
+`main` runs those checks and deploys the tested image. **Run workflow** on `main`
+redeploys it. Other branches do not deploy. Superseded main revisions are skipped;
 only one production deployment runs at a time.
 
-The artifact contains the built frontend, shared library, backend, locked
-production dependencies, and the Bun binary installed from the root lockfile.
-It is built for Linux x86_64 on Ubuntu 24.04. The VM needs SSH, Bash, tar, curl,
-Python 3, flock, and systemd; it does not need a Node installation or GitHub token.
-The existing `deploy` user must have passwordless sudo.
+The multistage Dockerfile builds the frontend/shared library with Node, then ships
+only the backend, built assets, production dependencies, and the lockfile's Bun
+runtime in a Debian image. Base images are pinned by digest. Runtime secrets and
+local databases are excluded from the Docker build context.
 
-SSH uploads the archive, checksum, and deployment script. The script extracts a
-fresh directory under `/srv/apps/3yellow3white-actions/releases`, checks its
-revision, compiles a sample scene, and tests HTTP routes/assets on a temporary
-loopback port. Only after these checks does it replace the `3yellow3white`
-systemd unit and restart the app on `0.0.0.0:8080`. It verifies both health and
-commit SHA, restoring the previous unit if activation fails. The existing
-`/srv/apps/3yellow3white` checkout is retained for migration rollback.
+The lifecycle test uses a unique Compose project, temporary data directories, and
+an automatically allocated **loopback-only** port. It checks compilation, routes,
+built assets, identity headers, owner isolation, stored video/WAV audio, literal
+environment values, a non-root process, a read-only app filesystem, clean shutdown,
+stop/start with an unfinished job, crash recovery, and removal/recreation with
+persistent SQLite and narration files. It does not invoke ElevenLabs or use
+production data.
 
-The managed public address remains <https://11.hackathon.ethz.ch>. VISCon handles
-TLS and access control; deployment does not change the VM firewall or SSH login
-settings.
+The VM must have Docker Engine running and enabled at boot, **Docker Compose
+2.30.0 or newer**, SSH, Bash, tar, curl, Python 3, and flock. The existing `deploy`
+user needs passwordless sudo; it does not need Docker group membership or Node.
+On the inspected `team-11` VM (Ubuntu 26.04), Docker Engine 29.9.0 and Compose
+5.6.0 were already installed, and Docker was enabled at boot.
+
+## Activation and rollback
+
+SSH uploads `release.tar.gz`, its checksum, and `scripts/deploy-release.sh`. The
+archive contains the saved Docker image, Compose file, revision, and validation
+scripts. The VM loads the image, verifies its revision label, and repeats the
+isolated container lifecycle test **before stopping production**.
+
+The first Docker activation stops the old `3yellow3white` systemd service, starts
+the `3yellow3white` Compose project on `0.0.0.0:8080`, waits for Docker health, and
+verifies `/healthz` reports the expected commit. Only after that does it disable
+the old app unit at boot and atomically update
+`/srv/apps/3yellow3white-actions/docker-current`. Docker's `unless-stopped`
+restart policy handles crashes and reboot recovery. The old systemd unit and its
+release are retained for recovery.
+
+Later deployments replace the Compose container after the candidate passes.
+If activation fails, the script removes the failed container and starts the
+previous Docker release; during first migration it restarts the old systemd
+service instead. This switch has a short interruption. There is only one writer
+for each database/narration directory. Rollback restores application code and
+configuration; it does not undo database changes.
+If the failed container cannot be removed, rollback retains its recovery files
+and leaves the previous application stopped (and legacy systemd disabled at boot)
+to prevent competing database writers.
+
+The public address remains <https://11.hackathon.ethz.ch>. VISCon handles TLS and
+access control and forwards to VM port 8080. Deployment does not install a new
+reverse proxy or change SSH settings. Docker publishes the same application port.
 
 ## GitHub configuration
 
-In this app repository's **Settings → Secrets and variables → Actions**, set:
+The existing repository configuration is reused:
 
-- Secret `VM_SSH_PRIVATE_KEY`: the dedicated deployment private key.
-- Secret `VM_SSH_KNOWN_HOSTS`: the verified SSH host-key line for the VM.
+- Secret `VM_SSH_PRIVATE_KEY`: dedicated deployment private key.
+- Secret `VM_SSH_KNOWN_HOSTS`: verified VM host-key line.
 - Variable `VM_HOST`: `11-direct.viscon-hackathon.ch`.
 - Variable `VM_SSH_USER`: `deploy`.
 
-The matching public key belongs in `/home/deploy/.ssh/authorized_keys`. Use the
-`restrict` prefix to disable forwarding and PTY allocation for that key. Keep
-existing keys in place. The shared VM password is not needed by the workflow.
+The matching public key belongs in `/home/deploy/.ssh/authorized_keys` with the
+`restrict` prefix. The workflow uses the GitHub `production` environment and is
+limited to `main`. No new registry credentials are needed.
 
-The deployment job uses the GitHub `production` environment. Repository secrets
-are available to it. A repository administrator may restrict that environment to
-`main`; the workflow already limits deployment to that branch.
+## Runtime configuration and storage
 
-Optional runtime configuration can live in `/etc/3yellow3white/environment` on
-the VM. The legacy `/srv/apps/3yellow3white/.env` is also read if it exists. Do not
-set `APP_REVISION` in either file: it is supplied by the deployment unit.
+Settings are read from `/srv/apps/3yellow3white/.env`, then
+`/etc/3yellow3white/environment` (later values win). Use one `KEY=value` per line;
+whole values can be single/double quoted. Root-owned files are read through sudo
+without logging their values. Shell commands and `$` references are
+never executed/interpolated; single-line backslash escapes follow systemd's
+EnvironmentFile rules. Multiline values are rejected before activation. Each release
+stores a translated `runtime.env` with mode 600 in its mode-700 directory.
+Compose uses `format: raw` so literal dollars and quotes survive. Managed
+`NODE_ENV`, `HOST`, `PORT`, `APP_REVISION`, storage paths, and
+`NARRATION_ALLOW_LOCAL=0` override runtime-file values.
 
-Narration requires `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`,
-`NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch`, and an absolute persistent
-`NARRATION_DATA_DIR` owned by `deploy` (for example
-`/var/lib/3yellow3white/narration`). Keep that directory outside releases so
-deployments and rollbacks retain audio and timing packages. Leave
-`NARRATION_ALLOW_LOCAL` disabled in production. The service relies on VISCon's
-trusted identity headers for narration ownership. See [narration](narration.md)
-for setup, retry behaviour, and the single-worker constraint.
+The container runs as the host `deploy` UID/GID with its application filesystem
+read-only, capabilities dropped, and a small writable `/tmp`. Bind mounts retain
+host ownership and persist across replacement:
 
-## Manual verification and recovery
+- SQLite: `/srv/apps/3yellow3white-actions/data/videos.sqlite` by default, mounted
+  with its whole directory (including WAL/SHM files). An existing absolute
+  `VIDEO_DB_PATH` in the runtime files is honored by mounting its parent.
+- Narration: `/var/lib/3yellow3white/narration` by default, or the existing absolute
+  `NARRATION_DATA_DIR`. Mounted at `/data/narration` inside the container.
 
-After running the build/test commands, package a release:
+Paths must be outside release directories and use letters, numbers, `/`, `_`,
+`.`, or `-`. Missing data directories are created for `deploy`; existing directory
+ownership is not changed. Configured paths should match those used by the old
+service before migration.
+
+Narration additionally requires `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and
+`NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch`. Never run a second writer
+or the narration CLI against the active data directory. See [narration](narration.md).
+
+## Build and verify without activating production
+
+On a machine with Docker, Compose >=2.30, and Python 3:
 
 ```sh
 bash scripts/package-release.sh "$(git rev-parse HEAD)" /tmp/aha-release
 ```
 
-Transfer `release.tar.gz`, `release.sha256`, and `scripts/deploy-release.sh` to a
-temporary directory on the VM using the deployment key. From that directory,
-logged in as `deploy`, run:
+This builds the image and runs the isolated lifecycle test. Transfer
+`release.tar.gz`, `release.sha256`, and `scripts/deploy-release.sh` to a temporary
+VM directory using the deployment key. From that directory, as `deploy`:
 
 ```sh
 sha256sum --check release.sha256
 bash deploy-release.sh release.tar.gz COMMIT_SHA --check
 ```
 
-`--check` removes its candidate directory and leaves the running service alone.
-Omitting it activates the release. Keep the checksum and commit SHA together.
+`--check` loads/tests the image and removes its candidate release directory. It
+never stops production or mounts production data. The loaded image is retained.
+Omitting `--check` activates production; only do that when ready to switch.
 
-Inspect the running app with `systemctl status 3yellow3white`,
-`journalctl -u 3yellow3white`, and `curl http://127.0.0.1:8080/healthz`.
-Successful deployments update `/srv/apps/3yellow3white-actions/current`. Each
-release saves the unit it replaced as `previous.service`; to roll back manually,
-install that saved unit at `/etc/systemd/system/3yellow3white.service`, run
-`systemctl daemon-reload`, and restart `3yellow3white`. Check `/healthz` afterward.
-Release directories are retained for recovery; remove older unused releases
-only after checking which paths the current and rollback units reference.
+## Start, stop, inspect, and recover
+
+After Docker migration, run on the VM:
+
+```sh
+cd /srv/apps/3yellow3white-actions/docker-current
+sudo docker compose -p 3yellow3white --env-file compose.env ps
+sudo docker compose -p 3yellow3white --env-file compose.env logs --tail 100
+sudo docker compose -p 3yellow3white --env-file compose.env stop
+sudo docker compose -p 3yellow3white --env-file compose.env up -d --wait
+curl --fail http://127.0.0.1:8080/healthz
+```
+
+`stop` leaves the container and data in place and keeps it stopped across reboots.
+`down` removes the container/network; the bind-mounted data remains. `up -d --wait`
+recreates it. Logs rotate at 10 MB, keeping three files per container.
+
+For a manual Docker rollback, stop the current project, follow its
+`previous-docker` link, then run the same `up -d --wait` command with that release's
+`compose.env` and update `docker-current` to that release. Verify `/healthz`.
+
+To return to systemd after the first migration, stop/down the Compose project,
+then `sudo systemctl enable --now 3yellow3white` and check health. Move
+`docker-current` aside before a future migration, because it identifies the
+active Docker deployment. Never start both services on port 8080 or against the
+same data directories.
+
+The legacy `/srv/apps/3yellow3white-actions/current` pointer is retained. Docker
+release directories, previous-release links, and images are retained for recovery;
+remove unused ones only after checking current/rollback references. Do not use
+`docker system prune` as part of deployment.
+
+## Verification performed
+
+On 2026-10-10, the image and saved-image release passed lifecycle tests on the
+actual VM, both as `viscon` with Docker access and as `deploy` through sudo.
+The production deployment script passed `--check`. Isolated integration tests
+also verified failed first migration → systemd recovery, successful migration,
+and failed Docker upgrade → previous healthy container. Test services, containers,
+networks, and data were removed. These validation runs did not activate production.
+Independent review also checked environment translation against actual systemd
+using synthetic escaped values and a private root-owned file, and verified that
+failed candidate removal prevents a competing writer and retains recovery files.
+
+The repeatable migration/rollback test is `scripts/test-docker-deployment.py`.
+Run it as `deploy`, supplying the archive, its SHA, and an existing legacy Bun
+release directory. It creates its own loopback port, temporary unit/project,
+and data directories. It uses modified copies of deployment paths/configuration
+and injects a container crash after candidate validation; it never stops the
+production unit. It requires the legacy Bun release to remain available.
