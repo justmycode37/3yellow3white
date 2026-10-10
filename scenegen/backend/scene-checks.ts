@@ -75,6 +75,8 @@ export function renderProblems(compiled: CompiledScene): string[] {
   const layout = layoutProblems(frames as never);
   if (pairs.size) layout.unshift(`Text overlaps: ${[...pairs].slice(0, 8).join("; ")}.`);
   if (layout.length) problems.push(`${layout.join("\n")}\n${LAYOUT_HINT}`);
+  const buried = buriedMarkers(frames as never);
+  if (buried.length) problems.push(`Markers hidden behind lines: ${buried.slice(0, 8).join(", ")}.\n${LAYER_HINT}`);
   const placed = compiled.controls.filter(control => control.position).map(control => control.id);
   if (placed.length) problems.push(`Controls with a position: ${placed.join(", ")}.\n${CONTROLS_HINT}`);
   return problems;
@@ -154,3 +156,45 @@ export async function deadControls(source: string, compiled: CompiledScene, prev
 
 export const DEAD_CONTROL_HINT = "These controls change nothing on the final frame of the scene. The scene holds there, and that is " +
   "when viewers try the control: compute the end picture (positions, shapes, numbers) from the control's value as well.";
+
+interface LayerElement extends FrameElement {
+  scale: number; billboard?: boolean; space?: string;
+  geometry: { kind: string; radius?: number; points?: number[][]; closed?: boolean };
+}
+
+/**
+ * Points and markers that a line or curve is drawn over. In a flat scene animlib draws
+ * later-created elements on top (a larger z wins over creation order), so a dot carried
+ * from an earlier scene ends up underneath a line created afterwards.
+ */
+export function buriedMarkers(frames: { camera: { yaw: number; pitch: number }; elements: LayerElement[] }[]): string[] {
+  const buried = new Set<string>();
+  for (const frame of frames) {
+    if (Math.abs(frame.camera.yaw) > 1e-3 || Math.abs(frame.camera.pitch) > 1e-3) continue; // real 3D: depth decides
+    const flat = frame.elements.map((element, index) => ({ element, index }))
+      .filter(({ element }) => !element.view && !element.billboard && element.space !== "screen" && element.opacity > 0.5);
+    const lines = flat.filter(({ element }) => ["line", "arrow", "path"].includes(element.geometry.kind) && (element.geometry.points?.length ?? 0) >= 2 && !element.geometry.closed);
+    for (const dot of flat) {
+      const radius = (dot.element.geometry.radius ?? 0) * dot.element.scale;
+      if (dot.element.geometry.kind !== "circle" || radius <= 0 || radius > 0.35) continue;
+      const [cx, cy, cz = 0] = dot.element.position;
+      for (const line of lines) {
+        const [lx, ly, lz = 0] = line.element.position;
+        const above = lz > cz + 1e-6 || (Math.abs(lz - cz) <= 1e-6 && line.index > dot.index);
+        if (!above) continue;
+        const points = line.element.geometry.points!.map(point => [lx + point[0] * line.element.scale, ly + point[1] * line.element.scale]);
+        const touches = points.slice(1).some((b, i) => {
+          const a = points[i], dx = b[0] - a[0], dy = b[1] - a[1], length = dx * dx + dy * dy;
+          const t = length ? Math.max(0, Math.min(1, ((cx - a[0]) * dx + (cy - a[1]) * dy) / length)) : 0;
+          return Math.hypot(cx - (a[0] + t * dx), cy - (a[1] + t * dy)) < radius;
+        });
+        if (touches) buried.add(`${dot.element.id} (under ${line.element.id})`);
+      }
+    }
+  }
+  return [...buried];
+}
+
+export const LAYER_HINT = "A point or marker must be drawn in front of the line or curve it sits on. Elements created later are drawn on " +
+  "top, and an object carried from the previous scene is older than anything this scene creates. Put markers on a higher layer with z: " +
+  "lines and curves at z = 0, points and markers at z = 0.05 (position: [x, y, 0.05], also in moveTo), labels at z = 0.1.";

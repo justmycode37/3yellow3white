@@ -177,6 +177,20 @@ Alignment (strict; misplaced parts are the most visible kind of jank):
 - Check the picture from the starting camera AND after rotating: nothing may sit
   beside what it belongs to.
 
+Layering (strict, checked; a dot hidden behind its own line looks broken):
+- In a flat scene, things are drawn in the order they are created, later on top, and
+  an object carried from the previous scene is older than everything this scene
+  creates. A larger z always wins over creation order. So set the layer with z
+  instead of relying on order:
+  axes, grids and filled areas at z = 0; lines, curves and arrows at z = 0.02;
+  points and markers at z = 0.05; labels and formulas at z = 0.1; the focus frame at
+  z = 0.15. Give positions three components (`position: [x, y, 0.05]`) and keep the
+  same z in every `moveTo` and when a control recomputes the position.
+- A point always sits in front of the line, curve or axis it lies on, including a
+  line that appears later in the scene or in a later scene. Filled areas go behind
+  the lines that bound them.
+- In real 3D scenes use true depth: do not fake layers with z there.
+
 Layout (keep it identical in every scene):
 - Geometry (2D or 3D) on the left two thirds of the frame; the right third is a fixed text
   area for formulas and matrices. It is just empty space (the temporary focus frame aside): NO box, border, frame,

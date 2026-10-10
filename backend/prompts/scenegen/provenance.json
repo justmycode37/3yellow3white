@@ -7,7 +7,7 @@
       "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
       "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
       "pullRequest": 59,
-      "sha256": "f99b3798b07c3aa04bf19395aca9a31cb8a6138526dd9d9bcba6879ddec556a8"
+      "sha256": "c0cba75f6e817d905b79b57b20c9071bde53dcdfaeec3e2fb3f1a2046c5c280e"
     },
     {
       "file": "planning.md",

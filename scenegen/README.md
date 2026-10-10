@@ -7,7 +7,7 @@ are the backend's own (`backend/prompts/scenegen/`). Nothing here is used by the
 ```
 cd backend
 bun ../scenegen/backend/dev.ts                 # the app, with the checks below
-bun test ../scenegen/backend/dev.test.ts       # 7 tests
+bun test ../scenegen/backend/dev.test.ts       # 8 tests
 ```
 
 ## Checks
@@ -22,6 +22,7 @@ the message. All in `backend/scene-checks.ts`.
 | 3D parts in their view | A 3D object is drawn outside the view that holds its model |
 | Controls top right | A control is given its own position |
 | Controls work at the end | A control changes nothing on the final held frame |
+| Markers in front | A point is drawn behind a line or curve it sits on |
 | Text overlap | animlib's `detectSceneOverlaps` reports overlapping settled text |
 | Formula off frame | A formula leaves a frame 1.5 times as wide as it is tall |
 | Too much text | More than seven formulas and labels are visible at once |

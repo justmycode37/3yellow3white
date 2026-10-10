@@ -91,6 +91,23 @@ test("a control that does nothing on the final frame is rejected", async () => {
   expect(results[1]).toBe("ok");
 });
 
+test("a dot drawn behind the line it sits on is rejected", async () => {
+  const visualization = await scenegenPrompt("visualization");
+  const scene = (z: number) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    s.circle("dot", { radius: 0.12, position: [0, 0, ${z}], fill: Color.GOLD });
+    s.line("curve", { points: [[0, -2], [0, 2]], stroke: Color.GREEN, strokeWidth: 0.06 });
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new CheckedRunner({ run: async task => {
+    for (const output of [scene(0), scene(0.05)]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({})}`, validate: async () => {} });
+  expect(results[0]).toContain("dot (under curve)");
+  expect(results[1]).toBe("ok");
+});
+
 test("a lesson plan must mark every scene as 3D or 2D with a reason", async () => {
   const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
   const plan = (description: string) => JSON.stringify({ plan: { scenes: [{ id: "beat-1", visualDescription: description }] } });
