@@ -160,11 +160,14 @@ API-key mode holds the key in memory and ignores saved OAuth credentials.
 Subscription mode requires OAuth and cannot fall back to an API key. Changing
 modes does not revoke the previous subscription registration.
 
-`AGENT_MODEL` defaults to `gpt-6-astra`, `AGENT_THINKING` to `high`, and
-`AGENT_TIMEOUT_MS` to 300000 per script/scene including repairs. The model must
-exist in the pinned catalog and be available to your account; `agents:check`
-verifies inference. Runs allow twelve agent turns and three final-output
-validation attempts. Provider retries and automatic compaction are disabled.
+`AGENT_MODEL` defaults to `gpt-6-astra` and `AGENT_THINKING` to `high`.
+Agent tasks have no wall-clock timeout, so thinking, validation repairs, and
+final output can finish. The former `AGENT_TIMEOUT_MS` setting is ignored.
+Deleting a video or shutting down the server still cancels its active agent.
+The model must exist in the pinned catalog and be available to your account;
+`agents:check` verifies inference. Runs allow twelve agent turns and three
+final-output validation attempts. Provider retries and automatic compaction
+are disabled.
 
 ## Demo server
 

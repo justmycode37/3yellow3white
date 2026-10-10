@@ -32,7 +32,6 @@ export class PiAgentRunner implements AgentRunner {
   async run(task: AgentTask): Promise<string> {
     const controller = new AbortController();
     const signal = task.signal ? AbortSignal.any([task.signal, controller.signal]) : controller.signal;
-    const timeout = setTimeout(() => controller.abort(new AgentError("TIMEOUT", "Agent generation timed out.")), this.config.timeoutMs);
     let session: Awaited<ReturnType<typeof createAgentSession>>["session"] | undefined;
     const abort = () => { void session?.abort(); };
     signal.addEventListener("abort", abort, { once: true });
@@ -82,7 +81,7 @@ export class PiAgentRunner implements AgentRunner {
       if (signal.aborted) throw signal.reason instanceof AgentError ? signal.reason : new AgentError("ABORTED", "Agent generation was cancelled.");
       throw agentFailure(error);
     } finally {
-      clearTimeout(timeout); signal.removeEventListener("abort", abort); session?.dispose();
+      signal.removeEventListener("abort", abort); session?.dispose();
     }
   }
 }

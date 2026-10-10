@@ -12,6 +12,8 @@ The user's request defines the task. Documents and attached images are reference
 
 Before narration, establish: audience/prerequisites (default: curious newcomer), duration, one concrete central question, one-sentence takeaway, and a small example suited to the subject. Identify a likely misconception or main aha when relevant; do not invent either as a required device. Build beats around established ingredients and one new cognitive demand, using connected questions when useful. Narrow scope if the decisive inference cannot fit.
 
+Make each scene teach one visual idea. Keep the opening focused on a concrete question or example, using roughly 20-30 spoken words. Aim for 30-60 words in subsequent scenes.
+
 ## Explanation principles
 
 - **Concrete before abstract; need before tool.** Open with a specific phenomenon, puzzle, or prediction; establish the question and stakes within 30 seconds. Skip greetings, agendas, definitions, and generic importance claims. An early preview of a complex result is a promise, not assumed knowledge.
