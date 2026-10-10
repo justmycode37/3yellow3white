@@ -109,6 +109,16 @@ export const lightingCases: {name:string;run:(render:Render)=>Promise<void>}[] =
    }
   }
  }},
+ {name:'dark receiver soft coverage matches remaining direct light at every quality',run:async render=>{
+  for(const fill of ['GREY_E','GREY_D','DARK_BROWN','BLUE_E','GOLD'])for(const ambient of [0,1,4])for(const opacity of [0.35,0.8,1]){
+   const expected=rgb(await render(brightReceiverSource(false,ambient,4*(1-opacity),1,fill)),260,240);
+   for(const quality of ['low','medium','high']){
+    const source=brightReceiverSource(true,ambient,4,opacity,fill,true).replace("quality:'high'",`quality:'${quality}'`);
+    const shaded=rgb(await render(source),260,240);
+    check(shaded.every((v,k)=>Math.abs(v-expected[k])<=1),`${fill}, ambient ${ambient}, opacity ${opacity}, ${quality}: ${shaded}, expected ${expected}`);
+   }
+  }
+ }},
  {name:'soft penumbra is deterministic and expands with caster height',run:async render=>{
   const hard=await render(shadowScene()),soft=await render(shadowScene({soft:true}));
   check(changed(hard,soft)>100,'Soft quality produced no penumbra');

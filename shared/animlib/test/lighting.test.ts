@@ -50,7 +50,11 @@ describe('scene lighting and planar shadows',()=>{
   expect(commands[receiver]).toMatchObject({opaque:true,opacity:1});
   expect(commands.at(-1)).toMatchObject({opaque:false,count:3});
   const layer=commands[receiver];
-  if('children' in layer)expect(layer.children.some(c=>'children' in c&&!c.opaque)).toBe(true);
+  if('children' in layer){
+   expect(layer.receiverColor).toEqual([1,1,1]);
+   expect(layer.receiverShadow).toBeGreaterThan(0);
+   expect(layer.children.some(c=>'children' in c&&c.additive)).toBe(true);
+  }
  });
  it('clips actual packed caster triangles to finite plane bounds, with a world-unit bias',async()=>{
   const {result}=await draw();

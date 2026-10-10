@@ -44,20 +44,22 @@ export function addPlanarShadows(items: GeometryDrawItem[], value: Frame['lighti
   const shadow = settings.directional?.shadow, direction = worldLightDirection(value, camera);
   const direct = 0.68 * (settings.directional?.intensity ?? 1) * Math.max(0, direction[1]);
   const ambient = 0.32 * (settings.ambient ?? 1);
-  // Keep albedo and fractional shadow coverage in [0,1] offscreen. Lighting is
-  // applied only at the opaque receiver composite, BEFORE output saturation.
-  // This avoids extinguishing bright ambient light by darkening a clamped color.
-  const receiverGroup = { id: '@receiver', opacity: 1, receiverLight: ambient + direct };
+  const softness = shadow?.softness ?? 0.04, bias = shadow?.bias ?? 0.002;
+  const count = softness === 0 ? 1 : ({ low: 1, medium: 7, high: 13 }[shadow?.quality ?? 'medium']);
+  // Accumulate coverage independently of albedo. Each opaque silhouette contributes
+  // an exact integer UNORM step; all samples fit without clipping. Normalize once
+  // in the final composite, so full coverage removes exactly the requested direct
+  // light even on dark receivers. No floating-point render-target extension needed.
+  const sampleWeight = Math.floor(255 / count) / 255;
+  const receiverGroup = { id: '@receiver', opacity: 1, receiverLight: ambient + direct,
+    receiverColor: parseColor(palette.resolve(plane.fill ?? 'GREY_D')).slice(0, 3) as Vec3,
+    receiverShadow: (shadow?.opacity ?? 0.35) * direct / (count * sampleWeight) };
   const receiver: number[] = [];
   triangles([[bounds[0], y, bounds[2]], [bounds[0], y, bounds[3]], [bounds[1], y, bounds[3]], [bounds[1], y, bounds[2]]], receiver,
-    parseColor(palette.resolve(plane.fill ?? 'GREY_D')), 0);
+    [0, 0, 0, 1], 0);
   const result: DrawItem[] = [...items, { depth, vertices: new Float32Array(receiver), transparent: false, screen: false, cameraDependentGeometry: true, groups: [receiverGroup] }];
-  if (!shadow || direction[1] <= 0.001) return result; // Light below/parallel to top of plane.
-  const opacity = (shadow.opacity ?? 0.35) * direct / Math.max(1e-6, ambient + direct);
-  if (opacity <= 0) return result;
+  if (!shadow || direction[1] <= 0.001 || direct * (shadow.opacity ?? 0.35) <= 0) return result;
   const casters = items.filter(item => item.castShadow && !item.screen && !item.transparent && !item.groups?.some(g => g.opacity < 0.999999));
-  const softness = shadow.softness ?? 0.04, bias = shadow.bias ?? 0.002;
-  const count = softness === 0 ? 1 : ({ low: 1, medium: 7, high: 13 }[shadow.quality ?? 'medium']);
   // Orthonormal disk around L, so softness is independent of source orientation.
   const axis: Vec3 = Math.abs(direction[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
   const cross = (a: Vec3, b: Vec3): Vec3 => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
@@ -73,10 +75,10 @@ export function addPlanarShadows(items: GeometryDrawItem[], value: Frame['lighti
       const points = [0, 1, 2].map(i => Array.from(item.vertices.subarray(offset + i*VERTEX_FLOATS, offset + i*VERTEX_FLOATS + 3)) as Vec3);
       let projected = clip(points, 1, y, 1).map(p => [p[0] - (p[1]-y)*light[0]/light[1], y+bias, p[2] - (p[1]-y)*light[2]/light[1]] as Vec3);
       for (const [axis, edge, sign] of [[0,bounds[0],1], [0,bounds[1],-1], [2,bounds[2],1], [2,bounds[3],-1]]) projected = clip(projected, axis, edge, sign);
-      triangles(projected, data, [0, 0, 0, 1], 0);
+      triangles(projected, data, [1, 1, 1, 1], 0);
     }
     if (data.length) result.push({ depth, vertices: new Float32Array(data), transparent: false, screen: false,
-      cameraDependentGeometry: true, groups: [receiverGroup, { id: `@shadow:${sample}`, opacity: 1 - (1-opacity)**(1/count) }] });
+      cameraDependentGeometry: true, groups: [receiverGroup, { id: `@shadow:${sample}`, opacity: sampleWeight, additive: true }] });
   }
   return result;
 }

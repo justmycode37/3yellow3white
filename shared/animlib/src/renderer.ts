@@ -71,6 +71,7 @@ export class CanvasRenderer {
   private gl:WebGLBackend|undefined;
   private contextLost=false;
   private ready=false;
+  private budgetRejected=false;
   private originalCanvas:HTMLCanvasElement;
   get backend():'webgpu'|'webgl2'|undefined {return this.gl?'webgl2':this.ready?'webgpu':undefined;}
   get canvasElement():HTMLCanvasElement {return this.canvas;}
@@ -337,6 +338,10 @@ export class CanvasRenderer {
     if(!this.initializing)this.initializing=this.initialize().catch(error=>{this.initializing=undefined;throw error;});
     await this.initializing;
   }
+  private frameRendered():void {
+    // Clear before notifying: the public player refreshes synchronously on recovery.
+    if(this.budgetRejected){this.budgetRejected=false;this.onRecovered?.();}
+  }
   render(frame:Frame,options:CompiledScene['options']):void {
     if(!this.ready||this.contextLost||this.disposed)return;
     this.lastFrame=frame;this.lastOptions=options;this.regions=frame.views??[];
@@ -373,7 +378,7 @@ export class CanvasRenderer {
     let offset=0;
     for(const batch of ordered)for(const item of batch.items){data.set(item.vertices,offset);offset+=item.vertices.length;}
     const clear=parseColor(palette.resolve(options.background));
-    if(this.gl){this.gl.render(data,ordered,clear,this.canvas.width,this.canvas.height);return;}
+    if(this.gl){this.gl.render(data,ordered,clear,this.canvas.width,this.canvas.height);this.frameRendered();return;}
     const device=this.device!;
     const viewIds=new Set(this.regions.map(v=>v.id));
     for(const [id,resource] of this.viewResources)if(!viewIds.has(id)){resource.uniform.destroy();this.viewResources.delete(id);}
@@ -408,8 +413,10 @@ export class CanvasRenderer {
       }
     }
     device.queue.submit([encoder.finish()]);
+    this.frameRendered();
     } catch(error) {
-      if(error instanceof VertexBufferLimitError){this.onError?.(error);return;}
+      if(error instanceof VertexBufferLimitError){this.budgetRejected=true;this.onError?.(error);return;}
+      this.budgetRejected=false;
       // Frame acquisition can fail before device.lost reaches the playback loop.
       if(this.device&&!this.disposed) {
         try {this.fallback(error);this.render(frame,options);if(this.ready)this.onRecovered?.();return;}

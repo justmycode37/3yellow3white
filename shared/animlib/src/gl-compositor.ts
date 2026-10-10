@@ -8,9 +8,14 @@ uniform sampler2D image;
 uniform sampler2D depthImage;
 uniform float opacity;
 uniform float receiverLight;
+uniform float receiverShadow;
+uniform vec4 receiverColor;
 out vec4 outputColor;
 void main(){ivec2 p=ivec2(gl_FragCoord.xy);vec4 color=texelFetch(image,p,0)*opacity;
-if(color.a<=0.000001)discard;outputColor=vec4(color.rgb*receiverLight,color.a);gl_FragDepth=texelFetch(depthImage,p,0).r;}`;
+if(color.a<=0.000001)discard;
+vec3 rgb=color.rgb*receiverLight;
+if(receiverColor.a>0.)rgb=receiverColor.rgb*max(vec3(0.),vec3(color.a*receiverLight)-color.rgb*receiverShadow);
+outputColor=vec4(rgb,color.a);gl_FragDepth=texelFetch(depthImage,p,0).r;}`;
 interface Layer { framebuffer: WebGLFramebuffer; resolved: WebGLFramebuffer; color: WebGLTexture; depth: WebGLTexture; colorBuffer: WebGLRenderbuffer; depthBuffer: WebGLRenderbuffer; }
 
 export class GLCompositor {
@@ -18,6 +23,8 @@ export class GLCompositor {
   private vao: WebGLVertexArrayObject;
   private opacity: WebGLUniformLocation;
   private receiverLight: WebGLUniformLocation;
+  private receiverShadow: WebGLUniformLocation;
+  private receiverColor: WebGLUniformLocation;
   private layers: Layer[] = [];
   private width = 0;
   private height = 0;
@@ -35,6 +42,8 @@ export class GLCompositor {
       this.program = program;this.vao = gl.createVertexArray()!;
       this.opacity = gl.getUniformLocation(program,'opacity')!;
       this.receiverLight = gl.getUniformLocation(program,'receiverLight')!;
+      this.receiverShadow = gl.getUniformLocation(program,'receiverShadow')!;
+      this.receiverColor = gl.getUniformLocation(program,'receiverColor')!;
       gl.useProgram(program);gl.uniform1i(gl.getUniformLocation(program,'image'),0);gl.uniform1i(gl.getUniformLocation(program,'depthImage'),1);
     } catch (error) { gl.deleteProgram(program);throw error; }
     finally { for (const shader of shaders) gl.deleteShader(shader); }
@@ -79,10 +88,12 @@ export class GLCompositor {
       gl.bindFramebuffer(gl.FRAMEBUFFER,parent);
       gl.viewport(0,0,width,height);gl.enable(gl.SCISSOR_TEST);gl.scissor(x,y,w,h);
       gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.depthMask(command.opaque);
-      gl.blendFuncSeparate(gl.ONE,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+      gl.blendFuncSeparate(gl.ONE,command.additive?gl.ONE:gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
       gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,layer.color);
       gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,layer.depth);
-      gl.uniform1f(this.opacity,command.opacity);gl.uniform1f(this.receiverLight,command.receiverLight ?? 1);gl.drawArrays(gl.TRIANGLES,0,3);
+      gl.uniform1f(this.opacity,command.opacity);gl.uniform1f(this.receiverLight,command.receiverLight ?? 1);gl.uniform1f(this.receiverShadow,command.receiverShadow ?? 0);
+      gl.uniform4f(this.receiverColor,...(command.receiverColor ?? [1,1,1] as const),command.receiverColor?1:0);
+      gl.drawArrays(gl.TRIANGLES,0,3);
       gl.viewport(x,y,w,h);
     }
     if (level > 0) {

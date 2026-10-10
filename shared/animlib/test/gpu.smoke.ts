@@ -2,6 +2,7 @@
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {create,globals} from 'webgpu';
 import {VertexBufferLimitError} from '../src/vertex-buffer.js';
+import {createPlayer} from '../src/player.js';
 import {CanvasRenderer} from '../src/renderer.js';
 import {SceneSequence} from '../src/sequence.js';
 import {initialSources} from '../demo/scenes.js';
@@ -49,7 +50,8 @@ describe('native Vulkan WebGPU rendering',()=> {
     // The renderer still calls its production requestAdapter/requestDevice path.
     vi.stubGlobal('navigator',{gpu:{requestAdapter:async()=>({requestDevice:async()=>device}),getPreferredCanvasFormat:()=>format}});
     renderer=new CanvasRenderer(canvas);renderer.onError=error=>errors.push(error.message);
-    sequence=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+    // Large allocation fixtures test GPU limits, not the default sandbox time budget.
+    sequence=new SceneSequence({executionLimitMs:1000,prepare:scenes=>renderer.prepare(scenes)});
     const result=await sequence.submit({type:'load',scenes:initialSources});
     expect(result).toEqual({ok:true,revision:1,diagnostics:[]});
   });
@@ -565,6 +567,36 @@ describe('native Vulkan WebGPU rendering',()=> {
     const expected={...frame,elements:frame.elements.map(e=>({...e,morph:undefined,geometry:{kind:'text' as const,text:'A',fontSize:2}}))};
     renderer.render(expected,scene.options);
     expect(Buffer.from(await pixels()).equals(actual)).toBe(true);expect(errors).toEqual([]);
+  });
+
+  // Last: this public player owns/disposes the native device supplied by the harness.
+  it('public Player recovers from an oversized frame and can play a smaller scene',async()=>{
+    Object.assign(canvas,{getAttribute:()=>null,setAttribute:()=>{},removeAttribute:()=>{}});
+    const callbacks=new Map<number,FrameRequestCallback>();let id=0;
+    vi.stubGlobal('requestAnimationFrame',(callback:FrameRequestCallback)=>{callbacks.set(++id,callback);return id;});
+    vi.stubGlobal('cancelAnimationFrame',(id:number)=>callbacks.delete(id));
+    const player=createPlayer({canvas,executionLimitMs:1000});
+    const source=`export default scene({mode:'3d',lighting:{directional:{direction:[0,1,0],space:'world',shadow:{quality:'high'}},receiver:{size:[8,8]}}},s=>{
+      for(let i=0;i<3;i++)s.parametricSurface('surface'+i,{uSegments:100,vSegments:100,fn:(u,v)=>[u,1+i*.1,v]});s.wait(1);
+    });`;
+    try{
+      expect((await player.submit({type:'load',scenes:[{id:'large',source}]})).ok).toBe(true);
+      expect(player.getState()).toMatchObject({status:'blocked',error:expect.stringContaining('exceeding WebGPU maxBufferSize')});
+      await expect(player.play()).rejects.toBeInstanceOf(VertexBufferLimitError);
+      expect((await player.submit({type:'load',scenes:[{id:'small',source:"export default scene({},s=>{s.rectangle('r',{width:3,height:2,fill:'PURE_RED'});s.wait(1)});"}]})).ok).toBe(true);
+      expect(player.getState()).toMatchObject({scene:'small',status:'paused'});
+      expect(player.getState().error).toBeUndefined();
+      const image=await pixels();expect(Array.from(image.slice((240*640+320)*4,(240*640+320)*4+4))).toEqual([255,0,0,255]);
+      await player.play();expect(player.getState().status).toBe('playing');expect(callbacks.size).toBe(1);
+      const time=performance.now(),clock=vi.spyOn(performance,'now').mockReturnValue(time+250);
+      try{
+        const [key,callback]=callbacks.entries().next().value!;callbacks.delete(key);callback(time+250);
+        expect(player.getState().time).toBeGreaterThanOrEqual(0.25);
+        expect(player.getState().status).toBe('playing');expect(callbacks.size).toBe(1);
+      }finally{clock.mockRestore();}
+      player.pause();expect(player.getState().status).toBe('paused');
+      expect(errors).toEqual([]);
+    }finally{player.dispose();}
   });
 
 });

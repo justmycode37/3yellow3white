@@ -4,7 +4,8 @@ import type { RenderCommand } from './composition.js';
 const shader = `
 @group(0) @binding(0) var color: texture_2d<f32>;
 @group(0) @binding(1) var depth: texture_depth_multisampled_2d;
-@group(0) @binding(2) var<uniform> opacity: vec4f;
+@group(0) @binding(2) var<uniform> effect: Effect;
+struct Effect { opacity: vec4f, receiverColor: vec4f }
 @vertex fn vertex(@builtin(vertex_index) index: u32) -> @builtin(position) vec4f {
   let points = array<vec2f,3>(vec2f(-1.,-1.),vec2f(3.,-1.),vec2f(-1.,3.));
   return vec4f(points[index],0.,1.);
@@ -12,11 +13,15 @@ const shader = `
 struct Result { @location(0) color: vec4f, @builtin(frag_depth) depth: f32 }
 @fragment fn fragment(@builtin(position) position: vec4f) -> Result {
   let p = vec2i(position.xy);
-  let rgba = textureLoad(color,p,0)*opacity.x;
+  let rgba = textureLoad(color,p,0)*effect.opacity.x;
   if(rgba.a<=0.000001){discard;}
   var z = 1.;
   for(var i=0;i<4;i++){z=min(z,textureLoad(depth,p,i));}
-  return Result(vec4f(rgba.rgb*opacity.y,rgba.a),z);
+  var rgb = rgba.rgb*effect.opacity.y;
+  if(effect.receiverColor.a>0.) {
+    rgb = effect.receiverColor.rgb * max(vec3f(0.),vec3f(rgba.a*effect.opacity.y)-rgba.rgb*effect.opacity.z);
+  }
+  return Result(vec4f(rgb,rgba.a),z);
 }`;
 interface Layer { color: GPUTexture; resolved: GPUTexture; depth: GPUTexture; }
 type Draw = Extract<RenderCommand, { first: number }>;
@@ -30,6 +35,7 @@ export class GPUCompositor {
   private height = 0;
   private opaque: GPURenderPipeline;
   private transparent: GPURenderPipeline;
+  private additive: GPURenderPipeline;
   constructor(private device: GPUDevice, private format: GPUTextureFormat) {
     const module = device.createShaderModule({ code: shader });
     const descriptor: GPURenderPipelineDescriptor = {
@@ -43,6 +49,12 @@ export class GPUCompositor {
     };
     this.opaque = device.createRenderPipeline(descriptor);
     this.transparent = device.createRenderPipeline({ ...descriptor, depthStencil: { ...descriptor.depthStencil!, depthWriteEnabled: false } });
+    this.additive = device.createRenderPipeline({ ...descriptor,
+      fragment: { ...descriptor.fragment!, targets: [{ format, blend: {
+        color: { srcFactor: 'one', dstFactor: 'one' },
+        alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+      } }] }, depthStencil: { ...descriptor.depthStencil!, depthWriteEnabled: false },
+    });
   }
   beginFrame(): void { this.uniformIndex = 0; }
   private layer(level: number, width: number, height: number): Layer {
@@ -75,10 +87,10 @@ export class GPUCompositor {
         colorAttachments: [...descriptor.colorAttachments].map(a => a ? { ...a, loadOp: 'load' } : a),
         depthStencilAttachment: { ...descriptor.depthStencilAttachment!, depthLoadOp: 'load' },
       });
-      const pipeline = command.opaque ? this.opaque : this.transparent;
+      const pipeline = command.additive ? this.additive : command.opaque ? this.opaque : this.transparent;
       const index = this.uniformIndex++;
-      const uniform = this.uniforms[index] ??= this.device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-      this.device.queue.writeBuffer(uniform,0,new Float32Array([command.opacity,command.receiverLight ?? 1,0,0]));
+      const uniform = this.uniforms[index] ??= this.device.createBuffer({ size: 32, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+      this.device.queue.writeBuffer(uniform,0,new Float32Array([command.opacity,command.receiverLight ?? 1,command.receiverShadow ?? 0,0,...(command.receiverColor ?? [1,1,1]),command.receiverColor ? 1 : 0]));
       const bindGroup = this.device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [
         { binding: 0, resource: layer.resolved.createView() }, { binding: 1, resource: layer.depth.createView() }, { binding: 2, resource: { buffer: uniform } },
       ] });

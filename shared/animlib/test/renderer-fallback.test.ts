@@ -144,3 +144,21 @@ it('recovers a WebGPU frame acquisition failure without throwing into the playba
   expect(renderer.backend).toBe('webgl2');expect(glState.render).toHaveBeenCalledOnce();
   expect(context.unconfigure).toHaveBeenCalledOnce();expect(error).not.toHaveBeenCalled();renderer.dispose();
 });
+
+it('does not recover a budget rejection when the retry instead fails both backends',async()=>{
+  const {renderer,device}=setup();await renderer.prepare([]);
+  const error=vi.fn(),recovered=vi.fn();renderer.onError=error;renderer.onRecovered=recovered;
+  const scene=await compileSource("export default scene({},s=>{s.rectangle('r');s.wait(1)});");
+  device.limits.maxBufferSize=256;
+  renderer.render(evaluateScene(scene,0),scene.options);
+  expect(error.mock.calls[0][0].name).toBe('VertexBufferLimitError');
+  expect(recovered).not.toHaveBeenCalled();
+  device.limits.maxBufferSize=268435456;
+  Object.assign(device,{queue:{writeBuffer:()=>{}},createCommandEncoder:()=>{throw new Error('GPU stopped');}});
+  glState.render.mockImplementationOnce(()=>{throw new Error('GL stopped');});
+  renderer.render(evaluateScene(scene,0),scene.options);
+  expect(error.mock.calls.at(-1)![0].message).toBe('GL stopped');
+  expect(recovered).not.toHaveBeenCalled();
+  renderer.render(evaluateScene(scene,0),scene.options);
+  expect(glState.render).toHaveBeenCalledOnce();expect(recovered).not.toHaveBeenCalled();renderer.dispose();
+});
