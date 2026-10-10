@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
 import { ArrowRight, Maximize, MenuGlyph, Pause, Play, RotateCcw } from './Icons'
 import type { Lesson } from './data'
@@ -25,14 +25,27 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   const [startupError, setStartupError] = useState('')
   const [connection, setConnection] = useState('')
   const [attempt, setAttempt] = useState(0)
-  const [controls, setControls] = useState(false)
   const [isFullscreen, setFullscreen] = useState(false)
+  const [cursorHidden, setCursorHidden] = useState(false)
+  const cursorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const state = useSyncExternalStore(playback?.subscribe ?? subscribeLoading, playback?.getState ?? getLoadingState)
   const error = startupError || state.error
   const duration = state.duration || lesson.duration
   const progress = duration ? Math.min(1, state.time / duration) : 0
   const enabled = state.ready && !error && !menuOpen && !overlayOpen
   const playbackRequested = state.playing || state.buffering && state.wantsPlay
+  const revealCursor = useCallback(() => {
+    clearTimeout(cursorTimer.current)
+    setCursorHidden(false)
+    if (state.playing && !menuOpen && !overlayOpen) {
+      cursorTimer.current = setTimeout(() => setCursorHidden(true), 3000)
+    }
+  }, [state.playing, menuOpen, overlayOpen])
+
+  useEffect(() => {
+    revealCursor()
+    return () => clearTimeout(cursorTimer.current)
+  }, [revealCursor])
 
   useEffect(() => {
     // Library refreshes replace lesson metadata, including on window focus.
@@ -101,7 +114,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     void action?.catch(() => {})
   }
 
-  return <div className={`player-page ${state.playing ? 'is-playing' : ''}`} ref={screen} onMouseMove={() => setControls(true)} onMouseLeave={() => setControls(false)}>
+  return <div className={`player-page ${state.playing ? 'is-playing' : ''} ${cursorHidden && state.playing && !menuOpen && !overlayOpen ? 'is-player-idle' : ''}`} ref={screen} onPointerMove={revealCursor} onPointerDown={revealCursor} onKeyDown={revealCursor} onFocusCapture={revealCursor}>
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
     {(connection || (state.ready && state.generationError)) && <p className="player-notice" role="status">{state.generationError || connection}</p>}
     <div className="player-stage">
@@ -110,7 +123,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
       {state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}
       {error && <div className="player-status player-error" role="alert"><strong>This lesson couldn’t play.</strong><p>{error}</p><button className="secondary-button" onClick={() => setAttempt(old => old + 1)}>Try again</button></div>}
     </div>
-    <div className={`player-controls ${controls || !state.playing ? 'show-controls' : ''}`}>
+    <div className="player-controls">
       <div className="player-control-row">
         <button className="icon-button" disabled={!enabled} aria-label={state.ended ? 'Replay lesson' : playbackRequested ? 'Pause lesson' : 'Play lesson'} onClick={() => { void playback?.toggle() }}>{state.ended ? <RotateCcw size={19}/> : playbackRequested ? <Pause size={19} fill="currentColor"/> : <Play size={19} fill="currentColor"/>}</button>
         <div className="player-timeline">
