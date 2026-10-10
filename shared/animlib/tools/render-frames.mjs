@@ -3,6 +3,8 @@ import { create, globals } from 'webgpu';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { ModelStore } from '../dist/model-store.js';
 import { CanvasRenderer } from '../dist/renderer.js';
 import { compileSource, evaluateScene } from '../dist/core.js';
 
@@ -29,7 +31,16 @@ async function readPixels(device, texture, format) {
 async function main() {
   const input=JSON.parse(await readFile(process.argv[2],'utf8'));
   if(!Array.isArray(input.times)||!input.times.length||input.times.length>16)throw new Error('Expected 1–16 sample times.');
-  const compiled=await compileSource(input.source,{previous:input.previousFrame});
+  const models=new ModelStore(input.models?.assets??{}, {
+    read:async asset=>new Uint8Array(Buffer.from(input.models?.files[asset.url]??'','base64')),
+    decode:async image=>{
+      const decoded=await loadImage(Buffer.from(image.bytes)),canvas=createCanvas(image.width,image.height),context=canvas.getContext('2d');
+      context.drawImage(decoded,0,0);
+      return {width:decoded.width,height:decoded.height,pixels:new Uint8Array(context.getImageData(0,0,image.width,image.height).data)};
+    },
+  });
+  const compiled=await compileSource(input.source,{previous:input.previousFrame,models:models.metadata});
+  await models.prepare([compiled]);
   if(!input.times.every(t=>Number.isFinite(t)&&t>=0&&t<=compiled.duration))throw new Error('Invalid sample time.');
   Object.assign(globalThis,globals);
   globalThis.ResizeObserver=class {observe(){}disconnect(){}};
@@ -46,7 +57,7 @@ async function main() {
     Object.defineProperty(globalThis,'navigator',{configurable:true,value:{gpu:{requestAdapter:async()=>({requestDevice:async()=>device}),getPreferredCanvasFormat:()=>format}}});
     const context={configure(){},unconfigure(){},getCurrentTexture:()=>texture};
     const canvas={width,height,style:{},getBoundingClientRect:()=>({width,height}),getContext:kind=>kind==='webgpu'?context:null,addEventListener(){},removeEventListener(){}};
-    const renderer=new CanvasRenderer(canvas);renderer.onError=e=>errors.push(e.message);
+    const renderer=new CanvasRenderer(canvas,undefined,models);renderer.onError=e=>errors.push(e.message);
     try {
       await renderer.prepare([compiled]);
       const cellW=640,cellH=Math.round(height*cellW/width),sheetW=cellW*2;
@@ -71,6 +82,7 @@ async function main() {
       }
     } finally {texture.destroy();renderer.dispose();device.destroy();}
   }
+  models.dispose();
   await writeFile(join(input.directory,'frames.json'),JSON.stringify(manifest,null,2));
   process.stdout.write(JSON.stringify(manifest));
 }

@@ -10,3 +10,8 @@ export { importPDB } from './molecular-data.js';
 export { createMolecularEnvelope } from './molecular-envelope.js';
 export type { MolecularEnvelopeOptions } from './molecular-envelope.js';
 export type * from "./types.js";
+
+export { parseModelGLB, MODEL_LIMITS } from "./models.js";
+export { validateModelMetadata } from "./model-metadata.js";
+export { createModelGLB } from './model-export.js';
+export type { GeneratedModel } from './model-export.js';

@@ -247,3 +247,14 @@ test('frequent usage-only snapshots preserve scenes, time, and playback intent',
   assert.equal(playback.getState().time, 3)
   playback.dispose()
 })
+
+test('registers model assets with audio before compiling a streamed scene', async () => {
+  const player=new StreamingPlayer();
+  const calls:string[]=[];
+  const asset={kind:'model' as const,url:'/api/models/hash.glb',metadata:{version:1 as const,parts:[],primitives:[],bounds:{min:[0,0,0] as [number,number,number],max:[1,1,1] as [number,number,number]},triangles:1,materials:[]}};
+  const registered:Record<string,unknown>[]=[];
+  Object.assign(player,{registerAssets:(assets:Record<string,unknown>)=>{calls.push('assets');registered.push(assets);}});
+  const submit=player.submit.bind(player);player.submit=async change=>{calls.push('submit');return submit(change);};
+  const playback=new LessonPlayback(player),video=manifest(1);video.scenes[0].assets={model:asset};
+  try{await playback.acceptManifest(video);assert.deepEqual(calls,['assets','submit']);assert.deepEqual(registered[0].model,asset);assert.deepEqual(registered[0]['audio-0'],{kind:'audio',url:'/audio'});}finally{playback.dispose();}
+});

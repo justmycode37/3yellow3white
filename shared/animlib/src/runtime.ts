@@ -212,6 +212,42 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     text: (id, props) => add("text", id, { fontSize: props.space === "screen" ? 16 : 0.4, ...props }),
     latex: (id, props) => add("latex", id, { fontSize: props.space === "screen" ? 24 : 0.6, ...props }),
     mesh: (id, props) => add("mesh", id, props),
+    model: (id, props) => {
+      idCheck(id);
+      const metadata = input.models?.[props.asset];
+      if (!metadata) throw new Error(`Unknown model asset: ${props.asset}`);
+      const { asset, tint, ...style } = props;
+      if (Object.keys(style).some(k => !['position','rotation','scale','opacity','castShadow'].includes(k))) throw new Error('Unsupported model property');
+      const handles = new Map<string, ElementHandle>();
+      const partId = (part: string) => `${id}/${part}`;
+      for (const part of [...metadata.parts].reverse()) {
+        const children = part.primitives.map(index => add('model', `${id}/primitive-${index}`, {
+          model: { asset, primitive: index, bounds: clone(metadata.primitives[index].bounds) },
+          fill: tint ?? 'WHITE', stroke: 'none',
+        }));
+        children.push(...metadata.parts.filter(p => p.parent === part.id).map(p => handles.get(p.id)!));
+        const group = context.group(partId(part.id), children);
+        // Group origins preserve imported node pivots. Imported static rotations/scales are baked in host geometry.
+        const position = vector(part.position);
+        states.get(group.id)!.position = position;
+        lifecycle.at(-1)!.elements![0].position = clone(position);
+        handles.set(part.id, group);
+      }
+      const root = context.group(id, metadata.parts.filter(p => !p.parent).map(p => handles.get(p.id)!));
+      const state = states.get(id)!;
+      if (style.position) state.position = vector(style.position);
+      if (style.rotation !== undefined) state.rotation = rotation(style.rotation);
+      if (style.scale !== undefined) state.scale = style.scale;
+      if (style.opacity !== undefined) state.opacity = style.opacity;
+      if (style.castShadow !== undefined) state.castShadow = style.castShadow;
+      lifecycle.at(-1)!.elements![0] = clone(state);
+      const modelHandle = (element: ElementHandle) => ({ ...element, tintTo: (color: import('./types.js').ColorValue) => ({type:'animate' as const,ids:descendants(element.id).filter(id=>states.get(id)!.geometry.kind==='model'),properties:{fill:color}}) });
+      return { ...modelHandle(root), part: key => {
+        const matches = metadata.parts.filter(p => p.id === key || p.name === key);
+        if (matches.length !== 1) throw new Error(`Unknown or ambiguous model part: ${key}. Use its node ID.`);
+        return modelHandle(handles.get(matches[0].id)!);
+      } };
+    },
     surface: (id, props) => generatedMesh(id, meshBuilders!.surface(props), props),
     parametricSurface: (id, props) => generatedMesh(id, meshBuilders!.parametricSurface(props), props),
     box: (id, props = {}) => generatedMesh(id, meshBuilders!.box(props), props),

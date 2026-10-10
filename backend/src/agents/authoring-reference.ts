@@ -53,6 +53,9 @@ const headings = [
   '### Silhouette and crease outlines',
   '### Per-vertex scalar palette colors',
   '### Configurable label occlusion',
+  '## Imported static 3D models',
+  '### Registering and delivering models',
+  '### Scene-agent publication',
 ];
 
 /** Production scene-authoring reference; preserves retained sections verbatim (LF). */
@@ -78,7 +81,8 @@ export function buildAuthoringReference(reference: string): string {
     ['## 3. Writing a scene', '## 7. Live source submissions'],
     ['### Execution environment', '## 8. One audio track per scene'],
     ['## 8. One audio track per scene', '## 9. Engine structure and verification'],
-    ['## 10. Current boundaries and next steps', undefined],
+    ['## 10. Current boundaries and next steps', '### Registering and delivering models'],
+    ['### Scene-agent publication', undefined],
   ] as const;
   const startLine = (heading: string) => sections.find(section => section.heading === heading)!.line;
   const selected = ranges.map(([start, end]) => {

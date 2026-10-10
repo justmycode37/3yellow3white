@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import {integrationCases} from './integration-cases.js';
 import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 /// <reference types="@webgpu/types" />
@@ -140,14 +141,14 @@ describe('native WebGPU rendering',()=> {
       expect(controlled).toEqual([]);expect(errors).toEqual([]);
       const buffers=create.mock.calls.map(([descriptor])=>descriptor).filter(d=>(d.usage&GPUBufferUsage.VERTEX)!==0);
       expect(buffers.map(d=>d.size)).toEqual([limit]); // payload fits; doubled growth does not.
-      expect(write.mock.calls.some(([, ,data])=>(data as ArrayBufferView).byteLength===208320744)).toBe(true);
+      expect(write.mock.calls.some(([, ,data])=>(data as ArrayBufferView).byteLength===208320744/31*VERTEX_FLOATS)).toBe(true);
       const before=await pixels();expect(changedPixels(before)).toBeGreaterThan(1000);
       const oversized=await sequence.submit({type:'load',scenes:[{id:'large-shadow',source:source(3)}]});
       expect(oversized.ok,JSON.stringify(oversized)).toBe(true);
       const allocationCount=create.mock.calls.length,submitCount=submit.mock.calls.length,writeCount=write.mock.calls.length;
       renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
       expect(controlled).toHaveLength(1);expect(controlled[0]).toBeInstanceOf(VertexBufferLimitError);
-      expect(controlled[0].message).toContain('312480744');
+      expect(controlled[0].message).toContain(String(312480744 / 31 * VERTEX_FLOATS));
       expect(create).toHaveBeenCalledTimes(allocationCount);expect(submit).toHaveBeenCalledTimes(submitCount);expect(write).toHaveBeenCalledTimes(writeCount);
       expect(renderer.backend).toBe('webgpu');expect(Buffer.from(await pixels())).toEqual(Buffer.from(before));
       expect(errors).toEqual([]);

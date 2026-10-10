@@ -76,8 +76,9 @@ marble, and wood patterns, plus `material` for metalness, roughness, specular
 highlights, and emissive color/intensity. Patterns use local XYZ and two palette
 colors on both GPU backends; `texture.bumpStrength` adds raised or recessed relief
 to the lighting normals. Metal reflections approximate a studio environment.
-Ordinary controls can rebuild their parameters. There are no image textures,
-image normal maps, displacement, scene reflections, or bloom. See
+Ordinary controls can rebuild their parameters. Imported GLB models additionally support
+image textures, UV maps and image normal maps through `s.model`; see below.
+Displacement, scene reflections and bloom are not included. See
 [textures and materials](docs/reference.md#procedural-textures-and-materials).
 
 Open `http://localhost:5173/spatial.html` for interactive function, flower, and
@@ -273,3 +274,23 @@ and interactive [lighting study](demo/lighting.html) (`/lighting.html` in the de
 Explanatory 3D studies: run `npm run dev` and open `/explanatory.html` for clipping
 planes with hole-preserving section caps, scalar fields, feature outlines, and
 depth-aware labels. See [authoring details](docs/reference.md#sections-feature-edges-scalar-fields-and-label-depth).
+
+### Imported models
+
+`s.model('assembly', { asset: 'registered-id' })` creates an ordinary seekable
+model instance with addressable parts and imported image materials on both GPU
+backends. The host registers `{ kind: 'model', url, sha256, metadata }`; binary
+GLBs stay outside the scene compiler and frame JSON. Use `part('name')` for
+transforms and `tintTo(Color.BLUE)` for highlighting.
+
+The backend scene agent can call `publish_model` with a public HTTPS GLB URL or
+generated named mesh geometry. Model manifests travel with generated scenes;
+the player preloads them before committing a submission. Storage uses
+`MODEL_ASSET_DIR` (default `data/models`). External generators can POST a raw GLB
+to `/api/models`.
+
+Open `/model-viewer.html` for a local-file viewer and a generated textured example.
+See [imported static models](docs/reference.md#imported-static-3d-models) for the
+API, static glTF compatibility profile, budgets, and current limitations. Run
+`/models.html` for focused browser pixel checks; native `test:gpu` covers the
+same UV/material behavior on Vulkan WebGPU.
