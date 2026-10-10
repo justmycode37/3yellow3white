@@ -23,3 +23,7 @@ User requests the newest library and texture-capable authoring guidance, then te
 ## Longer atom-only DNA revision
 
 User now explicitly requests a longer DNA strand made of atoms together with no bond lines. Show the entire deposited twelve-base-pair 1BNA duplex (486 resolved heavy atoms) at van der Waals radii. Remove covalent sticks and dashed contacts in every view; retain element colors, satin finish, groove inspection and optional central-two-pair close-up. Widen full-structure framing while keeping duration 14 seconds. Do not extend by invented coordinate repeats or move atom centers to force contact. This request supersedes the six-base-pair ball-and-stick default and earlier geometry-preservation constraint for DNA only.
+
+## DNA accuracy and readability revision
+
+The user finds the full-volume atom view congested and hard to recognize as DNA. Audit the coordinate data against the deposited PDB, antiparallel complementary pairing and distance-preserving display transform. Preserve all atom centers, element colors, atom-only rendering, texture and duration. Test a modest uniform reduction of displayed atom radii to expose grooves and stacked base pairs; label this explicitly as a readability scale and retain a full van der Waals option. Do not stretch the helix, spread base pairs or invent coordinates. Compare before/after native frames at setup, camera motion and final hold, plus browser control behavior.

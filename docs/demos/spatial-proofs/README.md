@@ -6,7 +6,7 @@ Shift-drag to pan, and use Reset view to restore the authored camera.
 
 | Proof | Construction | Duration |
 | --- | --- | --- |
-| DNA | Twelve deposited base pairs, 486 touching space-filling heavy atoms; no bond lines; selectable central pairs | 14 s |
+| DNA | Twelve deposited base pairs, 486 heavy atoms; clearer 75% radii or full volume; no bond lines; selectable central pairs | 14 s |
 | Engine | Cutaway housing, constrained piston/rod/crank, flywheel and timed valves | 16 s |
 | Gradient descent | Genuine 25-parameter neural-network MSE on a two-dimensional affine slice; 33 Armijo steps | 16 s |
 | Minecraft | Articulated voxel Steve, detailed oak tree, three tool contacts, cracks and released inventory block | 16 s |
@@ -18,10 +18,19 @@ parameter slice. Minecraft uses original voxel geometry and an approximate
 character palette. Detailed fidelity notes accompany each proof in the gallery
 and in the adjacent `*-notes.md` files.
 
-Latest DNA revision doubles the displayed base-pair count and removes all bond
-sticks/contact dashes. See [current DNA frame](dna-long-frame.png) and
-[independent review](dna-long-review.md). Earlier images below document prior
-milestones and are retained for comparison.
+Latest DNA revision preserves all 486 deposited atom centers while using 75%
+display radii and a groove-facing starting angle to reduce crowding. The Atom
+size control restores full van der Waals volume. See [current DNA frame](dna-clear-frame.png),
+[accuracy audit](dna-accuracy-audit.json) and [independent review](dna-readability-review.md).
+Earlier images and validation reports document prior milestones.
+
+The audit checks exact PDB atom records, 12 antiparallel complementary base pairs,
+rendered mesh centers and radii, element colors, and rigid coordinates at seven
+sample times in all four current control combinations. Run from repository root:
+`bun shared/animlib/demo/proofs/validate-dna.mjs`. Fresh official RCSB ATOM records
+also matched the vendored input on 2026-10-10. The 1.90 Å crystal structure is
+experimentally resolved geometry, not an exact dynamic molecule; hydrogens and
+solvent remain omitted. Smaller glyphs are explicitly a display convention.
 
 ## Texture update
 

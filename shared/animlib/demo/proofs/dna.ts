@@ -20,18 +20,21 @@ export const dnaProof = {
   id: 'dna',
   title: 'DNA, atom by atom.',
   kicker: '01 / Molecular structure',
-  description: 'A full twelve-base-pair B-DNA double helix: 486 deposited atoms packed together at their van der Waals radii. Inspect the grooves of the longer strand, or isolate its central pairs.',
+  description: 'A twelve-base-pair B-DNA double helix with 486 deposited atoms. Smaller atom glyphs reveal the grooves and stacked base pairs; switch to full molecular volume for comparison.',
   notes: [
     'RCSB PDB 1BNA · X-ray structure · 1.90 Å resolution. Coordinates remain rigid; this is structural inspection, not molecular dynamics.',
-    'Carbon grey · nitrogen blue · oxygen red · phosphorus gold. Only space-filling atoms are drawn: no covalent sticks, bond lines or dashed contacts.',
-    'All 486 DNA heavy atoms from the deposited twelve-base-pair structure are included. Hydrogens are not resolved in this coordinate set; deposited solvent is omitted. Touching and overlapping van der Waals spheres show molecular volume without moving atoms or inventing extra repeats.',
+    'Carbon grey · nitrogen blue · oxygen red · phosphorus gold. Atoms only: no covalent sticks, bond lines or dashed contacts.',
+    'All 486 DNA heavy atoms are included at their deposited positions. Hydrogens are not resolved in this coordinate set; solvent is omitted. This short crystal structure spans just over one right-handed turn and has a natural bend.',
+    'Clearer atoms uses 75% of van der Waals radii for readability, not physical molecular volume. Full molecular volume restores 100%. Both retain the exact same atom centers and relative element sizes.',
     'Orbit by dragging the molecule during a hold. Choose the central two pairs for an uncluttered atomic close-up. Play performs one groove inspection and a measured zoom.',
-    'Same-color procedural relief gives the atom glyphs a restrained satin finish. It is a display treatment, not measured atomic surface roughness; coordinates, radii and element colors are unchanged.',
+    'Same-color procedural relief gives the atom glyphs a restrained satin finish. It is a display treatment, not measured atomic surface roughness.',
   ],
   sampleTimes: [0,2,4.5,6,8.5,10.5,13.9],
   source: `export default scene({mode:'3d',background:Color.BLACK,orbit:false,end:'hold'},s=>{
     const data=${JSON.stringify(data)};
     const region=s.select('region',{label:'Region',default:'Twelve base pairs',options:['Twelve base pairs','Central two pairs']});
+    const display=s.select('display',{label:'Atom size',default:'Clearer atoms (75%)',options:['Clearer atoms (75%)','Full molecular volume (100%)']});
+    const radiusScale=display==='Full molecular volume (100%)'?1:.75;
     const atomicColors={C:Color.GREY_B,N:Color.BLUE_D,O:Color.RED_E,P:Color.GOLD};
     const vdW={C:1.7,N:1.55,O:1.52,P:1.8};
     const center=[14.71856995884775,20.979413580246902,8.82369958847737],scale=.22;
@@ -39,7 +42,7 @@ export const dnaProof = {
     const position=a=>[(a.p[0]-center[0])*scale,(a.p[2]-center[2])*scale,-(a.p[1]-center[1])*scale];
     const viewHeight=region==='Twelve base pairs'?12.6:5.64;
     let camera;
-    s.view('molecule',{rect:[0,0,1,1],orbit:true,orbitHitTest:'geometry',camera:{yaw:.22,pitch:-.12,height:viewHeight,distance:24,target:[0,0,0]}},v=>{
+    s.view('molecule',{rect:[0,0,1,1],orbit:true,orbitHitTest:'geometry',camera:{yaw:4.289,pitch:-.12,height:viewHeight,distance:24,target:[0,0,0]}},v=>{
       camera=v.camera;
       const buckets={};let serial=0;
       function bucket(color,needV,needT){
@@ -57,11 +60,11 @@ export const dnaProof = {
         for(const n of atomNormals){b.vertices.push([p[0]+n[0]*r,p[1]+n[1]*r,p[2]+n[2]*r]);b.normals.push(n);}
         for(const t of atomTriangles)b.triangles.push([start+t[0],start+t[1],start+t[2]]);
       }
-      for(const a of data.atoms)if(selected(a))atom(position(a),vdW[a.element]*scale,atomicColors[a.element]);
+      for(const a of data.atoms)if(selected(a))atom(position(a),vdW[a.element]*scale*radiusScale,atomicColors[a.element]);
       for(const color of Object.keys(buckets))flush(color,buckets[color]);
     });
     s.wait(2);
-    s.play(camera.animate({yaw:.95,pitch:.06}),{duration:3,ease:'smooth'});
+    s.play(camera.animate({yaw:5.37,pitch:-.12}),{duration:3,ease:'smooth'});
     s.wait(2);
     s.play(camera.animate({height:region==='Twelve base pairs'?11.3:4.588,target:[0,.1,0]}),{duration:3,ease:'smooth'});
     s.wait(4);
