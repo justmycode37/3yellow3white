@@ -60,8 +60,8 @@ test("a control with its own position is rejected, so controls stay top right", 
 test("overlapping formulas are rejected", async () => {
   const visualization = await scenegenPrompt("visualization");
   const scene = (gap: number) => `export default scene({ mode: "2d", end: "hold" }, s => {
-    s.latex("a", { tex: "A=\\\\begin{bmatrix}1&1\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [4, 1] });
-    s.latex("b", { tex: "B=\\\\begin{bmatrix}2&0\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [4, ${1 - gap}] });
+    s.latex("a", { tex: "A=\\\\begin{bmatrix}1&1\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [3, 1] });
+    s.latex("b", { tex: "B=\\\\begin{bmatrix}2&0\\\\\\\\0&1\\\\end{bmatrix}", fontSize: 0.46, position: [3, ${1 - gap}] });
     s.wait(1);
   });`;
   const results: string[] = [];
@@ -139,6 +139,24 @@ test("the previous frame's bulk geometry is left out of the scene prompt", async
   expect(sent.length).toBeLessThan(400);
   expect(sent).toContain("[500 entries omitted]");
   expect(sent).toContain('"radius":0.2');
+});
+
+test("an arrow through a label, or a label cut off at the edge, is rejected", async () => {
+  const visualization = await scenegenPrompt("visualization");
+  const scene = (labelAt: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    s.arrow("flow", { points: [[-2, 0], [2, 0]], stroke: Color.BLUE, strokeWidth: 0.05 });
+    s.latex("value", { tex: "=16", fontSize: 0.5, position: ${labelAt} });
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new CheckedRunner({ run: async task => {
+    for (const output of [scene("[0, 0]"), scene("[4.6, 1]"), scene("[0, 0.6]")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({})}`, validate: async () => {} });
+  expect(results[0]).toContain("flow through value");
+  expect(results[1]).toContain("Cut off at the frame edge");
+  expect(results[2]).toBe("ok");
 });
 
 test("a lesson plan may not use yellow or gold as an entity colour", async () => {

@@ -3,7 +3,8 @@
 // ("Invalid LaTeX: ..."). This runs the renderer's own layout on every formula.
 import { compileSource, detectSceneOverlaps, evaluateScene } from "animlib/core";
 import type { CompiledScene } from "animlib/core";
-import { layoutLatexGeometry } from "../../shared/animlib/dist/latex.js";
+import { layoutLatex, layoutLatexGeometry } from "../../shared/animlib/dist/latex.js";
+import { textTex } from "../../shared/animlib/dist/render-geometry.js";
 
 type Json = unknown;
 
@@ -88,55 +89,107 @@ export function renderProblems(compiled: CompiledScene): string[] {
 export const CONTROLS_HINT = "Controls must sit in the top right corner in every scene. Remove `position` from s.slider / s.toggle / " +
   "s.select: the player then stacks them top right by itself. Keep formulas below them on the right.";
 
-// The narrowest window the layout must survive: width = 1.5 x height.
-const SAFE_ASPECT = 1.5;
+// The narrowest window the layout must survive: width = 1.2 x height (the app in a laptop pane).
+const SAFE_ASPECT = 1.2;
 const MAX_FORMULAS = 7;
 
 interface Box { id: string; left: number; right: number; bottom: number; top: number }
-interface LayoutFrame {
-  camera: { yaw: number; pitch: number; target: number[]; height: number };
-  elements: (FrameElement & { scale: number; space?: string; billboard?: boolean; rotation?: number[];
-    geometry: { kind: string; tex?: string; fontSize?: number } })[];
+interface LayoutElement extends FrameElement {
+  scale: number; space?: string; billboard?: boolean; rotation?: number[]; strokeWidth?: number;
+  geometry: { kind: string; tex?: string; text?: string; fontSize?: number; radius?: number; width?: number; height?: number; points?: number[][]; closed?: boolean };
 }
+interface LayoutFrame { camera: { yaw: number; pitch: number; target: number[]; height: number }; elements: LayoutElement[] }
 
-/** Boxes of the flat formulas drawn by the main camera, in scene units. */
-function formulaBoxes(frame: LayoutFrame): Box[] {
+/** The flat, visible elements drawn by the main camera (nothing in a 3D view, nothing rotated). */
+function flatElements(frame: LayoutFrame): LayoutElement[] {
   if (Math.abs(frame.camera.yaw) > 1e-3 || Math.abs(frame.camera.pitch) > 1e-3) return [];
-  const boxes: Box[] = [];
-  for (const element of frame.elements) {
-    if (element.geometry.kind !== "latex" || element.view || element.billboard || element.space === "screen" || element.opacity <= 0.05) continue;
-    if ((element.rotation ?? []).some(angle => Math.abs(angle) > 1e-3)) continue;
-    let points: number[][];
-    try { points = layoutLatexGeometry(element.geometry as never).paths.flatMap(path => path.contours.flat()); } catch { continue; }
-    if (!points.length) continue;
-    const size = (element.geometry.fontSize ?? 0.6) * element.scale;
-    const xs = points.map(point => point[0] * size + element.position[0]), ys = points.map(point => point[1] * size + element.position[1]);
-    boxes.push({ id: element.id, left: Math.min(...xs), right: Math.max(...xs), bottom: Math.min(...ys), top: Math.max(...ys) });
-  }
-  return boxes;
+  return frame.elements.filter(element => !element.view && !element.billboard && element.space !== "screen" && element.opacity > 0.05
+    && !(element.rotation ?? []).some(angle => Math.abs(angle) > 1e-3));
 }
 
-/** Formulas that leave the frame or pile up, as the viewer would see them. */
+function boxOf(id: string, xs: number[], ys: number[]): Box {
+  return { id, left: Math.min(...xs), right: Math.max(...xs), bottom: Math.min(...ys), top: Math.max(...ys) };
+}
+
+/** Box of a formula or a text label, in scene units. */
+function textBox(element: LayoutElement): Box | undefined {
+  const { kind } = element.geometry;
+  if (kind !== "latex" && kind !== "text") return undefined;
+  let points: number[][];
+  try {
+    const layout = kind === "latex" ? layoutLatexGeometry(element.geometry as never) : layoutLatex(textTex(element.geometry.text ?? ""));
+    points = layout.paths.flatMap(path => path.contours.flat());
+  } catch { return undefined; }
+  if (!points.length) return undefined;
+  const size = (element.geometry.fontSize ?? (kind === "text" ? 0.4 : 0.6)) * element.scale;
+  return boxOf(element.id, points.map(point => point[0] * size + element.position[0]), points.map(point => point[1] * size + element.position[1]));
+}
+
+function worldPoints(element: LayoutElement): number[][] {
+  return (element.geometry.points ?? []).map(point => [element.position[0] + point[0] * element.scale, element.position[1] + point[1] * element.scale]);
+}
+
+/** Box of an arrow or a small marker: things that must never be cut off. Grid and axis lines may run off the frame. */
+function markBox(element: LayoutElement): Box | undefined {
+  const { kind } = element.geometry, [x, y] = element.position;
+  if (kind === "arrow") { const points = worldPoints(element); return points.length ? boxOf(element.id, points.map(p => p[0]), points.map(p => p[1])) : undefined; }
+  if (kind === "circle") { const r = (element.geometry.radius ?? 0) * element.scale; return r > 0 && r <= 0.5 ? { id: element.id, left: x - r, right: x + r, bottom: y - r, top: y + r } : undefined; }
+  return undefined;
+}
+
+/** Does the segment a-b pass through the box? */
+function crosses(a: number[], b: number[], box: Box): boolean {
+  let t0 = 0, t1 = 1;
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  for (const [p, q] of [[-dx, a[0] - box.left], [dx, box.right - a[0]], [-dy, a[1] - box.bottom], [dy, box.top - a[1]]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const t = q / p;
+    if (p < 0) { if (t > t1) return false; t0 = Math.max(t0, t); } else { if (t < t0) return false; t1 = Math.min(t1, t); }
+  }
+  return t1 - t0 > 1e-6;
+}
+
+/** Text or marks cut off at the frame edge, lines through labels, and too much text, as the viewer would see them. */
 export function layoutProblems(frames: LayoutFrame[]): string[] {
-  const outside = new Set<string>();
+  const outside = new Set<string>(), struck = new Map<string, number>();
   let most = 0;
-  frames.forEach(frame => {
-    const boxes = formulaBoxes(frame);
-    most = Math.max(most, boxes.length);
+  frames.forEach((frame, index) => {
+    const elements = flatElements(frame), last = index === frames.length - 1;
+    const texts = elements.map(textBox).filter((box): box is Box => !!box);
+    most = Math.max(most, texts.length);
     const halfHeight = frame.camera.height / 2, halfWidth = halfHeight * SAFE_ASPECT, [cx, cy] = frame.camera.target;
-    for (const box of boxes) {
+    for (const box of [...texts, ...elements.map(markBox).filter((box): box is Box => !!box)]) {
       if (box.left < cx - halfWidth || box.right > cx + halfWidth || box.bottom < cy - halfHeight || box.top > cy + halfHeight) outside.add(box.id);
+    }
+    // A line or arrow drawn through a label makes both unreadable. Thin, faint lines (grids) are left alone.
+    for (const element of elements) {
+      const { kind } = element.geometry;
+      const strong = kind === "arrow" || ((kind === "line" || kind === "path") && !element.geometry.closed && (element.strokeWidth ?? 0) >= 0.035 && element.opacity >= 0.6);
+      if (!strong) continue;
+      const points = worldPoints(element);
+      for (const box of texts) {
+        // Shrink the label a little so a line that merely touches its edge is not counted.
+        const mx = (box.right - box.left) * 0.12, my = (box.top - box.bottom) * 0.12;
+        const inner = { ...box, left: box.left + mx, right: box.right - mx, bottom: box.bottom + my, top: box.top - my };
+        if (!points.slice(1).some((point, i) => crosses(points[i], point, inner))) continue;
+        const key = `${element.id} through ${box.id}`;
+        struck.set(key, (struck.get(key) ?? 0) + (last ? 2 : 1)); // sweeping past a label once mid-motion is fine
+      }
     }
   });
   const problems: string[] = [];
-  if (outside.size) problems.push(`Formulas leave the frame (it can be as narrow as ${SAFE_ASPECT} x its height): ${[...outside].slice(0, 8).join(", ")}.`);
+  const through = [...struck].filter(([, count]) => count >= 2).map(([pair]) => pair);
+  if (through.length) problems.push(`Lines or arrows run through labels: ${through.slice(0, 8).join("; ")}.`);
+  if (outside.size) problems.push(`Cut off at the frame edge (the frame can be as narrow as ${SAFE_ASPECT} x its height): ${[...outside].slice(0, 8).join(", ")}.`);
   if (most > MAX_FORMULAS) problems.push(`Too much text: ${most} formulas and labels are visible at once (at most ${MAX_FORMULAS}).`);
   return problems;
 }
 
-export const LAYOUT_HINT = "Show less at once: fade out formulas that are no longer needed before adding the next, keep at most three " +
-  "formulas in the right-hand column, leave a clear gap (at least half a line) between neighbours, and make each fit inside the frame " +
-  "(smaller fontSize or a shorter formula). A 2x2 matrix at fontSize 0.46 is about 1.1 units tall, so stack matrices at least 1.5 units apart.";
+export const LAYOUT_HINT = "Show less at once and give everything room. Fade out formulas that are no longer needed before adding the next, " +
+  "leave a clear gap between neighbours, and keep every label, formula, arrow and marker inside the frame: with camera height 8 that is " +
+  "x from -4.5 to 4.5 and y from -3.6 to 3.6 (use a smaller fontSize, a shorter formula, or a smaller diagram). An arrow or line starts and " +
+  "ends 0.15 clear of any label and never passes through one: move the label beside the line (offset it perpendicular to the line), " +
+  "shorten the arrow, or route it around.";
 
 interface ControlInfo { id: string; kind: string; default: unknown; min?: number; max?: number; options?: string[] }
 

@@ -315,7 +315,7 @@ Layering (strict, checked; a dot hidden behind its own line looks broken):
 - In real 3D scenes use true depth: do not fake layers with z there.
 
 Layout (keep it identical in every scene):
-- Geometry (2D or 3D) on the left two thirds of the frame; the right third is a fixed text
+- Geometry (2D or 3D) on the left two thirds of the safe area; the right third is a fixed text
   area for formulas and matrices. It is just empty space (the temporary focus frame aside): NO box, border, frame,
   backing rectangle or panel shape around text anywhere. Geometry never enters the
   text area; text never sits on the grid except short object labels.
@@ -331,9 +331,20 @@ Layout (keep it identical in every scene):
   line about 0.5 tall. Stack with a clear gap of at least half a line: matrices at
   least 1.5 units apart centre to centre, single lines at least 0.8.
 - Everything stays inside the frame (strict, checked). The window can be as narrow
-  as 1.5 times its height, so with the usual camera height 8 keep all text within
-  x from -5.6 to 5.6 and y from -3.6 to 3.6. Centre the column near x = 4 and make
-  wide formulas smaller or shorter rather than letting them run off the edge.
+  as 1.2 times its height, so with the usual camera height 8 the SAFE AREA is x from
+  -4.5 to 4.5 and y from -3.6 to 3.6: every label, formula, arrow, marker and
+  diagram part stays inside it at every moment. The diagram goes in x from -4.5 to
+  1.3; the formula column is x from 1.7 to 4.5, centred on x = 3.1 and at most 2.8
+  wide, so pick the fontSize from the formula's width (a formula 6 f wide needs
+  f <= 0.46) or break a long formula into two lines. Size a diagram to fit: scale
+  the whole thing down before letting any part reach the edge.
+- Lines and arrows never run through text (strict, checked). An arrow starts and
+  ends about 0.15 clear of the label or number it points from or to, and no line,
+  arrow or stem passes through any label, number or formula. Put a label BESIDE its
+  line, offset perpendicular to it, never on it; when several arrows meet near a
+  label, move the label outward. Leave empty space around a diagram for its labels
+  when you size it, and keep its values (such as "= 16") in a clear spot beside the
+  node they belong to, away from every connecting line.
 - Show only what the student needs for THIS step. One idea on screen at a time: the
   objects being talked about, their labels, and the one formula that states the
   point. Fade out the rest, including dimmed "ghost" copies of earlier formulas.
