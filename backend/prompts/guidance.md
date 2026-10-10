@@ -23,11 +23,15 @@ For the viewing experience, classic scenes use empty `interactions` arrays; inte
 
 Establish the audience and prerequisites (default: curious newcomer), requested duration, central question, and what the viewer should be able to reconstruct afterwards. Choose a small, concrete example that can develop across the lesson. Work out the decisive reasoning before writing polished narration; narrow scope if it cannot fit.
 
+Choose a representation whose parts and permitted operations expose that reasoning. State what each part represents, which relationship the viewer can inspect, and what an operation preserves. For example, rearranging a fixed set of dots preserves their count; an arbitrary morph between two pictures establishes no such fact. Prefer the representation that makes the central relationship easiest to reason about, within the requested viewing mode and supplied capabilities.
+
+Before drafting, test the proposed mental model on a changed case: could the viewer use the same construction or relationship to predict what happens and explain why? Identify the premises that make that prediction valid. Establish any premise the audience does not already have, or name it as an assumption and bound the conclusion. Avoid explaining a rule by quietly assuming that same rule. This is an internal quality check, not a requirement to add a quiz or extra scene.
+
 For each scene, record in its nonspoken context and available plan fields:
 
 - **Starting knowledge and picture:** what the viewer already understands and which objects continue from the preceding scene.
 - **Question or need:** what makes the next step worth taking.
-- **Visible evidence:** the specific comparison, construction, transformation, or relationship the viewer will inspect. State what changes, what stays constant, and why those facts support the inference.
+- **Visible evidence:** the specific comparison, construction, transformation, or relationship the viewer will inspect. State what changes, what stays constant, and why those facts support the inference. Identify any prerequisite or assumption the inference relies on and where it is established.
 - **Narration and order:** what speech directs attention to each stage, which evidence must precede the conclusion, and when a label, formula, or answer may appear. Use spoken phrases and ordered steps as cues; do not invent timestamps.
 - **Result and continuation:** what the viewer can now infer, the clean end picture, and how the same objects support the next scene.
 
@@ -76,28 +80,28 @@ Write the script in the following Markdown format. The host specifies whether to
 - Limits: 100 beats, 20,000 spoken characters, 500 speech/pause blocks, 600 seconds of explicit silence.
 - Estimate pacing only. ElevenLabs alignment and measured audio, including inserted silence, determine actual timestamps and scene lengths. Never invent timestamps or force audio into estimates. Speech edits require regenerated audio/timing; context accompanies the handoff.
 
-Syntax example only; invent content for the requested topic:
+Syntax example of a short visual argument; invent content for the requested topic:
 
 ```md
-# Two arrows describe a transformation
+# Counting a staircase
 
-## Beat 1 — Follow the building blocks
+## Beat 1 — Make a shape we can count
 
-Content needed: Establish a 2D grid, a blue unit arrow pointing right, a green unit arrow pointing up, and an example vector (2, 1). Show its decomposition as two blue unit steps and one green unit step, keeping the example's endpoint visible. Then show where the two basis arrows will land under a linear transformation: blue at (1, 1), green at (-1, 1). Retain reference marks for their original positions and keep identities/colors stable. Show destination coordinates as each new basis arrow is discussed. Do not transform the example vector or show its destination yet. Carry the basis arrows, example vector, and decomposition into the next beat.
+Content needed: Show a flat staircase of blue dots in four left-aligned rows, with row lengths 1, 2, 3, 4 from top to bottom. Establish those lengths alongside the opening speech. When the narration introduces a copy, create a separate yellow staircase with exactly the same dot arrangement and briefly show the matching rows. Rotate the yellow copy by a half-turn without changing its internal arrangement, then translate it beside the blue staircase to fill a rectangle with four rows and five dots in each row. Keep each dot distinct; add no dots except in the explicitly introduced copy. As the narration describes the fit, highlight that blue and yellow row lengths complement each other. Show dimension labels 4 and 5, but no total for the original staircase. Carry the full two-color rectangle into the next beat.
 
-Narration: This arrow reaches its tip by taking two blue steps to the right and one green step up. Suppose a linear transformation sends the blue arrow here, to one across and one up, and the green arrow here, to one left and one up. Where should our original arrow land?
+Narration: One dot, then two, then three, then four. Counting this little staircase is easy, but what if it had a hundred rows? Let's make a shape we can count all at once. Take an identical copy, turn it around, and fit it beside the original. The short rows fill the gaps beside the long ones. Together they make a rectangle: four rows, each five dots wide.
 
-## Beat 2 — Keep the same recipe
+## Beat 2 — Count both, then take half
 
-Content needed: Build from the preceding picture. As narration explains preservation of linear combinations, stage two blue helper arrows and one green helper arrow using the transformed basis directions and lengths; leave the tip-to-tail construction incomplete. Keep the resultant endpoint and its coordinates hidden during the invitation and pause. At Reveal, assemble the three steps tip-to-tail and transform the original example arrow so its tail stays at the origin and its tip reaches (1, 3). Highlight how the same two-blue-plus-one-green recipe produces that endpoint. Only after the visible result, introduce the matrix with columns (1, 1) and (-1, 1), matching column colors to the basis arrows. Clear helper copies after establishing the correspondence.
+Content needed: Use the carried rectangle. Highlight its four rows of five when the narration counts twenty dots across both copies. Keep the original staircase's total hidden during the invitation and pause. At Reveal, highlight the blue staircase and show its count of 10, retaining the yellow copy so the equal-count relationship remains inspectable. When narration adds another row, extend the example to two matching five-row staircases forming a five-by-six rectangle; make the newly added dots explicit. As narration explains the general pattern, highlight successive rows: each extra blue dot is matched by one fewer yellow dot, keeping the combined width constant. Introduce n as the number of rows only with its spoken meaning. Highlight the top row's one blue dot and n yellow dots to establish the width n+1, then label the general rectangle n by n+1. Introduce n(n+1)/2 as the narration connects multiplication to the rectangle and division by two to the two identical copies. For the hundred-row application, show the substitution and 5050 only with the closing explanation; no need to draw every dot of that larger case. Finish with the rectangle construction and its formula visibly connected.
 
-Narration: A linear transformation preserves combinations: two blue steps plus one green step still give our arrow, using the transformed steps. We can use that same recipe to find its new tip.
+Narration: Four rows of five give twenty dots altogether. Those dots belong to two identical staircases.
 
-Invitation (spoken): Where do those three steps end? Take a moment to work it out.
+Invitation (spoken): How many belong to our original staircase? Take a moment to work it out.
 
 Pause: 5s
 
-Reveal (spoken): One across and three up. Two blue steps take us two across and two up; the green step takes us one back and one more up. A matrix records the two transformed building blocks as its columns. Multiplying by it applies the same recipe to a vector's coordinates.
+Reveal (spoken): Half of twenty: ten. Add another row and the same construction gives five rows of six. Why does the fit keep working? Going down each row, the blue part gains one dot and the yellow part loses one, so the combined width stays the same. Call the number of rows n. The top row pairs one blue dot with n yellow dots, so all n rows are n plus one dots wide. Multiply those dimensions to count both copies, then divide by two for the original. For a hundred rows, that's half of a hundred times a hundred and one: five thousand and fifty dots. We can count the whole staircase by completing the rectangle.
 ```
 
-Before emitting, check: an accessible opening and concrete reason to care; a gradual build from intuition; meanings for nontrivial notation at first use; visible evidence for the central inference; speech and pictures attending to the same relationship; meaningful continuity; enough time to inspect each consequential change; no inference available only in hidden notes; justified claims and accurate values; an answer to the opening question; and compliance with the output, timing, mode, and pause contracts. If included, a prediction should be reachable, a perspective shift motivated, and a transfer example useful.
+Before emitting, check: an accessible opening and concrete reason to care; a gradual build from intuition; meanings for nontrivial notation at first use; a central inference supported by established premises and visible evidence; a mental model that supports a changed case; speech and pictures attending to the same relationship; meaningful continuity; enough time to inspect each consequential change; no inference available only in hidden notes; justified claims and accurate values; an answer to the opening question; and compliance with the output, timing, mode, and pause contracts. If included, a prediction should be reachable, a perspective shift motivated, and a transfer example useful.
