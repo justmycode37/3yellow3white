@@ -346,6 +346,11 @@ export class CanvasRenderer {
     const parents=new Map<string,ElementState>();
     for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
     const items:DrawItem[]=[];
+    // Camera depth is affine in world position. Reuse its coefficients when
+    // sorting translucent triangles, including after the viewer orbits a view.
+    const sy=Math.sin(camera.yaw),cy=Math.cos(camera.yaw),sp=Math.sin(camera.pitch),cp=Math.cos(camera.pitch);
+    const depthAt=(x:number,y:number,z:number):number=>camera.distance
+      -(x-camera.target[0])*sy*cp+(y-camera.target[1])*sp-(z-camera.target[2])*cy*cp;
     for(const [elementIndex,element] of frame.elements.entries()) {
       if(element.geometry.kind==='group'||element.view!==view)continue;
       const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
@@ -396,10 +401,20 @@ export class CanvasRenderer {
           } else {vertices[j+8]=normalBasis[2][0];vertices[j+9]=normalBasis[2][1];vertices[j+10]=normalBasis[2][2];}
           vertices[j+11]=normals?1:0;vertices[j+12]=elementIndex;vertices[j+13]=viewportOffset[0];vertices[j+14]=viewportOffset[1];
         }
-        // Camera depth is linear in world position, so the centroid gives the
-        // same sorting depth without projecting every vertex.
-        const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
-        items.push({depth,vertices,transparent:a<0.999999,screen,groups});
+        const transparent=a<0.999999;
+        if(transparent&&!screen) {
+          // Whole-object sorting lets rear sphere/tube faces blend over front
+          // faces, and cannot place another surface between them. Sort complete
+          // packed triangles globally; composeItems merges the resulting draws.
+          for(let j=0;j<vertices.length;j+=45) {
+            const depth=depthAt((vertices[j]+vertices[j+15]+vertices[j+30])/3,
+              (vertices[j+1]+vertices[j+16]+vertices[j+31])/3,(vertices[j+2]+vertices[j+17]+vertices[j+32])/3);
+            items.push({depth,vertices:vertices.subarray(j,j+45),transparent,screen,groups});
+          }
+        } else {
+          const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
+          items.push({depth,vertices,transparent,screen,groups});
+        }
       };
       const contours=(paths:Vec3[][],alpha=1,color=element.fill):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha);};
       const stroke=(points:Vec3[],closed:boolean,alpha=1,capEnd=true):void=> {

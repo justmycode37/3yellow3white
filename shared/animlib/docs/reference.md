@@ -1234,8 +1234,12 @@ in typed arrays. Vertex generation/upload and timeline evaluation still happen
 each frame. Selective reconstruction and GPU-side animation are possible
 improvements after measuring real scenes.
 
-Opaque meshes have depth testing. Intersecting transparent surfaces use approximate
-sorting and can render incorrectly. Default strokes are tessellated ribbons; opt-in round strokes use lit tubes
+Opaque meshes have depth testing. Translucent world geometry is sorted back to front
+per triangle, including sphere surfaces and round strokes, using the current camera
+for each view. This preserves front/back blending and lets other translucent surfaces
+sort between an object's faces. Intersecting triangles still use approximate sorting
+and can render incorrectly; isolated groups remain atomic compositing units.
+Default strokes are tessellated ribbons; opt-in round strokes use lit tubes
 and cones. The renderer does not provide a comprehensive material system. Shape matching cannot infer semantic
 part correspondence or arbitrary mesh topology.
 
