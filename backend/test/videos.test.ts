@@ -6,12 +6,14 @@ import { Database } from 'bun:sqlite'
 import { AgentError } from '../src/agents/config'
 import { SHARED_OWNER, VideoService } from '../src/videos'
 import type { Generator } from '../src/videos'
+import { parseThumbnailSVG } from '../src/agents/thumbnail'
 
 const services: VideoService[] = []
 afterEach(async () => { await Promise.all(services.splice(0).map(service => service.close())) })
 const source = "export default scene({ end: 'advance' }, s => { const x = s.slider('x', { min: 0, max: 3, default: 1 }); s.circle('dot', { position: [x, 0] }); s.wait(1); });"
 const fixture: Generator = async (_request, index) => index >= 2 ? null : ({ audio: new Uint8Array([1, 2, 3]), scene: { id: `scene-${index}`, index, duration: 1, source, captions: [] } })
 const input = { title: 'Vectors', topic: 'Explain vectors', documents: [] }
+const thumbnail = parseThumbnailSVG('<svg viewBox="0 0 420 270"><path d="M100 200Q200 130 280 80"/></svg>')
 const api = (path = '', init?: RequestInit) => new Request(`http://localhost/api/videos${path}`, init)
 async function waitFor(check: () => boolean) {
   for (let i = 0; i < 300; i++) { if (check()) return; await Bun.sleep(10) }
@@ -86,6 +88,75 @@ test('legacy saved errors are sanitized for reads, lists, events and idempotent 
       expect(await (await service.handle(api(`/${video.id}/events`))).text()).not.toContain('agents:check')
     } finally { await service.close() }
   } finally { await original.close().catch(() => {}); await rm(dir, { recursive: true, force: true }) }
+})
+
+test('thumbnail generation overlaps scenes, persists, and finishes before the terminal event', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'aha-thumbnails-'))
+  let release!: () => void, calls = 0
+  const gate = new Promise<void>(resolve => { release = resolve })
+  const service = new VideoService(join(dir, 'db'), fixture, 'pi', async request => {
+    calls++; expect(request.topic).toBe(input.topic); await gate; return thumbnail
+  }); services.push(service)
+  try {
+    const video = service.create(SHARED_OWNER, 'one', input)
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.scenes.length === 2)
+    expect(service.get(video.id, SHARED_OWNER)?.thumbnailStatus).toBe('generating')
+    expect(service.get(video.id, SHARED_OWNER)?.status).toBe('generating')
+    release()
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.status === 'complete')
+    expect(service.get(video.id, SHARED_OWNER)?.thumbnail).toEqual(thumbnail)
+    const events = await service.handle(api(`/${video.id}/events`))
+    expect(await events.text()).toContain('"thumbnailStatus":"complete"')
+    await service.close(); services.splice(services.indexOf(service), 1)
+    const reopened = new VideoService(join(dir, 'db'), fixture, 'pi', async () => { calls++; return thumbnail }); services.push(reopened)
+    expect(reopened.get(video.id, SHARED_OWNER)?.thumbnail).toEqual(thumbnail)
+    expect(calls).toBe(1)
+  } finally { release(); await Promise.all(services.splice(0).map(s => s.close())); await rm(dir, { recursive: true, force: true }) }
+})
+
+test('thumbnail failure preserves playable videos and does not stop the queue', async () => {
+  const service = new VideoService(':memory:', fixture, 'pi', async () => { throw new Error('private provider error') }); services.push(service)
+  const first = service.create(SHARED_OWNER, 'one', input), second = service.create(SHARED_OWNER, 'two', input)
+  await waitFor(() => service.get(second.id, SHARED_OWNER)?.status === 'complete')
+  const video = service.get(first.id, SHARED_OWNER)!
+  expect(video).toMatchObject({ status: 'complete', thumbnailStatus: 'failed' })
+  expect(video.scenes).toHaveLength(2)
+  expect(video.thumbnail).toBeUndefined()
+  expect(JSON.stringify(video)).not.toContain('private provider error')
+})
+
+test('deleting a video cancels its thumbnail and prevents late publication', async () => {
+  let started = false, aborted = false
+  const service = new VideoService(':memory:', fixture, 'pi', async (_request, context) => {
+    started = true
+    await new Promise<void>((_, reject) => context.signal.addEventListener('abort', () => { aborted = true; reject(context.signal.reason) }, { once: true }))
+    return thumbnail
+  }); services.push(service)
+  const video = service.create(SHARED_OWNER, 'one', input)
+  await waitFor(() => started)
+  service.delete(video.id)
+  await waitFor(() => aborted)
+  expect(service.get(video.id, SHARED_OWNER)).toBeUndefined()
+})
+
+test('interrupted thumbnails resume while completed thumbnails are reused', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'aha-thumbnail-resume-'))
+  let started = false
+  const service = new VideoService(join(dir, 'db'), fixture, 'pi', async (_request, context) => {
+    started = true
+    await new Promise<void>((_, reject) => context.signal.addEventListener('abort', () => reject(context.signal.reason), { once: true }))
+    return thumbnail
+  }); services.push(service)
+  try {
+    const video = service.create(SHARED_OWNER, 'one', input)
+    await waitFor(() => started)
+    await service.close(); services.splice(services.indexOf(service), 1)
+    let calls = 0
+    const reopened = new VideoService(join(dir, 'db'), fixture, 'pi', async () => { calls++; return thumbnail }); services.push(reopened)
+    await waitFor(() => reopened.get(video.id, SHARED_OWNER)?.status === 'complete')
+    expect(reopened.get(video.id, SHARED_OWNER)?.thumbnail).toEqual(thumbnail)
+    expect(calls).toBe(1)
+  } finally { await Promise.all(services.splice(0).map(s => s.close())); await rm(dir, { recursive: true, force: true }) }
 })
 
 test('creation is idempotent, shared, durable and publishes assets before scenes', async () => {
