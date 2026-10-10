@@ -9,14 +9,21 @@ export async function requestStudyPlan(document: PlanDocument, signal: AbortSign
   return data
 }
 
-/** Keep original source excerpts distinct from generated teaching suggestions. */
+/** Original distill.py:topic_notes wording, with app field-name adapters only. */
 export function topicLessonText(topic: VideoSegment, plan: StudyPlan): string {
   if (!topic.summary) return topic.text
   const all = plan.chapters.flatMap(chapter => chapter.segments)
-  return [
-    `Learning goal: ${topic.summary}`, `Visual idea: ${topic.whyVisual ?? ''}`,
-    `Key ideas: ${(topic.keyIdeas ?? []).join('; ')}`,
-    `Suggested earlier topics (do not assume mastery): ${(topic.requires ?? []).map(id => all.find(t => t.id === id)?.title ?? id).join('; ') || 'none'}`,
-    `Original source excerpts from ${plan.sourceName}${topic.pageStart ? `, pages ${topic.pageStart}–${topic.pageEnd}` : ''}:`, topic.text,
-  ].join('\n\n')
+  const earlier = (topic.requires ?? []).flatMap(id => {
+    const found = all.find(t => t.id === id)
+    return found ? [found.title] : []
+  })
+  const parts = [
+    `From: ${plan.title} (${topic.sourceReference ?? ''})`,
+    `Summary: ${topic.summary}`,
+    `What makes it visual: ${topic.whyVisual ?? ''}`,
+    'Key ideas, in order:\n' + (topic.keyIdeas ?? []).map(k => `- ${k}`).join('\n'),
+    'Source notes:\n' + topic.text,
+  ]
+  if (earlier.length) parts.push('Already explained in earlier films (build on it, do not re-teach): ' + earlier.join(', '))
+  return parts.join('\n\n')
 }

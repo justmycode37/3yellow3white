@@ -71,8 +71,8 @@ function MaterialUpload({ subject, nextNote, onAdd, onCancel }: { subject: Cours
     finally { if (!controller.signal.aborted) setStatus('') }
   }
   if (drafts.length) return <div className="subject-upload plan-draft">
-    <h3>Review your course lessons</h3><p>Edit lesson titles and learning goals before adding them. Check the source excerpts for accuracy.</p>
-    {drafts.map((plan, pi) => <section key={pi}><h4>{plan.sourceName}</h4>{plan.audience && <p>{plan.audience}</p>}
+    <h3>Review your course lessons</h3><p>Edit lesson titles and learning goals before adding them. Check the notes and references against your original material.</p>
+    {drafts.map((plan, pi) => <section key={pi}><h4>{plan.sourceName}</h4>{plan.audience && <p>{plan.audience}</p>}{plan.originalText && <details><summary>Original material</summary><pre className="plan-original-text">{plan.originalText}</pre></details>}
       {plan.chapters.map((chapter, ci) => <section key={chapter.id}><h4>{chapter.title}</h4>{chapter.segments.map((topic, ti) => {
         const edit = (field: 'title' | 'summary', value: string) => setDrafts(current => current.map((p, i) => i !== pi ? p : { ...p, chapters: p.chapters.map((c, j) => j !== ci ? c : { ...c, segments: c.segments.map((t, k) => k !== ti ? t : { ...t, [field]: value }) }) }))
         const prerequisites = (topic.requires ?? []).map(id => plan.chapters.flatMap(c => c.segments).find(t => t.id === id)?.title ?? id)
@@ -80,7 +80,7 @@ function MaterialUpload({ subject, nextNote, onAdd, onCancel }: { subject: Cours
           <label>Lesson title<input value={topic.title} maxLength={200} onChange={e => edit('title', e.target.value)}/></label>
           {topic.summary !== undefined && <label>Learning goal<textarea value={topic.summary} maxLength={4000} onChange={e => edit('summary', e.target.value)}/></label>}
           {topic.whyVisual && <p>{topic.whyVisual}</p>}{!!prerequisites.length && <p>Builds on: {prerequisites.join(', ')}</p>}
-          <details><summary>Source excerpts{topic.pageStart ? ` · pages ${topic.pageStart}–${topic.pageEnd}` : ''}</summary><pre>{topic.text || 'Chapter outline only.'}</pre></details>
+          <details><summary>{topic.sourceKind === 'notes' ? 'AI-generated source notes' : 'Source excerpts'}{topic.pageStart ? ` · pages ${topic.pageStart}–${topic.pageEnd}` : ''}</summary>{topic.sourceReference && <p>Suggested source reference: {topic.sourceReference}</p>}<pre>{topic.text || 'Chapter outline only.'}</pre></details>
         </div>
       })}</section>)}
     </section>)}

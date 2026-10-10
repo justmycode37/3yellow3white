@@ -1,27 +1,31 @@
 import { expect, test } from 'bun:test';
-import { parsePlanDocument, parseTopicPlan, generateStudyPlan } from '../src/agents/study-plan.js';
+import { parsePlanDocument, parseTopicPlan, generateStudyPlan, sourceMaterial } from '../src/agents/study-plan.js';
+import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 import { studyPlanRoutes } from '../src/study-plans.js';
 
 const document = { name: 'Lecture.pdf', pages: 2, lines: [
   { text: 'Vectors have magnitude and direction. A basis represents each vector by its coordinates along independent directions.', page: 1 },
   { text: 'A linear map preserves vector addition and scaling. Its matrix columns record the images of the basis vectors.', page: 2 },
 ] };
-const topic = (id: string, line: number, requires: string[] = []) => ({ id, title: id, summary: 'Understand the concept', whyVisual: 'Watch a vector transform', keyIdeas: ['Coordinates'], requires, sourceRefs: [{ startLine: line, endLine: line }], minutes: 4 });
-const output = () => ({ title: 'Linear algebra', audience: 'Beginners', assumed: ['Arithmetic'], chapters: [{ title: 'Vectors and maps', topics: [topic('vectors', 1), topic('maps', 2, ['vectors'])] }] });
+const topic = (id: string, page: number, requires: string[] = []) => ({ id, title: id, summary: 'Understand the concept', why_visual: 'Watch a vector transform', key_ideas: ['Coordinates'], requires, source_refs: `Page ${page}`, notes: `Condensed source notes for ${id}.` });
+const output = () => ({ source_title: 'Linear algebra', audience: 'Beginners', assumed: ['Arithmetic'], topics: [topic('vectors', 1), topic('maps', 2, ['vectors'])] });
 
-test('semantic topics retain exact source excerpts, real page numbers and prerequisite order', () => {
+test('original topic schema adapts to app without claiming generated notes are source quotations', () => {
   const plan = parseTopicPlan(JSON.stringify(output()), parsePlanDocument(document));
-  expect(plan.chapters[0].segments[1]).toMatchObject({ text: document.lines[1].text, pageStart: 2, pageEnd: 2, requires: ['vectors'] });
+  expect(plan.chapters[0].segments[1]).toMatchObject({ text: 'Condensed source notes for maps.', sourceReference: 'Page 2', sourceKind: 'notes', requires: ['vectors'] });
+  expect(plan.chapters[0].segments[1].pageStart).toBeUndefined();
   expect(plan.sourceName).toBe(document.name);
+  expect(plan.originalText).toBe(sourceMaterial(document));
 });
 
-test('reject hallucinated references, forward/self dependencies, duplicate IDs and empty topics', () => {
+test('reject missing notes/references, forward/self dependencies, duplicate IDs and empty topics', () => {
   for (const mutate of [
-    (v: ReturnType<typeof output>) => { v.chapters[0].topics[0].sourceRefs[0].endLine = 9; },
-    (v: ReturnType<typeof output>) => { v.chapters[0].topics[0].requires = ['maps']; },
-    (v: ReturnType<typeof output>) => { v.chapters[0].topics[0].requires = ['vectors']; },
-    (v: ReturnType<typeof output>) => { v.chapters[0].topics[1].id = 'vectors'; },
-    (v: ReturnType<typeof output>) => { v.chapters[0].topics = []; },
+    (v: ReturnType<typeof output>) => { v.topics[0].notes = ''; },
+    (v: ReturnType<typeof output>) => { v.topics[0].source_refs = ''; },
+    (v: ReturnType<typeof output>) => { v.topics[0].requires = ['maps']; },
+    (v: ReturnType<typeof output>) => { v.topics[0].requires = ['vectors']; },
+    (v: ReturnType<typeof output>) => { v.topics[1].id = 'vectors'; },
+    (v: ReturnType<typeof output>) => { v.topics = []; },
   ]) { const value = output(); mutate(value); expect(() => parseTopicPlan(JSON.stringify(value), document)).toThrow(); }
 });
 
@@ -34,9 +38,10 @@ test('reject oversized and malformed input before model work', async () => {
   expect(called).toBe(false);
 });
 
-test('model receives numbered source and validation feedback, final response validated again', async () => {
+test('model receives original SYSTEM and FORMAT with the original source delimiters, final response validated again', async () => {
   const plan = await generateStudyPlan({ run: async task => {
-    expect(JSON.parse(task.prompt).lines[1].line).toBe(2);
+    expect(task.systemPrompt).toBe(await scenegenPrompt('topics-system'));
+    expect(task.prompt).toBe((await scenegenPrompt('topics-format')).replace('{max_topics}', '8') + '\n\nSOURCE MATERIAL:\n<<<\n' + sourceMaterial(document) + '\n>>>');
     await expect(task.validate!('{}')).rejects.toThrow();
     return JSON.stringify(output());
   } }, document, new AbortController().signal);
@@ -60,10 +65,10 @@ test('endpoint bounds concurrency and sanitizes provider failures', async () => 
   } finally { if (previous === undefined) delete process.env.VIDEO_GENERATOR; else process.env.VIDEO_GENERATOR = previous; }
 });
 
-test('long single-line lectures become citable spans while retaining every source character and page', () => {
+test('long single-line lectures remain intact and work with the original notes response', () => {
   const paragraph = 'Vectors retain their meaning and coordinates throughout a linear transformation. '.repeat(800);
   const normalized = parsePlanDocument({ name: 'notes', pages: 1, lines: [{ text: paragraph, page: 1 }] });
   expect(normalized.lines.map(l => l.text).join('')).toBe(paragraph);
-  expect(normalized.lines.every(l => l.text.length <= 4001 && l.page === 1)).toBe(true);
-  expect(parseTopicPlan(JSON.stringify(output()), normalized).chapters[0].segments[0].pageStart).toBe(1);
+  expect(normalized.lines).toEqual([{ text: paragraph, page: 1 }]);
+  expect(parseTopicPlan(JSON.stringify(output()), normalized).originalText).toBe('[Page 1]\n' + paragraph);
 });
