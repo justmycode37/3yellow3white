@@ -36,6 +36,10 @@ or explicitly set `VIDEO_GENERATOR=simulated` for scenes with a test tone. See [
 
 ## Run the combined app
 
+Visitor sign-in is provided by the VIScon reverse proxy using `X-User-Id` and
+`X-User-Name`. Aha displays that identity without a separate login. See
+[proxy identity, local development, and deployment requirements](docs/authentication.md).
+
 ```sh
 npm ci
 npm run backend:dev

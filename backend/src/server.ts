@@ -4,12 +4,10 @@ import { fileURLToPath } from "node:url";
 import { VideoService } from './videos.js';
 import { narrationRoutes } from "./narration/routes.js";
 import type { NarrationService } from "./narration/service.js";
-import { SHARED_OWNER } from './identity.js';
+import { proxyUser } from './identity.js';
 import { studyPlanRoutes } from './study-plans.js';
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
-
-function user(_request: Request) { return { id: SHARED_OWNER, name: 'Demo user' }; }
 
 function notFound() {
   return Response.json({ detail: "Not Found" }, { status: 404 });
@@ -65,9 +63,13 @@ export function createHandler(frontendDir = defaultFrontendDir, videoService?: V
       ok: true,
       ...(process.env.APP_REVISION ? { revision: process.env.APP_REVISION } : {}),
     });
-    else if (path === "/api/me") response = Response.json({ user: user(request) });
-    else if (path === "/api/hello") response = Response.json({ message: "Hello from the 3yellow3white backend", user: user(request) });
+    else if (path === "/api/me") response = Response.json({ user: proxyUser(request) });
+    else if (path === "/api/hello") response = Response.json({ message: "Hello from the 3yellow3white backend", user: proxyUser(request) });
     else response = await serveFile(page ? "index.html" : path.slice("/static/".length));
+    if (path === "/api/me" || path === "/api/hello") {
+      response.headers.set("Cache-Control", "private, no-store");
+      response.headers.set("Vary", "X-User-Id, X-User-Name");
+    }
     return request.method === "HEAD" ? new Response(null, { status: response.status, headers: response.headers }) : response;
   };
 }
