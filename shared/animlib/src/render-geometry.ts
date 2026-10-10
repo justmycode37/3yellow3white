@@ -1,0 +1,190 @@
+/** CPU tessellation shared by rendering and overlap inspection; no browser or GPU required. */
+import earcut from 'earcut';
+import { GeometryCache } from './cache.js';
+import { parseColor } from './palette.js';
+import type { PaletteResolver } from './palette.js';
+import type { CameraState, ColorValue, ElementState, Frame, Geometry, OverlapComponent, Vec3 } from './types.js';
+import type { DrawItem } from './composition.js';
+import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles, tubeTriangles, coneTriangles } from './geometry.js';
+import { layoutLatex, layoutLatexGeometry } from './latex.js';
+import type { LatexPath } from './latex.js';
+
+export function textTex(text:string):string {return String.raw`\text{`+text.replace(/[\\{}$&#%_^~]/g,c=>({'\\':String.raw`\backslash `,'{':String.raw`\{`,'}':String.raw`\}`,'$':String.raw`\$`,'&':String.raw`\&`,'#':String.raw`\#`,'%':String.raw`\%`,'_':String.raw`\_`,'^':String.raw`\textasciicircum `,'~':String.raw`\textasciitilde `}[c]!))+'}';}
+function contains(contour:Vec3[],point:Vec3):boolean {
+  let inside=false;
+  for(let i=0,j=contour.length-1;i<contour.length;j=i++) {
+    const a=contour[i],b=contour[j];
+    if((a[1]>point[1])!==(b[1]>point[1])&&point[0]<(b[0]-a[0])*(point[1]-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+  }
+  return inside;
+}
+const triangulations = new GeometryCache<Vec3[]>();
+/** Triangulates compound contours, preserving glyph holes and nested islands. */
+export function triangulateContours(contours:Vec3[][]):Vec3[] {
+  const key=JSON.stringify(contours),cached=triangulations.get(key);
+  if(cached)return cached;
+  const loops=contours.map(c=>c.length>1&&Math.hypot(...c[0].map((v,i)=>v-c.at(-1)![i]))<1e-8?c.slice(0,-1):c).filter(c=>c.length>=3);
+  const parents=loops.map((loop,i)=>loops.map((outer,j)=>j!==i&&contains(outer,loop[0])?j:-1).filter(j=>j>=0));
+  const result:Vec3[]=[];
+  for(let i=0;i<loops.length;i++) {
+    if(parents[i].length%2!==0)continue;
+    const holes=loops.filter((_,j)=>parents[j].length===parents[i].length+1&&parents[j].includes(i));
+    const rings=[loops[i],...holes],vertices=rings.flat(),indices:number[]=[];let count=loops[i].length;
+    for(const hole of holes){indices.push(count);count+=hole.length;}
+    const triangles=earcut(vertices.flat(),indices,3);for(const index of triangles)result.push(vertices[index]);
+  }
+  // The cache owns its points; later edits to an input contour must not alter
+  // a triangulation retained for a previous frame or scene.
+  return triangulations.set(key,result.map(p=>[...p] as Vec3),result.length*64);
+}
+export interface GeometryDrawItem extends DrawItem { elementId: string; component: OverlapComponent; }
+
+export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string):GeometryDrawItem[] {
+  const parents=new Map<string,ElementState>();
+  for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
+  const items:GeometryDrawItem[]=[];
+  for(const [elementIndex,element] of frame.elements.entries()) {
+    if(element.geometry.kind==='group'||element.view!==view)continue;
+    const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
+    while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
+    const viewportOffset=[0,1].map(axis=>chain.reduce((sum,e)=>sum+(e.viewportOffset?.[axis]??0),0));
+    const groups:{id:string;opacity:number}[]=[];
+    let opacity=1;
+    for(const e of [...chain].reverse()) {
+      opacity*=e.opacity;
+      if(e.geometry.kind==='group'&&e.geometry.isolated){groups.push({id:e.id,opacity});opacity=1;}
+    }
+    if(opacity<=0||groups.some(g=>g.opacity<=0))continue;
+    const applyTransforms=(point:Vec3):Vec3=>{let p=point;for(const state of chain){p=rotate(p.map(v=>v*state.scale) as Vec3,state.rotation);p=p.map((v,i)=>v+state.position[i]) as Vec3;}return p;};
+    const world=(point:Vec3):Vec3=> {
+      if(!element.billboard||element.space==='screen')return applyTransforms(point);
+      const center=applyTransforms([0,0,0]),scale=chain.reduce((product,state)=>product*state.scale,1);
+      let local=rotate(point.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]);
+      const offset=element.billboardOffset??[0,0,0];local=local.map((v,i)=>v+(offset[i]??0)) as Vec3;
+      local=rotate(local,[camera.pitch,camera.yaw,0]);
+      return local.map((v,i)=>v+center[i]) as Vec3;
+    };
+    // Each element's transform is affine. Evaluate it once, rather than
+    // allocating vectors and recomputing trigonometry for every vertex.
+    const origin=world([0,0,0]);
+    const axes:Vec3[]=[[1,0,0],[0,1,0],[0,0,1]];
+    const normalBasis=axes.map(axis=>{let normal=axis;for(const state of chain)normal=rotate(normal,state.rotation);return normal;});
+    const scale=chain.reduce((product,state)=>product*state.scale,1);
+    // Transform directions separately to avoid subtracting nearly equal
+    // translated points when a small object is far from the world origin.
+    const basis=element.billboard&&element.space!=='screen'
+      ?axes.map(axis=>rotate(rotate(axis.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]),[camera.pitch,camera.yaw,0]))
+      :normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
+    const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:OverlapComponent='fill'):void=> {
+      const rgba=parseColor(palette.resolve(color));if(!points.length||rgba[3]*opacity*alpha<=0)return;
+      const vertices=new Float32Array(points.length*15),screen=element.space==='screen',a=rgba[3]*opacity*alpha;
+      let sumX=0,sumY=0,sumZ=0;
+      for(let i=0;i<points.length;i++) {
+        const p=points[i],j=i*15;
+        const x=origin[0]+p[0]*basis[0][0]+p[1]*basis[1][0]+p[2]*basis[2][0];
+        const y=origin[1]+p[0]*basis[0][1]+p[1]*basis[1][1]+p[2]*basis[2][1];
+        const z=origin[2]+p[0]*basis[0][2]+p[1]*basis[1][2]+p[2]*basis[2][2];
+        sumX+=x;sumY+=y;sumZ+=z;
+        vertices[j]=x;vertices[j+1]=y;vertices[j+2]=z;
+        vertices[j+3]=rgba[0];vertices[j+4]=rgba[1];vertices[j+5]=rgba[2];vertices[j+6]=a;vertices[j+7]=screen?1:0;
+        if(normals) {
+          const n=normals[i];
+          for(let axis=0;axis<3;axis++)vertices[j+8+axis]=n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis];
+        } else {vertices[j+8]=normalBasis[2][0];vertices[j+9]=normalBasis[2][1];vertices[j+10]=normalBasis[2][2];}
+        vertices[j+11]=normals?1:0;vertices[j+12]=elementIndex;vertices[j+13]=viewportOffset[0];vertices[j+14]=viewportOffset[1];
+      }
+      // Camera depth is linear in world position, so the centroid gives the
+      // same sorting depth without projecting every vertex.
+      const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
+      items.push({depth,vertices,transparent:a<0.999999,screen,groups,elementId:element.id,component});
+    };
+    const contours=(paths:Vec3[][],alpha=1,color=element.fill,component:OverlapComponent='fill'):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha,undefined,component);};
+    const stroke=(points:Vec3[],closed:boolean,alpha=1,capEnd=true):void=> {
+      if(element.stroke==='none'||element.strokeWidth<=0)return;
+      if(element.strokeProfile==='round') {
+        const tube=tubeTriangles(points,element.strokeWidth,closed,capEnd);
+        addTriangles(tube.points,element.stroke,alpha,tube.normals,'stroke');
+      } else addTriangles(strokeTriangles(points,element.strokeWidth,closed),element.stroke,alpha,undefined,'stroke');
+    };
+    const latexPaths=(paths:LatexPath[],size:number,alpha:number,offset:Vec3=[0,0,0]):void=> {
+      const color=element.fill==='none'?element.stroke:element.fill;
+      if(color==='none')return;
+      for(const path of paths)addTriangles(triangulateContours(path.contours).map(p=>p.map((v,i)=>v*size+offset[i]) as Vec3),color,alpha,undefined,'content');
+    };
+    const addMesh=(geometry:Geometry,alpha=1):void=> {
+      const vertices=(geometry.vertices??[]).map(vec3);
+      for(const indices of geometry.triangles??[]){const triangle=indices.map(i=>vertices[i]).filter(Boolean);if(triangle.length===3){addTriangles(triangle,element.fill,alpha);stroke(triangle,true,alpha);}}
+    };
+    const drawGeometry=(geometry:Geometry,alpha=1):void=> {
+      if(geometry.kind==='text'||geometry.kind==='latex'){latexPaths((geometry.kind==='text'?layoutLatex(textTex(geometry.text??'')):layoutLatexGeometry(geometry)).paths,geometry.fontSize??(element.space==='screen'?(geometry.kind==='text'?16:24):(geometry.kind==='text'?0.4:0.6)),alpha);return;}
+      if(geometry.kind==='mesh'){addMesh(geometry,alpha);return;}
+      if(geometry.kind==='sphere'){const sphere=sphereTriangles(geometry.radius??1);addTriangles(sphere.points,element.fill,alpha,sphere.normals);return;}
+      const shape=outline(geometry);if(!shape||!shape.points.length)return;
+      if(geometry.kind==='arrow'&&shape.points.length>1) {
+        const points=shape.points.filter((p,i)=>!i||Math.hypot(...p.map((v,j)=>v-shape.points[i-1][j]))>1e-10),end=points.at(-1)!;
+        const lengths=points.slice(1).map((p,i)=>Math.hypot(...p.map((v,j)=>v-points[i][j]))),length=lengths.reduce((a,b)=>a+b,0);
+        if(length>1e-10) {
+          const headLength=Math.min(length*0.45,Math.max(element.space==='screen'?6:0.16,element.strokeWidth*4));
+          let remaining=headLength,index=points.length-2;
+          while(index>0&&remaining>lengths[index]){remaining-=lengths[index];index--;}
+          const a=points[index],b=points[index+1],ratio=1-remaining/lengths[index];
+          const base=a.map((v,i)=>lerp(v,b[i],ratio)) as Vec3;
+          const delta=end.map((v,i)=>v-base[i]),xy=Math.hypot(delta[0],delta[1]),headWidth=Math.max(element.strokeWidth*2.6,headLength*0.7);
+          const side:Vec3=xy>1e-10?[-delta[1]/xy*headWidth/2,delta[0]/xy*headWidth/2,0]:[headWidth/2,0,0];
+          stroke([...points.slice(0,index+1),base],false,alpha,element.strokeProfile!=='round');
+          if(element.strokeProfile==='round') {
+            const head=coneTriangles(base,end,headWidth/2);
+            addTriangles(head.points,element.stroke,alpha,head.normals,'stroke');
+          } else addTriangles([end,base.map((v,i)=>v+side[i]) as Vec3,base.map((v,i)=>v-side[i]) as Vec3],element.stroke,alpha,undefined,'stroke');
+        }
+      } else {if(shape.closed)contours([shape.points],alpha);stroke(shape.points,shape.closed,alpha);}
+
+    };
+    const morph=element.morph;
+    if(!morph){drawGeometry(element.geometry);continue;}
+    const {from,to,progress:t}=morph;
+    if(t<=0){drawGeometry(from);continue;}if(t>=1){drawGeometry(to);continue;}
+    if(from.kind==='text'&&to.kind==='text'&&(from.text??'')===(to.text??'')) {
+      const defaultSize=element.space==='screen'?16:0.4;
+      drawGeometry({...from,fontSize:lerp(from.fontSize??defaultSize,to.fontSize??defaultSize,t)});
+      continue;
+    }
+    const shape=morphOutline(from,to,t);
+    if(shape){drawGeometry({kind:from.kind==='arrow'&&to.kind==='arrow'?'arrow':'path',points:shape.points,closed:shape.closed});continue;}
+    if(from.kind==='sphere'&&to.kind==='sphere'){drawGeometry({kind:'sphere',radius:lerp(from.radius??1,to.radius??1,t)});continue;}
+    if(from.kind==='mesh'&&to.kind==='mesh'&&from.vertices&&to.vertices&&from.vertices.length===to.vertices.length){const target=to.vertices!;addMesh({...to,vertices:from.vertices!.map((p,i)=>vec3(p).map((v,j)=>lerp(v,vec3(target[i])[j],t)) as Vec3)});continue;}
+    if(from.kind==='latex'&&to.kind==='latex') {
+      const a=layoutLatexGeometry(from),b=layoutLatexGeometry(to),map=morph.map??{},targets=new Set(Object.values(map));
+      const sizeA=from.fontSize??(element.space==='screen'?24:0.6),sizeB=to.fontSize??(element.space==='screen'?24:0.6);
+      for(const path of a.paths)if(!path.part||!map[path.part])latexPaths([path],sizeA,1-t);
+      for(const path of b.paths)if(!path.part||!targets.has(path.part))latexPaths([path],sizeB,t);
+      const bounds=(paths:LatexPath[],size:number):Vec3=>{const points=paths.flatMap(p=>p.contours.flat());return [0,1,2].map(i=>points.length?(Math.min(...points.map(p=>p[i]))+Math.max(...points.map(p=>p[i])))*size/2:0) as Vec3;};
+      for(const [start,end] of Object.entries(map)) {
+        const pathsA=a.paths.filter(p=>p.part===start),pathsB=b.paths.filter(p=>p.part===end);
+        if(pathsA.length===pathsB.length&&pathsA.every((p,i)=>p.contours.length===pathsB[i].contours.length)) {
+          for(let i=0;i<pathsA.length;i++)contours(pathsA[i].contours.map((c,j)=>{
+            const a=c.map(p=>p.map(v=>v*sizeA) as Vec3),b=pathsB[i].contours[j].map(p=>p.map(v=>v*sizeB) as Vec3);
+            // Preserve all exact corners when a glyph merely translates/scales. Sampling even
+            // an unchanged contour changes its silhouette and makes symbols pop at endpoints.
+            let equivalent=a.length===b.length;
+            if(equivalent) {
+              const center=(points:Vec3[])=>[0,1,2].map(axis=>points.reduce((sum,p)=>sum+p[axis],0)/points.length) as Vec3;
+              const ca=center(a),cb=center(b);let dot=0,length=0;
+              for(let k=0;k<a.length;k++)for(let axis=0;axis<3;axis++){dot+=(a[k][axis]-ca[axis])*(b[k][axis]-cb[axis]);length+=(a[k][axis]-ca[axis])**2;}
+              const scale=length>1e-12?dot/length:1;
+              equivalent=scale>0&&a.every((p,k)=>p.every((v,axis)=>Math.abs((v-ca[axis])*scale+cb[axis]-b[k][axis])<1e-7));
+            }
+            const [source,target]=equivalent?[a,b]:matchPoints(a,b,true,96);
+            return source.map((p,k)=>p.map((v,l)=>lerp(v,target[k][l],t)) as Vec3);
+          }),1,element.fill==='none'?element.stroke:element.fill,'content');
+        } else {
+          const centerA=bounds(pathsA,sizeA),centerB=bounds(pathsB,sizeB),delta=centerA.map((v,i)=>centerB[i]-v) as Vec3;
+          latexPaths(pathsA,sizeA,1-t,delta.map(v=>v*t) as Vec3);latexPaths(pathsB,sizeB,t,delta.map(v=>-v*(1-t)) as Vec3);
+        }
+      }
+      continue;
+    }
+    drawGeometry(from,1-t);drawGeometry(to,t);
+  }
+  return items;
+}

@@ -219,6 +219,49 @@ export interface Frame {
   views?: (ViewState & { cameraAnimated: boolean })[];
 }
 
+/** Canvas CSS pixels, with x increasing rightwards and y increasing downwards. */
+export interface OverlapBounds { left: number; top: number; right: number; bottom: number; }
+export type OverlapComponent = "content" | "fill" | "stroke";
+export type OverlapSeverity = "unacceptable" | "undesirable";
+export interface OverlapContact {
+  /** Components in the same order as OverlapDiagnostic.elements. */
+  components: [OverlapComponent, OverlapComponent];
+  bounds: OverlapBounds;
+  /** A point inside an actual intersection, suitable for a debug marker. */
+  witness: Vec2;
+}
+export interface OverlapDiagnostic {
+  /** Leaf element IDs, sorted lexically for stable pair identity. */
+  elements: [string, string];
+  /** Content (text/LaTeX) collisions are unacceptable; other collisions undesirable. */
+  severity: OverlapSeverity;
+  kind: "text-overlap" | "shape-overlap";
+  /** Bounding box of actual intersections, not just intersecting element boxes. */
+  bounds: OverlapBounds;
+  elementBounds: [OverlapBounds, OverlapBounds];
+  contacts: OverlapContact[];
+}
+export interface OverlapOptions {
+  /** Logical canvas size in CSS pixels. Required: projection depends on aspect ratio. */
+  width: number;
+  height: number;
+  palette?: ColorPalette;
+  /** Skip primitives below this effective alpha, including groups and morph fades. Default 0.01. */
+  minOpacity?: number;
+  /** Intentional overlaps. Group IDs apply to all their descendants; order is irrelevant. */
+  ignorePairs?: readonly (readonly [string, string])[];
+}
+export interface SceneOverlapOptions extends OverlapOptions {
+  /** Explicit local sample times; sorted/deduplicated. Overrides sampleRate. */
+  times?: readonly number[];
+  /** Samples per second, default 10. Includes endpoints, lifecycle events and track boundaries. */
+  sampleRate?: number;
+}
+export interface SceneOverlapSample {
+  time: number;
+  overlaps: OverlapDiagnostic[];
+}
+
 export interface ElementHandle {
   readonly id: string;
   animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset" | "strokeProfile">): AnimationAction;

@@ -1179,6 +1179,91 @@ Browsers may require a user gesture to start audio. `play()` can reject and play
 state becomes `blocked`; pressing Play can retry. The host should handle that
 state alongside its transport. See the [browser autoplay guide](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay).
 
+## Overlap inspection
+
+`detectOverlaps(frame, options)` and `detectSceneOverlaps(compiled, options)` are
+host inspection APIs exported from both `animlib` and `animlib/core`. They work in
+Node/Bun and browsers without initializing a canvas, DOM, or GPU. They do not
+change scene data, reposition objects, or run automatically during playback.
+
+```js
+import { evaluateScene, detectOverlaps, detectSceneOverlaps } from 'animlib/core';
+
+const frame = evaluateScene(compiled, 1.25);
+const overlaps = detectOverlaps(frame, {
+  width: 1280,
+  height: 720,
+  minOpacity: 0.01,
+  ignorePairs: [['highlight', 'matrix']],
+});
+const samples = detectSceneOverlaps(compiled, {
+  width: 1280,
+  height: 720,
+  sampleRate: 10,
+});
+// Or inspect specific local times:
+const selected = detectSceneOverlaps(compiled, {
+  width: 1280, height: 720, times: [0, 1.25, compiled.duration],
+});
+```
+
+`width` and `height` must be positive finite **CSS pixel** dimensions of the
+intended canvas. Projection depends on these dimensions and aspect ratio.
+`minOpacity` defaults to `0.01` and must lie in `[0, 1]`; it includes paint alpha,
+ancestor/group opacity, and morph fades. Zero-alpha and degenerate geometry are
+always excluded. `palette` optionally supplies the host palette; scene inspection
+otherwise uses the compiled scene's palette.
+
+Each `OverlapDiagnostic` contains:
+
+- `elements`: two leaf IDs in lexical order. Groups apply transforms and opacity
+  but are not reported as separate colliding shapes. Group membership alone does
+  not suppress collisions between siblings.
+- `severity` and `kind`: a collision involving actual text or LaTeX glyph ink is
+  `unacceptable` / `text-overlap`; a collision between other fills or strokes is
+  `undesirable` / `shape-overlap`. This is a default layout policy, not an
+  inference about the author's intent.
+- `bounds`: `{ left, top, right, bottom }`, the bounding box of actual
+  intersections in canvas pixels, with origin at the top left. Multiple disjoint
+  intersections can share this bounding box.
+- `elementBounds`: the clipped visible footprint bounds for the two leaf IDs.
+- `contacts`: intersections grouped by component pair (`content`, `fill`, or
+  `stroke`), with bounds and a `witness` point inside an actual intersection.
+
+Reports are JSON-serializable. One report aggregates all intersecting primitives
+for a pair of distinct elements; an element's own glyphs, fills, and strokes do
+not collide with themselves. Pair ordering and component ordering are stable.
+`ignorePairs` suppresses intentional pairs in either order. A group ID matches
+all descendants, so `['highlight', 'matrix']` can exclude a highlight against an
+entire matrix group. `['matrix', 'matrix']` excludes collisions within that group.
+
+The detector reuses the renderer's tessellation, including MathJax glyph holes,
+LaTeX anchors/numeric slots, arrowheads, round strokes, current morph geometry,
+nested transforms, billboards, and viewport offsets. Broad bounding-box checks
+are followed by positive-area polygon intersections. Containment inside an
+unfilled border, empty glyph holes, separated diagonal strokes, and edge-only
+contact therefore do not trigger a report. Geometry is clipped at the camera's
+near/far planes, each view rectangle, and the canvas. View-local results are
+translated to common canvas coordinates, including collisions with screen labels.
+
+This measures **projected overlap**, including objects at different depths. It
+does not remove geometry hidden by another object's depth or by compositing, and
+does not infer acceptable connections, highlights, backgrounds, or containment
+inside filled objects; use `ignorePairs` for those. Bounds use logical viewport
+dimensions; device-pixel rounding and raster antialiasing can differ slightly at
+edges. No minimum-clearance/near-miss check or continuous collision solver is
+included.
+
+Scene inspection returns `{ time, overlaps }[]` for **only samples with
+collisions**. By default it samples at 10 Hz and includes scene endpoints,
+lifecycle events, and track start/end times. `times` replaces that schedule and
+must contain finite values within `[0, compiled.duration]`; values are sorted and
+deduplicated. Empty `times` inspects nothing. Each call supports up to 100,000
+samples; reduce `sampleRate` or split explicit times for larger jobs. Sampling
+can miss collisions between inspected frames. Reports use authored cameras and
+current compiled controls/bindings; for viewer camera changes or live interaction,
+pass the corresponding presentation frame to `detectOverlaps`.
+
 ## 9. Engine structure and verification
 
 The public player composes three concerns:
@@ -1198,8 +1283,10 @@ The main implementation files are:
   execution, validation, and off-thread browser compilation.
 - [src/sequence.ts](../src/sequence.ts) and [src/timeline.ts](../src/timeline.ts):
   reconstruction, transactions, and deterministic time evaluation.
-- [src/renderer.ts](../src/renderer.ts), [src/geometry.ts](../src/geometry.ts), and
+- [src/renderer.ts](../src/renderer.ts), [src/render-geometry.ts](../src/render-geometry.ts), [src/geometry.ts](../src/geometry.ts), and
   [src/latex.ts](../src/latex.ts): GPU drawing, outline matching, and vector formula layout.
+- [src/overlap.ts](../src/overlap.ts): projected geometry intersections and sampled
+  animation diagnostics.
 - [src/player.ts](../src/player.ts), [src/audio.ts](../src/audio.ts), and
   [src/controls.ts](../src/controls.ts): transport, audio, and optional native widgets.
 - [demo/scenes.ts](../demo/scenes.ts): application-level demo helpers and scene sources.
