@@ -16,7 +16,7 @@ struct Result { @location(0) color: vec4f, @builtin(frag_depth) depth: f32 }
   if(rgba.a<=0.000001){discard;}
   var z = 1.;
   for(var i=0;i<4;i++){z=min(z,textureLoad(depth,p,i));}
-  return Result(rgba,z);
+  return Result(vec4f(rgba.rgb*opacity.y,rgba.a),z);
 }`;
 interface Layer { color: GPUTexture; resolved: GPUTexture; depth: GPUTexture; }
 type Draw = Extract<RenderCommand, { first: number }>;
@@ -78,7 +78,7 @@ export class GPUCompositor {
       const pipeline = command.opaque ? this.opaque : this.transparent;
       const index = this.uniformIndex++;
       const uniform = this.uniforms[index] ??= this.device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-      this.device.queue.writeBuffer(uniform,0,new Float32Array([command.opacity,0,0,0]));
+      this.device.queue.writeBuffer(uniform,0,new Float32Array([command.opacity,command.receiverLight ?? 1,0,0]));
       const bindGroup = this.device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [
         { binding: 0, resource: layer.resolved.createView() }, { binding: 1, resource: layer.depth.createView() }, { binding: 2, resource: { buffer: uniform } },
       ] });

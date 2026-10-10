@@ -7,15 +7,17 @@ precision highp float;
 uniform sampler2D image;
 uniform sampler2D depthImage;
 uniform float opacity;
+uniform float receiverLight;
 out vec4 outputColor;
 void main(){ivec2 p=ivec2(gl_FragCoord.xy);vec4 color=texelFetch(image,p,0)*opacity;
-if(color.a<=0.000001)discard;outputColor=color;gl_FragDepth=texelFetch(depthImage,p,0).r;}`;
+if(color.a<=0.000001)discard;outputColor=vec4(color.rgb*receiverLight,color.a);gl_FragDepth=texelFetch(depthImage,p,0).r;}`;
 interface Layer { framebuffer: WebGLFramebuffer; resolved: WebGLFramebuffer; color: WebGLTexture; depth: WebGLTexture; colorBuffer: WebGLRenderbuffer; depthBuffer: WebGLRenderbuffer; }
 
 export class GLCompositor {
   private program: WebGLProgram;
   private vao: WebGLVertexArrayObject;
   private opacity: WebGLUniformLocation;
+  private receiverLight: WebGLUniformLocation;
   private layers: Layer[] = [];
   private width = 0;
   private height = 0;
@@ -32,6 +34,7 @@ export class GLCompositor {
       if (!gl.getProgramParameter(program,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) ?? 'Compositor linking failed');
       this.program = program;this.vao = gl.createVertexArray()!;
       this.opacity = gl.getUniformLocation(program,'opacity')!;
+      this.receiverLight = gl.getUniformLocation(program,'receiverLight')!;
       gl.useProgram(program);gl.uniform1i(gl.getUniformLocation(program,'image'),0);gl.uniform1i(gl.getUniformLocation(program,'depthImage'),1);
     } catch (error) { gl.deleteProgram(program);throw error; }
     finally { for (const shader of shaders) gl.deleteShader(shader); }
@@ -79,7 +82,7 @@ export class GLCompositor {
       gl.blendFuncSeparate(gl.ONE,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
       gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,layer.color);
       gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,layer.depth);
-      gl.uniform1f(this.opacity,command.opacity);gl.drawArrays(gl.TRIANGLES,0,3);
+      gl.uniform1f(this.opacity,command.opacity);gl.uniform1f(this.receiverLight,command.receiverLight ?? 1);gl.drawArrays(gl.TRIANGLES,0,3);
       gl.viewport(x,y,w,h);
     }
     if (level > 0) {

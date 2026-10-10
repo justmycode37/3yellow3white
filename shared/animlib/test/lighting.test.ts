@@ -6,6 +6,7 @@ import { lightingUniform, worldLightDirection } from '../src/lighting.js';
 import { addPlanarShadows } from '../src/planar-shadows.js';
 import { buildDrawItems } from '../src/render-geometry.js';
 import { paletteResolver } from '../src/palette.js';
+import { composeItems } from '../src/composition.js';
 import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import type { CameraState, SceneLighting } from '../src/types.js';
 const camera: CameraState = {yaw:0,pitch:0,target:[0,0,0],height:8,distance:12,perspective:1};
@@ -40,9 +41,20 @@ describe('scene lighting and planar shadows',()=>{
   expect(lightingUniform({},orbit)).toEqual(lightingUniform({},camera));
   expect(worldLightDirection({directional:{direction:[0,0,1]}},orbit)).toEqual([1,0,expect.closeTo(0,10)]);
  });
+ it('composes the receiver and masks as one opaque layer before unrelated transparency',async()=>{
+  const {result}=await draw();
+  const farGlass={depth:1e5,vertices:new Float32Array(3*VERTEX_FLOATS),transparent:true,screen:false};
+  const {commands}=composeItems([...result,farGlass],0);
+  const receiver=commands.findIndex(c=>'children' in c&&c.receiverLight!==undefined);
+  expect(receiver).toBeGreaterThanOrEqual(0);
+  expect(commands[receiver]).toMatchObject({opaque:true,opacity:1});
+  expect(commands.at(-1)).toMatchObject({opaque:false,count:3});
+  const layer=commands[receiver];
+  if('children' in layer)expect(layer.children.some(c=>'children' in c&&!c.opaque)).toBe(true);
+ });
  it('clips actual packed caster triangles to finite plane bounds, with a world-unit bias',async()=>{
   const {result}=await draw();
-  const shadows=result.filter(i=>i.groups?.[0]?.id.startsWith('@shadow'));
+  const shadows=result.filter(i=>i.groups?.some(g=>g.id.startsWith('@shadow')));
   expect(shadows).toHaveLength(1);
   for(const item of shadows){
    expect(item.vertices.length%VERTEX_FLOATS).toBe(0);
@@ -54,15 +66,15 @@ describe('scene lighting and planar shadows',()=>{
   }
  });
  it.each(['castShadow:false','opacity:0.5',"texture:{pattern:'checker',color:{color:'WHITE',opacity:0.5}}",'billboard:true','viewportOffset:[0.1,0]'])('excludes nonphysical or translucent casters: %s',async style=>{
-  const {result}=await draw(style);expect(result.some(i=>i.groups?.[0]?.id.startsWith('@shadow'))).toBe(false);
+  const {result}=await draw(style);expect(result.some(i=>i.groups?.some(g=>g.id.startsWith('@shadow')))).toBe(false);
  });
  it('excludes translucent isolated groups, bounds sample count, and never mutates packed geometry',async()=>{
   const {items}=await draw();const before=structuredClone(items);
   const high={...lighting,directional:{...lighting.directional,shadow:{quality:'high' as const}}};
-  expect(addPlanarShadows(items,high,camera,paletteResolver()).filter(i=>i.groups?.[0]?.id.startsWith('@shadow'))).toHaveLength(13);
+  expect(addPlanarShadows(items,high,camera,paletteResolver()).filter(i=>i.groups?.some(g=>g.id.startsWith('@shadow')))).toHaveLength(13);
   expect(items).toEqual(before);
   for(const item of items)item.groups=[{id:'fade',opacity:0.5}];
-  expect(addPlanarShadows(items,high,camera,paletteResolver()).some(i=>i.groups?.[0]?.id.startsWith('@shadow'))).toBe(false);
+  expect(addPlanarShadows(items,high,camera,paletteResolver()).some(i=>i.groups?.some(g=>g.id.startsWith('@shadow')))).toBe(false);
  });
  it('keeps inherited noncasting policy when a departing group is baked',async()=>{
   const scene=await compileSource(`export default scene({lighting:${JSON.stringify(lighting)}},s=>{
@@ -71,7 +83,7 @@ describe('scene lighting and planar shadows',()=>{
   const next=await compileSource('export default scene({},s=>s.wait(1))',{previous:evaluateScene(scene,1)});
   expect(next.initial[0].castShadow).toBe(false);
   const frame=evaluateScene(next,0),items=buildDrawItems(frame,camera,640,480,paletteResolver());
-  expect(addPlanarShadows(items,frame.lighting,camera,paletteResolver()).some(i=>i.groups?.[0]?.id.startsWith('@shadow'))).toBe(false);
+  expect(addPlanarShadows(items,frame.lighting,camera,paletteResolver()).some(i=>i.groups?.some(g=>g.id.startsWith('@shadow')))).toBe(false);
  });
  it('compiles the demo and rebuilds lighting from its ordinary controls',async()=>{
   const demo=await compileSource(lightingSource.source,{controls:{space:'camera',ambient:0.5,quality:'high'}});
@@ -80,6 +92,6 @@ describe('scene lighting and planar shadows',()=>{
  it('uses final deformed triangles and excludes below-plane geometry',async()=>{
   const {items}=await draw();
   for(const item of items)for(let i=0;i<item.vertices.length;i+=VERTEX_FLOATS)item.vertices[i+1]=-2;
-  expect(addPlanarShadows(items,lighting,camera,paletteResolver()).some(i=>i.groups?.[0]?.id.startsWith('@shadow'))).toBe(false);
+  expect(addPlanarShadows(items,lighting,camera,paletteResolver()).some(i=>i.groups?.some(g=>g.id.startsWith('@shadow')))).toBe(false);
  });
 });

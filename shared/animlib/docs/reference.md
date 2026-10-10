@@ -504,7 +504,11 @@ animation or reactive binding targets.
   excessive bias detaches contacts. Casters are clipped against the original plane,
   and projected silhouettes are clipped to its finite bounds.
 - `opacity`: `0`–`1`, default `0.35`, controls occlusion of the receiver's directional
-  contribution. Ambient remains. Every sample forms an opaque silhouette union before
+  contribution. Ambient remains, including under bright lighting: the receiver's
+  masked albedo is lit before final output saturation. The receiver and its masks
+  resolve as one opaque layer before unrelated translucent surfaces or isolated
+  groups, so those surfaces never receive the floor's shadows. Every sample forms
+  an opaque silhouette union before
   opacity is applied, so overlapping triangles/casters do not multiply darkness.
   Samples blend multiplicatively with normalized full-coverage opacity.
 
@@ -526,8 +530,13 @@ packed geometry separately for each view, without changing scene state. Play/pau
 seek and handoff repeat the same projection. WebGPU and WebGL2 share geometry and
 sample settings; edge antialiasing can differ slightly.
 
-The optional pass costs up to 13 projections of eligible triangles and isolated
-compositing passes per view. It is bypassed entirely without a receiver/shadow.
+The optional shadow pass costs up to 13 projections of eligible triangles and
+isolated compositing passes per view, plus one opaque receiver composite. Shadow
+projection is bypassed without a shadow setting; no receiver work runs without a
+receiver. WebGPU vertex-buffer growth is capped at the actual device limit. A frame
+whose packed upload exceeds that limit reports a recoverable scene error before
+allocation/submission, retaining the last good image; reduce mesh density, shadow
+quality, or view count and retry. No shadow samples are silently dropped to fit.
 Use medium quality and modest caster counts for interactive scenes.
 
 ### Procedural textures and materials

@@ -2,6 +2,7 @@ import type { SceneLighting } from '../src/types.js';
 /** Shared real GPU checks. Images are RGBA, top row first, 640×480. */
 type Render = (source: string, yaw?: number, time?: number) => Promise<Uint8Array>;
 const check = (value: unknown, message: string) => { if (!value) throw new Error(message); };
+const rgb = (image: Uint8Array, x: number, y: number) => Array.from(image.subarray((Math.round(y)*640+Math.round(x))*4,(Math.round(y)*640+Math.round(x))*4+3));
 const pixel = (image: Uint8Array, x: number, y: number) => image[(Math.round(y)*640+Math.round(x))*4];
 const changed = (a: Uint8Array, b: Uint8Array, threshold=3) => a.filter((v,i)=>i%4!==3&&Math.abs(v-b[i])>threshold).length;
 const ball = (lighting?: SceneLighting | 'studio', material=false) => `export default scene({mode:'3d',${lighting===undefined?'':'lighting:'+JSON.stringify(lighting)}},s=>{
@@ -21,6 +22,23 @@ export const shadowScene = (options: {shadow?:boolean;soft?:boolean;duplicate?:b
  s.view('right',{rect:[0.5,0,0.5,1],camera:{yaw:0,pitch:-Math.PI/2,height:8,perspective:0}},s=>{s.wait(1);});`:body}
  });`;
 };
+// Review regressions: glass above the far half of the plane must not receive a
+// shadow just because its center is deeper than the receiver's center.
+const transparentReceiverSource = (shadow: boolean, isolated: boolean) => `export default scene({mode:'3d',lighting:{
+ ambient:1,directional:{direction:[1,1,0],space:'world',${shadow?"shadow:{softness:0,opacity:0.8,bias:0.001}":''}},
+ receiver:{position:[0,0,0],size:[8,8],fill:'PURE_RED'}}},s=>{
+ s.play(s.camera.to3D({yaw:0,pitch:-0.6,height:8,target:[0,0,0],distance:12,perspective:0}),{duration:0});
+ s.box('caster',{position:[0,1,-2],width:0.8,height:1,depth:0.8,fill:'PURE_RED'});
+ const glass=s.mesh('glass',{vertices:[[-1.7,.3,-2.7],[-.5,.3,-2.7],[-.5,.3,-1.3],[-1.7,.3,-1.3]],
+ triangles:[[0,1,2],[0,2,3]],fill:'PURE_GREEN',opacity:${isolated?1:0.5},castShadow:false});
+ ${isolated?"const g=s.group('g',[glass],{isolated:true});s.play(g.animate({opacity:.5}),{duration:0});":''}s.wait(1);
+});`;
+const brightReceiverSource = (shadow: boolean, ambient: number, intensity: number, opacity=1, fill='WHITE', soft=false) => `export default scene({mode:'3d',lighting:{
+ ambient:${ambient},directional:{direction:[1,1,0],space:'world',intensity:${intensity},${shadow?`shadow:{softness:${soft?0.04:0},quality:'high',opacity:${opacity},bias:0.001}`:''}},
+ receiver:{position:[0,0,0],size:[8,8],fill:'${fill}'}}},s=>{
+ s.play(s.camera.to3D({yaw:0,pitch:-Math.PI/2,height:8,perspective:0}),{duration:0});
+ s.box('caster',{position:[0,1,0],width:.8,height:1,depth:.8,fill:'PURE_RED'});s.wait(1);
+});`;
 export const lightingCases: {name:string;run:(render:Render)=>Promise<void>}[] = [
  {name:'studio default and explicit defaults preserve pixels',run:async render=>{
   for(const material of [false,true]){
@@ -64,6 +82,31 @@ export const lightingCases: {name:string;run:(render:Render)=>Promise<void>}[] =
   for(const policy of [{opacity:0.5},{group:true}]){
    const noShadow=await render(shadowScene({...policy,shadow:false}));
    check(changed(noShadow,await render(shadowScene(policy)))===0,'Translucent geometry or isolated group cast a shadow');
+  }
+ }},
+ {name:'receiver shadows precede unrelated translucent surfaces and isolated groups',run:async render=>{
+  for(const isolated of [false,true]){
+   const bare=rgb(await render(transparentReceiverSource(false,isolated)),254,168);
+   const shadow=rgb(await render(transparentReceiverSource(true,isolated)),254,168);
+   check(bare[1]>=126&&bare[1]<=129,'Probe missed the unlit green transparent surface');
+   check(Math.abs(bare[1]-shadow[1])<=1,`Receiver shadow darkened ${isolated?'isolated':'ordinary'} glass: ${bare} -> ${shadow}`);
+   check(bare[0]-shadow[0]>40,'Receiver red must still darken behind the glass');
+   check(shadow[2]===0,'Unexpected blue contribution');
+  }
+ }},
+ {name:'receiver occlusion preserves ambient and applies before per-channel saturation',run:async render=>{
+  for(const soft of [false,true]){
+   for(const [ambient,intensity,opacity,fill] of [[4,1,1,'WHITE'],[0.5,4,1,'WHITE'],[0.5,4,0.5,'WHITE'],[1,4,1,'GOLD']] as const){
+    const floor=rgb(await render(brightReceiverSource(false,ambient,0,1,fill)),260,240);
+    const lit=rgb(await render(brightReceiverSource(false,ambient,intensity,1,fill)),260,240);
+    const shaded=rgb(await render(brightReceiverSource(true,ambient,intensity,opacity,fill,soft)),260,240);
+    // A no-shadow render with the remaining direct intensity is the correct
+    // pre-saturation reference, including when only some color channels saturate.
+    const expected=rgb(await render(brightReceiverSource(false,ambient,intensity*(1-opacity),1,fill)),260,240);
+    check(lit.some(c=>c===255),'Fixture must exercise output saturation');
+    check(shaded.every((v,k)=>Math.abs(v-expected[k])<=4),`Occlusion applied after saturation: ${shaded}, expected ${expected}`);
+    check(shaded.every((v,k)=>v>=floor[k]-4),`Shadow removed ambient: ${shaded}, ambient ${floor}`);
+   }
   }
  }},
  {name:'soft penumbra is deterministic and expands with caster height',run:async render=>{

@@ -1,6 +1,7 @@
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {create,globals} from 'webgpu';
+import {VertexBufferLimitError} from '../src/vertex-buffer.js';
 import {CanvasRenderer} from '../src/renderer.js';
 import {SceneSequence} from '../src/sequence.js';
 import {initialSources} from '../demo/scenes.js';
@@ -92,6 +93,42 @@ describe('native Vulkan WebGPU rendering',()=> {
     });
     expect(errors).toEqual([]);
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('caps shadow-expanded allocations and rejects oversized uploads without losing the last frame',async()=>{
+    const source=(count:number)=>`export default scene({mode:'3d',lighting:{directional:{direction:[0,1,0],space:'world',shadow:{quality:'high'}},receiver:{size:[8,8]}}},s=>{
+      for(let i=0;i<${count};i++)s.parametricSurface('surface'+i,{uSegments:100,vSegments:100,fn:(u,v)=>[u,1+i*.1,v]});s.wait(1);
+    });`;
+    // Default production requestDevice() guarantees at least this limit; the
+    // regression target requests no increased maxBufferSize on the test device.
+    const limit=device!.limits.maxBufferSize;
+    expect(limit).toBe(268435456);
+    const create=vi.spyOn(device!,'createBuffer'),submit=vi.spyOn(device!.queue,'submit'),write=vi.spyOn(device!.queue,'writeBuffer');
+    const controlled:Error[]=[],previousError=renderer.onError;
+    renderer.onError=error=>controlled.push(error);
+    try {
+      const loaded=await sequence.submit({type:'load',scenes:[{id:'large-shadow',source:source(2)}]});
+      expect(loaded.ok,JSON.stringify(loaded)).toBe(true);
+      renderer.resetInteraction();renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+      await device!.queue.onSubmittedWorkDone();
+      expect(controlled).toEqual([]);expect(errors).toEqual([]);
+      const buffers=create.mock.calls.map(([descriptor])=>descriptor).filter(d=>(d.usage&GPUBufferUsage.VERTEX)!==0);
+      expect(buffers.map(d=>d.size)).toEqual([limit]); // payload fits; doubled growth does not.
+      expect(write.mock.calls.some(([, ,data])=>(data as ArrayBufferView).byteLength===208320744)).toBe(true);
+      const before=await pixels();expect(changedPixels(before)).toBeGreaterThan(1000);
+      const oversized=await sequence.submit({type:'load',scenes:[{id:'large-shadow',source:source(3)}]});
+      expect(oversized.ok,JSON.stringify(oversized)).toBe(true);
+      const allocationCount=create.mock.calls.length,submitCount=submit.mock.calls.length,writeCount=write.mock.calls.length;
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+      expect(controlled).toHaveLength(1);expect(controlled[0]).toBeInstanceOf(VertexBufferLimitError);
+      expect(controlled[0].message).toContain('312480744');
+      expect(create).toHaveBeenCalledTimes(allocationCount);expect(submit).toHaveBeenCalledTimes(submitCount);expect(write).toHaveBeenCalledTimes(writeCount);
+      expect(renderer.backend).toBe('webgpu');expect(Buffer.from(await pixels())).toEqual(Buffer.from(before));
+      expect(errors).toEqual([]);
+      // A scene budget error is recoverable: a smaller frame renders on the same device.
+      expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);await device!.queue.onSubmittedWorkDone();
+      expect(renderer.backend).toBe('webgpu');expect(controlled).toHaveLength(1);expect(errors).toEqual([]);
+    } finally {renderer.onError=previousError;create.mockRestore();submit.mockRestore();write.mockRestore();}
   });
   it.each([false,true])('bump changes normals with constant albedo, metal=%s',async metal=>{
     const images:Uint8Array[]=[];

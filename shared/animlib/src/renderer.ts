@@ -1,4 +1,5 @@
 /// <reference types="@webgpu/types" />
+import { VertexBufferLimitError, vertexBufferCapacity } from './vertex-buffer.js';
 import { lightingUniform } from './lighting.js';
 import { addPlanarShadows } from './planar-shadows.js';
 import { materialWGSL } from './material-shader.js';
@@ -363,16 +364,20 @@ export class CanvasRenderer {
       const floatCount=batch.items.reduce((n,i)=>n+i.vertices.length,0);vertexOffset+=floatCount/VERTEX_FLOATS;
       return {...batch,...composition,lighting,floatCount,opaqueVertices:composition.commands.filter(c=>'first' in c&&c.opaque).reduce((n,c)=>n+('count' in c?c.count:0),0)};
     });
-    const data=new Float32Array(ordered.reduce((n,batch)=>n+batch.floatCount,0));
+    try {
+    const floatCount=ordered.reduce((n,batch)=>n+batch.floatCount,0);
+    // Reject oversized scene data before the combined CPU allocation or any GPU
+    // allocation/write/submit. Keep the last good frame and allow a smaller retry.
+    const capacity=this.device?vertexBufferCapacity(floatCount*4,this.device.limits.maxBufferSize):0;
+    const data=new Float32Array(floatCount);
     let offset=0;
     for(const batch of ordered)for(const item of batch.items){data.set(item.vertices,offset);offset+=item.vertices.length;}
     const clear=parseColor(palette.resolve(options.background));
-    try {
     if(this.gl){this.gl.render(data,ordered,clear,this.canvas.width,this.canvas.height);return;}
     const device=this.device!;
     const viewIds=new Set(this.regions.map(v=>v.id));
     for(const [id,resource] of this.viewResources)if(!viewIds.has(id)){resource.uniform.destroy();this.viewResources.delete(id);}
-    if(data.byteLength>this.capacity){this.vertices?.destroy();this.capacity=Math.max(256,data.byteLength*2);this.vertices=device.createBuffer({size:this.capacity,usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});}
+    if(data.byteLength>this.capacity){this.vertices?.destroy();this.capacity=capacity;this.vertices=device.createBuffer({size:this.capacity,usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});}
     if(data.length)device.queue.writeBuffer(this.vertices!,0,data);
     const encoder=device.createCommandEncoder();
     const colorView=this.colorTexture!.createView(),target=this.context!.getCurrentTexture().createView(),depthView=this.depthTexture!.createView();
@@ -404,6 +409,7 @@ export class CanvasRenderer {
     }
     device.queue.submit([encoder.finish()]);
     } catch(error) {
+      if(error instanceof VertexBufferLimitError){this.onError?.(error);return;}
       // Frame acquisition can fail before device.lost reaches the playback loop.
       if(this.device&&!this.disposed) {
         try {this.fallback(error);this.render(frame,options);if(this.ready)this.onRecovered?.();return;}

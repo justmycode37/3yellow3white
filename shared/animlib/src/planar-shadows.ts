@@ -28,6 +28,7 @@ function triangles(points: Vec3[], output: number[], color: number[], lit: numbe
 
 /**
  * Shadow actual world-space draw triangles, after morphs/clipping/transforms.
+ * The plane and its masks resolve as one opaque receiver before scene transparency.
  * Each direction is an opaque silhouette union inside an isolated opacity layer:
  * overlapping casters never multiply darkness. Samples are deterministic.
  * No temporal state, depth-map allocation, geometry cache, or backend-specific path.
@@ -40,14 +41,18 @@ export function addPlanarShadows(items: GeometryDrawItem[], value: Frame['lighti
   const bounds = [x - w / 2, x + w / 2, z - d / 2, z + d / 2];
   const depth = camera.distance - (x - camera.target[0]) * Math.sin(camera.yaw) * Math.cos(camera.pitch)
     + (y - camera.target[1]) * Math.sin(camera.pitch) - (z - camera.target[2]) * Math.cos(camera.yaw) * Math.cos(camera.pitch);
+  const shadow = settings.directional?.shadow, direction = worldLightDirection(value, camera);
+  const direct = 0.68 * (settings.directional?.intensity ?? 1) * Math.max(0, direction[1]);
+  const ambient = 0.32 * (settings.ambient ?? 1);
+  // Keep albedo and fractional shadow coverage in [0,1] offscreen. Lighting is
+  // applied only at the opaque receiver composite, BEFORE output saturation.
+  // This avoids extinguishing bright ambient light by darkening a clamped color.
+  const receiverGroup = { id: '@receiver', opacity: 1, receiverLight: ambient + direct };
   const receiver: number[] = [];
   triangles([[bounds[0], y, bounds[2]], [bounds[0], y, bounds[3]], [bounds[1], y, bounds[3]], [bounds[1], y, bounds[2]]], receiver,
-    parseColor(palette.resolve(plane.fill ?? 'GREY_D')), 1);
-  const result: DrawItem[] = [...items, { depth, vertices: new Float32Array(receiver), transparent: false, screen: false, cameraDependentGeometry: true }];
-  const shadow = settings.directional?.shadow, direction = worldLightDirection(value, camera);
+    parseColor(palette.resolve(plane.fill ?? 'GREY_D')), 0);
+  const result: DrawItem[] = [...items, { depth, vertices: new Float32Array(receiver), transparent: false, screen: false, cameraDependentGeometry: true, groups: [receiverGroup] }];
   if (!shadow || direction[1] <= 0.001) return result; // Light below/parallel to top of plane.
-  const direct = 0.68 * (settings.directional?.intensity ?? 1) * direction[1];
-  const ambient = 0.32 * (settings.ambient ?? 1);
   const opacity = (shadow.opacity ?? 0.35) * direct / Math.max(1e-6, ambient + direct);
   if (opacity <= 0) return result;
   const casters = items.filter(item => item.castShadow && !item.screen && !item.transparent && !item.groups?.some(g => g.opacity < 0.999999));
@@ -71,7 +76,7 @@ export function addPlanarShadows(items: GeometryDrawItem[], value: Frame['lighti
       triangles(projected, data, [0, 0, 0, 1], 0);
     }
     if (data.length) result.push({ depth, vertices: new Float32Array(data), transparent: false, screen: false,
-      cameraDependentGeometry: true, groups: [{ id: `@shadow:${sample}`, opacity: 1 - (1-opacity)**(1/count) }] });
+      cameraDependentGeometry: true, groups: [receiverGroup, { id: `@shadow:${sample}`, opacity: 1 - (1-opacity)**(1/count) }] });
   }
   return result;
 }

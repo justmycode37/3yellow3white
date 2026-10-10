@@ -23,7 +23,7 @@ function setup(failure = '') {
   let lose!: (info: { message: string }) => void;
   const buffer = () => ({ destroy: vi.fn() });
   const device = {
-    limits: { maxTextureDimension2D: 8192 }, destroy: vi.fn(), addEventListener: vi.fn(),
+    limits: { maxTextureDimension2D: 8192, maxBufferSize: 268435456 }, destroy: vi.fn(), addEventListener: vi.fn(),
     lost: new Promise(resolve => { lose = resolve; }),
     createShaderModule: () => ({ getCompilationInfo: async () => ({ messages: failure === 'shader' ? [{ type: 'error', message: 'bad shader' }] : [] }) }),
     createRenderPipelineAsync: vi.fn(async () => { if (failure === 'pipeline') throw new Error('bad pipeline'); return { getBindGroupLayout: () => ({}) }; }),
