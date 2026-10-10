@@ -129,8 +129,8 @@ jobs:
         env:
           DEPLOY_REVISION: ${{ github.sha }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          # Alice - Clear, Engaging Educator; verified with the demo account.
-          ELEVENLABS_VOICE_ID: Xb7hH8MSUJpSbSDYk0k2
+          # Alexander - Smooth, Deep and Round; runtime account needs voice access.
+          ELEVENLABS_VOICE_ID: CQcj2MsUgZyAgfHH6yJV
           ELEVENLABS_MODEL_ID: eleven_multilingual_v2
           NARRATION_PUBLIC_ORIGIN: https://11.hackathon.ethz.ch
         run: |

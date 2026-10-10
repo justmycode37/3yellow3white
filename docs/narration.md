@@ -53,13 +53,15 @@ Limits: 50,000 Markdown characters, 20,000 spoken characters, 100 scenes, 500 bl
 From the repository root, install dependencies with `npm ci`, copy `backend/.env.example` to `backend/.env.local`, and configure:
 
 - `ELEVENLABS_API_KEY`: server-only ElevenLabs key, with text-to-speech access.
-- `ELEVENLABS_VOICE_ID`: `Xb7hH8MSUJpSbSDYk0k2`, verified as **Alice - Clear, Engaging Educator** with the demo account. Voice access must also be available to the runtime key; another account may need to select a different voice.
+- `ELEVENLABS_VOICE_ID`: `CQcj2MsUgZyAgfHH6yJV`, **Alexander - Smooth, Deep and Round**. Ensure this voice is available to the runtime account; add it from the ElevenLabs Voice Library if needed. Existing local environment files must also be updated to this ID.
 - `ELEVENLABS_MODEL_ID`: defaults to `eleven_multilingual_v2`.
 - `NARRATION_DATA_DIR`: an absolute writable directory, e.g. a `.narration` directory in the checkout.
 - `NARRATION_ALLOW_LOCAL=1`: is a legacy local binding option; the backend then defaults to a loopback bind. It refuses a shared bind with this bypass enabled and ignores it in production.
 - Omit `NARRATION_PUBLIC_ORIGIN` locally. Behind the production gateway set it to the exact public browser origin, `https://11.hackathon.ethz.ch`.
 
 Never use `VITE_` for credentials. `.env` files and generated audio are ignored by Git. The checked-in example contains no API key.
+
+Narration uses stability `0.45` and style exaggeration `0.2` for a more expressive delivery, with similarity `0.75`, speaker boost enabled, and normal speed. ElevenLabs documents that [lower stability broadens emotional range and style exaggeration amplifies the speaker's delivery](https://elevenlabs.io/docs/api-reference/voices/settings/update). The production workflow pins the same Alexander voice. Restart the backend after changing its environment; newly generated narration uses the new settings, while existing video audio keeps its original voice.
 
 Generate the smoke sample before starting the backend worker:
 
