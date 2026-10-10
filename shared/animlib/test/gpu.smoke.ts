@@ -1,3 +1,4 @@
+import {integrationCases} from './integration-cases.js';
 import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
@@ -23,6 +24,8 @@ import {reactiveCases} from './reactive-cases.js';
 import {lightingCases} from './lighting-cases.js';
 import {materialCases,materialSource,bumpSource} from './material-cases.js';
 import {textureCases,texturePixelIssues} from './texture-cases.js';
+import {retainedPrecisionCases,retainedCases,occlusionGateSource,occlusionGateFrames} from './retained-cases.js';
+import {RetainedGeometry} from '../src/retained-geometry.js';
 import {transparencyCases} from './transparency-cases.js';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
@@ -85,10 +88,29 @@ describe('native Vulkan WebGPU rendering',()=> {
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
   function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  it.each(integrationCases)('cross-feature: $name',async entry=>{
+    renderer.resetInteraction();
+    await entry.run({sequence,draw:async(frame,options,reference=false)=>{
+      const bypass=reference?vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined):undefined;
+      const uploads=vi.spyOn(device!.queue,'writeBuffer');
+      const encoder=device!.createCommandEncoder.bind(device!);let indexed=0;
+      const encoding=vi.spyOn(device!,'createCommandEncoder').mockImplementation((...args)=>{
+        const e=encoder(...args),begin=e.beginRenderPass.bind(e);
+        e.beginRenderPass=(...args)=>{const p=begin(...args),draw=p.drawIndexed.bind(p);p.drawIndexed=(...args)=>{indexed++;return draw(...args);};return p;};return e;
+      });
+      try {
+        renderer.render(frame,options);
+        return {pixels:await pixels(),indexed,resources:(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes.size,
+          uploads:uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX)).length};
+      } finally {bypass?.mockRestore();uploads.mockRestore();encoding.mockRestore();}
+    }});
+    expect(errors).toEqual([]);
+  });
   it.each(lightingCases)('lighting: $name',async test=>{
     let imageIndex=0;
     await test.run(async(source,yaw=0,time=0)=>{
       renderer.resetInteraction();
+      (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
       const result=await sequence.submit({type:'load',scenes:[{id:'lighting',source}]});
       expect(result.ok,JSON.stringify(result)).toBe(true);
       renderer.setOrbit({yaw,pitch:0});
@@ -133,6 +155,78 @@ describe('native Vulkan WebGPU rendering',()=> {
       renderer.render(sequence.frame(0,0),sequence.compiled[0].options);await device!.queue.onSubmittedWorkDone();
       expect(renderer.backend).toBe('webgpu');expect(controlled).toHaveLength(1);expect(errors).toEqual([]);
     } finally {renderer.onError=previousError;create.mockRestore();submit.mockRestore();write.mockRestore();}
+  });
+  it.each(retainedCases)('retained/reference pixels: $name',async ({source})=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'retained',source}]})).ok).toBe(true);
+    for(const [yaw,pitch,time] of [[0,0,0],[0.7,0.35,0.5],[-0.8,-0.4,1]]) {
+      const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+      renderer.render(frame,sequence.compiled[0].options);const optimized=await pixels();
+      const bypass=vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined);
+      try {renderer.render(frame,sequence.compiled[0].options);} finally {bypass.mockRestore();}
+      const reference=await pixels();
+      expect(changedPixels(optimized)).toBeGreaterThan(200);
+      expect(optimized.filter((v,i)=>Math.abs(v-reference[i])>3).length).toBeLessThan(optimized.length*0.002);
+    }
+    expect(errors).toEqual([]);
+  });
+  it.each(retainedPrecisionCases)('retained precision/reference pixels: $name',async ({source,retained,orbit})=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'precision',source}]})).ok).toBe(true);
+    (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
+    let warm=false;
+    for(const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
+      const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw:orbit===false?0:yaw,pitch:orbit===false?0:pitch};
+      const uploads=vi.spyOn(device!.queue,'writeBuffer');
+      let geometryUploads=0;
+      try {
+        renderer.render(frame,sequence.compiled[0].options);
+        geometryUploads=uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX)).length;
+      } finally {uploads.mockRestore();}
+      const optimized=await pixels();
+      const resources=(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes;
+      const usedRetained=resources.size>0;
+      const bypass=vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined);
+      try {renderer.render(frame,sequence.compiled[0].options);} finally {bypass.mockRestore();}
+      const reference=await pixels();
+      expect(changedPixels(reference)).toBeGreaterThan(200);
+      expect(optimized.filter((v,i)=>Math.abs(v-reference[i])>3)).toHaveLength(0);
+      expect(usedRetained).toBe(retained);
+      if(warm&&retained)expect(geometryUploads).toBe(0);
+      // Leave retained resources warm for the next sample (reference rendering
+      // deliberately releases them), exercising both cold and reused meshes.
+      renderer.render(frame,sequence.compiled[0].options);await pixels();warm=true;
+    }
+    expect(errors).toEqual([]);
+  });
+  it('camera-only frames retain GPU vertex/index buffers and instance repeated spheres',async()=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'retained',source:`export default scene({mode:'3d'},s=>{
+      for(let i=0;i<8;i++)s.sphere('s'+i,{radius:0.2,position:[i/2-2,0,0],fill:'BLUE'});s.wait(2);
+    });`}]})).ok).toBe(true);
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);await pixels();
+    const uploads=vi.spyOn(device!.queue,'writeBuffer');
+    try {
+      const frame=sequence.frame(0,1);frame.camera.yaw=0.4;
+      renderer.render(frame,sequence.compiled[0].options);expect(changedPixels(await pixels())).toBeGreaterThan(100);
+      expect(uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX))).toHaveLength(0);
+      expect(uploads.mock.calls.some(([buffer])=>buffer.usage&GPUBufferUsage.UNIFORM)).toBe(true);
+    } finally {uploads.mockRestore();}
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('label occlusion integration gate submits final world-space occluders, including morph endpoints',async()=>{
+    expect((await sequence.submit({type:'load',scenes:[{id:'occlusion-gate',source:occlusionGateSource}]})).ok).toBe(true);
+    const frame=sequence.frame(0,0),options=sequence.compiled[0].options;
+    const resourceCount=()=> (renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes.size;
+    renderer.render(frame,options);expect(changedPixels(await pixels())).toBeGreaterThan(200);expect(resourceCount()).toBeGreaterThan(0);
+    for(const dependent of occlusionGateFrames(frame)) {
+      renderer.render(dependent,options);expect(changedPixels(await pixels())).toBeGreaterThan(200);
+      expect(resourceCount()).toBe(0);
+    }
+    renderer.render(frame,options);await pixels();expect(resourceCount()).toBeGreaterThan(0);
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it.each([false,true])('bump changes normals with constant albedo, metal=%s',async metal=>{
     const images:Uint8Array[]=[];
