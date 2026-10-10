@@ -52,6 +52,14 @@ subviews, creation/removal, and compatible morphs.
 
 ## Test runs
 
+After integrating main at `c588ac7` for the PR, the expanded suites pass with
+320 library tests, 173 backend tests, 40 frontend tests, 45 native Vulkan WebGPU
+tests, and 43 browser WebGL2 checks. Library/backend typechecks and library, app,
+and demo builds pass. Both transparency and reactive GPU regressions are retained.
+The authoring-reference extractor recognizes and preserves the new callback
+section and its fallback guidance. The table below records the earlier isolated
+prototype run used for the before/after comparisons.
+
 | Check | Result |
 | --- | --- |
 | Clean baseline library suite | 239 passed |

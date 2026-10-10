@@ -27,6 +27,7 @@ const headings = [
   '### Anchors and counting numbers',
   '## 6. Interaction and 2D/3D scenes',
   '### Controls are input values',
+  '### Reactive sliders (prototype)',
   '### Control appearance',
   '### Overlay placement',
   '### Round lines and arrows in 3D',

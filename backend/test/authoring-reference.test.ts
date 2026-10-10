@@ -21,6 +21,8 @@ test('retains every authoring section verbatim while excluding host and developm
     expect(output).not.toContain(heading);
   }
   expect(output.length).toBeLessThan(reference.length);
+  expect(output).toContain('### Reactive sliders (prototype)');
+  expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
 });
 
 test('normalizes line endings deterministically without changing authoring prose', () => {
