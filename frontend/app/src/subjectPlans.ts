@@ -17,6 +17,7 @@ const record = (value: unknown): value is Record<string, unknown> => !!value && 
 
 export function isStudyPlan(value: unknown): value is StudyPlan {
   return record(value) && value.version === 1 && typeof value.title === 'string' && typeof value.sourceName === 'string'
+    && (value.sourceNames === undefined || (Array.isArray(value.sourceNames) && value.sourceNames.every(name => typeof name === 'string')))
     && Array.isArray(value.chapters) && value.chapters.length > 0 && value.chapters.every(chapter => record(chapter) && typeof chapter.id === 'string' && typeof chapter.title === 'string' && Array.isArray(chapter.segments) && chapter.segments.length > 0 && chapter.segments.every(segment => record(segment) && typeof segment.id === 'string' && typeof segment.title === 'string' && typeof segment.text === 'string' && typeof segment.minutes === 'number' && Number.isFinite(segment.minutes) && segment.minutes > 0))
 }
 

@@ -9,5 +9,5 @@ export interface VideoSegment {
 export interface PlanChapter { id: string; title: string; segments: VideoSegment[] }
 export interface StudyPlan {
   version: 1; title: string; sourceName: string; sourcePages?: number; chapters: PlanChapter[]; example?: boolean
-  audience?: string; assumed?: string[]; originalText?: string
+  audience?: string; assumed?: string[]; originalText?: string; sourceNames?: string[]
 }

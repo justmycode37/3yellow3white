@@ -48,3 +48,12 @@ and supports deletion. Pi generation is the default; `VIDEO_GENERATOR=simulated`
 explicit diagnostic fixture. Course topics and extracted source text still use browser local
 storage. See [video delivery](../../docs/video-delivery.md), [agent setup](../../docs/agents.md),
 and [narration](../../docs/narration.md).
+
+
+Course uploads now stage files and pasted text together. The top-right Add button
+calls `/api/study-plans` once, always using AI, and stores the returned topics and
+video-sized lessons. File names, sizes, and remove buttons remain in the drop area
+while staged or processing. Input tabs remain selectable during processing;
+cancel and failure retain the material for retry. Course material and delete
+controls use distinct React keys so switching courses unmounts the old panel.
+See the root README for supported formats, limits, and `STUDY_PLAN_MODEL`.

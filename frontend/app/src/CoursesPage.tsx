@@ -11,7 +11,7 @@ import type { SubjectPlans, TopicVideoRequest } from './subjectPlans'
 type CoursesPageProps = {
   curriculum: Curriculum
   selectedId?: string
-  onSelect: (id: string) => void
+  onSelect: (id?: string) => void
   plans: SubjectPlans
   onAddMaterial: (subjectId: string, plans: StudyPlan[]) => void
   onMakeVideo: (request: TopicVideoRequest) => void
@@ -30,7 +30,7 @@ export default function CoursesPage({ curriculum, selectedId, onSelect, plans, o
   const icons = [BookOpen, ListTree, Layers3, Atom, Library]
   const scrollToPlan = () => document.getElementById('subject-plan')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' })
   useEffect(() => { if (selectedId) scrollToPlan() }, [selectedId])
-  const selectSubject = (id: string) => { if (id === selectedId) scrollToPlan(); else onSelect(id) }
+  const selectSubject = (id: string) => onSelect(id === selectedId ? undefined : id)
 
   return <main className="plan-page courses-page" aria-label="Courses">
     <h1>Courses</h1>
@@ -41,7 +41,7 @@ export default function CoursesPage({ curriculum, selectedId, onSelect, plans, o
           {curriculum.subjects.map((subject, index) => {
             const Icon = icons[index % icons.length]
             return <li key={subject.id}>
-              <button className={`plan-subject-row subject-${subject.color} ${selectedId === subject.id ? 'selected' : ''}`} aria-label={`Open ${subject.title} course`} aria-pressed={selectedId === subject.id} aria-controls={selectedId === subject.id ? 'subject-plan' : undefined} onClick={() => selectSubject(subject.id)}>
+              <button className={`plan-subject-row subject-${subject.color} ${selectedId === subject.id ? 'selected' : ''}`} aria-label={`${selectedId === subject.id ? 'Close' : 'Open'} ${subject.title} course`} aria-expanded={selectedId === subject.id} aria-controls={selectedId === subject.id ? 'subject-plan' : undefined} onClick={() => selectSubject(subject.id)}>
                 <span className="plan-subject-icon"><Icon size={25}/></span>
                 <span className="plan-subject-name">{subject.title}</span>
                 <ArrowUpRight className="plan-subject-arrow" size={20}/>
@@ -62,9 +62,9 @@ export default function CoursesPage({ curriculum, selectedId, onSelect, plans, o
         </div>
       </section>
     </div>
-    {selectedSubject && <SubjectPlan key={selectedSubject.id} subject={selectedSubject} materials={plans.subjects[selectedSubject.id] || []} onAdd={material => onAddMaterial(selectedSubject.id, material)} onMakeVideo={onMakeVideo}/>}
+    {selectedSubject && <SubjectPlan key={`material-${selectedSubject.id}`} subject={selectedSubject} materials={plans.subjects[selectedSubject.id] || []} onAdd={material => onAddMaterial(selectedSubject.id, material)} onMakeVideo={onMakeVideo}/>}
     {storageNote && <p className="subject-plan-error" role="status">{storageNote}</p>}
-    {selectedSubject && <DeleteCourse key={selectedSubject.id} title={selectedSubject.title} onDelete={() => onDeleteCourse(selectedSubject.id)}/>}
+    {selectedSubject && <DeleteCourse key={`delete-${selectedSubject.id}`} title={selectedSubject.title} onDelete={() => onDeleteCourse(selectedSubject.id)}/>}
   </main>
 }
 
