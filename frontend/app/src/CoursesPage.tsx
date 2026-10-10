@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import SubjectPlan from './SubjectPlan'
-import { ArrowUpRight, Atom, BookOpen, Check, Layers3, Library, ListTree, Play, Plus, Trash, X } from './Icons'
+import CourseOutline, { OutlineDisclosure } from './CourseOutline'
+import { Atom, BookOpen, Check, ChevronDown, Layers3, Library, ListTree, Play, Plus, Trash, X } from './Icons'
 import { courseColors } from './courses'
 import type { Curriculum, SubjectColor } from './curriculum'
 import type { Lesson } from './data'
 import type { StudyPlan } from './plan'
-import type { SubjectPlans, TopicVideoRequest } from './subjectPlans'
+import type { CourseLessonRef, SubjectPlans, TopicParent, TopicVideoRequest } from './subjectPlans'
 
 type CoursesPageProps = {
   curriculum: Curriculum
@@ -14,6 +15,11 @@ type CoursesPageProps = {
   onSelect: (id?: string) => void
   plans: SubjectPlans
   onAddMaterial: (subjectId: string, plans: StudyPlan[]) => void
+  onAddTopic: (subjectId: string, name: string) => void
+  onDeleteTopic: (subjectId: string, materialId: string, chapterId: string) => void
+  onAddLesson: (subjectId: string, parent: TopicParent, title: string) => void
+  onDeleteLesson: (reference: CourseLessonRef) => void
+  pendingLessons: CourseLessonRef[]
   onMakeVideo: (request: TopicVideoRequest) => void
   onAddCourse: (name: string, color: SubjectColor) => void
   onDeleteCourse: (id: string) => void
@@ -23,14 +29,22 @@ type CoursesPageProps = {
   storageNote: string
 }
 
-export default function CoursesPage({ curriculum, selectedId, onSelect, plans, onAddMaterial, onMakeVideo, onAddCourse, onDeleteCourse, onNewVideo, recent, renderVideo, storageNote }: CoursesPageProps) {
+export default function CoursesPage({ curriculum, selectedId, onSelect, plans, onAddMaterial, onAddTopic, onDeleteTopic, onAddLesson, onDeleteLesson, pendingLessons, onMakeVideo, onAddCourse, onDeleteCourse, onNewVideo, recent, renderVideo, storageNote }: CoursesPageProps) {
   const selectedSubject = curriculum.subjects.find(subject => subject.id === selectedId)
   const [adding, setAdding] = useState(false)
+  const [uploadRequest, setUploadRequest] = useState<{ subjectId: string; sequence: number }>()
   const addButton = useRef<HTMLButtonElement>(null)
   const icons = [BookOpen, ListTree, Layers3, Atom, Library]
-  const scrollToPlan = () => document.getElementById('subject-plan')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' })
-  useEffect(() => { if (selectedId) scrollToPlan() }, [selectedId])
-  const selectSubject = (id: string) => onSelect(id === selectedId ? undefined : id)
+  const selectSubject = (id: string) => { setUploadRequest(undefined); onSelect(id === selectedId ? undefined : id) }
+  const openUpload = (id: string) => {
+    setUploadRequest(current => ({ subjectId: id, sequence: (current?.sequence || 0) + 1 }))
+    requestAnimationFrame(() => document.getElementById('subject-plan')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }))
+  }
+  const openTopic = (materialId: string, chapterId: string) => {
+    const heading = document.getElementById(`chapter-${materialId}-${chapterId}`)
+    heading?.focus({ preventScroll: true })
+    heading?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' })
+  }
 
   return <main className="plan-page courses-page" aria-label="Courses">
     <h1>Courses</h1>
@@ -40,12 +54,15 @@ export default function CoursesPage({ curriculum, selectedId, onSelect, plans, o
         <ul className="plan-subject-list" aria-label="Courses">
           {curriculum.subjects.map((subject, index) => {
             const Icon = icons[index % icons.length]
-            return <li key={subject.id}>
-              <button className={`plan-subject-row subject-${subject.color} ${selectedId === subject.id ? 'selected' : ''}`} aria-label={`${selectedId === subject.id ? 'Close' : 'Open'} ${subject.title} course`} aria-expanded={selectedId === subject.id} aria-controls={selectedId === subject.id ? 'subject-plan' : undefined} onClick={() => selectSubject(subject.id)}>
+            return <li key={subject.id} className={`subject-${subject.color}`}>
+              <button className={`plan-subject-row ${selectedId === subject.id ? 'selected' : ''}`} aria-label={`${selectedId === subject.id ? 'Close' : 'Open'} ${subject.title} course`} aria-expanded={selectedId === subject.id} aria-controls={`course-outline-${subject.id}`} onClick={() => selectSubject(subject.id)}>
                 <span className="plan-subject-icon"><Icon size={25}/></span>
                 <span className="plan-subject-name">{subject.title}</span>
-                <ArrowUpRight className="plan-subject-arrow" size={20}/>
+                <ChevronDown className="plan-subject-arrow course-outline-chevron" size={17}/>
               </button>
+              <OutlineDisclosure id={`course-outline-${subject.id}`} expanded={selectedId === subject.id}>
+                <CourseOutline subject={subject} materials={plans.subjects[subject.id] || []} onAdd={name => onAddTopic(subject.id, name)} onDelete={(materialId, chapterId) => onDeleteTopic(subject.id, materialId, chapterId)} onOpenTopic={openTopic} onUpload={() => openUpload(subject.id)}/>
+              </OutlineDisclosure>
             </li>
           })}
         </ul>
@@ -62,7 +79,7 @@ export default function CoursesPage({ curriculum, selectedId, onSelect, plans, o
         </div>
       </section>
     </div>
-    {selectedSubject && <SubjectPlan key={`material-${selectedSubject.id}`} subject={selectedSubject} materials={plans.subjects[selectedSubject.id] || []} onAdd={material => onAddMaterial(selectedSubject.id, material)} onMakeVideo={onMakeVideo}/>}
+    {selectedSubject && (!!plans.subjects[selectedSubject.id]?.length || uploadRequest?.subjectId === selectedSubject.id) && <SubjectPlan key={`material-${selectedSubject.id}`} uploadRequest={uploadRequest?.subjectId === selectedSubject.id ? uploadRequest.sequence : 0} subject={selectedSubject} materials={plans.subjects[selectedSubject.id] || []} onAdd={material => onAddMaterial(selectedSubject.id, material)} onAddLesson={(parent, title) => onAddLesson(selectedSubject.id, parent, title)} onDeleteLesson={onDeleteLesson} pendingLessons={pendingLessons} onMakeVideo={onMakeVideo}/>}
     {storageNote && <p className="subject-plan-error" role="status">{storageNote}</p>}
     {selectedSubject && <DeleteCourse key={`delete-${selectedSubject.id}`} title={selectedSubject.title} onDelete={() => onDeleteCourse(selectedSubject.id)}/>}
   </main>
