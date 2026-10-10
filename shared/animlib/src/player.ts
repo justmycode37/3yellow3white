@@ -27,6 +27,7 @@ export class Player {
   private error?: string;
   private rendererError?: Error;
   private raf?: number;
+  private frameInvalidated = false;
   private startedAt = 0;
   private offset = 0;
   private playbackGeneration = 0;
@@ -102,7 +103,8 @@ export class Player {
   setPan(value: Vec3, view = ''): void { this.assertAlive(); this.renderer.setPan(value, view); this.invalidateFrame(); }
   setNavigationMode(mode: 'orbit' | 'pan'): void { this.assertAlive(); this.renderer.setNavigationMode(mode); }
   resetView(): void { this.assertAlive(); this.input.cancel(); this.behaviors.reset(); this.renderer.resetInteraction(); this.invalidateFrame(); }
-  invalidateFrame(): void { this.assertAlive(); this.time = this.clockTime(); this.refresh(); }
+  /** Schedule presentation of the latest input state; repeated calls share one animation frame. */
+  invalidateFrame(): void { this.assertAlive(); this.frameInvalidated = true; this.scheduleFrame(); }
   project(point: Vec3, view = '') {
     const snapshot = this.getInteractionSnapshot(view); if (!snapshot) return;
     return project(point, snapshot.camera, snapshot.width, snapshot.height);
@@ -147,6 +149,10 @@ export class Player {
 
   private refresh(): void {
     if (this.disposed) return;
+    this.frameInvalidated = false;
+    // An explicit seek/control/pause refresh consumes a queued input refresh.
+    if (this.raf !== undefined) cancelAnimationFrame(this.raf);
+    this.raf = undefined;
     const index = this.currentIndex();
     const scene = index < 0 ? undefined : this.sequence.compiled[index];
     if (scene) {
@@ -244,7 +250,7 @@ export class Player {
   }
 
   private scheduleFrame(): void {
-    if (this.disposed || this.rendererError || this.status !== "playing" && !this.behaviors.active || this.raf !== undefined) return;
+    if (this.disposed || this.rendererError || this.status !== "playing" && !this.behaviors.active && !this.frameInvalidated || this.raf !== undefined) return;
     this.raf = requestAnimationFrame(() => {
       this.raf = undefined;
       if (this.disposed || this.rendererError) return;

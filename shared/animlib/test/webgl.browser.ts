@@ -6,6 +6,8 @@ import { compositionCases } from './composition-cases.js';
 import { reactiveCases } from './reactive-cases.js';
 import { materialCases, materialSource, bumpSource } from './material-cases.js';
 import { textureCases, texturePixelIssues } from './texture-cases.js';
+import { retainedCases, occlusionGateSource, occlusionGateFrames } from './retained-cases.js';
+import { RetainedGeometry } from '../src/retained-geometry.js';
 import { transparencyCases } from './transparency-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
 import { initialSources } from '../demo/scenes.js';
@@ -75,6 +77,48 @@ export async function runWebGLTests() {
     return pixels(renderer.canvasElement);
   };
   try {
+    for (const {name,source} of retainedCases) await test('retained/reference pixels: '+name,async()=>{
+      await load(source);
+      for (const [yaw,pitch,time] of [[0,0,0],[0.7,0.35,0.5],[-0.8,-0.4,1]]) {
+        const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+        renderer.render(frame,sequence.compiled[0].options);const optimized=pixels(renderer.canvasElement);
+        const get=RetainedGeometry.prototype.get;RetainedGeometry.prototype.get=()=>undefined;
+        try {renderer.render(frame,sequence.compiled[0].options);} finally {RetainedGeometry.prototype.get=get;}
+        const reference=pixels(renderer.canvasElement);
+        assert(foreground(optimized)>200,'Retained scene was empty');
+        assert(optimized.filter((v,i)=>Math.abs(v-reference[i])>3).length<optimized.length*0.002,'Retained and CPU world geometry diverged');
+      }
+    });
+    await test('label occlusion integration gate keeps transformed occluders in world space',async()=>{
+      await load(occlusionGateSource);
+      const frame=sequence.frame(0,0),options=sequence.compiled[0].options;
+      const gl=renderer.canvasElement.getContext('webgl2')!,indexed=gl.drawElementsInstanced;
+      let indexedCalls=0;
+      gl.drawElementsInstanced=new Proxy(indexed,{apply(target,receiver,args){indexedCalls++;return Reflect.apply(target,receiver,args);}});
+      try {
+        renderer.render(frame,options);pixels(renderer.canvasElement);assert(indexedCalls>0,'Ordinary scene did not use indexed geometry');
+        for(const dependent of occlusionGateFrames(frame)) {
+          indexedCalls=0;renderer.render(dependent,options);
+          assert(foreground(pixels(renderer.canvasElement))>200,'Occlusion gate scene was empty');
+          assert(indexedCalls===0,'Label visibility received retained local-space occluders');
+        }
+      } finally {gl.drawElementsInstanced=indexed;}
+    });
+    await test('retained indexed instances skip geometry uploads on camera movement',async()=>{
+      await load(`export default scene({mode:'3d'},s=>{for(let i=0;i<8;i++)s.sphere('s'+i,{radius:0.2,position:[i/2-2,0,0],fill:'BLUE'});s.wait(2);});`);
+      draw();
+      const gl=renderer.canvasElement.getContext('webgl2')!,upload=gl.bufferSubData,allocate=gl.bufferData,instanced=gl.drawElementsInstanced;
+      let uploads=0,allocations=0,maxInstances=0;
+      gl.bufferSubData=new Proxy(upload,{apply(target,receiver,args){uploads++;return Reflect.apply(target,receiver,args);}});
+      gl.bufferData=new Proxy(allocate,{apply(target,receiver,args){allocations++;return Reflect.apply(target,receiver,args);}});
+      gl.drawElementsInstanced=function(...args:Parameters<typeof instanced>){maxInstances=Math.max(maxInstances,args[4]);return instanced.apply(this,args);};
+      try {
+        const frame=sequence.frame(0,1);frame.camera.yaw=0.4;renderer.render(frame,sequence.compiled[0].options);
+        assert(foreground(pixels(renderer.canvasElement))>100,'Retained spheres were empty');
+        assert(uploads===0&&allocations===0,'Camera movement uploaded geometry');
+        assert(maxInstances===8,'Repeated spheres did not instance');
+      } finally {gl.bufferSubData=upload;gl.bufferData=allocate;gl.drawElementsInstanced=instanced;}
+    });
     await test('missing WebGPU: real WebGL2 triangle colors', async () => {
       await load(`export default scene({},s=>{s.rectangle('r',{width:3,height:2,fill:'PURE_RED',stroke:'none'});s.wait(1)});`);
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');

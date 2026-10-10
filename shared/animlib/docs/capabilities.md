@@ -22,7 +22,10 @@ Keep these instructions in nonspoken planning; they are not narration.
   round lines and arrows, and groups. Use these for spatial vectors, curved sheets,
   flower petals, stems, and schematic molecules. Meshes support flat or smooth
   directional shading; raw meshes remain unlit unless shading is requested.
-  Labels can face the camera and remain attached to objects.
+  Labels can face the camera and remain attached to objects. Static opaque objects
+  retain GPU geometry during navigation; repeated spheres and matching round bonds
+  and arrows share indexed geometry. Orbit and pan input render once per animation
+  frame. Transparency and morphs still require more per-frame geometry work.
 - **Surface appearance:** spheres and meshes support checker, stripe, noise,
   marble, and wood patterns using two palette colors. Patterns stay attached under
   object transforms. Adjustable procedural bump perturbs lighting normals for

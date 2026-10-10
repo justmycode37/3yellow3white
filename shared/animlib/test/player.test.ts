@@ -540,7 +540,25 @@ it('cancels capture before replacing the active compilation, even when a later s
     expect(canvas.captures.size).toBe(0);expect(events).toEqual(['start','cancel','dispose']);
     expect(player.getState()).toMatchObject({scene:'a',time:1,status:'paused'});
     expect(canvas.send('pointermove',375,200).prevented).toBe(false);
-    canvas.send('pointerdown');canvas.send('pointermove',375,200);
+    canvas.send('pointerdown');canvas.send('pointermove',375,200);advance(1/60);
     expect(rendering.frame?.elements[0].position[0]).toBeCloseTo(2);
+  } finally {player.dispose();}
+});
+
+it('coalesces paused and playing input into one RAF and consumes pending invalidation on seek/pause/dispose',async()=>{
+  const player=createPlayer({canvas:{} as HTMLCanvasElement});
+  try {
+    await player.submit({type:'load',scenes:[{id:'a',source:wait(5)}]});
+    const notified=vi.fn(),unsubscribe=player.subscribe(notified);notified.mockClear();
+    for(let i=0;i<8;i++)player.invalidateFrame();
+    expect(notified).not.toHaveBeenCalled();expect(frames.size).toBe(1);
+    advance(1/60);expect(notified).toHaveBeenCalledTimes(1);expect(frames.size).toBe(0);
+    await player.play();notified.mockClear();
+    for(let i=0;i<8;i++)player.invalidateFrame();
+    expect(frames.size).toBe(1);advance(1/60);expect(notified).toHaveBeenCalledTimes(1);
+    player.invalidateFrame();await player.seek({scene:'a',time:2});
+    expect(frames.size).toBe(0);expect(player.getState().time).toBe(2);
+    player.invalidateFrame();player.pause();expect(frames.size).toBe(0);
+    player.invalidateFrame();player.dispose();expect(frames.size).toBe(0);unsubscribe();
   } finally {player.dispose();}
 });

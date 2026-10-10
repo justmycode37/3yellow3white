@@ -1,4 +1,5 @@
 /** CPU tessellation shared by rendering and overlap inspection; no browser or GPU required. */
+import { RetainedGeometry, retainableElement, canonicalPrimitive } from './retained-geometry.js';
 import { VERTEX_FLOATS, texturePatterns } from './texture-shader.js';
 import earcut from 'earcut';
 import { GeometryCache } from './cache.js';
@@ -46,10 +47,11 @@ export interface GeometryDrawItem extends DrawItem { elementId: string; componen
 const isText = (geometry: Geometry): boolean => geometry.kind === 'text' || geometry.kind === 'latex';
 
 /** textOnly skips shape tessellation while retaining groups and the text portions of mixed morphs. */
-export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string,textOnly=false):GeometryDrawItem[] {
+export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string,textOnly=false,retained?:RetainedGeometry):GeometryDrawItem[] {
   const parents=new Map<string,ElementState>();
   for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
   const items:GeometryDrawItem[]=[];
+  const paletteKey=retained?JSON.stringify(palette.palette):'';
   // Camera depth is affine in world position. Reuse its coefficients when
   // sorting translucent triangles, including after the viewer orbits a view.
   const sy=Math.sin(camera.yaw),cy=Math.cos(camera.yaw),sp=Math.sin(camera.pitch),cp=Math.cos(camera.pitch);
@@ -92,6 +94,29 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     // Transform directions separately to avoid subtracting nearly equal
     // translated points when a small object is far from the world origin.
     const basis=normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
+    const opaqueColor=(color:ColorValue):boolean=>color==='none'||parseColor(palette.resolve(color))[3]>=0.999999;
+    if(retained && retainableElement(element) && scale !== 0 && opacity>=0.999999
+      && opaqueColor(element.fill) && opaqueColor(element.stroke)
+      && (!element.geometry.texture || opaqueColor(element.geometry.texture.color))) {
+      // Tessellate once in object space. Groups, billboards, layer and navigation
+      // remain live instance state; full geometry/style/palette content is keyed.
+      const primitive=canonicalPrimitive(element);
+      const local:ElementState={...element,geometry:primitive.geometry,id:'',view:undefined,position:[0,0,0],rotation:[0,0,0],scale:1,
+        opacity,billboard:false,billboardOffset:undefined,viewportOffset:undefined};
+      const key=paletteKey+JSON.stringify([local.geometry,local.fill,local.stroke,local.strokeWidth,local.strokeProfile,local.space,opacity]);
+      const meshes=retained.get(key,()=>buildDrawItems({...frame,elements:[local]},camera,width,height,palette),element.geometry.kind==='arrow',JSON.stringify([view,element.id]));
+      if(meshes) {
+        const instanceBasis=primitive.axes.map(p=>p.map((_,axis)=>p.reduce((sum,v,i)=>sum+v*basis[i][axis],0)) as Vec3);
+        const instanceOrigin=origin.map((v,axis)=>v+primitive.origin.reduce((sum,p,i)=>sum+p*basis[i][axis],0)) as Vec3;
+        const instance=new Float32Array([...instanceBasis[0],0,...instanceBasis[1],0,...instanceBasis[2],0,...instanceOrigin,1,elementIndex,scale*primitive.scale,...viewportOffset]);
+        for(const mesh of meshes) {
+          const depth=Math.min(...mesh.centers.map(center=>depthAt(...center.map((_,axis)=>instanceOrigin[axis]+center.reduce((sum,v,i)=>sum+v*instanceBasis[i][axis],0)) as Vec3)));
+          items.push({depth:element.space==='screen'?-1e9:depth,vertices:new Float32Array(0),
+            transparent:false,screen:element.space==='screen',groups,elementId:element.id,component:mesh.component,mesh,instance});
+        }
+        continue;
+      }
+    }
     const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:DrawComponent='fill',twoSided=false,texture?:ProceduralTexture,material?:Material):void=> {
       const rgba=parseColor(palette.resolve(color));
       const secondary=texture?parseColor(palette.resolve(texture.color)):rgba;

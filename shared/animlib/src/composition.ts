@@ -1,10 +1,15 @@
+import { MAX_INSTANCES } from './retained-geometry.js';
+import type { RetainedMesh } from './retained-geometry.js';
 import { VERTEX_FLOATS } from './texture-shader.js';
 /** Shared draw order for the two native graphics backends. */
 export type RenderCommand =
-  | { first: number; count: number; opaque: boolean }
+  | { first: number; count: number; opaque: boolean; mesh?: RetainedMesh; instances?: Float32Array[] }
   | { children: RenderCommand[]; opacity: number; opaque: boolean };
 export interface DrawItem {
   depth: number; vertices: Float32Array; transparent: boolean; screen: boolean;
+  /** CPU-derived view/scene geometry must bypass local-space retention. */
+  cameraDependentGeometry?: boolean;
+  mesh?: RetainedMesh; instance?: Float32Array;
   groups?: { id: string; opacity: number }[];
 }
 
@@ -31,13 +36,14 @@ export function composeItems(items: DrawItem[], first: number): { commands: Rend
     units.sort((a,b) => Number(a.transparent)-Number(b.transparent) || b.depth-a.depth);
     const commands: RenderCommand[] = units.map(unit => {
       if (unit.children) return { children: build(unit.children), opacity: unit.opacity, opaque: !unit.transparent };
-      const item = unit.item!, count = item.vertices.length/VERTEX_FLOATS, command = { first, count, opaque: !item.transparent };
+      const item = unit.item!, count = item.vertices.length/VERTEX_FLOATS, command: RenderCommand = { first, count, opaque: !item.transparent, ...(item.mesh ? { mesh: item.mesh, instances: [item.instance!] } : {}) };
       ordered.push(item); first += count; return command;
     });
     const merged: RenderCommand[] = [];
     for (const command of commands) {
       const previous = merged.at(-1);
-      if (previous && 'first' in previous && 'first' in command && previous.opaque === command.opaque && previous.first+previous.count === command.first) previous.count += command.count;
+      if (previous && 'first' in previous && 'first' in command && previous.mesh && previous.mesh === command.mesh && previous.instances!.length < MAX_INSTANCES) previous.instances!.push(...command.instances!);
+      else if (previous && 'first' in previous && 'first' in command && !previous.mesh && !command.mesh && previous.opaque === command.opaque && previous.first+previous.count === command.first) previous.count += command.count;
       else merged.push(command);
     }
     return merged;

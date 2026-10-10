@@ -1,3 +1,5 @@
+import { IDENTITY_INSTANCE, MAX_INSTANCES } from './retained-geometry.js';
+import type { RetainedMesh } from './retained-geometry.js';
 import { materialGLSL } from './material-shader.js';
 import { VERTEX_FLOATS, textureGLSL } from './texture-shader.js';
 import type { CameraState } from './types.js';
@@ -17,13 +19,13 @@ export interface RenderBatch {
 
 const vertex = `#version 300 es
 precision highp float;
-layout(location=0) in vec3 world;
+layout(location=0) in vec3 localWorld;
 layout(location=1) in vec4 color;
 layout(location=2) in float screen;
-layout(location=3) in vec3 normal;
+layout(location=3) in vec3 localNormal;
 layout(location=4) in float lit;
-layout(location=5) in float layer;
-layout(location=6) in vec2 viewportOffset;
+layout(location=5) in float localLayer;
+layout(location=6) in vec2 localViewportOffset;
 layout(location=7) in vec3 texPosition;
 layout(location=8) in float texKind;
 layout(location=9) in vec4 texColor;
@@ -31,6 +33,8 @@ layout(location=10) in float texSeed;
 layout(location=11) in vec3 material;
 layout(location=12) in vec3 emission;
 layout(location=13) in float bumpStrength;
+uniform mat4 objectTransform[${MAX_INSTANCES}];
+uniform vec4 objectInfo[${MAX_INSTANCES}];
 uniform vec4 focus;
 uniform vec4 angles;
 uniform vec4 viewport;
@@ -47,6 +51,12 @@ out vec3 vEmission;
 out vec3 vViewPosition;
 out float vBumpStrength;
 void main() {
+  mat4 transform=objectTransform[gl_InstanceID];
+  vec4 info=objectInfo[gl_InstanceID];
+  vec3 world=(transform*vec4(localWorld,1.)).xyz;
+  vec3 normal=(transform*vec4(localNormal,0.)).xyz/info.y;
+  float layer=localLayer+info.x;
+  vec2 viewportOffset=localViewportOffset+info.zw;
   vec3 p=world-focus.xyz;
   float cy=cos(-angles.x), sy=sin(-angles.x);
   p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
@@ -66,7 +76,7 @@ void main() {
   vNormal=vec3(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
   vLit=lit; vColor=color;
   vTexPosition=texPosition;vTexKind=texKind;vTexColor=texColor;vTexSeed=texSeed;
-  vMaterial=material;vEmission=emission;vViewPosition=p;vBumpStrength=bumpStrength;vViewDirection=mix(vec3(0.,0.,1.),vec3(-p.x,-p.y,depth),angles.w);
+  vMaterial=material;vEmission=emission;vViewPosition=p;vBumpStrength=bumpStrength*info.y;vViewDirection=mix(vec3(0.,0.,1.),vec3(-p.x,-p.y,depth),angles.w);
 }`;
 const fragment = `#version 300 es
 precision highp float;
@@ -114,6 +124,9 @@ export class WebGLBackend {
   private angles: WebGLUniformLocation;
   private viewport: WebGLUniformLocation;
   private capacity = 0;
+  private objectTransform: WebGLUniformLocation;
+  private objectInfo: WebGLUniformLocation;
+  private meshes = new Map<RetainedMesh, { vertices: WebGLBuffer; indices: WebGLBuffer; vao: WebGLVertexArrayObject }>();
   private compositor?: GLCompositor;
   readonly maxSize: number;
 
@@ -143,10 +156,9 @@ export class WebGLBackend {
         return value;
       };
       this.focus = uniform('focus'); this.angles = uniform('angles'); this.viewport = uniform('viewport');
+      this.objectTransform = uniform('objectTransform[0]'); this.objectInfo = uniform('objectInfo[0]');
       gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108],[13,1,120]]) {
-        gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, VERTEX_FLOATS*4, offset);
-      }
+      this.attributes();
       gl.bindVertexArray(null);
       const viewportLimits = gl.getParameter(gl.MAX_VIEWPORT_DIMS) as Int32Array;
       this.maxSize = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), viewportLimits[0], viewportLimits[1]);
@@ -157,6 +169,29 @@ export class WebGLBackend {
       if (program) gl.deleteProgram(program);
       throw error;
     } finally { for (const shader of shaders) gl.deleteShader(shader); }
+  }
+
+  private attributes(): void {
+    const gl = this.gl;
+    for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108],[13,1,120]]) {
+      gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, VERTEX_FLOATS*4, offset);
+    }
+  }
+
+  private retainedMesh(mesh: RetainedMesh) {
+    const gl = this.gl;
+    let resource = this.meshes.get(mesh);
+    if (resource) return resource;
+    const vertices = gl.createBuffer(), indices = gl.createBuffer(), vao = gl.createVertexArray();
+    if (!vertices || !indices || !vao) {
+      if (vertices) gl.deleteBuffer(vertices); if (indices) gl.deleteBuffer(indices); if (vao) gl.deleteVertexArray(vao);
+      throw new Error('WebGL2 could not allocate retained geometry.');
+    }
+    resource = { vertices, indices, vao }; this.meshes.set(mesh, resource);
+    gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW); this.attributes();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
+    return resource;
   }
 
   render(data: Float32Array, batches: RenderBatch[], clear: number[], width: number, height: number): void {
@@ -175,6 +210,7 @@ export class WebGLBackend {
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.clearColor(clear[0], clear[1], clear[2], 1); gl.clearDepth(1);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    const used = new Set<RetainedMesh>();
     let first = 0;
     for (const batch of batches) {
       gl.useProgram(this.program);
@@ -192,7 +228,15 @@ export class WebGLBackend {
       const draw = (command: Extract<RenderCommand,{first:number}>) => {
         gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.depthMask(command.opaque);
         gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
-        gl.drawArrays(gl.TRIANGLES,command.first,command.count);
+        const instances = command.instances ?? [IDENTITY_INSTANCE];
+        const matrices = new Float32Array(instances.length*16), info = new Float32Array(instances.length*4);
+        instances.forEach((instance,i) => { matrices.set(instance.subarray(0,16),i*16); info.set(instance.subarray(16,20),i*4); });
+        gl.uniformMatrix4fv(this.objectTransform,false,matrices); gl.uniform4fv(this.objectInfo,info);
+        if (command.mesh) {
+          used.add(command.mesh);
+          gl.bindVertexArray(this.retainedMesh(command.mesh).vao);
+          gl.drawElementsInstanced(gl.TRIANGLES,command.mesh.indices.length,gl.UNSIGNED_INT,0,instances.length);
+        } else gl.drawArrays(gl.TRIANGLES,command.first,command.count);
       };
       if (commands.some(command => 'children' in command)) {
         this.compositor ??= new GLCompositor(gl);
@@ -201,10 +245,17 @@ export class WebGLBackend {
       first += count;
     }
     gl.depthMask(true); gl.disable(gl.SCISSOR_TEST); gl.bindVertexArray(null);
+    for (const [mesh,resource] of this.meshes) if (!used.has(mesh)) {
+      gl.deleteBuffer(resource.vertices); gl.deleteBuffer(resource.indices); gl.deleteVertexArray(resource.vao); this.meshes.delete(mesh);
+    }
   }
 
   dispose(): void {
     this.compositor?.dispose();
+    for (const resource of this.meshes.values()) {
+      this.gl.deleteBuffer(resource.vertices); this.gl.deleteBuffer(resource.indices); this.gl.deleteVertexArray(resource.vao);
+    }
+    this.meshes.clear();
     this.gl.deleteBuffer(this.buffer); this.gl.deleteVertexArray(this.vao); this.gl.deleteProgram(this.program);
   }
 }

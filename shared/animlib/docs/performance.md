@@ -217,3 +217,81 @@ node shared/animlib/bench/render.mjs --frames 200 --profile /tmp/interactive.cpu
 The console table times rendering only. `--profile` captures the warmed interactive
 frame loop, including evaluation, and excludes compilation and other demo scenes.
 Load the generated `.cpuprofile` into a browser's JavaScript profiler.
+
+## Retained indexed geometry (2026-10-10)
+
+The retained renderer replaces per-frame opaque vertex expansion with indexed
+local-space meshes and 80-byte object transform records. Compatible consecutive
+draws instance up to 32 objects, within WebGL2's minimum vertex-uniform limits.
+Untextured spheres share across radii; round two-point bonds/arrows share across
+translation/orientation when length, width and style match. Textured geometry
+keeps its authored local texture coordinates. Vertex format remains **31 floats**.
+
+Keys include effective geometry arrays/normals, texture/material values, style,
+opacity and the resolved palette, rather than scene or element identity alone.
+Camera, group/object transforms, billboard facing, viewport offsets and layer bias
+are live uniforms. Changed content invalidates its mesh; continuously changing
+content streams through the CPU path until stable again, avoiding repeated cold
+indexing costs. Only the current frame's working set retains GPU handles. Context
+recovery creates new backend resources. Transparent triangles still sort globally
+per camera, with existing isolated composition and independent view clipping.
+Adaptive paths, morphs, and stroked meshes retain their CPU path.
+
+Integration gates also preserve the CPU path for explanatory geometry fields
+(`clipPlanes`, `outline`, `scalarColors`, `labelOcclusion`). A shadow receiver, or
+a world text/LaTeX label with defined occlusion other than `depth` (including either
+morph endpoint), disables retention for the frame: these stages need **final
+world-space occluder/caster triangles**. Hide/fade visibility and shadow semantics
+belong to the accompanying feature changes and need joint integration tests.
+
+Matched baseline: `aaf8249ebd15e4522968c1e1a49cc6d4b0115446`, using its current
+31-float format. The interaction probe's obsolete `drawItems` hook was removed;
+both versions wait for the next animation frame after input. `refreshMs` below
+measures CPU work inside the refresh, excluding that scheduling wait. Same Chrome
+154/Linux setup as above, DPR 2, 1280 × 800 CSS pixels, five warmups and 20 samples.
+WebGL submission was **suppressed** on both versions. These are CPU measurements,
+not hardware frame rates or input-to-display latency.
+
+| Orbit workload | Baseline median / p95 refresh | Retained median / p95 refresh | Baseline packed bytes | Retained packed bytes |
+| --- | --- | --- | --- | --- |
+| Interactive demo, one event | 8.6 / 12.1 ms | 0.7 / 1.1 ms | 4,349,796 | 0 |
+| Interactive demo, eight events in one task | 59.8 / 66.1 ms | 0.6 / 0.9 ms | 34,798,368 | 0 |
+| 10 static spheres, one event | 4.3 / 5.0 ms | 0.4 / 0.5 ms | 4,523,520 | 0 |
+| 100 static spheres, one event | 38.5 / 42.4 ms | 1.4 / 1.8 ms | 45,235,200 | 0 |
+
+Eight-event samples now produce **one** render instead of eight, including while
+playing (covered separately by the player scheduling test). Packed bytes describe
+the legacy concatenated array only; they do not include cold indexed uploads or
+per-draw object/camera uniforms. Real backend tests independently assert zero
+vertex/index uploads on warmed camera movement and actual instanced draws.
+[Baseline raw probe](../bench/results/2026-10-10-retained-baseline-interactions.json)
+and [retained raw probe](../bench/results/2026-10-10-retained-interactions.json)
+include all counters and the single-scene control samples.
+
+`bench/spatial.mjs --json` uses production compilation and mocked GPU/DOM boundaries,
+30 measured samples after five warmups. Representative median CPU orbit times:
+
+| Spatial workload | Baseline | Retained | Warm vertex upload bytes/frame, before → after |
+| --- | --- | --- | --- |
+| Textured metal | 0.540 ms | 0.143 ms | 738,048 → 0 |
+| Default surface | 0.824 ms | 0.259 ms | 761,856 → 0 |
+| Torus | 0.349 ms | 0.104 ms | 285,696 → 0 |
+| Mixed modest | 0.606 ms | 0.378 ms | 665,136 → 0 |
+| Transparent surface | 0.998 ms | 1.394 ms | 761,856 → 761,856 |
+| Stroked surface | 9.225 ms | 10.311 ms | 5,332,992 → 5,332,992 |
+
+[Full spatial measurements](../bench/results/2026-10-10-retained-spatial.json)
+include cold preparation, compilation and fresh evaluated frames. Tiny workloads
+and CPU fallback cases do not uniformly improve; timings include allocation and
+runtime noise. The animated `bench/render.mjs` medians changed from 0.90 to 0.98 ms
+for algebra, 0.85 to 0.18 ms for chemistry, 0.37 to 0.08 ms for sorting, and 5.58 to
+0.25 ms for the interactive demo. Cold indexing and changed styles can cost more
+than one CPU expansion; the optimization targets reuse across frames.
+
+Actual shader compilation, readback and retained/reference image comparisons ran
+on **native Vulkan WebGPU, NVIDIA RTX 4080 (595.71.05)**, and browser **WebGL2 ANGLE
+SwiftShader**. The browser exposed no WebGPU adapter. These checks establish
+rendered behavior on those implementations, not hardware browser performance or
+cross-backend pixel identity. Mocked CPU tests alone do not establish visual
+correctness. Run `npm run test:gpu --workspace animlib` and the documented
+`webgl-test.html` suite for the corresponding rendering checks.

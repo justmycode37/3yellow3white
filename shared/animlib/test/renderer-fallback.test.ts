@@ -104,9 +104,10 @@ it('submits shared lit geometry, opacity ordering, and viewport offsets to WebGL
   await renderer.prepare([scene]); renderer.render(evaluateScene(scene, 0), scene.options);
   const [data, batches] = glState.render.mock.calls[0];
   expect(data).toBeInstanceOf(Float32Array);
-  expect(batches[0].opaqueVertices).toBeGreaterThan(100);
-  expect(data[11]).toBe(1); expect(data[13]).toBeCloseTo(0.2);
-  expect(data[batches[0].opaqueVertices * VERTEX_FLOATS + 6]).toBe(0.5);
+  const opaque=batches[0].commands.find((c:any)=>c.mesh);
+  expect(opaque.mesh.indices.length).toBeGreaterThan(100);
+  expect(opaque.mesh.vertices[11]).toBe(1); expect(opaque.instances[0][18]).toBeCloseTo(0.2);
+  expect(data[6]).toBe(0.5);
   renderer.dispose();
 });
 it('reports loss once, rebuilds WebGL resources on restore and detaches handlers on disposal', async () => {
