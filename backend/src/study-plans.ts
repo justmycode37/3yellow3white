@@ -54,7 +54,7 @@ export function studyPlanRoutes(createRunner: () => AgentRunner = () => new PiAg
         catch { return failure('Provide valid course material.', 400); }
       }
       try { document = parsePlanDocument(document); }
-      catch { return failure('Provide a document name and readable material, up to 200,000 characters. Split longer material into sections.', 400); }
+      catch { return failure('Provide a document name and readable material.', 400); }
       progress('planning');
       const result = await generateStudyPlan(runner, document, signal);
       if (sourceNames) result.sourceNames = sourceNames;
@@ -95,9 +95,6 @@ export function studyPlanRoutes(createRunner: () => AgentRunner = () => new PiAg
           const { value, done } = await reader.read();
           if (done) break;
           size += value.byteLength;
-          if (size > (contentType.startsWith('multipart/form-data') ? 101 * 1024 * 1024 : 2_000_000)) {
-            await reader.cancel(); return respond(failure('Course material is too large. Split it into sections.', 413));
-          }
           chunks.push(value);
         }
       } finally { signal.removeEventListener('abort', abort); reader.releaseLock(); }

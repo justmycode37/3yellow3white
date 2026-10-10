@@ -110,6 +110,40 @@ test('JSON and multipart creation forward the viewing preference and distinguish
   expect(received).toEqual(['classic', 'interactive', undefined, 'classic', 'interactive', undefined])
 })
 
+test('video creation retains more than ten uploaded, JSON, or combined documents', async () => {
+  for (const [fileCount, documentCount] of [[12, 0], [0, 12], [6, 6]]) {
+    let received: { name: string; text: string }[] | undefined
+    const service = new VideoService(':memory:', async request => { received = request.documents; return null }); services.push(service)
+    const documents = Array.from({ length: documentCount }, (_, i) => ({ name: `document-${i}.md`, text: `Document ${i} describes a basis.` }))
+    const files = Array.from({ length: fileCount }, (_, i) => new File([`File ${i} describes a vector.`], `file-${i}.md`))
+    const payload = JSON.stringify({ ...input, topic: '', documents })
+    const form = new FormData(); form.set('request', payload)
+    for (const file of files) form.append('files', file)
+    const response = await service.handle(api('', { method: 'POST', headers: { 'Idempotency-Key': 'many-documents' }, body: fileCount ? form : payload }))
+    expect(response.status).toBe(202)
+    const video = await response.json()
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.status === 'complete')
+    expect(received).toEqual([...documents, ...await Promise.all(files.map(async file => ({ name: file.name, text: await file.text() })))])
+  }
+})
+
+test('large JSON and multipart video sources reach the worker intact', async () => {
+  const text = 'Vector coordinates. '.repeat(60_000);
+  for (const multipart of [false, true]) {
+    let received: { name: string; text: string }[] | undefined
+    const service = new VideoService(':memory:', async request => { received = request.documents; return null }); services.push(service)
+    const documents = [{ name: 'notes.md', text }]
+    const payload = JSON.stringify({ ...input, topic: '', documents })
+    const form = new FormData(); form.set('request', payload)
+    form.append('files', new File([text], 'lecture.txt'))
+    const response = await service.handle(api('', { method: 'POST', headers: { 'Idempotency-Key': 'large-source' }, body: multipart ? form : payload }))
+    expect(response.status).toBe(202)
+    const video = await response.json()
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.status === 'complete')
+    expect(received).toEqual(multipart ? [...documents, { name: 'lecture.txt', text }] : documents)
+  }
+})
+
 test('video failures use user-facing messages in live events and preserve ready scenes', async () => {
   let release!: () => void
   const gate = new Promise<void>(resolve => { release = resolve })

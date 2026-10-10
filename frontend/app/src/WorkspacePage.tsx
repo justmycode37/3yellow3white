@@ -63,10 +63,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
     const errors = new Set<string>()
     for (const file of incoming) {
       if (!(mode === 'photos' ? imageFile : supportedFile).test(file.name)) { errors.add(mode === 'photos' ? 'Choose an image for Photos.' : 'Choose a PDF, DOCX, text file, or image.'); continue }
-      if (file.size > 50 * 1024 * 1024) { errors.add('Each file must be 50 MB or smaller.'); continue }
       if (next.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) continue
-      if (next.length >= 10) { errors.add('You can add up to 10 files to one video.'); continue }
-      if (next.reduce((sum, item) => sum + item.size, 0) + file.size > 100 * 1024 * 1024) { errors.add('Files must total 100 MB or less.'); continue }
       next.push(file)
     }
     setModeFiles(current => ({ ...current, [mode]: next }))
@@ -134,7 +131,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
               <VideoModeSelector value={videoMode} onChange={setVideoMode} disabled={creating}/>
             </div>
 
-            {mode === 'text' ? <textarea id="video-topic" aria-label="What would you like explained?" disabled={creating} value={topic} onChange={event => setTopic(event.target.value)} placeholder="Explain something I’ve always wondered about…" maxLength={10000}/>
+            {mode === 'text' ? <textarea id="video-topic" aria-label="What would you like explained?" disabled={creating} value={topic} onChange={event => setTopic(event.target.value)} placeholder="Explain something I’ve always wondered about…"/>
             : mode === 'drop' ? <button className="composer-upload-area" type="button" onClick={() => picker.current?.click()}>
               <Upload size={38}/><strong>Drop your material here</strong><span>Documents, notes, or images</span><span className="upload-browse">Choose files <Plus size={14}/></span>
             </button>
