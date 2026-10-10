@@ -140,8 +140,11 @@ This uses a heuristic of 20 tokens per second, bounded by the model's output lim
 streamed text, reasoning summaries, and tool arguments also establish a lower bound at
 roughly four characters per token. These are activity-based estimates, not measured hidden
 reasoning tokens. The UI displays the sum in the DynaPuff title font with a small “tokens”
-label below and a visible `~` while estimates remain. The tooltip and accessible label
-also identify estimates. Provider-reported usage replaces each response's estimate,
+label below and a visible `~` while estimates remain. Digits roll upward as usage increases
+(downward for confirmed corrections), with immediate updates when reduced motion is requested.
+The counter appears only before the first playable scene and stays hidden during playback
+and later buffering. The tooltip and accessible label also identify estimates.
+Provider-reported usage replaces each response's estimate,
 including hidden reasoning and input; this can adjust the number downward.
 
 Pi generation uses one request-scoped tracker for planning, review, scene, and thumbnail
@@ -149,6 +152,16 @@ calls, including retries. The heartbeat stops on response completion, error, can
 and session disposal, so queued jobs, validation, and speech synthesis do not invent
 ongoing model activity. Confirmed responses publish immediately. Totals are stored in
 SQLite and sent in authoritative SSE snapshots, including the final success/failure
-snapshot. Reconnects do not add totals
-again. Interrupted responses retain their unconfirmed estimate when usage is unavailable.
+snapshot. Reconnects do not add totals again. Interrupted responses retain their
+unconfirmed estimate when usage is unavailable.
 Speech synthesis is excluded because it does not report model token usage.
+
+Below the count, an `≈` symbol and small grey glasses with animated blue water show an
+illustrative water comparison, without a visible caption. Each glass represents 250 mL.
+The reference is [Mistral's July 2025 Le Chat lifecycle study](https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai/),
+which reports 45 mL per 400-token response. We scale that reference linearly by confirmed
+plus provisional **output** tokens; input/cache tokens are excluded. This extrapolation
+is a visual comparison, not measured water consumption for the generation's model or
+datacenter. The tooltip and accessible label make that limitation explicit. The glasses
+hide together with the count once the first scene is playable, and reduced motion
+disables the sketch/wave/fill animations.
