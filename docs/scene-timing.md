@@ -17,17 +17,19 @@ Existing scenes remain byte-for-byte unchanged. Switching back to `inline` does
 not invalidate scenes already generated with host timing; restart the backend
 after changing the environment setting.
 
-The preceding paired experiment on RNA transcription, binary search, and the
+The original integration experiment on RNA transcription, binary search, and the
 derivative of x² measured 19.3% less scene-generation time than the already
 optimized completion protocol across two observations per topic. This is a small
 sample, not a guaranteed speedup for every generation. Independent sampled visual
 review found no clear material explanation downgrade; all six candidate animations
 completed audio-enabled playback without reported errors.
 
-Integration verification covers exact compiled-scene/frame equivalence, invalid
+Historical verification snapshot (from the original timing integration, not current CI status):
+
+Integration verification covered exact compiled-scene/frame equivalence, invalid
 word IDs, immutable accessors, both completion modes, unchanged cached scenes,
 and disabling the optimization after generating a scene. Strict backend typecheck
-passes. The latest full local backend run has 151 passes and five known failures
+passed. That local backend run recorded 151 passes and five known failures
 (the narration-resume failure varies between runs):
 
 - `the video pipeline preserves narration audio IDs and reuses completed script, speech and scenes`
@@ -36,4 +38,4 @@ passes. The latest full local backend run has 151 passes and five known failures
 - `coalesces submissions and measures offsets from full audio including trailing silence`
 - `HTTP interfaces share one user, validate input and serve committed assets`
 
-The timing change does not include the separate in-progress scene-boundary work.
+That historical timing change did not include the scene-boundary work in progress at the time. Run the current backend checks for present status.

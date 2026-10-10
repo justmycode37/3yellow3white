@@ -12,8 +12,9 @@ import type { AgentRunner, AgentTask } from "./runtime.js";
 import { parsePlannedLesson, scenePlanningContext, validateStory } from './planning.js';
 import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
-import { validateScenePlan } from './scene-plan.js';
-import { scenegenPrompt } from './scenegen-prompts.js';
+import { validateScenePlan, validateViewingMode } from './scene-plan.js';
+import { instructionSnapshot, loadPrompt } from './prompts.js';
+import { buildAuthoringReference } from './authoring-reference.js';
 import { validationMessage } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
 
@@ -45,10 +46,15 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const cachedLesson = await saved(lessonPath);
     let plan: LessonPlan | undefined;
     let markdown: string | undefined;
+    let legacyPlan = false;
     if (cachedLesson) {
-      const lesson = parsePlannedLesson(cachedLesson, request);
+      legacyPlan = JSON.parse(cachedLesson).instructionVersion === undefined;
+      const lesson = parsePlannedLesson(cachedLesson, request, { legacy: legacyPlan });
       markdown = lesson.markdown; plan = lesson.plan;
-    } else markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
+    } else {
+      markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
+      legacyPlan = !!markdown;
+    }
     if (!markdown) {
       const lesson = await logStage({ videoId, stage: 'script' }, () => authorReviewedLesson(runner, request, directory, signal, context.images, videoId));
       markdown = lesson.markdown; plan = lesson.plan;
@@ -84,6 +90,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     if (!scene) return null;
     const { instructions, ...input } = buildSceneAgentInput(pkg, scene.id, previousFrame);
     const planning = scenePlanningContext(story, index, plan);
+    const packet = { ...input, planning, videoMode: request.videoMode ?? 'classic', legacyPlan };
     const assemble = (output: string) => options.timingMode === 'host'
       ? attachTimingPrelude(sceneSource(output), input) : sceneSource(output);
     const diagnostics: string[] = [];
@@ -92,6 +99,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       try {
         const { compiled, finalFrame } = await validateSceneAgainstNarration(sceneSource(output), pkg, scene.id, previousFrame);
         if (Math.abs(compiled.duration - scene.durationSec) > 1e-6) throw new Error(`The scene must last ${scene.durationSec} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
+        if (!legacyPlan) validateViewingMode(compiled, packet.videoMode);
         if (plan) validateScenePlan(compiled, finalFrame, plan.scenes[index]);
       } catch (error) {
         diagnostics.push(validationMessage(error));
@@ -104,17 +112,19 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const path = join(directory, `scene-${index}.js`);
     let source = await saved(path);
     if (!source) {
-      const reference = await readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
-      const craft = await readFile(new URL('../../prompts/scene-craft.md', import.meta.url), 'utf8');
-      const visualization = await scenegenPrompt('visualization');
+      const [reference, craft, viewingMode] = await Promise.all([
+        readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8").then(buildAuthoringReference),
+        loadPrompt('scene-craft'), loadPrompt('viewing-mode'),
+      ]);
       const task = {
         outputMode: options.outputMode ?? 'text',
-        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${reference}`,
-        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify({ ...input, planning })}`, validate, signal,
+        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing. The host output/timing contract and viewing-mode policy take priority over illustrative API examples; implement the approved plan within those constraints.\n\n${viewingMode}\n\n${craft}\n\n${reference}`,
+        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify(packet)}`, validate, signal,
         logContext: { videoId, sceneIndex: index, stage: 'scene' as const },
       };
+      await atomicWrite(join(directory, `scene-${index}.instructions.json`), JSON.stringify(instructionSnapshot(task.systemPrompt)));
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
-      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning }));
+      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify(packet));
       source = assemble(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
       await validateSource(source);
       signal.throwIfAborted();

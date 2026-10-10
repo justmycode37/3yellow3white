@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { compileSource, evaluateScene } from 'animlib/core';
 import { parsePlannedLesson } from '../src/agents/planning.js';
 import type { PlannedLesson } from '../src/agents/planning.js';
-import { validateScenePlan } from '../src/agents/scene-plan.js';
+import { validateScenePlan, validateViewingMode } from '../src/agents/scene-plan.js';
 
 const request = { title: 'Counting', topic: 'Dots', documents: [{ name: 'notes.pdf', text: '[Page 1]\nTwo dots.' }] };
 function lesson(): PlannedLesson {
@@ -39,6 +39,45 @@ test('planning rejects contradictory ownership and unsupported palette/control d
   expect(() => parsePlannedLesson(JSON.stringify(color), request)).toThrow('palette token');
   const controls = lesson(); controls.plan.scenes[0].interactions = Array.from({ length: 3 }, (_, i) => ({ id: `slider-${i}`, type: 'slider', label: 'Count', drives: 'Count', discover: 'Count' }));
   expect(() => parsePlannedLesson(JSON.stringify(controls), request)).toThrow('at most 2');
+});
+
+test('Classic defaults reject planned controls while Interactive and saved legacy plans remain valid', () => {
+  const draft = lesson();
+  draft.plan.scenes[0].interactions = [{ id: 'count', type: 'slider', label: 'Count', drives: 'Number of dots', discover: 'Compare counts' }];
+  for (const videoMode of ['classic', undefined] as const) {
+    expect(() => parsePlannedLesson(JSON.stringify(draft), { ...request, videoMode })).toThrow('Classic lessons');
+  }
+  expect(parsePlannedLesson(JSON.stringify(draft), { ...request, videoMode: 'interactive' })).toEqual(draft);
+  expect(parsePlannedLesson(JSON.stringify(draft), request, { legacy: true })).toEqual(draft);
+  expect(parsePlannedLesson(JSON.stringify(lesson()), { ...request, videoMode: 'interactive' })).toEqual(lesson());
+});
+
+test('Classic checks controls and every orbit region without forbidding authored 3D motion', async () => {
+  const sources = [
+    `export default scene({},s=>{s.slider('size',{default:1,min:0,max:2});s.wait(1);});`,
+    `export default scene({mode:'3d',orbit:true},s=>{s.sphere('dot');s.wait(1);});`,
+    `export default scene({orbit:false},s=>{s.view('detail',{rect:[0,0,1,1]},v=>v.sphere('dot'));s.wait(1);});`,
+  ];
+  for (const source of sources) {
+    const compiled = await compileSource(source);
+    expect(() => validateViewingMode(compiled, 'classic')).toThrow('Classic scenes');
+    expect(() => validateViewingMode(compiled, 'interactive')).not.toThrow();
+  }
+  const passive = await compileSource(`export default scene({mode:'3d',orbit:false},s=>{
+    const dot=s.sphere('dot');s.behavior(dot,{type:'spring'});
+    s.view('detail',{rect:[0,0,0.5,0.5],orbit:false},v=>v.sphere('detail-dot'));
+    s.play(s.camera.to2D(),{duration:1});
+  });`);
+  expect(() => validateViewingMode(passive, 'classic')).not.toThrow();
+});
+
+test('unplanned drag and custom input behavior cannot bypass lesson controls', async () => {
+  for (const behavior of ["{type:'drag'}", "{type:'custom',name:'select'}"]) {
+    const compiled = await compileSource(`export default scene({},s=>{const dot=s.circle('dot');s.behavior(dot,${behavior});s.wait(1);});`);
+    for (const mode of ['classic', 'interactive'] as const) {
+      expect(() => validateViewingMode(compiled, mode)).toThrow('unplanned drag or custom');
+    }
+  }
 });
 
 test('compiled scene plan checks enforce real persistence and cleanup', async () => {
@@ -82,6 +121,11 @@ test('planning round-trips explicit view choices and rejects malformed choices',
     planned.plan.scenes[0].view = { mode, rationale: 'Show the relevant geometry clearly.' };
     expect(parsePlannedLesson(JSON.stringify(planned), request)).toEqual(planned);
   }
+  const explicit = lesson();
+  explicit.plan.scenes[0].view = { mode: '2d', rationale: 'A flat graph exposes the relationship.' };
+  explicit.plan.scenes[0].visualDescription = '3D: legacy prose that predates the structured view.';
+  expect(parsePlannedLesson(JSON.stringify(explicit), request).plan.scenes[0].view).toEqual(explicit.plan.scenes[0].view);
+  expect(parsePlannedLesson(JSON.stringify(explicit), request, { legacy: true }).plan.scenes[0].view?.mode).toBe('3d');
   for (const view of [{ mode: '4d', rationale: 'Depth' }, { mode: '3d', rationale: '' }, '3d', null]) {
     const planned = lesson();
     Object.assign(planned.plan.scenes[0], { view });
