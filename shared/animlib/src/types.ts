@@ -1,5 +1,9 @@
 import type { Color, PaletteColor } from "./palette.js";
+import type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
+import type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
 export type { Color, PaletteColor } from "./palette.js";
+export type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
+export type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
 
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
@@ -34,6 +38,10 @@ export interface Geometry {
   fontSize?: number;
   vertices?: Position[];
   triangles?: [number, number, number][];
+  /** Mesh lighting; omitted preserves unlit rendering. Smooth normals share vertex indices. */
+  shading?: "unlit" | "flat" | "smooth";
+  /** Optional per-vertex local normals for smooth mesh shading; normalized when rendered. */
+  normals?: Vec3[];
   children?: string[];
   /** Composite this group's children before applying its opacity. */
   isolated?: boolean;
@@ -302,6 +310,15 @@ export interface SceneContext {
   text(id: string, props: ElementProps): ElementHandle;
   latex(id: string, props: ElementProps): ElementHandle;
   mesh(id: string, props: ElementProps): ElementHandle;
+  /** Sample z = fn(x, y) into a shaded triangle mesh. */
+  surface(id: string, props: SurfaceProps): ElementHandle;
+  /** Sample a two-parameter map into a shaded triangle mesh. */
+  parametricSurface(id: string, props: ParametricSurfaceProps): ElementHandle;
+  box(id: string, props?: BoxProps): ElementHandle;
+  cylinder(id: string, props?: CylinderProps): ElementHandle;
+  cone(id: string, props?: ConeProps): ElementHandle;
+  torus(id: string, props?: TorusProps): ElementHandle;
+  tube(id: string, props: TubeProps): ElementHandle;
   group(id: string, children: ElementHandle[], options?: { isolated?: boolean }): ElementHandle;
   behavior(target: ElementHandle, behavior: BehaviorSpec): void;
   attach(target: ElementHandle, source: ElementHandle, options?: { offset?: Position }): void;

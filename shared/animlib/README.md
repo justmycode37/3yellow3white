@@ -59,6 +59,24 @@ parts fade as one object. Domain helpers for matrices, molecules, arrays, and gr
 surrounding app. Internal dependencies are allowed; the public API requires no
 framework.
 
+Spatial builders include `surface` for `z = f(x, y)`, `parametricSurface` for
+two-parameter maps (including curved petals), `box`, `cylinder`, `cone`, `torus`,
+and `tube` for a constant-radius sweep through 3D points. They produce ordinary
+mesh handles with smooth shading by default (flat for boxes) and no stroke.
+Raw `mesh` remains unlit unless given `shading: 'flat'` or `'smooth'`; both GPU
+backends support the same simple directional lighting. Geometry-changing controls
+use ordinary numeric sliders to rebuild meshes, not retained `s.bind` callbacks.
+See [shaded meshes and sampled surfaces](docs/reference.md#shaded-meshes) for
+examples, periodic seams, invalid-sample holes, segment defaults, and geometry
+budgets. Start with modest sampling; the 20,000-vertex/20,000-triangle per-mesh
+limits are validation ceilings, not frame-rate guarantees.
+
+Open `http://localhost:5173/spatial.html` for interactive function, flower, and
+solid/tube studies. The [scene sources](demo/spatial.ts) use the production player
+and support orbit, shading comparisons, and parameter controls. After building,
+run `node shared/animlib/bench/spatial.mjs --json` from the repository root for
+compilation and CPU rendering measurements (GPU calls are stubbed).
+
 The library enforces a color palette, defaulting to 3Blue1Brown's Manim colors
 with a black background and white foreground. Scene styles use typed tokens such
 as `Color.BLUE` and `Color.NONE`; raw CSS colors are rejected by TypeScript and

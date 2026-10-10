@@ -383,8 +383,181 @@ start of the interval. Scene-builder calls never draw intermediate frames.
 ### Elements and coordinates
 
 Basic creation methods are `circle`, `sphere`, `rectangle`, `line`, `arrow`,
-`path`, `text`, `latex`, `mesh`, and `group`. All take stable IDs and plain
-data. Groups supply parent transforms and operate on their children together.
+`path`, `text`, `latex`, `mesh`, and `group`. For spatial geometry, use
+`surface`, `parametricSurface`, `box`, `cylinder`, `cone`, `torus`, and `tube`.
+All take stable IDs. Groups supply parent transforms and operate on their children
+together. Surface callbacks run during scene compilation and produce plain mesh data.
+
+### Shaded meshes
+
+`s.mesh(id, { vertices, triangles, shading?, normals?, ...style })` accepts local
+positions and zero-based triangle index triples. Omitted `shading` preserves the
+existing unlit appearance. Choose `"flat"` for a normal per triangle or `"smooth"`
+for area-weighted normals averaged at shared vertex indices. Duplicate positions
+with different indices remain separate at hard edges. Optional `normals` supply
+one finite, nonzero local `Vec3` per vertex for smooth shading; the renderer
+normalizes them. Flat shading ignores supplied normals. Use consistent triangle
+winding when computing smooth normals.
+
+```js
+s.mesh('facet', {
+  vertices: [[-1, 0, 0], [1, 0, 0], [0, 1, 0.7]],
+  triangles: [[0, 1, 2]],
+  shading: 'flat', fill: Color.BLUE, stroke: Color.NONE,
+});
+```
+
+Flat and smooth meshes use the same simple directional lighting as spheres and
+round 3D strokes on both WebGPU and WebGL2. They support element/group transforms,
+independent views, depth testing, opacity, and palette colors. This is not a
+material or light-source API. Prefer opaque bodies when surfaces intersect;
+triangle transparency sorting does not solve every intersection. Ordinary 2D
+fills and raw meshes without a shading option retain their existing appearance.
+
+`vertices`, `triangles`, `shading`, and `normals` are geometry, while `fill`,
+`stroke`, `strokeWidth`, `position`, `rotation`, `scale`, and `opacity` are element
+style/transform properties. The surface and solid helpers below return ordinary
+mesh element handles; their sampled callbacks and construction parameters are not
+retained as animatable properties. Move, rotate, scale, group, fade, and keep these
+handles like other elements. A mesh morph still needs corresponding vertices and
+compatible topology. Morphs without authored normals recompute lighting from the
+intermediate geometry. If either endpoint supplies normals, normalized endpoint
+normals interpolate instead; the missing endpoint is derived from its geometry.
+Exactly opposite normals use a finite fallback at their ambiguous midpoint.
+Nonuniform changes of shape require new mesh geometry.
+
+### Function and parametric surfaces
+
+`s.surface(id, { fn: (x, y) => z, xRange?, yRange?, xSegments?, ySegments?,
+shading?, ...style })` samples the graph **z = f(x, y)** in local XYZ coordinates.
+Both ranges default to `[-2, 2]`; both segment counts default to `32`.
+
+```js
+const amplitude = s.slider('amplitude', {
+  label: 'Amplitude', default: 0.6, min: 0, max: 1.2, step: 0.05,
+});
+s.surface('wave', {
+  fn: (x, y) => amplitude * Math.sin(2 * x) * Math.cos(2 * y),
+  xRange: [-2, 2], yRange: [-2, 2],
+  xSegments: 32, ySegments: 32, fill: Color.TEAL,
+});
+s.wait(3);
+```
+
+Use this inside a `scene({ mode: '3d', orbit: true }, s => { ... })` builder,
+or create the surface in an `s.view` callback. This ordinary numeric slider
+recompiles the sampled geometry at the current playback time, including while
+paused. Derive dependent labels from the same value and keep duration stable.
+Do not use `reactive: true` or `s.bind` to change a surface callback, vertices,
+segment count, solid dimensions, or tube points: retained bindings do not rebuild
+mesh geometry. An ordinary control is also needed if a size change updates text.
+
+`s.parametricSurface(id, { fn: (u, v) => [x, y, z], uRange?, vRange?,
+uSegments?, vSegments?, closedU?, closedV?, shading?, ...style })` supports shapes
+that are not single-valued height graphs. Both parameter ranges default to `[0, 1]`,
+segment counts to `32`, and closure flags to `false`. A closed axis shares seam
+indices and does not sample its duplicate upper endpoint. Set a closure flag only
+when the map is periodic across that axis; it joins the seam but adds no caps.
+
+For example, a five-lobed flower cup with real depth can be authored as one
+parametric surface, with a tube stem as a separate grouped part:
+
+```js
+const flower = s.parametricSurface('flower', {
+  uRange: [0, 2 * Math.PI], vRange: [0.08, 1],
+  uSegments: 64, vSegments: 24, closedU: true,
+  fn: (u, v) => {
+    const r = v * (1 + 0.28 * Math.cos(5 * u));
+    return [r * Math.cos(u), 0.7 * v * v, r * Math.sin(u)];
+  },
+  fill: Color.PURPLE,
+});
+const stem = s.tube('stem', {
+  points: [[0, -1.6, 0], [0.12, -0.8, 0], [0, 0, 0]],
+  radius: 0.06, fill: Color.GREEN,
+});
+s.group('plant', [flower, stem]);
+```
+
+Both helpers default to smooth shading and `stroke: Color.NONE`; override shading
+with `"flat"` or `"unlit"` when appropriate. A nonzero stroke draws triangle edges,
+including diagonals, rather than only parameter-grid lines. Sample separate paths
+if the lesson needs specific coordinate curves. Drawing every triangle edge adds
+substantial geometry and CPU work; keep dense surfaces stroke-free by default.
+
+Callbacks must be synchronous and deterministic. Returning `NaN` or `Infinity`
+omits that sample and every adjacent grid cell, creating a hole rather than a
+bridge across an undefined domain. Returning the wrong type or throwing is an
+error. Degenerate triangles are omitted. Holes and collapsed poles can change
+topology, so do not assume two sampled surfaces are morph-compatible.
+
+Ranges must contain two finite, strictly increasing endpoints within ±1,000,000.
+Finite sampled coordinates have the same bound. Segment counts are integers from
+1 to 20,000, or from 3 on a closed axis, subject to a **20,000 vertex and 20,000
+triangle budget per surface** checked before sampling. An open grid uses
+`(uSegments + 1) * (vSegments + 1)` samples and up to
+`2 * uSegments * vSegments` triangles; a closed axis omits its extra endpoint.
+The default open 32-by-32 grid has 1,089 vertices and at most 2,048 triangles.
+Holes do not allow a larger requested grid. Start with modest segment counts:
+doubling both counts roughly quadruples compilation and drawing work, and an
+ordinary slider resamples on each accepted change. Keep callbacks cheap and use
+transforms for rigid motion. Per-mesh limits are ceilings, not performance targets;
+the scene's aggregate geometry and sandbox execution budgets also apply.
+
+### Basic solids and swept tubes
+
+Each helper accepts the ordinary element style/transform options plus
+`shading: 'unlit' | 'flat' | 'smooth'`. All default to no stroke and smooth shading,
+except `box`, which defaults to flat shading. Parameters below describe geometry
+in local scene units; use `position` and `rotation` to place the resulting mesh.
+
+- `s.box(id, { width?, height?, depth?, ...style })`: dimensions default to `1`.
+  The box is centered at the origin, with width along X, height along Y, and depth
+  along Z. Face vertices are separate, preserving hard edges even in smooth mode.
+- `s.cylinder(id, { radius?, height?, radialSegments?, capped?, ...style })`:
+  defaults are radius `1`, height `2`, radial segments `32`, and `capped: true`.
+  The axis is Y, with ends at `-height / 2` and `height / 2`.
+- `s.cone(id, { radius?, height?, radialSegments?, capped?, ...style })`: the same
+  defaults, with a base at `-height / 2` and tip at `height / 2`. `capped` closes
+  the base. Cylinder/cone caps use separate vertices to keep their rims sharp.
+- `s.torus(id, { radius?, tubeRadius?, radialSegments?, tubularSegments?,
+  ...style })`: defaults are `1`, `0.25`, `32`, and `12`, respectively. The ring
+  lies in XZ around the Y axis, centered at the origin. `radius` measures to the
+  tube center, not its outside edge; `tubeRadius` must be smaller than `radius`.
+  Radial segments run around the major ring; tubular segments run around each
+  cross-section. Both seams share indices.
+- `s.tube(id, { points, radius?, radialSegments?, capped?, closed?, ...style })`:
+  `points` is a required `Vec3[]` centerline. Defaults are radius `0.1`, radial
+  segments `12`, `capped: true`, and `closed: false`. Radius is constant. Closed
+  tubes join the last point to the first and ignore caps.
+
+```js
+s.box('block', { width: 1.2, height: 0.8, depth: 0.6, fill: Color.BLUE });
+s.cylinder('column', { radius: 0.4, height: 1.8, position: [2, 0, 0], fill: Color.TEAL });
+s.cone('tip', { radius: 0.4, height: 0.8, position: [2, 1.3, 0], fill: Color.TEAL });
+s.torus('ring', { radius: 0.8, tubeRadius: 0.15, position: [-2, 0, 0], fill: Color.GOLD });
+```
+
+Tubes sweep circular rings along the supplied polyline; they do not interpolate a
+Catmull–Rom curve. Sample a smooth centerline yourself when needed. Parallel
+transport carries the cross-section orientation along bends, with distributed
+twist correction for closed loops. Consecutive duplicate points within `1e-10`
+scene units are removed, including a repeated closing endpoint. At least two
+points must remain for an open tube, or three for a closed one. Exact or near
+U-turns are rejected because the joint tangent is ambiguous. There is no collision
+or self-intersection repair: use gentle bends and a radius small relative to the
+centerline's curvature and spacing. End caps retain sharp rims.
+
+Dimensions and radii must be finite and strictly positive, at most 1,000,000.
+Input points and generated vertex coordinates must lie within ±1,000,000.
+All segment counts are integers from 3 to 20,000, further constrained by the
+20,000-vertex and 20,000-triangle budget per mesh. Tube input is also limited to
+20,000 points before duplicate removal. Caps count toward the budget. For an open
+tube with `n` retained points and `r` radial segments, the sides use `n * r`
+vertices and `2 * (n - 1) * r` triangles; two caps add `2 * (r + 1)` vertices
+and `2 * r` triangles. A closed tube uses `n * r` vertices and `2 * n * r`
+triangles. More radial segments round the cross-section; more centerline samples
+resolve bends. Keep both modest for interactive scenes.
 
 ### Curved paths and organic shapes
 

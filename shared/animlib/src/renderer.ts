@@ -37,8 +37,12 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
   output.normal=n;output.lit=lit;output.color=color;
   return output;
 }
-@fragment fn fragment(input:Output) -> @location(0) vec4f { var color=input.color;
-  if(input.lit>0.5){let amount=0.32+0.68*max(0.,dot(normalize(input.normal),normalize(vec3f(-0.4,0.65,1.))));color=vec4f(color.rgb*amount,color.a);}
+@fragment fn fragment(input:Output,@builtin(front_facing) frontFacing:bool) -> @location(0) vec4f { var color=input.color;
+  if(input.lit>0.5){
+    var n=input.normal;if(input.lit>1.5&&!frontFacing){n=-n;}
+    let normal=n/max(length(n),0.000001);
+    let amount=0.32+0.68*max(0.,dot(normal,normalize(vec3f(-0.4,0.65,1.))));color=vec4f(color.rgb*amount,color.a);
+  }
   return color; }
 `;
 export class CanvasRenderer {
