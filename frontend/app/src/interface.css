@@ -85,6 +85,9 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .drawer-icon { display: grid; place-items: center; width: 43px; height: 43px; flex-shrink: 0; border-radius: 15px; }
 .drawer-links > button > svg:last-child { margin-left: auto; color: var(--muted); }
 .drawer-bottom { margin-top: auto; padding-top: 24px; flex-shrink: 0; }
+.drawer-user { margin: 0 10px 20px; overflow-wrap: anywhere; }
+.drawer-user span { display: block; margin-bottom: 4px; color: var(--muted); font-size: 12px; }
+.drawer-user strong { display: block; font-size: 14px; font-weight: 600; }
 .drawer-theme-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 15px; background: var(--sage); color: var(--card-ink); }
 .drawer-theme-toggle:hover { filter: brightness(.95); }
 
