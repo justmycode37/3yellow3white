@@ -11,7 +11,7 @@ export function agentConfig(env: Record<string, string | undefined> = process.en
   const provider = env.AGENT_PROVIDER ?? 'openai';
   if (provider !== 'openai' && provider !== 'openai-codex') throw new AgentError('CONFIG', 'AGENT_PROVIDER must be openai or openai-codex.');
   if (provider === 'openai-codex' && authMode !== 'subscription') throw new AgentError('CONFIG', 'Existing Pi openai-codex credentials require subscription mode.');
-  const thinking = env.AGENT_THINKING ?? "medium";
+  const thinking = env.AGENT_THINKING ?? "high";
   if (!["off", "minimal", "low", "medium", "high", "xhigh", "max"].includes(thinking)) throw new AgentError("CONFIG", "Invalid AGENT_THINKING level.");
   const timeoutMs = Number(env.AGENT_TIMEOUT_MS ?? 300_000);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1000 || timeoutMs > 900_000) throw new AgentError("CONFIG", "AGENT_TIMEOUT_MS must be between 1000 and 900000.");
@@ -20,7 +20,7 @@ export function agentConfig(env: Record<string, string | undefined> = process.en
     provider,
     agentDir: resolve(env.PI_CODING_AGENT_DIR ?? join(homedir(), ".aha", "pi")),
     dataDir: resolve(env.AGENT_DATA_DIR ?? "data/agents"),
-    model: env.AGENT_MODEL ?? "gpt-6.1-sol",
+    model: env.AGENT_MODEL ?? "gpt-6-astra",
     thinking: thinking as "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max",
     timeoutMs,
     apiKey: env.OPENAI_API_KEY,
