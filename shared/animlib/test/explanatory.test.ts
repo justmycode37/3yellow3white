@@ -11,7 +11,7 @@ import { createSolidBuilders } from '../src/solids.js';
 import { paletteResolver } from '../src/palette.js';
 import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import { add, cameraRay, cross, planePoint, sub } from '../src/spatial.js';
-import type { CompileInput, Geometry, Vec3 } from '../src/types.js';
+import type { ClipPlane, CompileInput, Geometry, Vec3 } from '../src/types.js';
 const solids=createSolidBuilders();
 const corners=(g:Geometry):Corner[]=>meshTriangles(g).points.map(p=>({p}));
 const area=(c:Corner[])=>{let sum=0;for(let i=0;i<c.length;i+=3)sum+=Math.hypot(...cross(sub(c[i+1].p,c[i].p),sub(c[i+2].p,c[i].p)))/2;return sum;};
@@ -95,6 +95,29 @@ describe('explanatory geometry',()=>{
     for(let i=0;i<r.caps[0].corners.length;i+=3){const p=r.caps[0].corners.slice(i,i+3).map(c=>c.p);const center=[0,1,2].map(a=>p.reduce((n,p)=>n+p[a],0)/3);expect(Math.hypot(center[0],center[2])).toBeGreaterThan(1.4);}
     const box=explainMesh(corners(solids.box({width:2,height:2,depth:2})),[{normal:[1,0,0],offset:0,section:{color:'RED',cap:'BLUE'}},{normal:[0,1,0],offset:0,section:{color:'RED',cap:'GREEN'}}]);
     expect(box.caps.map(c=>area(c.corners))).toEqual([2,2]);
+  });
+  it.each([0.1,1,7])('preserves caps and contours under repeated/equivalent planes (normal multiplier %s)',factor=>{
+    for(const scale of [1,1000])for(const offset of [0,0.3]) {
+      const box=corners(solids.box({width:2*scale,height:2*scale,depth:2*scale}));
+      const p:ClipPlane={normal:[2,-1,-1],offset:offset*scale,section:{color:'RED',cap:'BLUE'}};
+      const equivalent:ClipPlane={...p,normal:p.normal.map(v=>v*factor) as Vec3,offset:p.offset*factor};
+      const single=explainMesh(box,[p]),repeated=explainMesh(box,[p,equivalent]);
+      expect(area(single.caps[0].corners)/scale**2).toBeGreaterThan(4);
+      if(offset===0)expect(area(single.caps[0].corners)/scale**2).toBeCloseTo(2*Math.sqrt(6),10);
+      expect(repeated.corners).toEqual(single.corners);
+      expect(repeated.caps[0].corners).toEqual(single.caps[0].corners);
+      expect(repeated.sections[0].points).toEqual(single.sections[0].points);
+      expect(repeated.caps[1].corners).toHaveLength(0);
+      expect(repeated.sections[1].points).toHaveLength(0);
+      // A later, distinct cut needs the entire earlier cap to close its contour.
+      const q:ClipPlane={normal:[2,2,-2],offset:0,section:{color:'RED',cap:'GREEN'}};
+      const cut=explainMesh(box,[p,q]),recut=explainMesh(box,[p,equivalent,q]);
+      expect(area(cut.caps[1].corners)/scale**2).toBeGreaterThan(1);
+      expect(area(recut.corners)/scale**2).toBeCloseTo(area(cut.corners)/scale**2,10);
+      expect(area(recut.caps[0].corners)/scale**2).toBeCloseTo(area(cut.caps[0].corners)/scale**2,10);
+      expect(area(recut.caps[2].corners)/scale**2).toBeCloseTo(area(cut.caps[1].corners)/scale**2,10);
+      expect(recut.sections[2].points).toEqual(cut.sections[1].points);
+    }
   });
   it('does not cap open, degenerate, tangent or fully removed sections',()=>{
     const open:Corner[]=[{p:[-1,0,0]},{p:[1,0,0]},{p:[0,1,0]}];

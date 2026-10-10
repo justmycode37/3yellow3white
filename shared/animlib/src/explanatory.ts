@@ -21,22 +21,28 @@ const mix = (a: Corner, b: Corner, t: number): Corner => ({
   ...(a.n && b.n ? { n: add(a.n,mul(sub(b.n,a.n),t)) } : {}),
   ...(a.c && b.c ? { c: a.c.map((v,i)=>v+(b.c![i]-v)*t) as RGBA } : {}),
 });
-const distance = (p: Vec3, plane: ClipPlane) => (dot(p,plane.normal)-plane.offset)/Math.hypot(...plane.normal);
-function polygonClip(poly: Corner[], plane: ClipPlane): Corner[] {
+const meshEpsilon = (corners: Corner[]) => 1e-8*corners.reduce((m,c)=>Math.max(m,...c.p.map(Math.abs)),1);
+// Use the same coplanar classification for fills, generated caps and contours.
+// Strict signs can discard cap vertices whose computed plane residual is roundoff.
+const distance = (p: Vec3, plane: ClipPlane, epsilon: number) => {
+  const d=(dot(p,plane.normal)-plane.offset)/Math.hypot(...plane.normal);
+  return Math.abs(d)<=epsilon?0:d;
+};
+function polygonClip(poly: Corner[], plane: ClipPlane, epsilon: number): Corner[] {
   const output: Corner[] = [];
   for (let i=0;i<poly.length;i++) {
-    const a=poly[i],b=poly[(i+1)%poly.length],da=distance(a.p,plane),db=distance(b.p,plane);
+    const a=poly[i],b=poly[(i+1)%poly.length],da=distance(a.p,plane,epsilon),db=distance(b.p,plane,epsilon);
     if (da<=0) output.push(a);
     if ((da<0&&db>0)||(da>0&&db<0)) output.push(mix(a,b,da/(da-db)));
   }
   return output;
 }
 const fan = (poly: Corner[]) => poly.slice(2).flatMap((c,i)=>[poly[0],poly[i+1],c]);
-export function clipTriangles(corners: Corner[], planes: ClipPlane[]): Corner[] {
+export function clipTriangles(corners: Corner[], planes: ClipPlane[], epsilon=meshEpsilon(corners)): Corner[] {
   let result = corners;
   for (const plane of planes) {
     const next: Corner[]=[];
-    for(let i=0;i<result.length;i+=3) next.push(...fan(polygonClip(result.slice(i,i+3),plane)));
+    for(let i=0;i<result.length;i+=3) next.push(...fan(polygonClip(result.slice(i,i+3),plane,epsilon)));
     result=next;
   }
   return result;
@@ -80,21 +86,20 @@ function capLoops(segments: Vec3[][], normal: Vec3, epsilon: number): Corner[] {
 export function explainMesh(corners: Corner[], planes: ClipPlane[] = []): ExplainedMesh {
   const caps: ExplainedMesh['caps']=[], sections:Section[]=[];
   let result=corners;
-  const magnitude=corners.reduce((m,c)=>Math.max(m,...c.p.map(Math.abs)),1);
-  const epsilon=1e-8*magnitude;
+  const epsilon=meshEpsilon(corners);
   // Sequential caps participate in subsequent cuts, closing multi-plane solids.
   for(let planeIndex=0;planeIndex<planes.length;planeIndex++) {
     const plane=planes[planeIndex];
     const intersections=new Map<string,{points:Vec3[];sides:number}>();
     for(const source of [result,...caps.map(c=>c.corners)])for(let i=0;i<source.length;i+=3) {
-      const tri=source.slice(i,i+3),d=tri.map(c=>distance(c.p,plane));
-      const sides=(d.some(v=>v>epsilon)?1:0)|(d.some(v=>v<-epsilon)?2:0);
+      const tri=source.slice(i,i+3),d=tri.map(c=>distance(c.p,plane,epsilon));
+      const sides=(d.some(v=>v>0)?1:0)|(d.some(v=>v<0)?2:0);
       if(!sides)continue;
       const hits:Vec3[]=[];
       for(let j=0;j<3;j++) {
         const k=(j+1)%3;
-        if(Math.abs(d[j])<=epsilon)hits.push(tri[j].p);
-        if((d[j]<-epsilon&&d[k]>epsilon)||(d[j]>epsilon&&d[k]<-epsilon))hits.push(mix(tri[j],tri[k],d[j]/(d[j]-d[k])).p);
+        if(d[j]===0)hits.push(tri[j].p);
+        if((d[j]<0&&d[k]>0)||(d[j]>0&&d[k]<0))hits.push(mix(tri[j],tri[k],d[j]/(d[j]-d[k])).p);
       }
       const distinct=[...new Map(hits.map(p=>[key(p,epsilon),p])).values()];
       if(distinct.length!==2)continue;
@@ -107,15 +112,15 @@ export function explainMesh(corners: Corner[], planes: ClipPlane[] = []): Explai
     // half-spaces. Touching edges on a discarded torus otherwise invent a disk.
     // Straddling triangles supply both sides directly, including vertex cuts.
     const segments=[...intersections.values()].filter(edge=>edge.sides===3).map(edge=>edge.points);
-    result=clipTriangles(result,[plane]);
-    for(const cap of caps)cap.corners=clipTriangles(cap.corners,[plane]);
+    result=clipTriangles(result,[plane],epsilon);
+    for(const cap of caps)cap.corners=clipTriangles(cap.corners,[plane],epsilon);
     if(plane.section) {
       if(plane.section.cap && plane.section.cap!=='none')caps.push({corners:capLoops(segments,plane.normal,epsilon),color:plane.section.cap});
       const remaining=planes.slice(planeIndex+1);
       const points:Vec3[]=[];
       for(const segment of segments) {
         let [a,b]=segment;let visible=true;
-        for(const p of remaining){const da=distance(a,p),db=distance(b,p);if(da>0&&db>0){visible=false;break;}if((da>0)!==(db>0)){const hit=add(a,mul(sub(b,a),da/(da-db)));if(da>0)a=hit;else b=hit;}}
+        for(const p of remaining){const da=distance(a,p,epsilon),db=distance(b,p,epsilon);if(da>0&&db>0){visible=false;break;}if((da>0)!==(db>0)){const hit=add(a,mul(sub(b,a),da/(da-db)));if(da>0)a=hit;else b=hit;}}
         if(visible)points.push(a,b);
       }
       sections.push({points,color:plane.section.color,width:plane.section.width??0.025});

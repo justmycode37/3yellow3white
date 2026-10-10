@@ -10,6 +10,30 @@ const black=(p:number[])=>p.every(v=>v<10);
 const label=(mode:string)=>scene(`s.box('occluder',{width:3,height:2,depth:1,fill:'PURE_BLUE',shading:'unlit'});s.text('label',{text:'MMMM',fontSize:1,position:[0,0,-2],fill:'PURE_RED',billboard:true,labelOcclusion:'${mode}'})`);
 const labelRedCount=(at:(x:number,y:number)=>number[])=>{let n=0;for(let y=210;y<270;y++)for(let x=240;x<400;x++)if(red(at(x,y)))n++;return n;};
 type PixelReader=(x:number,y:number)=>number[];
+export const capClippingCases=[0,0.3].flatMap(offset=>[false,true].map(laterCut=>({
+  name:`repeated oblique cap at offset ${offset}${laterCut?' followed by another cut':''}`,
+  laterCut,
+  sources:['p','p,p','p,equivalent'].map(planes=>scene(`
+    s.play(s.camera.to3D({yaw:Math.atan2(2,-1),pitch:Math.asin(1/Math.sqrt(6)),height:5,perspective:0}),{duration:0});
+    const p={normal:[2,-1,-1],offset:${offset},section:{color:'none',cap:'PURE_RED'}};
+    const equivalent={...p,normal:[0.2,-0.1,-0.1],offset:${offset*0.1}};
+    const q={normal:[2,2,-2],offset:0,section:{color:'none',cap:'PURE_GREEN'}};
+    s.box('b',{width:2,height:2,depth:2,fill:'PURE_BLUE',shading:'unlit',clipPlanes:[${planes}${laterCut?',q':''}]});
+  `)),
+})));
+export function capClippingIssues(images:PixelReader[],laterCut:boolean):string[] {
+  let redPixels=0,greenPixels=0;const changed=images.slice(1).map(()=>0),issues:string[]=[];
+  for(let y=0;y<480;y++)for(let x=0;x<640;x++) {
+    const reference=images[0](x,y);
+    if(red(reference))redPixels++;
+    if(reference[1]>150&&reference[0]<30&&reference[2]<30)greenPixels++;
+    images.slice(1).forEach((at,i)=>{if(at(x,y).some((v,j)=>Math.abs(v-reference[j])>20))changed[i]++;});
+  }
+  if(redPixels<5000)issues.push('reference must visibly render the first cap');
+  if(laterCut&&greenPixels<1000)issues.push('reference must visibly render the subsequent cap');
+  changed.forEach((n,i)=>{if(n>8)issues.push(`${i===0?'repeated':'equivalent'} plane changed ${n} pixels`);});
+  return issues;
+}
 const labelModes=['depth','overlay','hide','fade'];
 // Compare each anchor mode to actual shader-projected text, including clipped
 // triangles. These fixtures are shared by the two real graphics backends.

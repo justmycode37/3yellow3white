@@ -1,4 +1,4 @@
-import { explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
+import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {create,globals} from 'webgpu';
@@ -108,6 +108,26 @@ describe('native Vulkan WebGPU rendering',()=> {
       renderer.render(sequence.frame(0,0),sequence.compiled[0].options);images.push(await pixels());
     }
     expect(labelProjectionIssues(images.map(image=>(x,y)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3))))).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for(const dpr of [1,2])for(const fixture of capClippingCases)it(`explanatory DPR ${dpr}: ${fixture.name}`,async()=>{
+    vi.stubGlobal('devicePixelRatio',dpr);
+    (renderer as unknown as {resize():void}).resize();
+    try {
+      const images:Uint8Array[]=[];
+      for(const [i,source] of fixture.sources.entries()) {
+        expect((await sequence.submit({type:'load',scenes:[{id:'cap',source}]})).ok).toBe(true);
+        renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+        expect([texture!.width,texture!.height]).toEqual([width*dpr,height*dpr]);
+        const image=await pixels();images.push(image);
+        await artifact(`cap-DPR${dpr}-${fixture.name.replaceAll(' ','-')}-${i}`,image);
+      }
+      expect(capClippingIssues(images.map(image=>(x,y)=>{
+        const i=(y*dpr*width*dpr+x*dpr)*4;return Array.from(image.subarray(i,i+3));
+      }),fixture.laterCut)).toEqual([]);
+    } finally {
+      vi.stubGlobal('devicePixelRatio',1);(renderer as unknown as {resize():void}).resize();
+    }
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   for (const fixture of explanatoryCases) it(`explanatory: ${fixture.name}`,async()=>{

@@ -1,4 +1,4 @@
-import { explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
+import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
@@ -86,6 +86,21 @@ export async function runWebGLTests() {
       for(const source of fixture.sources){await load(source);images.push(draw());}
       const issues=labelProjectionIssues(images.map(image=>(x,y)=>at(image,canvas,x,y)));
       assert(issues.length===0,issues.join('; '));
+    });
+    for(const dpr of [1,2])for(const fixture of capClippingCases)await test(`explanatory DPR ${dpr}: ${fixture.name}`,async()=>{
+      Object.defineProperty(window,'devicePixelRatio',{value:dpr,configurable:true});
+      (renderer as unknown as {resize():void}).resize();
+      try {
+        const images:Uint8Array[]=[];
+        for(const source of fixture.sources){await load(source);images.push(draw());}
+        assert(canvas.width===640*dpr&&canvas.height===480*dpr,'Cap target must match requested DPR');
+        assert(renderer.backend==='webgl2','Cap checks must use WebGL2');
+        const issues=capClippingIssues(images.map(image=>(x,y)=>at(image,canvas,x*dpr,y*dpr)),fixture.laterCut);
+        assert(issues.length===0,issues.join('; '));artifact(canvas,`DPR ${dpr}: ${fixture.name}`);
+      } finally {
+        Object.defineProperty(window,'devicePixelRatio',{value:1,configurable:true});
+        (renderer as unknown as {resize():void}).resize();
+      }
     });
     for(const fixture of explanatoryCases) await test(`explanatory: ${fixture.name}`,async()=>{
       await load(fixture.source);const image=draw();

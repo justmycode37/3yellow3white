@@ -1830,7 +1830,10 @@ for open/branching intersection components. Self-intersecting, coincident, or
 nonmanifold meshes are outside the cap guarantee. Coplanar triangles create no
 new section; a tangent cut creates no artificial disk. Geometrically coincident
 endpoints are welded with a tolerance of `1e-8 * max(1, maxAbsLocalCoordinate)`;
-avoid details smaller than that tolerance. A cut that removes the entire shape
+the same tolerance classifies plane distances for fills, caps, and contours.
+Coplanar vertices are retained, so repeating a plane (including a positive
+rescaling of its normal and offset) preserves earlier caps and contours.
+Avoid details smaller than that tolerance. A cut that removes the entire shape
 produces no cap. Cap/contour display does not change the source mesh topology.
 
 Planes run in array order. Requested caps participate in later cuts; enable caps
