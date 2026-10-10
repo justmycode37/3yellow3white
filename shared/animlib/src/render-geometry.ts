@@ -1,4 +1,5 @@
 /** CPU tessellation shared by rendering and overlap inspection; no browser or GPU required. */
+import { RetainedGeometry, retainableElement, canonicalPrimitive, retainedPrecisionSafe, normalFloat32 } from './retained-geometry.js';
 import { VERTEX_FLOATS, texturePatterns } from './texture-shader.js';
 import earcut from 'earcut';
 import { GeometryCache } from './cache.js';
@@ -12,6 +13,9 @@ import type { LatexPath } from './latex.js';
 import { morphPathContours, pathContours } from './path.js';
 import type { PathContour } from './path.js';
 import { meshTriangles, morphMeshNormals } from './mesh-shading.js';
+import { explainMesh, outlineEdges, scalarVertexColors, morphExplanatory, type Corner, type RGBA } from './explanatory.js';
+import { cameraRay, dot } from './spatial.js';
+import { applyLabelOcclusion, type LabelAnchor } from './label-occlusion.js';
 
 export function textTex(text:string):string {return String.raw`\text{`+text.replace(/[\\{}$&#%_^~]/g,c=>({'\\':String.raw`\backslash `,'{':String.raw`\{`,'}':String.raw`\}`,'$':String.raw`\$`,'&':String.raw`\&`,'#':String.raw`\#`,'%':String.raw`\%`,'_':String.raw`\_`,'^':String.raw`\textasciicircum `,'~':String.raw`\textasciitilde `}[c]!))+'}';}
 function contains(contour:Vec3[],point:Vec3):boolean {
@@ -42,14 +46,21 @@ export function triangulateContours(contours:Vec3[][]):Vec3[] {
   return triangulations.set(key,result.map(p=>[...p] as Vec3),result.length*64);
 }
 type DrawComponent = 'content' | 'fill' | 'stroke';
-export interface GeometryDrawItem extends DrawItem { elementId: string; component: DrawComponent; }
+export interface GeometryDrawItem extends DrawItem { elementId: string; castShadow?: boolean; retentionUnsafe?: boolean; component: DrawComponent; cameraDependentGeometry?: boolean; }
 const isText = (geometry: Geometry): boolean => geometry.kind === 'text' || geometry.kind === 'latex';
 
 /** textOnly skips shape tessellation while retaining groups and the text portions of mixed morphs. */
-export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string,textOnly=false,elementIds?:ReadonlySet<string>):GeometryDrawItem[] {
+export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string,textOnly=false,retained?:RetainedGeometry,elementIds?:ReadonlySet<string>):GeometryDrawItem[] {
+  // Anchor visibility needs opaque occluders even during text overlap inspection.
+  if((textOnly || elementIds) && frame.elements.some(e=>e.view===view && (!elementIds || elementIds.has(e.id)) && [e.geometry,e.morph?.from,e.morph?.to].some(g=>g?.labelOcclusion && g.labelOcclusion!=='depth'))) {
+    return buildDrawItems(frame,camera,width,height,palette,view,false,retained)
+      .filter(item=>(!textOnly || item.component==='content') && (!elementIds || elementIds.has(item.elementId)));
+  }
   const parents=new Map<string,ElementState>();
   for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
   const items:GeometryDrawItem[]=[];
+  const labels = new Map<string, LabelAnchor>();
+  const paletteKey=retained?JSON.stringify(palette.palette):'';
   // Camera depth is affine in world position. Reuse its coefficients when
   // sorting translucent triangles, including after the viewer orbits a view.
   const sy=Math.sin(camera.yaw),cy=Math.cos(camera.yaw),sp=Math.sin(camera.pitch),cp=Math.cos(camera.pitch);
@@ -62,6 +73,8 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
     while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
     const viewportOffset=[0,1].map(axis=>chain.reduce((sum,e)=>sum+(e.viewportOffset?.[axis]??0),0));
+    const castShadow=chain.every(e=>e.castShadow!==false)&&!element.billboard&&viewportOffset.every(v=>v===0)
+      &&["mesh","sphere"].includes(element.geometry.kind);
     const groups:{id:string;opacity:number}[]=[];
     let opacity=1;
     for(const e of [...chain].reverse()) {
@@ -81,6 +94,11 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     // Each element's transform is affine. Evaluate it once, rather than
     // allocating vectors and recomputing trigonometry for every vertex.
     const origin=world([0,0,0]);
+    const labelGeometry = element.morph ? (element.morph.progress <= 0 || !isText(element.morph.to) ? element.morph.from : element.morph.to) : element.geometry;
+    if (isText(labelGeometry) && labelGeometry.labelOcclusion && labelGeometry.labelOcclusion !== 'depth' && element.space !== 'screen') {
+      labels.set(element.id, { point: origin, offset: viewportOffset, mode: labelGeometry.labelOcclusion });
+    }
+    let cameraDependentGeometry = false;
     const axes:Vec3[]=[[1,0,0],[0,1,0],[0,0,1]];
     const normalBasis=element.billboard&&element.space!=='screen'
       ?axes.map(axis=>rotate(rotate(axis,[0,0,element.rotation[2]]),[camera.pitch,camera.yaw,0]))
@@ -93,7 +111,30 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     // Transform directions separately to avoid subtracting nearly equal
     // translated points when a small object is far from the world origin.
     const basis=normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
-    const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:DrawComponent='fill',twoSided=false,texture?:ProceduralTexture,material?:Material):void=> {
+    const opaqueColor=(color:ColorValue):boolean=>color==='none'||parseColor(palette.resolve(color))[3]>=0.999999;
+    if(retained && retainableElement(element) && scale !== 0 && opacity>=0.999999
+      && opaqueColor(element.fill) && opaqueColor(element.stroke)
+      && (!element.geometry.texture || opaqueColor(element.geometry.texture.color))) {
+      // Tessellate once in object space. Groups, billboards, layer and navigation
+      // remain live instance state; full geometry/style/palette content is keyed.
+      const primitive=canonicalPrimitive(element);
+      const local:ElementState={...element,geometry:primitive.geometry,id:'',view:undefined,position:[0,0,0],rotation:[0,0,0],scale:1,
+        opacity,billboard:false,billboardOffset:undefined,viewportOffset:undefined};
+      const key=paletteKey+JSON.stringify([local.geometry,local.fill,local.stroke,local.strokeWidth,local.strokeProfile,local.space,opacity]);
+      const meshes=retained.get(key,()=>buildDrawItems({...frame,elements:[local]},camera,width,height,palette),element.geometry.kind==='arrow',JSON.stringify([view,element.id]));
+      const instanceBasis=primitive.axes.map(p=>p.map((_,axis)=>p.reduce((sum,v,i)=>sum+v*basis[i][axis],0)) as Vec3);
+      const instanceOrigin=origin.map((v,axis)=>v+primitive.origin.reduce((sum,p,i)=>sum+p*basis[i][axis],0)) as Vec3;
+      const instance=new Float32Array([...instanceBasis[0],0,...instanceBasis[1],0,...instanceBasis[2],0,...instanceOrigin,1,elementIndex,scale*primitive.scale,...viewportOffset]);
+      if(meshes && retainedPrecisionSafe(meshes,instanceOrigin,instanceBasis,instance,camera,height,element.space==='screen')) {
+        for(const mesh of meshes) {
+          const depth=Math.min(...mesh.centers.map(center=>depthAt(...center.map((_,axis)=>instanceOrigin[axis]+center.reduce((sum,v,i)=>sum+v*instanceBasis[i][axis],0)) as Vec3)));
+          items.push({depth:element.space==='screen'?-1e9:depth,vertices:new Float32Array(0),
+            transparent:false,screen:element.space==='screen',groups,elementId:element.id,component:mesh.component,mesh,instance});
+        }
+        continue;
+      }
+    }
+    const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:DrawComponent='fill',twoSided=false,texture?:ProceduralTexture,material?:Material,colors?:RGBA[]):void=> {
       const rgba=parseColor(palette.resolve(color));
       const secondary=texture?parseColor(palette.resolve(texture.color)):rgba;
       if(!points.length||Math.max(rgba[3],secondary[3])*opacity*alpha<=0)return;
@@ -102,32 +143,38 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       const textureKind=texture?texturePatterns.indexOf(texture.pattern)+1:0;
       const textureScale=typeof texture?.scale==='number'?[texture.scale,texture.scale,texture.scale]:texture?.scale??[1,1,1];
       const vertices=new Float32Array(points.length*VERTEX_FLOATS),screen=element.space==='screen',a=rgba[3]*opacity*alpha;
-      let sumX=0,sumY=0,sumZ=0;
+      let sumX=0,sumY=0,sumZ=0,retentionUnsafe=false;
       for(let i=0;i<points.length;i++) {
         const p=points[i],j=i*VERTEX_FLOATS;
         const x=origin[0]+p[0]*basis[0][0]+p[1]*basis[1][0]+p[2]*basis[2][0];
         const y=origin[1]+p[0]*basis[0][1]+p[1]*basis[1][1]+p[2]*basis[2][1];
         const z=origin[2]+p[0]*basis[0][2]+p[1]*basis[1][2]+p[2]*basis[2][2];
+        retentionUnsafe ||= !normalFloat32(x)||!normalFloat32(y)||!normalFloat32(z);
         sumX+=x;sumY+=y;sumZ+=z;
         vertices[j]=x;vertices[j+1]=y;vertices[j+2]=z;
-        vertices[j+3]=rgba[0];vertices[j+4]=rgba[1];vertices[j+5]=rgba[2];vertices[j+6]=a;vertices[j+7]=screen?1:0;
+        const vertexColor=colors?.[i]??rgba;
+        vertices[j+3]=vertexColor[0];vertices[j+4]=vertexColor[1];vertices[j+5]=vertexColor[2];vertices[j+6]=vertexColor[3]*opacity*alpha*(colors?rgba[3]:1);vertices[j+7]=screen?1:0;
         if(normals) {
           const n=normals[i];
-          for(let axis=0;axis<3;axis++)vertices[j+8+axis]=n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis];
+          for(let axis=0;axis<3;axis++) {
+            const value=n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis];
+            retentionUnsafe ||= !normalFloat32(value);vertices[j+8+axis]=value;
+          }
         } else {vertices[j+8]=normalBasis[2][0];vertices[j+9]=normalBasis[2][1];vertices[j+10]=normalBasis[2][2];}
         vertices[j+11]=normals?(twoSided?2:1):0;vertices[j+12]=elementIndex;vertices[j+13]=viewportOffset[0];vertices[j+14]=viewportOffset[1];
         if(texture) {
           for(let axis=0;axis<3;axis++)vertices[j+15+axis]=p[axis]*textureScale[axis]+(texture.offset?.[axis]??0);
           vertices[j+18]=textureKind;
           vertices[j+19]=secondary[0];vertices[j+20]=secondary[1];vertices[j+21]=secondary[2];vertices[j+22]=secondary[3]*opacity*alpha;
-          vertices[j+23]=texture.seed??0;vertices[j+30]=(texture.bumpStrength??0)*scale;
+          const bump=(texture.bumpStrength??0)*scale;retentionUnsafe ||= !normalFloat32(bump);
+          vertices[j+23]=texture.seed??0;vertices[j+30]=bump;
         }
         if(material) {
           vertices[j+24]=material.metalness??0;vertices[j+25]=material.roughness??0.45;vertices[j+26]=material.specular??0.5;
           for(let axis=0;axis<3;axis++)vertices[j+27+axis]=emission[axis]*emissionStrength;
         }
       }
-      const transparent=Math.min(a,secondary[3]*opacity*alpha)<0.999999;
+      const transparent=Math.min(a,secondary[3]*opacity*alpha)<0.999999 || Boolean(colors?.some(c=>c[3]*opacity*alpha<0.999999));
       if(transparent&&!screen) {
         // Whole-object sorting lets rear sphere/tube faces blend over front
         // faces, and cannot place another surface between them. Sort complete
@@ -135,11 +182,11 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
         for(let j=0;j<vertices.length;j+=3*VERTEX_FLOATS) {
           const depth=depthAt((vertices[j]+vertices[j+VERTEX_FLOATS]+vertices[j+2*VERTEX_FLOATS])/3,
             (vertices[j+1]+vertices[j+VERTEX_FLOATS+1]+vertices[j+2*VERTEX_FLOATS+1])/3,(vertices[j+2]+vertices[j+VERTEX_FLOATS+2]+vertices[j+2*VERTEX_FLOATS+2])/3);
-          items.push({depth,vertices:vertices.subarray(j,j+3*VERTEX_FLOATS),transparent,screen,groups,elementId:element.id,component});
+          items.push({depth,vertices:vertices.subarray(j,j+3*VERTEX_FLOATS),transparent,screen,groups,castShadow:castShadow&&component==='fill',elementId:element.id,component,retentionUnsafe,...(cameraDependentGeometry?{cameraDependentGeometry:true}:{})});
         }
       } else {
         const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
-        items.push({depth,vertices,transparent,screen,groups,elementId:element.id,component});
+        items.push({depth,vertices,transparent,screen,groups,castShadow:castShadow&&component==='fill',elementId:element.id,component,retentionUnsafe,...(cameraDependentGeometry?{cameraDependentGeometry:true}:{})});
       }
     };
     const contours=(paths:Vec3[][],alpha=1,color=element.fill,component:DrawComponent='fill'):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha,undefined,component);};
@@ -159,9 +206,41 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       if(color==='none')return;
       for(const path of paths)addTriangles(triangulateContours(path.contours).map(p=>p.map((v,i)=>v*size+offset[i]) as Vec3),color,alpha,undefined,'content');
     };
-    const addMesh=(geometry:Geometry,alpha=1,normalOverride?:Vec3[]):void=> {
+    const addMesh=(geometry:Geometry,alpha=1,normalOverride?:Vec3[],twoSided=true):void=> {
       const mesh=meshTriangles(normalOverride?{...geometry,shading:'unlit'}:geometry);
       const normals=normalOverride??mesh.normals;
+      if (geometry.clipPlanes?.length || geometry.outline || geometry.scalarColors) {
+        const scalar = geometry.scalarColors ? scalarVertexColors(geometry.scalarColors,palette) : undefined;
+        const colors = scalar ? geometry.triangles!.flatMap(face=>face.map(i=>scalar[i])) : undefined;
+        const corners:Corner[]=mesh.points.map((p,i)=>({p,n:normals?.[i],c:colors?.[i]}));
+        const explained=explainMesh(corners,geometry.clipPlanes);
+        const fill=(cs:Corner[],color:ColorValue,cap=false)=> {
+          if(color!=='none')addTriangles(cs.map(c=>c.p),color,alpha,cs[0]?.n?cs.map(c=>c.n!):undefined,'fill',cap||twoSided,cap?undefined:geometry.texture,cap?undefined:geometry.material,cs[0]?.c?cs.map(c=>c.c!):undefined);
+        };
+        fill(explained.corners,element.fill);
+        if(element.fill!=='none')for(const cap of explained.caps)fill(cap.corners,cap.color,true);
+        // Round unlit tubes remain visible for cuts in any local plane.
+        const edges=(points:Vec3[],color:ColorValue,width:number)=> {
+          if(color==='none')return;
+          for(let i=0;i<points.length;i+=2) {
+            const tube=tubeTriangles(points.slice(i,i+2),width,false);
+            addTriangles(tube.points,color,alpha,undefined,'stroke');
+          }
+        };
+        if(element.stroke!=='none')for(let i=0;i<explained.corners.length;i+=3)stroke(explained.corners.slice(i,i+3).map(c=>c.p),true,alpha);
+        for(const section of explained.sections)edges(section.points,section.color,section.width);
+        if(geometry.outline) {
+          cameraDependentGeometry=true;
+          const points=outlineEdges([...explained.corners,...explained.caps.flatMap(c=>c.corners)],geometry,(p,n)=> {
+            const wp=world(p),projection=project(wp,camera,width,height),ray=cameraRay(projection.x,projection.y,camera,width,height);
+            const wn=normalBasis[0].map((_,axis)=>n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis]) as Vec3;
+            return -dot(wn,ray.direction);
+          });
+          edges(points,geometry.outline.color,geometry.outline.width??0.025);
+          cameraDependentGeometry=false;
+        }
+        return;
+      }
       if(element.stroke!=='none'&&element.strokeWidth>0) {
         // Keep each fill next to its wireframe in depth order. Batching fills
         // across depths can otherwise cover the inner half of a rear stroke.
@@ -178,7 +257,12 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       if(textOnly&&!isText(geometry))return;
       if(geometry.kind==='text'||geometry.kind==='latex'){latexPaths((geometry.kind==='text'?layoutLatex(textTex(geometry.text??'')):layoutLatexGeometry(geometry)).paths,geometry.fontSize??(element.space==='screen'?(geometry.kind==='text'?16:24):(geometry.kind==='text'?0.4:0.6)),alpha);return;}
       if(geometry.kind==='mesh'){addMesh(geometry,alpha);return;}
-      if(geometry.kind==='sphere'){if(element.fill==='none')return;const sphere=sphereTriangles(geometry.radius??1);addTriangles(sphere.points,element.fill,alpha,sphere.normals,'fill',false,geometry.texture,geometry.material);return;}
+      if(geometry.kind==='sphere'){
+        if(geometry.clipPlanes?.length||geometry.outline){
+          const sphere=sphereTriangles(geometry.radius??1);
+          addMesh({...geometry,kind:'mesh',vertices:sphere.points,triangles:Array.from({length:sphere.points.length/3},(_,i)=>[i*3,i*3+1,i*3+2]),shading:'smooth',normals:sphere.normals},alpha,undefined,false);return;
+        }
+        if(element.fill==='none')return;const sphere=sphereTriangles(geometry.radius??1);addTriangles(sphere.points,element.fill,alpha,sphere.normals,'fill',false,geometry.texture,geometry.material);return;}
       if(geometry.kind==='path'&&(geometry.d!==undefined||geometry.curve==='smooth')){drawPath(pathContours(geometry,pathTolerance),alpha);return;}
       const shape=outline(geometry);if(!shape||!shape.points.length)return;
       if(geometry.kind==='arrow'&&shape.points.length>1) {
@@ -214,8 +298,8 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     if(curved){drawPath(curved);continue;}
     const shape=morphOutline(from,to,t,pathTolerance);
     if(shape){drawGeometry({kind:from.kind==='arrow'&&to.kind==='arrow'?'arrow':'path',points:shape.points,closed:shape.closed});continue;}
-    if(from.kind==='sphere'&&to.kind==='sphere'){drawGeometry({...to,kind:'sphere',radius:lerp(from.radius??1,to.radius??1,t)});continue;}
-    if(from.kind==='mesh'&&to.kind==='mesh'&&from.vertices&&to.vertices&&from.vertices.length===to.vertices.length){const target=to.vertices!;addMesh({...to,normals:undefined,vertices:from.vertices!.map((p,i)=>vec3(p).map((v,j)=>lerp(v,vec3(target[i])[j],t)) as Vec3)},1,morphMeshNormals(from,to,t));continue;}
+    if(from.kind==='sphere'&&to.kind==='sphere'){drawGeometry({...to,...morphExplanatory(from,to,t),kind:'sphere',radius:lerp(from.radius??1,to.radius??1,t)});continue;}
+    if(from.kind==='mesh'&&to.kind==='mesh'&&from.vertices&&to.vertices&&from.vertices.length===to.vertices.length){const target=to.vertices!;addMesh({...to,...morphExplanatory(from,to,t),normals:undefined,vertices:from.vertices!.map((p,i)=>vec3(p).map((v,j)=>lerp(v,vec3(target[i])[j],t)) as Vec3)},1,morphMeshNormals(from,to,t));continue;}
     if(from.kind==='latex'&&to.kind==='latex') {
       const a=layoutLatexGeometry(from),b=layoutLatexGeometry(to),map=morph.map??{},targets=new Set(Object.values(map));
       const sizeA=from.fontSize??(element.space==='screen'?24:0.6),sizeB=to.fontSize??(element.space==='screen'?24:0.6);
@@ -249,5 +333,5 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     }
     drawGeometry(from,1-t);drawGeometry(to,t);
   }
-  return items;
+  return applyLabelOcclusion(items,labels,camera,width,height);
 }

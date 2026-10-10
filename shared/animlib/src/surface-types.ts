@@ -1,7 +1,9 @@
+import type { ExplanatoryGeometry, SurfaceScalar } from "./explanatory-types.js";
 import type { ElementStyle, Material, ProceduralTexture, Vec3 } from "./types.js";
 
 /** A sampled graph in local XYZ coordinates, with Z given by fn(X, Y). */
-export interface SurfaceProps extends ElementStyle {
+export interface SurfaceProps extends ElementStyle, ExplanatoryGeometry {
+  scalar?: SurfaceScalar;
   texture?: ProceduralTexture;
   material?: Material;
   fn: (x: number, y: number) => number;
@@ -15,7 +17,8 @@ export interface SurfaceProps extends ElementStyle {
 }
 
 /** A grid sampled over an increasing parameter domain. */
-export interface ParametricSurfaceProps extends ElementStyle {
+export interface ParametricSurfaceProps extends ElementStyle, ExplanatoryGeometry {
+  scalar?: SurfaceScalar;
   texture?: ProceduralTexture;
   material?: Material;
   fn: (u: number, v: number) => Vec3;

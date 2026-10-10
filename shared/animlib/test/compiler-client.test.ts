@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SourceCompiler } from "../src/compiler-client.js";
 import type { CompilerRequest, CompilerResponse } from "../src/compiler-client.js";
-import { compileSource, SceneCompileError } from "../src/compiler.js";
+import { compileSource, createSceneProgram, SceneCompileError } from "../src/compiler.js";
 
 class TestWorker {
   static instances: TestWorker[] = [];
@@ -44,6 +44,26 @@ describe("off-thread source compiler", () => {
     instance.retain([]);
     expect(worker.requests[2]).toMatchObject({type:'release',sessions:[session]});
     expect(instance.canUpdate(loaded)).toBe(false);
+  });
+  it('sends prepared duration to an isolated retained program when sampling time', async () => {
+    const program=await createSceneProgram(`export default scene({},s=>{
+      const m=s.surface('m',{fn:()=>0,xSegments:1,ySegments:1});s.deform(m,[s.time],([x,y],i,t)=>[x,y,t]);s.wait(4);
+    });`);
+    try {
+      vi.stubGlobal('Worker',TestWorker);
+      const instance=compiler(),loading=instance.compile('source');
+      const worker=TestWorker.instances[0],session=worker.requests[0].id;
+      worker.respond({id:session,ok:true,scene:structuredClone(program.scene)});
+      const loaded=await loading;loaded.duration=6;
+      const sampling=instance.update(loaded,{},[],{},5),request=worker.requests.at(-1)!;
+      expect(request).toMatchObject({type:'update',time:5,duration:6});
+      if(request.type!=='update')throw Error('Expected update');
+      const updates=program.update(request.values,request.changed,request.time,request.duration);
+      worker.respond({id:request.id,ok:true,updates});
+      expect((await sampling)[0].properties.vertices![0][2]).toBe(5);
+      expect(program.update({},[],10,6)[0].properties.vertices![0][2]).toBe(6);
+      expect(()=>program.update({},[],5,Infinity)).toThrow('duration');
+    } finally {program.dispose();}
   });
   it("uses the sandbox directly for headless Node consumers", async () => {
     vi.stubGlobal("Worker", undefined);

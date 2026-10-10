@@ -101,6 +101,19 @@ describe('public bounds queries', () => {
     close3D(getCameraBounds(state, 'r', { camera: turn }), [-1, -0.5, 9], [1, 0.5, 9]);
   });
 
+  it('retains external occluders when measuring a selected label', () => {
+    const label = element('label', { kind: 'text', text: 'Hello', fontSize: 1, labelOcclusion: 'hide' }, { position: [0, 0, -2] });
+    const state = frame(rect('occluder', { position: [0, 0, 1] }), label);
+    expect(getScreenBounds(state, 'label', viewport)).toBeUndefined();
+    state.elements[0].position[0] = 5;
+    const visible = getScreenBounds(state, 'label', viewport)!;
+    expect(visible).toBeDefined();
+    expect(visible.right).toBeLessThan(500);
+    label.geometry.labelOcclusion = 'overlay';
+    state.elements[0].position[0] = 0;
+    expect(getScreenBounds(state, 'label', viewport)).toEqual(visible);
+  });
+
   it('clips projected geometry at view/canvas edges, with optional offscreen extents', () => {
     const state = frame(rect('r', { position: [8, 0, 0] }));
     expect(getScreenBounds(state, 'r', viewport)).toEqual({ left: 750, top: 175, right: 800, bottom: 225 });

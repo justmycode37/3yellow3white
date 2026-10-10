@@ -76,7 +76,7 @@ export async function profileInteractions(player, sources, {
   };
   try {
     for (const key of ['refresh', 'getState']) wrap(player, key);
-    for (const key of ['render', 'drawItems', 'syncInteraction']) wrap(renderer, key);
+    for (const key of ['render', 'syncInteraction']) wrap(renderer, key);
     wrap(player.behaviors, 'evaluate');
     if (player.overlay) wrap(player.overlay, 'update');
     wrap(sequence, 'frame');
@@ -119,9 +119,9 @@ export async function profileInteractions(player, sources, {
       // asking setPointerCapture to capture an untrusted, inactive pointer.
       renderer.drag = { id: -1, x, y, view, pan: false };
       const move = () => renderer.pointerMove({ pointerId: -1, clientX: x + 40 * Math.sin(++moves / 12), clientY: y + 20 * Math.cos(moves / 12) });
-      const orbit = await measure(move);
+      const orbit = await measure(async () => { move(); await tick(); });
       summarize('orbit: one pointermove per animation frame', orbit, { view, elementCount: renderer.lastFrame.elements.length });
-      summarize('orbit: eight pointermoves in one task', await measure(() => { for (let i = 0; i < 8; i++) move(); }));
+      summarize('orbit: eight pointermoves in one task', await measure(async () => { for (let i = 0; i < 8; i++) move(); await tick(); }));
       renderer.drag = null;
     }
     for (const count of sceneCounts) {
@@ -208,7 +208,7 @@ export async function profileTriangulationCache(player, GeometryCache, {
   };
   backend.render = () => {};
   try {
-    player.invalidateFrame(); // Discover caches before changing their capacity.
+    player.invalidateFrame(); await tick(); // Discover caches before changing their capacity.
     for (const limit of limits) {
       for (const cache of caches.keys()) cache.limit = limit;
       const measurements = [];
@@ -217,7 +217,7 @@ export async function profileTriangulationCache(player, GeometryCache, {
         counts = { hits: 0, misses: 0, sets: 0, oversize: 0 };
         renderer.setOrbit({ ...originalOrbit, yaw: originalOrbit.yaw + i / 100 }, view);
         const start = performance.now();
-        player.invalidateFrame();
+        player.invalidateFrame(); await tick();
         if (i >= warmup) measurements.push({ wallMs: performance.now() - start, ...counts });
       }
       counts = undefined;

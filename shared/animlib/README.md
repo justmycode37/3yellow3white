@@ -263,3 +263,13 @@ Canvas attributes are preserved, native controls are rebound, and disposal resto
 the original canvas. `player.backend` reports `webgpu` or `webgl2` once prepared.
 WebGL context loss pauses playback/audio; restoration redraws at the retained time
 and allows Play to resume. Antialiasing quality depends on the WebGL implementation.
+
+Scene `lighting` configures ambient/directional intensity and world-fixed versus
+camera-relative light direction. Optional soft planar shadows add contact cues
+from opaque meshes/spheres on a finite receiving floor. The original studio
+appearance remains the default. See the [authoring reference](docs/reference.md#scene-lighting-and-planar-shadows)
+and interactive [lighting study](demo/lighting.html) (`/lighting.html` in the dev server).
+
+Explanatory 3D studies: run `npm run dev` and open `/explanatory.html` for clipping
+planes with hole-preserving section caps, scalar fields, feature outlines, and
+depth-aware labels. See [authoring details](docs/reference.md#sections-feature-edges-scalar-fields-and-label-depth).
