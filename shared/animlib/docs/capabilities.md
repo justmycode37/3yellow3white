@@ -30,6 +30,17 @@ Keep these instructions in nonspoken planning; they are not narration.
   color/intensity create stylized metal, matte, plastic, and luminous surfaces.
   These settings can be explored with ordinary controls. Emission does not cast
   light or create bloom, and metallic reflections do not show other scene objects.
+- **Explanatory 3D tools:** up to four object-local clipping planes can expose
+  interiors. Optional section contours trace the actual sampled intersection;
+  optional colored caps fill closed nonbranching loops, preserving holes. Open
+  surfaces show contours without invented solid caps. Boundary, crease, and
+  camera-dependent silhouette outlines reveal shape without full wireframes.
+  Scalar values on mesh vertices or sampled surface positions map through 2–16
+  named palette colors on an explicit clamped domain. Colors interpolate across
+  triangles; author a legend when needed. World labels can preserve default
+  glyph depth testing or use whole-label overlay, hiding, or 20% fading based on
+  their anchor's visibility against opaque fills in the same view. These options
+  update with geometry, transforms, seeking, and orbit; screen labels stay fixed.
 - **Views:** a main camera plus clipped rectangular regions with independent
   cameras. Side-by-side views can compare the same construction from different
   angles. Screen-space labels can remain fixed while world geometry moves.
@@ -193,7 +204,11 @@ run asynchronous builders.
 - No branching lesson navigation, infinite scenes, playback-rate controls, or
   built-in video export. Interactive controls vary visuals within the lesson.
 - Target modest explanatory scenes rather than dense particle simulations or
-  huge datasets. There is no large-scene performance guarantee. Compiler
+  huge datasets. There is no large-scene performance guarantee.
+  Section caps require closed nonbranching contours and do not repair
+  self-intersections/nonmanifold meshes. Fine outlines follow finite tessellation.
+  Anchor label modes ignore translucent occluders and do not place labels
+  automatically. Scalar ramps require sufficient surface sampling for detail. Compiler
   ceilings include 2,000 object IDs per builder and 32 view regions; these are
   hard limits, not recommended scene sizes.
 

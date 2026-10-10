@@ -1,3 +1,4 @@
+import { explanatoryCases, explanatoryMorphSource } from './explanatory-cases.js';
 import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
@@ -75,6 +76,16 @@ export async function runWebGLTests() {
     return pixels(renderer.canvasElement);
   };
   try {
+    await test('explanatory morph pixels after backwards seek',async()=>{
+      await load(explanatoryMorphSource);const a=draw(0),b=draw(1),c=draw(2),again=draw(1);
+      assert(different(a,b)&&different(b,c),'Scalar and clipping morph must change pixels');
+      assert(!different(b,again),'Backwards seek must reproduce identical pixels');
+    });
+    for(const fixture of explanatoryCases) await test(`explanatory: ${fixture.name}`,async()=>{
+      await load(fixture.source);const image=draw();
+      const issues=fixture.check((x,y)=>at(image,canvas,x,y));
+      assert(issues.length===0,issues.join('; '));artifact(canvas,fixture.name);
+    });
     await test('missing WebGPU: real WebGL2 triangle colors', async () => {
       await load(`export default scene({},s=>{s.rectangle('r',{width:3,height:2,fill:'PURE_RED',stroke:'none'});s.wait(1)});`);
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');

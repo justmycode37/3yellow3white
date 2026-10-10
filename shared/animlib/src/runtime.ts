@@ -129,13 +129,13 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
 
   // Constructor callbacks and sampling options stay inside the builder. Only
   // ordinary mesh data and supported style properties cross the VM boundary.
-  const generatedMesh = (id: string, geometry: Geometry, props: ElementStyle & Pick<Geometry, "texture" | "material">): ElementHandle => {
+  const generatedMesh = (id: string, geometry: Geometry, props: ElementStyle & Pick<Geometry, "texture" | "material" | "clipPlanes" | "outline">): ElementHandle => {
     const style: ElementStyle = {};
     for (const key of ["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth", "strokeProfile", "space", "billboard", "billboardOffset", "viewportOffset"] as const) {
       if (props[key] !== undefined) Object.assign(style, { [key]: props[key] });
     }
     const { kind: _kind, ...mesh } = geometry;
-    return add("mesh", id, { ...mesh, ...style, ...(props.texture !== undefined ? { texture: props.texture } : {}), ...(props.material !== undefined ? { material: props.material } : {}) });
+    return add("mesh", id, { ...mesh, ...style, ...(props.clipPlanes !== undefined ? { clipPlanes: props.clipPlanes } : {}), ...(props.outline !== undefined ? { outline: props.outline } : {}), ...(props.texture !== undefined ? { texture: props.texture } : {}), ...(props.material !== undefined ? { material: props.material } : {}) });
   };
 
   const control = (id: string, definition: Omit<ControlDefinition, "id" | "label" | "value"> & { label?: string }): ControlValue => {

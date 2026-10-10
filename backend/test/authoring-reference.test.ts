@@ -57,3 +57,12 @@ test('retains curved-path authoring rules and the Bézier example', () => {
   expect(output).toContain(between('### Curved paths and organic shapes', '### Choosing how objects relate and move'));
   expect(output).toContain("d: 'M0 0 C0.5 0.6 1.3 0.7 2 0 C1.3 -0.5 0.5 -0.4 0 0 Z'");
 });
+
+test('retains explanatory geometry APIs, topology limits, palette ramps and label semantics', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('## Sections, feature edges, scalar fields, and label depth'));
+  for (const text of ['dot(normal, localPosition) <= offset', 'nested holes', 'creaseAngle',
+    'scalarColors', 'uniformly spaced palette', "'hide'", "'fade'", 'same view']) {
+    expect(output).toContain(text);
+  }
+});

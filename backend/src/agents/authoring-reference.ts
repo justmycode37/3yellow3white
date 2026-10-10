@@ -45,6 +45,11 @@ const headings = [
   '## Overlap inspection',
   '## 9. Engine structure and verification',
   '## 10. Current boundaries and next steps',
+  '## Sections, feature edges, scalar fields, and label depth',
+  '### Clipping planes and actual cross-sections',
+  '### Silhouette and crease outlines',
+  '### Per-vertex scalar palette colors',
+  '### Configurable label occlusion',
 ];
 
 /** Authoring-only benchmark candidate; preserves retained sections verbatim (LF). */

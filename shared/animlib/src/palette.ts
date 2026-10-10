@@ -1,5 +1,5 @@
 import colorString from "color-string";
-import type { ColorPalette, ColorValue, CompiledScene, ElementState } from "./types.js";
+import type { ColorPalette, ColorValue, CompiledScene, ElementState, Geometry } from "./types.js";
 
 // Source: https://github.com/3b1b/manim/blob/master/manimlib/default_config.yml
 // Median aliases follow manimlib/constants.py. Black background follows
@@ -175,7 +175,16 @@ export function enforceScenePalette(scene: CompiledScene, resolver: PaletteResol
   const validate = (value: ColorValue, label: string) => {
     try { resolver.validate(value); } catch (error) { throw new Error(`${label}: ${(error as Error).message}`); }
   };
+  const explanatory = (g: Geometry) => {
+    for (const color of g.scalarColors?.colors ?? []) validate(color, "Scalar ramp");
+    if (g.outline) validate(g.outline.color, "Outline");
+    for (const p of g.clipPlanes ?? []) if (p.section) {
+      validate(p.section.color, "Section");
+      if (p.section.cap !== undefined) validate(p.section.cap, "Section cap");
+    }
+  };
   const element = (e: ElementState) => {
+    explanatory(e.geometry);
     validate(e.fill, `${e.id} fill`); validate(e.stroke, `${e.id} stroke`);
     if (e.geometry.material?.emissive !== undefined) validate(e.geometry.material.emissive, `${e.id} emissive color`);
     if (e.geometry.texture) validate(e.geometry.texture.color, `${e.id} texture color`);
@@ -188,6 +197,7 @@ export function enforceScenePalette(scene: CompiledScene, resolver: PaletteResol
   for (const event of scene.lifecycle) event.elements?.forEach(element);
   for (const track of scene.tracks) {
     Object.values(track.from).forEach(element);
+    if (track.action.type === "morph" && track.action.geometry) explanatory(track.action.geometry);
     if (track.action.type === "morph" && track.action.geometry?.material?.emissive !== undefined) validate(track.action.geometry.material.emissive, "Morph emissive color");
     if (track.action.type === "morph" && track.action.geometry?.texture) validate(track.action.geometry.texture.color, "Morph texture color");
     if (track.action.type === "animate") {
