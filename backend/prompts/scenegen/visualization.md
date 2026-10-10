@@ -167,6 +167,21 @@ How to build 3D with animlib:
   To vary surface callbacks, solid dimensions, or tube points, use an ordinary
   numeric slider and rebuild from its value; `s.bind` cannot rebuild mesh geometry.
   Keep dependent labels and the scene duration consistent.
+- Give every 3D thing its TRUE shape with the matching primitive, instead of
+  approximating it with rows of spheres or flat silhouettes:
+  a quantity that depends on two variables (a potential or energy landscape, a
+  loss surface, z = f(x, y)) is a `surface`; a curved sheet, lobe, membrane, shell
+  or orbital is a `parametricSurface`; a strand, backbone, wire, vessel, orbit or
+  field line is one `tube` along its centre line; containers, rods, wedges and
+  rings are `box`, `cylinder`, `cone`, `torus`; atoms and particles stay `sphere`.
+  Join the parts of one body in a group so they move and pulse together.
+- Keep 3D cheap and calm: at most three or four surface or tube meshes in a scene,
+  32 segments per axis or fewer unless the shape visibly needs more, opaque bodies
+  where they intersect, and no triangle strokes. A surface that a slider reshapes
+  is rebuilt on every change, so keep its callback simple.
+- The focus pulse works on these meshes too (`scaleTo(1.15)` and back on the mesh
+  or its group). To point at one REGION of a surface (a minimum, a saddle point),
+  place a small sphere marker on it and pulse the marker.
 
 Alignment (strict; misplaced parts are the most visible kind of jank):
 - Everything that belongs to a 3D model lives in the SAME 3D view as the model:

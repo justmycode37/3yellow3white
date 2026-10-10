@@ -19,6 +19,16 @@ When writing the plan:
   "Simpler to draw" is not a reason. For a subject that has a 3D shape, plan the flat
   step as a visible transformation of the same 3D object, and plan the return to 3D.
   A lesson about a spatial subject should be 3D in most of its scenes.
+- **Name the true 3D shape.** The scene can draw real shaded surfaces and solids, so
+  say which one each object is: a smooth surface for anything that depends on two
+  variables (an energy or potential landscape, a loss surface, a wave, z = f(x, y)),
+  a curved sheet or lobe (orbital, membrane, shell, petal), a tube along a path
+  (backbone, strand, wire, vessel, orbit, field line), or a solid (box, cylinder,
+  cone, ring), with spheres for atoms and particles. Prefer one such shape to many
+  small spheres. An idea usually drawn as a flat graph of two inputs (a function of
+  x and y, a cost landscape) is better as a rotatable surface: plan it in 3D.
+  A slider may reshape a surface (an amplitude, a curvature, a parameter of the
+  function); plan that as an ordinary slider.
 - **Show little (2D and 3D alike):** a scene shows only what the student needs to
   see for its one idea: the objects being talked about, short labels, and at most
   three formulas or matrices at a time. Do not plan a growing list of results. When
