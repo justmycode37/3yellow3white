@@ -51,8 +51,10 @@ removes videos deleted by another viewer.
 
 ## Generation and persistence
 
-`VideoService` runs one durable queue in one Bun process. Startup resumes queued
-or generating jobs at their first unpublished scene. `VIDEO_DB_PATH` defaults to
+`VideoService` runs durable jobs concurrently in one Bun process, with no app-level
+cap on active videos. Separate videos and narration jobs progress independently;
+provider rate limits still apply. Startup resumes all queued or generating jobs at
+their first unpublished scene. `VIDEO_DB_PATH` defaults to
 `data/videos.sqlite`; deployment sets it outside release directories. Run only one
 worker against this database. Multiple workers require leases/claims before use.
 Back up the SQLite database using a SQLite-aware backup procedure.
@@ -63,7 +65,7 @@ duration, narration, visual description, word timings, captions, an audio ID and
 completed scripts and scenes separately and reuses the narration service cache. The service compiles and validates scenes with
 `animlib/core` before publication. Narration publishes each completed scene's audio and timing packet atomically to
 disk. Scene generation starts from the first ready packet while later speech continues;
-it does not wait for the combined narration WAV. Code agents run one scene at a time.
+it does not wait for the combined narration WAV. Code agents run one scene at a time per video.
 Interrupted narration for a resumed video is retried automatically using saved chunks;
 a speech request interrupted before its result was saved may be billed again.
 Provider failures persist a terminal failure
