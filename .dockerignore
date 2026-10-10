@@ -7,6 +7,9 @@ frontend/site
 **/.env.*
 **/.narration
 **/data
+**/.aha
+**/.pi
+**/auth.json
 **/coverage
 **/*.sqlite*
 **/*.pem

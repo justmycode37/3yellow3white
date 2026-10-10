@@ -106,11 +106,11 @@ if [[ "$mode" == --check ]]; then
   echo 'Container lifecycle verified; production was not changed.'
   exit 0
 fi
-mapfile -t directories < <(python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); print(p["video"]); print(p["narration"])' "$release/paths.json")
-[[ ${#directories[@]} == 2 ]]
+mapfile -t directories < <(python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); print(p["video"]); print(p["narration"]); print(p["agents"])' "$release/paths.json")
+[[ ${#directories[@]} == 3 ]]
 for directory in "${directories[@]}"; do
   if [[ ! -d "$directory" ]]; then
-    sudo -n install -d -o deploy -g deploy -m 750 "$directory"
+    sudo -n install -d -o deploy -g deploy -m 700 "$directory"
   fi
   [[ -w "$directory" && -x "$directory" ]] || { echo "deploy cannot write $directory" >&2; exit 1; }
 done

@@ -14,3 +14,5 @@ coverage/
 .idea/
 .vscode/
 data/
+.aha/
+**/auth.json

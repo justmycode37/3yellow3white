@@ -1,10 +1,12 @@
 # Progressive interactive video delivery
 
-The first implementation uses a simulated server generator: three six-second
-interactive scenes with a short test tone, not generated explanations or speech.
+The default simulated generator produces three six-second scenes with a test tone.
+With `VIDEO_GENERATOR=pi`, Pi writes storyline Markdown, ElevenLabs generates
+narration, and Pi writes validated scene code aligned to the audio. See
+[Pi setup and authentication](agents.md).
 Uploaded PDF, DOCX, text and Markdown documents are read by the existing browser
 reader; extracted text and the requested topic are sent to and stored on the server.
-Raw document upload/OCR and real generation/TTS providers are not implemented.
+Raw document upload/OCR is not implemented.
 
 ## Contract and ownership
 
@@ -35,10 +37,10 @@ or generating jobs at their first unpublished scene. `VIDEO_DB_PATH` defaults to
 worker against this database. Multiple workers require leases/claims before use.
 Back up the SQLite database using a SQLite-aware backup procedure.
 
-The `Generator` interface receives the persisted request and next scene index and
-returns source, duration, captions and WAV bytes, or null when complete. A real
-provider should generate narration/audio first, align animation timing, and return
-short ready-to-play scenes. The service compiles and validates scenes with
+The `Generator` interface receives the persisted request, next scene index, and
+job context (owner, previous frame, and cancellation signal). It returns source,
+duration, captions, an audio ID and WAV bytes, or null when complete. Pi persists
+completed scripts and scenes separately and reuses the narration service cache. The service compiles and validates scenes with
 `animlib/core` before publication. Provider failures persist a terminal failure
 while retaining available scenes. Retry/resume of failed provider jobs, cancellation,
 retention policies, quotas, distributed queues and object storage are future work.

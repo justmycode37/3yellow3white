@@ -77,10 +77,14 @@ def main():
     values = read_environment([Path("/srv/apps/3yellow3white/.env"), Path("/etc/3yellow3white/environment")])
     video_db = host_path(values.get("VIDEO_DB_PATH", str(base / "data/videos.sqlite")))
     narration = host_path(values.get("NARRATION_DATA_DIR", "/var/lib/3yellow3white/narration"))
+    agents = host_path(values.get("AGENT_STATE_DIR", str(base / "agents")))
     # SQLite needs its whole directory, including WAL/SHM files, to persist.
-    if video_db.parent == narration or video_db.parent in narration.parents or narration in video_db.parent.parents:
-        raise ValueError("Video and narration directories must be separate")
-    for path in [video_db.parent, narration]:
+    directories = [video_db.parent, narration, agents]
+    for index, left in enumerate(directories):
+        for right in directories[index + 1:]:
+            if left == right or left in right.parents or right in left.parents:
+                raise ValueError("Video, narration, and agent directories must be separate")
+    for path in directories:
         if path == release or release in path.parents or base / "releases" == path or base / "releases" in path.parents:
             raise ValueError("Persistent data cannot be inside a release directory")
     runtime = release / "runtime.env"
@@ -94,12 +98,13 @@ def main():
         "AHA_VIDEO_DATA_DIR": str(video_db.parent),
         "AHA_VIDEO_DB_NAME": video_db.name,
         "AHA_NARRATION_DATA_DIR": str(narration),
+        "AHA_AGENT_DATA_DIR": str(agents),
         "AHA_RUNTIME_ENV": str(runtime),
         "AHA_BIND_ADDRESS": "0.0.0.0",
         "AHA_PORT": "8080",
     }
     (release / "compose.env").write_text("".join(f"{key}={value}\n" for key, value in settings.items()))
-    (release / "paths.json").write_text(json.dumps({"video": str(video_db.parent), "narration": str(narration)}))
+    (release / "paths.json").write_text(json.dumps({"video": str(video_db.parent), "narration": str(narration), "agents": str(agents)}))
 
 
 if __name__ == "__main__":

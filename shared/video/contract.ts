@@ -20,7 +20,7 @@ export interface VideoManifest {
   title: string
   revision: number
   status: 'queued' | 'generating' | 'complete' | 'failed'
-  provider: 'simulated'
+  provider: 'simulated' | 'pi'
   createdAt: string
   scenes: VideoScene[]
   error?: string

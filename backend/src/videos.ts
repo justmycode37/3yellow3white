@@ -2,10 +2,13 @@ import { Database } from 'bun:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { SceneSequence } from 'animlib/core'
+import type { Frame } from 'animlib/core'
 import type { VideoManifest, VideoRequest, VideoScene } from '../../shared/video/contract'
+import { AgentError } from './agents/config.js'
 
 type Row = { id: string; owner: string; request: string; manifest: string }
-export type Generator = (request: VideoRequest, index: number) => Promise<{ scene: Omit<VideoScene, 'audio'>; audio: Uint8Array } | null>
+export interface GenerationContext { videoId: string; owner: string; previousFrame?: Frame; signal: AbortSignal }
+export type Generator = (request: VideoRequest, index: number, context?: GenerationContext) => Promise<{ scene: Omit<VideoScene, 'audio'> & { audio?: { id: string } }; audio: Uint8Array } | null>
 
 // A deterministic fixture exercises audio delivery without claiming to generate narration.
 export const simulatedGenerator: Generator = async (_request, index) => {
@@ -41,8 +44,9 @@ export class VideoService {
   private running = false
   private stopped = false
   private idle: Promise<void> = Promise.resolve()
+  private abort = new AbortController()
 
-  constructor(path: string, private generate: Generator = simulatedGenerator) {
+  constructor(path: string, private generate: Generator = simulatedGenerator, private provider: VideoManifest['provider'] = 'simulated') {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
     this.db = new Database(path, { create: true })
     this.db.exec(`PRAGMA journal_mode=WAL;
@@ -65,7 +69,7 @@ export class VideoService {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
       return JSON.parse(prior.manifest)
     }
-    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: 'simulated', createdAt: new Date().toISOString(), scenes: [] }
+    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [] }
     this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
     this.kick()
     return manifest
@@ -87,18 +91,22 @@ export class VideoService {
         const manifest: VideoManifest = JSON.parse(row.manifest)
         const sequence = new SceneSequence()
         try {
+          if (manifest.provider === 'pi' && this.provider !== 'pi') throw new AgentError('CONFIG', 'This video requires VIDEO_GENERATOR=pi.')
+          const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
           manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
           const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
           if (!initial.ok) throw new Error('Stored scenes could not be restored')
           while (!this.stopped) {
-            const next = await this.generate(JSON.parse(row.request), manifest.scenes.length)
+            const priorIndex = manifest.scenes.length - 1
+            const next = await generate(JSON.parse(row.request), manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
+              previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal: this.abort.signal })
             if (this.stopped) break
             if (!next) { manifest.status = 'complete'; this.save(manifest); this.notify(manifest); break }
-            const scene: VideoScene = { ...next.scene, audio: { id: `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
+            const scene: VideoScene = { ...next.scene, audio: { id: next.scene.audio?.id ?? `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
             if (scene.index !== manifest.scenes.length || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
             const result = await sequence.submit({ type: 'insert', after: manifest.scenes.at(-1)?.id ?? null, scenes: [scene] })
             if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join('; '))
-            if (sequence.compiled.at(-1)?.duration !== scene.duration) throw new Error('Scene timing does not match its declared duration')
+            if (Math.abs(sequence.compiled.at(-1)!.duration - scene.duration) > 1e-6) throw new Error('Scene timing does not match its declared duration')
             // Publish the scene and its asset atomically before sending an event.
             this.db.transaction(() => {
               this.db.query('INSERT INTO video_audio VALUES (?, ?, ?)').run(manifest.id, scene.id, next.audio)
@@ -107,14 +115,15 @@ export class VideoService {
             this.notify(manifest)
           }
         } catch (error) {
-          manifest.status = 'failed'; manifest.error = 'Generation failed. Available scenes can still be played.'
-          console.error('Video generation failed', manifest.id, error)
+          if (this.stopped) break
+          manifest.status = 'failed'; manifest.error = error instanceof AgentError ? error.message : 'Generation failed. Available scenes can still be played.'
+          console.error('Video generation failed', manifest.id, error instanceof AgentError ? error.code : 'GENERATION')
           this.save(manifest); this.notify(manifest)
         } finally { sequence.dispose() }
       }
     }).finally(() => { this.running = false })
   }
-  async close() { this.stopped = true; await this.idle; this.db.close() }
+  async close() { this.stopped = true; this.abort.abort(); await this.idle; this.db.close() }
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url), parts = url.pathname.split('/')

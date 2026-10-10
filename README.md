@@ -1,6 +1,6 @@
 # Aha! — VISCon Hackathon
 
-Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page shows a compact colour-coded curriculum and a separate plan for each subject. It reads PDF, Word, text, or Markdown files in the browser, groups them into chapters and video topics, and sends selected topics to the workspace composer. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. AI explanation and speech are not yet connected to this preview flow.
+Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page shows a compact colour-coded curriculum and a separate plan for each subject. It reads PDF, Word, text, or Markdown files in the browser, groups them into chapters and video topics, and sends selected topics to the workspace composer. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. An optional Pi agent pipeline generates scripts and scene code with ElevenLabs narration.
 
 ## Repository layout
 
@@ -13,7 +13,7 @@ shared/video/      Versioned progressive video delivery contract
 ```
 
 The built frontend is checked in so the backend can serve it directly. Use Node.js
-22.16 or newer for the existing npm/Vite tooling. `npm ci` also installs a pinned
+22.19 or newer for the existing npm/Vite tooling. `npm ci` also installs a pinned
 [Bun](https://bun.sh/docs) runtime for the backend commands, so a global Bun install
 is optional. Dependencies are managed with npm and the checked-in package locks.
 To update the site after editing the React source:
@@ -31,7 +31,8 @@ Lesson playback uses animlib's clock and a full-viewport canvas, preferring WebG
 with automatic WebGL2 fallback. The app's controls drive play, pause, seeking,
 and replay; opening navigation or a dialog pauses the animation. Existing sample
 lessons play locally. New previews persist on the server and deliver interactive
-scenes and test-tone audio progressively. See [video delivery](docs/video-delivery.md).
+scenes and audio progressively. Enable real generation using the [Pi agent setup](docs/agents.md),
+or use the default simulated scenes and test tone. See [video delivery](docs/video-delivery.md).
 
 ## Run the combined app
 
@@ -54,8 +55,9 @@ Browser code imports the player from `animlib`; the Bun backend and other Node
 consumers can import scene compilation and state evaluation from `animlib/core`
 without loading the renderer. See the library's
 [shared evaluation example](shared/animlib/README.md#shared-scene-evaluation).
-The video queue currently uses a simulated generator. The backend separately
-normalizes AI-written storyline Markdown through `/api/narrations` (including
+Set `VIDEO_GENERATOR=pi` to connect the video queue to Pi script/scene agents and
+ElevenLabs; see [local/VM authentication and remote logout](docs/agents.md).
+The backend also normalizes AI-written storyline Markdown through `/api/narrations` (including
 common label, formatting, pause, and table variations), generates
 ElevenLabs narration with word timings and explicit pauses, and provides a
 validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
@@ -66,7 +68,7 @@ specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent
 
 GitHub Actions builds and tests pull requests, including Docker startup, shutdown,
 and persistence checks, then deploys successful `main` updates over SSH. The app
-runs in a non-root Docker Compose container with persistent SQLite/narration bind
-mounts. Candidate images are tested before replacing production; failed activation
+runs in a non-root Docker Compose container with persistent SQLite, narration,
+and agent-state bind mounts. Candidate images are tested before replacing production; failed activation
 restores the previous container or legacy systemd service. See
 [deployment setup, container commands, and recovery](docs/deployment.md).

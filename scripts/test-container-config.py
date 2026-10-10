@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import importlib.util
+import json
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -66,6 +67,22 @@ class EnvironmentTests(unittest.TestCase):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 config.host_path(path)
         self.assertEqual(config.host_path('/tmp/aha/videos.sqlite'), Path('/tmp/aha/videos.sqlite'))
+
+    def test_agent_state_is_persistent_and_separate_from_releases(self):
+        with tempfile.TemporaryDirectory() as root:
+            base = Path(root)
+            release = base / 'releases' / 'candidate'
+            release.mkdir(parents=True)
+            values = {'NARRATION_DATA_DIR': str(base / 'narration')}
+            with patch.object(config, 'read_environment', return_value=values), patch.object(config.sys, 'argv', ['config', str(release), str(base), 'a' * 40, 'image']):
+                config.main()
+                paths = json.loads((release / 'paths.json').read_text())
+                self.assertEqual(paths['agents'], str(base / 'agents'))
+                self.assertIn(f'AHA_AGENT_DATA_DIR={base}/agents\n', (release / 'compose.env').read_text())
+                for path in [base / 'data', base / 'narration' / 'pi', release / 'pi', base / 'releases']:
+                    with self.subTest(path=path), self.assertRaises(ValueError):
+                        values['AGENT_STATE_DIR'] = str(path)
+                        config.main()
 
 
 if __name__ == '__main__':

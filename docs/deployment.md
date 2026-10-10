@@ -23,8 +23,8 @@ an automatically allocated **loopback-only** port. It checks compilation, routes
 built assets, identity headers, owner isolation, stored video/WAV audio, literal
 environment values, a non-root process, a read-only app filesystem, clean shutdown,
 stop/start with an unfinished job, crash recovery, and removal/recreation with
-persistent SQLite and narration files. It does not invoke ElevenLabs or use
-production data.
+persistent SQLite, narration, and agent files. It imports Pi under Bun without
+external inference, ElevenLabs calls, or production data.
 
 The VM must have Docker Engine running and enabled at boot, **Docker Compose
 2.30.0 or newer**, SSH, Bash, tar, curl, Python 3, and flock. The existing `deploy`
@@ -96,8 +96,12 @@ host ownership and persist across replacement:
   `VIDEO_DB_PATH` in the runtime files is honored by mounting its parent.
 - Narration: `/var/lib/3yellow3white/narration` by default, or the existing absolute
   `NARRATION_DATA_DIR`. Mounted at `/data/narration` inside the container.
+- Pi: `/srv/apps/3yellow3white-actions/agents` by default, or absolute
+  `AGENT_STATE_DIR`. Mounted at `/data/agents`, holding private credentials in
+  `pi/` and generated scripts/scenes in `jobs/`. New directories use mode 700.
+  See [agent login, API-key switching, and remote disconnect](agents.md).
 
-Paths must be outside release directories and use letters, numbers, `/`, `_`,
+The three data directories must be separate, without nesting. Paths must be outside release directories and use letters, numbers, `/`, `_`,
 `.`, or `-`. Missing data directories are created for `deploy`; existing directory
 ownership is not changed. Configured paths should match those used by the old
 service before migration.
