@@ -9,6 +9,7 @@ import type { PlannedLesson } from '../src/agents/planning.js';
 import type { AgentTask } from '../src/agents/runtime.js';
 import { createPiGenerator } from '../src/agents/generator.js';
 import { NarrationService } from '../src/narration/service.js';
+import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 import { settingsFromEnv } from '../src/narration/elevenlabs.js';
 
 const roots: string[] = [];
@@ -67,6 +68,8 @@ test('editorial repairs update speech and plan together, forward sources, and pr
   tasks.forEach(task => expect(task.images).toEqual([image]));
   expect(tasks[1].prompt).toContain('Sixteen, eight, four.');
   expect(tasks[1].prompt).toContain('parsedScenes');
+  expect(tasks[0].systemPrompt.endsWith(await scenegenPrompt('planning'))).toBe(true);
+  expect(tasks[2].systemPrompt.endsWith(await scenegenPrompt('planning'))).toBe(true);
   expect(tasks[1].systemPrompt).toContain('Visual plans and reveal guards belong in nonspoken context');
   const capabilities = await readFile(new URL('../../shared/animlib/docs/capabilities.md', import.meta.url), 'utf8');
   tasks.forEach(task => expect(task.systemPrompt).toContain(capabilities));

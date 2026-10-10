@@ -123,5 +123,5 @@ button.curriculum-block:focus-visible { outline: 3px solid var(--subject-color);
 .plan-draft-topic { display: grid; gap: .65rem; padding: 1rem 0; border-bottom: 1px solid var(--border, #8885); }
 .plan-draft-topic label { display: grid; gap: .35rem; font-size: .85rem; }
 .plan-draft-topic input, .plan-draft-topic textarea { width: 100%; box-sizing: border-box; padding: .65rem; color: inherit; background: transparent; border: 1px solid var(--border, #8885); border-radius: .4rem; font: inherit; }
-.plan-draft-topic pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 16rem; overflow: auto; font: inherit; }
+.plan-draft-topic pre, .plan-original-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 16rem; overflow: auto; font: inherit; }
 .plan-draft-actions { display: flex; gap: 1rem; margin-top: 1rem; }
