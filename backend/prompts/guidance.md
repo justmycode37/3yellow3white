@@ -23,16 +23,21 @@ The existing narration and output contracts apply to both modes. Keep `videoMode
 
 Before narration, establish: audience/prerequisites (default: curious newcomer), duration, one concrete central question, one-sentence takeaway, and a small example suited to the subject. Identify a likely misconception or main aha when relevant; do not invent either as a required device. Build beats around established ingredients and one new cognitive demand, using connected questions when useful. Narrow scope if the decisive inference cannot fit.
 
-Make each scene teach one visual idea. Keep the opening focused on a concrete question or example, using roughly 20-30 spoken words. Aim for 30-60 words in subsequent scenes.
+Make each scene teach one visual idea. Give the opening enough room for a brief introduction and a concrete question or example. Aim for 30–60 words per scene as a pacing guide, not a cap; split dense material across scenes instead of omitting necessary explanations to fit a word target.
+
+## Mandatory teaching progression
+
+- **Start with an accessible introduction.** Open with a brief, topic-relevant story, familiar situation, intuitive observation, or simple example that gives the viewer a reason to ask the central question. Establish what we are trying to understand before doing the difficult work. Do not open with the most complex mathematics, a dense formula, or an unexplained preview of the final result. Keep the introduction purposeful and concise; avoid generic greetings and long agendas.
+- **Build from intuition to formalism.** Develop the opening example step by step, introducing one new idea at a time. Establish each prerequisite before relying on it, and explain why the next concept or mathematical tool is needed. Let the same example lead naturally into the more advanced reasoning.
+- **Explain variables and formulas when introducing them.** Never introduce a nontrivial variable, symbol, or formula without explaining it in the spoken narration before or as it is first used. Say what each quantity represents, its units when relevant, and how it relates to the example. For a formula, explain what it expresses, why its terms and operations belong there, and how it follows from the established idea. Merely reading an equation aloud or naming its symbols is not an explanation. Keep meanings consistent throughout.
+- **Only trivial details may go unexplained.** An explanation may be shortened or omitted only when the detail is trivial for the stated audience or has already been explained in this video. Familiar arithmetic may qualify; a new topic-specific variable, an unfamiliar convention, or the central relationship does not. When unsure, explain briefly. Reduce scope instead of dropping necessary definitions or reasoning to meet a time budget.
 
 ## Explanation principles
 
-- **Concrete before abstract; need before tool.** Open with a specific phenomenon, puzzle, or prediction; establish the question and stakes within 30 seconds. Skip greetings, agendas, definitions, and generic importance claims. An early preview of a complex result is a promise, not assumed knowledge.
 - **One causal thread.** Explain why each step follows. Let the previous question or limitation motivate the next idea. Reuse the running example across detours; pay off setups and explicitly defer out-of-scope questions.
 - **Make discovery plausible.** When useful, try a reasonable approach and let its failure motivate a better one. No straw men. Model reusable moves: simplify, compare, reverse, vary one input, test extremes, seek what stays unchanged. State prerequisites the viewer cannot infer.
 - **Earn a perspective shift when useful.** If the explanation changes perspective, explain what is hard in the current view and why a new view helps. Map the same example across, identify what is preserved, derive the result, and translate back. An aha comes from seeing structure, not renaming things; a shift is not required for every topic.
 - **Choose revealing cases.** Start small; change one factor at a time; test boundaries and failures. Demonstrate repetition once before compressing it. Separate essential structure from arbitrary details and justify generalization.
-- **Meaning before notation.** Usually: example → need → idea → name → symbol → formula. Omit unnecessary stages. Define symbols consistently through the example; justify each formula part, then read it back in plain words. Explain consequential conventions.
 - **Honest reasoning.** Verify facts, calculations, signs, units, and formulas. Distinguish observations, assumptions, conjectures, deductions, and approximations. Cases/simulations suggest patterns; structural arguments establish proofs. Label toy models and simplifications; give analogies a mapping and boundary before they mislead. Establish finite approximations before limits. Resolve essential uncertainty; cut unsupported extras.
 - **Close the loop.** Answer the opening question and state the mental model. When it helps the requested scope, test a changed case requiring understanding rather than recall. Correct relevant misconceptions and include necessary limitations; do not invent a misconception or transfer exercise as a quota. No essential new concept at the end.
 
@@ -70,7 +75,7 @@ Syntax example only; invent content for the requested topic:
 
 Content needed: Sixteen possibilities; each truthful answer halves the remaining set. Keep the question count hidden until the reveal.
 
-Narration: One question reduces sixteen possibilities to eight.
+Narration: Imagine guessing a friend's secret number from one to sixteen. Asking whether it is above eight leaves just eight possibilities, whichever answer they give.
 
 Invitation (spoken): How many questions leave one possibility? Take a moment to work it out.
 
@@ -93,4 +98,4 @@ Pause: 4s
 Reveal (spoken): Just one more. The first question returns us to sixteen; the rest is unchanged.
 ```
 
-Before emitting, check: earned answer, no missing inference, accurate limits, timing budget, correct labels/reveal order, and a natural spoken invitation immediately before every pause. If included, discovery should be reachable, a perspective shift motivated, and transfer relevant.
+Before emitting, check: an accessible, topic-relevant opening; a gradual build from intuition; every nontrivial variable and formula explained at first use; earned answer; no missing inference; accurate limits; timing budget; correct labels/reveal order; and a natural spoken invitation immediately before every pause. If included, discovery should be reachable, a perspective shift motivated, and transfer relevant.

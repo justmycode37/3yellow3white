@@ -2,6 +2,8 @@
 
 Make the scene's purpose visible. Show a concrete change before naming its rule; every causal claim needs a visible reason, such as a correspondence, comparison, or quantity changing together with its geometry. Use the running example and exact values established in the script. Do not choose new values that contradict the speech.
 
+Preserve the script's progression from an accessible introduction or example to more advanced ideas. Do not add an opening splash of complex mathematics or introduce nontrivial variables or formulas that the narration has not explained. Reveal notation with its spoken introduction and connect each quantity or term to the example. Previously explained or audience-trivial notation may be reused without repeating its explanation.
+
 Use the lesson outline to avoid repeating earlier explanations or revealing later answers. Set up the next scene's needs. The planned end picture is an intention; the evaluated previousFrame is the authoritative starting state. Retrieve carried objects with s.previous.get(id), animate the same object, and keep the declared carry IDs. Do not recreate a lookalike under a different ID. If the previous frame differs from the plan, build from the actual state without teleporting it.
 
 Before constructing a reusable object, read its shared entity meaning, later uses, current visualDescription, and adjacent plans. The outline gives all scene purposes, not every later scene's construction requirements. Choose a representation that supports the stated later operations, even if this scene only introduces a still picture. Keep meaningful parts addressable under stable IDs; preserve the groups needed for later joint motion. Future-use context guides construction, not early reveals.
