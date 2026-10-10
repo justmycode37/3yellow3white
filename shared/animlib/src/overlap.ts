@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from './texture-shader.js';
 import { rotate } from './geometry.js';
 import { paletteResolver } from './palette.js';
 import { buildDrawItems } from './render-geometry.js';
@@ -96,8 +97,8 @@ function inspectFrame(frame: Frame, options: OverlapOptions, excluded: ReadonlyS
       if (item.component !== 'content' || excluded.has(item.elementId)) continue;
       const data = item.vertices, opacity = data[6] * (item.groups ?? []).reduce((n, group) => n * group.opacity, 1);
       if (opacity <= 0 || opacity < minOpacity) continue;
-      for (let i = 0; i < data.length; i += 45) {
-        const triangle: Vec3[] = [0, 15, 30].map(j => [data[i + j], data[i + j + 1], data[i + j + 2]]);
+      for (let i = 0; i < data.length; i += 3 * VERTEX_FLOATS) {
+        const triangle: Vec3[] = [0, VERTEX_FLOATS, 2 * VERTEX_FLOATS].map(j => [data[i + j], data[i + j + 1], data[i + j + 2]]);
         let points = projectedTriangle(triangle, item.screen, region.camera, width, height, [data[i + 13], data[i + 14]])
           .map(([x, y]): Vec2 => [x + left * options.width, y + top * options.height]);
         points = clip(clip(clip(clip(points, p => p[0]), p => options.width - p[0]), p => p[1]), p => options.height - p[1]);

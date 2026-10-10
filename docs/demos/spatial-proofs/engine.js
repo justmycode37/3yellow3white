@@ -2,9 +2,16 @@ export default scene({mode:'3d',orbit:false,end:'hold',background:'BLACK'},s=>{
   const PI=Math.PI, R=.9, L=2.8;
   s.view('engine-model',{rect:[.04,.025,.92,.95],orbit:true,orbitHitTest:'geometry',
     camera:{height:8.7,distance:15,yaw:.42,pitch:-.18,target:[0,1.65,0],perspective:.65}},v=>{
-    function cyl(id,r,h,p,color,axisZ=false){return v.cylinder(id,{radius:r,height:h,radialSegments:40,position:p,rotation:axisZ?[PI/2,0,0]:[0,0,0],fill:color,stroke:'none'});}
-    function box(id,w,h,d,p,color){return v.box(id,{width:w,height:h,depth:d,position:p,fill:color,stroke:'none'});}
-    function ring(id,r,t,p,color,axisZ=false){return v.torus(id,{radius:r,tubeRadius:t,radialSegments:48,tubularSegments:8,position:p,rotation:axisZ?[PI/2,0,0]:[0,0,0],fill:color,stroke:'none'});}
+    // Appearance only: all original dimensions, pivots and motion remain intact.
+    function finish(id,color){
+      if(id==='plug-ceramic')return {material:{roughness:.24,specular:.55}};
+      if(color==='GREY_A'||color==='GREY_B')return {texture:{pattern:'stripes',color,scale:[14,1,1],seed:11,bumpStrength:.002},material:{metalness:.58,roughness:.38,specular:.4}};
+      if(color==='GOLD'||color==='GOLD_D')return {texture:{pattern:'stripes',color,scale:[10,1,1],seed:17,bumpStrength:.002},material:{metalness:.42,roughness:.46}};
+      return {texture:{pattern:'noise',color,scale:7,seed:23,bumpStrength:.008},material:{metalness:.10,roughness:.7,specular:.2}};
+    }
+    function cyl(id,r,h,p,color,axisZ=false){return v.cylinder(id,{radius:r,height:h,radialSegments:40,position:p,rotation:axisZ?[PI/2,0,0]:[0,0,0],fill:color,stroke:'none',...finish(id,color)});}
+    function box(id,w,h,d,p,color){return v.box(id,{width:w,height:h,depth:d,position:p,fill:color,stroke:'none',...finish(id,color)});}
+    function ring(id,r,t,p,color,axisZ=false){return v.torus(id,{radius:r,tubeRadius:t,radialSegments:48,tubularSegments:8,position:p,rotation:axisZ?[PI/2,0,0]:[0,0,0],fill:color,stroke:'none',...finish(id,color)});}
     // A solid annular sector with explicit inner/outer faces and cut faces.
     function shell(id,ri,ro,y0,y1,a0,a1,color){
       const vertices=[],triangles=[],N=48;
@@ -13,7 +20,7 @@ export default scene({mode:'3d',orbit:false,end:'hold',background:'BLACK'},s=>{
       function quad(a,b,c,d){triangles.push([a,b,c],[a,c,d]);}
       for(let i=0;i<N;i++){const k=i*4,j=k+4;quad(k,j,j+2,k+2);quad(k+1,k+3,j+3,j+1);quad(k,k+1,j+1,j);quad(k+2,j+2,j+3,k+3);}
       quad(0,2,3,1);const k=N*4;quad(k,k+1,k+3,k+2);
-      return v.mesh(id,{vertices,triangles,fill:color,shading:'flat',stroke:'none'});
+      return v.mesh(id,{vertices,triangles,fill:color,shading:'flat',stroke:'none',...finish(id,color)});
     }
     box('mounting-bed',4.2,.26,2.5,[0,-1.75,-.25],'GREY_D');
     for(const x of [-1.63,1.63]){
@@ -88,7 +95,7 @@ export default scene({mode:'3d',orbit:false,end:'hold',background:'BLACK'},s=>{
       valves.push(v.group('valve-'+i,parts));
       cyl('valve-guide-'+i,.105,.20,[x,5.0,.06],'GREY_D');
       // Port sections remain behind their valve and do not obscure the piston.
-      v.tube('port-'+i,{points:[[x,4.61,-.22],[x,4.7,-.62],[x+(i===0?-.72:.72),4.89,-.87]],radius:.17,radialSegments:16,fill:color});
+      v.tube('port-'+i,{points:[[x,4.61,-.22],[x,4.7,-.62],[x+(i===0?-.72:.72),4.89,-.87]],radius:.17,radialSegments:16,fill:color,...finish('port-'+i,color)});
     }
     // Spark plug: the electrical/thermal process is deliberately not simulated.
     cyl('plug-ceramic',.095,.45,[0,5.03,-.25],'WHITE');

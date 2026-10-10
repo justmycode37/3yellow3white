@@ -59,9 +59,82 @@ Raw meshes are unlit by default: choose `shading:'smooth'` for organic forms or
 (smooth except boxes), with no edge stroke by default. Smooth lighting does not
 make a planar silhouette volumetric. Optional mesh normals must match vertex
 count; shared indices smooth across faces, split indices retain creases. Lighting
-is simple directional shading, not a programmable material/light system. Prefer
+defaults to simple directional shading; optional stylized materials are described
+below, not a programmable light system. Prefer
 opaque cutaways or separated parts to intersecting transparent shells; triangle
 sorting does not guarantee correct transparency at intersections.
+
+## Procedural texture and material finish
+
+When requested or useful for material identity, create finish in the initial scene
+source on spheres and meshes, including surface/solid/tube helpers. Add it to the
+existing geometry, stable IDs, groups and timeline when revising an established
+model. Surface appearance must retain the approved palette roles, silhouette,
+scientific data, articulation and explanatory clarity.
+
+Use `texture: { pattern, color, scale, offset, seed, bumpStrength }` and
+`material: { metalness, roughness, specular, emissive, emissiveIntensity }` geometry
+options. Set only needed fields. Element `fill` is the primary palette color;
+`texture.color` is the secondary palette color. Choose related colors when the
+object's color encodes an element or quantity. A low-contrast surface must still
+read beside its outline, moving part, path and selected point.
+
+Patterns are `'checker'`, `'stripes'`, `'noise'`, `'marble'`, or `'wood'`.
+They use **local XYZ**, with coordinates `localPosition * scale + offset`, and
+follow element/group transforms. Stripes vary across X; wood forms rings around
+Y. Align geometry/local axes deliberately. `scale` is a positive scalar or XYZ
+triple, each component at most 1000; larger values mean finer detail. This texture
+scale is distinct from an element's scalar transform scale. Fractional offsets
+avoid constant-color/balanced checker boundaries on flat sheets. `seed` is an
+integer 0–65535 for noise/marble/wood; it is independent of scene randomness.
+Do not expect a tube's pattern to follow arc length or use surface UVs.
+
+Choose bump relative to model scale and pattern frequency, not a universal preset.
+Start near zero (`bumpStrength` roughly 0–0.005 for fine/checker patterns or small
+models; allowed −1 to 1 in local units), and increase only after rendered-frame
+verification shows more relief is needed. Values suitable for large, broad
+patterns can make small metal parts look hammered or voxel faces look like brick.
+Matching primary/secondary colors provide relief without recoloring.
+Bump perturbs lighting normals, not vertices, silhouettes, contact or picking.
+Its height scales with the object. Avoid high-frequency strong bump and fine
+patterns that shimmer or disappear at the chosen framing. Per-fragment patterns
+need no extra tessellation: increase geometry resolution only for shape.
+
+For metals use `metalness` near 1 with a suitable palette fill. `roughness`
+0.05–1 controls highlight spread; `specular` 0–1 controls nonmetal highlights.
+Keep roughness high enough to reveal shape without saturated glare. Emission is
+surface color, not a halo or a light on neighbors; `emissiveIntensity` is 0–4.
+Raw meshes need `shading:'flat'` or `'smooth'` for lit material/bump response;
+spheres and helpers already supply lighting. Unlit meshes still display color
+patterns and emission. Omitted material preserves original simple shading;
+`material:{}` selects configurable shading defaults.
+
+For example, a reusable local wood part can retain established brown color roles:
+
+```js
+const timber = v.box('timber', {
+  width: 0.7, height: 2, depth: 0.7, fill: Color.LIGHT_BROWN,
+  texture: { pattern: 'wood', color: Color.DARK_BROWN,
+    scale: [3, 0.5, 3], offset: [0.2, 0, 0.3], seed: 17, bumpStrength: 0.003 },
+  material: { roughness: 0.85, specular: 0.15 },
+});
+```
+
+Use only tokens supplied by the host palette; the example's brown tokens must
+exist in that palette. Do not add image/video textures, UV maps, image normal/bump
+maps, displacement, environment maps, configurable lights, shadows or bloom:
+those APIs are absent. Procedural studio reflections are stylized and do not
+reflect other scene objects or guarantee physically based accuracy.
+
+Texture/material settings are construction options, not `animate` or reactive
+`s.bind` properties. Ordinary sliders/selects rebuild them at the current time
+only when interaction is planned. Kept geometry preserves settings. Compatible
+mesh/sphere morphs switch to target settings for interior frames, without finish
+interpolation: keep settings identical for continuous appearance or deliberately
+crossfade separate objects. Mesh deformation resamples local patterns. Inspect
+actual setup, motion-interior and final frames for drift, seams, glare, aliasing
+and semantic color loss, at both requested aspects. Verification comes first;
+repair only demonstrated failures afterward.
 
 ## Build coherent models, not independent decorations
 

@@ -1,3 +1,4 @@
+import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {CanvasRenderer} from '../src/renderer.js';
 import {project,strokeTriangles} from '../src/geometry.js';
@@ -50,13 +51,13 @@ describe('render review regressions',()=> {
         draw(sphere,view);
         const data=vertices();
         let previous=Infinity;
-        for(let i=0;i<data.length;i+=45) {
-          const center=[0,1,2].map(axis=>(data[i+axis]+data[i+15+axis]+data[i+30+axis])/3) as Vec3;
+        for(let i=0;i<data.length;i+=(3 * VERTEX_FLOATS)) {
+          const center=[0,1,2].map(axis=>(data[i+axis]+data[i+VERTEX_FLOATS+axis]+data[i+2*VERTEX_FLOATS+axis])/3) as Vec3;
           const depth=project(center,view,800,450).depth;
           expect(depth).toBeLessThanOrEqual(previous+1e-10);previous=depth;
-          for(let j=i;j<i+45;j+=15){expect(data[j+6]).toBe(0.5);expect(data[j+11]).toBe(1);expect(Math.hypot(data[j+8],data[j+9],data[j+10])).toBeCloseTo(1,6);}
+          for(let j=i;j<i+(3 * VERTEX_FLOATS);j+=VERTEX_FLOATS){expect(data[j+6]).toBe(0.5);expect(data[j+11]).toBe(1);expect(Math.hypot(data[j+8],data[j+9],data[j+10])).toBeCloseTo(1,6);}
         }
-        expect(draws()).toEqual([data.length/15]);
+        expect(draws()).toEqual([data.length/VERTEX_FLOATS]);
       }
     }finally{renderer.dispose();}
   });

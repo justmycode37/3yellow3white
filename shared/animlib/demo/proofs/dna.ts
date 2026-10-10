@@ -27,7 +27,8 @@ export const dnaProof = {
     'RCSB PDB 1BNA · X-ray structure · 1.90 Å resolution. Coordinates remain rigid; this is structural inspection, not molecular dynamics.',
     'Carbon grey · nitrogen blue · oxygen red · phosphorus gold. Covalent connectivity comes from the RCSB nucleotide dictionaries; dashed gold contacts indicate base-pair hydrogen bonds.',
     'Hydrogens are not resolved in this coordinate set. Deposited solvent is omitted for clarity. The segment cuts the two backbones at its boundaries; no artificial capping atoms are added. Ball sizes aid visibility; space filling uses conventional van der Waals radii.',
-    'Orbit by dragging the molecule during a hold. Choose the central two pairs for an uncluttered atomic close-up. Play performs one groove inspection and a measured zoom.'
+    'Orbit by dragging the molecule during a hold. Choose the central two pairs for an uncluttered atomic close-up. Play performs one groove inspection and a measured zoom.',
+    'Same-color procedural relief gives the atom glyphs a restrained satin finish. It is a display treatment, not measured atomic surface roughness; coordinates, radii and element colors are unchanged.',
   ],
   sampleTimes: [0,2,4.5,6,8.5,10.5,13.9],
   source: `export default scene({mode:'3d',background:Color.BLACK,orbit:false,end:'hold'},s=>{
@@ -57,7 +58,7 @@ export const dnaProof = {
         }
         return b;
       }
-      function flush(color,b){if(b.vertices.length)v.mesh('atomic-batch-'+serial++,{...b,fill:color,stroke:Color.NONE,shading:'smooth'});}
+      function flush(color,b){if(b.vertices.length)v.mesh('atomic-batch-'+serial++,{...b,fill:color,stroke:Color.NONE,shading:'smooth',texture:{pattern:'noise',color,scale:12,seed:19,bumpStrength:.004},material:{roughness:.62,specular:.28}});}
       const atomNormals=representation==='Space filling'?${JSON.stringify(atomMesh.vertices)}:${JSON.stringify(atomMesh.coarseVertices)},atomTriangles=representation==='Space filling'?${JSON.stringify(atomMesh.triangles)}:${JSON.stringify(atomMesh.coarseTriangles)};
       function atom(p,r,color){
         const b=bucket(color,atomNormals.length,atomTriangles.length),start=b.vertices.length;

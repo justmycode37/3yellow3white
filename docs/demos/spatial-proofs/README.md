@@ -18,6 +18,14 @@ parameter slice. Minecraft uses original voxel geometry and an approximate
 character palette. Detailed fidelity notes accompany each proof in the gallery
 and in the adjacent `*-notes.md` files.
 
+## Texture update
+
+The current gallery adds the newest upstream library texture/material capability
+(`076f017`, PR #73). It modifies these same proof scenes in place. Original
+untextured screenshots below remain the before reference; current frames are
+under [`textures/`](textures/). See [texture verification](textures/README.md) and
+the [independent review](texture-review.md).
+
 These are agent-authored proofs using the integrated library and scene-authoring
 guidance. They are not an untouched run of the production generation pipeline.
 Engine, gradient and Minecraft were independently delegated; DNA and gallery

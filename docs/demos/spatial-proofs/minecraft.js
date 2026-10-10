@@ -1,6 +1,22 @@
 export default scene({mode:'3d',end:'hold',orbit:false,background:'BLACK'},s=>{
     s.view('voxel-world',{rect:[0,0,1,1],orbit:true,orbitHitTest:'geometry',
       camera:{yaw:-0.44,pitch:-0.21,height:7.2,distance:15,target:[0,1.9,0],perspective:0.65}},v=>{
+      // Semantic surface policy keeps the existing color batches and geometry intact.
+      function finish(id,color){
+        const matte={roughness:.95,specular:.06};
+        if(id==='grass-island'){
+          if(color==='GREEN_D'||color==='GREEN_E')return {texture:{pattern:'checker',color:color==='GREEN_D'?'GREEN_E':'GREEN_D',scale:8,offset:[.13,.17,.21],seed:7,bumpStrength:.001},material:matte};
+          if(color==='GREY_BROWN')return {texture:{pattern:'noise',color:'LIGHT_BROWN',scale:8,seed:31,bumpStrength:.004},material:matte};
+        }
+        if(id==='oak-crown'&&(color==='GREEN_D'||color==='GREEN_E'))return {texture:{pattern:'checker',color:color==='GREEN_D'?'GREEN_E':'GREEN_D',scale:7.5,offset:[.13,.17,.21],seed:9,bumpStrength:.001},material:matte};
+        if(id==='stump'||id.indexOf('log')>=0){
+          if(color==='GREY_BROWN')return {texture:{pattern:'wood',color:'LIGHT_BROWN',scale:[3,.3,3],offset:[-3,0,0],seed:19,bumpStrength:.008},material:matte};
+          if(color==='GOLD_E')return {texture:{pattern:'wood',color:'LIGHT_BROWN',scale:[3,.3,3],offset:[-3,0,0],seed:19,bumpStrength:.004},material:matte};
+        }
+        if(id==='pixel-iron-axe'&&color.indexOf('GREY_')===0)return {texture:{pattern:'stripes',color,scale:[12,1,1],seed:3,bumpStrength:.002},material:{metalness:.55,roughness:.5}};
+        if((id.indexOf('steve-')===0||id==='mining-upper-arm')&&id!=='steve-head-pivot'&&color.indexOf('BLUE')===0)return {texture:{pattern:'checker',color,scale:18,offset:[.13,.17,.21],seed:5,bumpStrength:.0008},material:matte};
+        return {material:matte};
+      }
       // Consolidate opaque pixel detail by color. Moving assemblies remain separate.
       function model(id,blocks){
         const buckets={};
@@ -14,7 +30,7 @@ export default scene({mode:'3d',end:'hold',orbit:false,background:'BLACK'},s=>{
             q.triangles.push(t.map(i=>i+n));
         }
         const parts=[];
-        for(const color of Object.keys(buckets))parts.push(v.mesh(id+'-'+color,{...buckets[color],fill:color,shading:'flat'}));
+        for(const color of Object.keys(buckets))parts.push(v.mesh(id+'-'+color,{...buckets[color],fill:color,shading:'flat',...finish(id,color)}));
         return v.group(id,parts);
       }
       // A cropped island, not a competing landscape. Flat faces retain voxel identity.
@@ -123,7 +139,7 @@ export default scene({mode:'3d',end:'hold',orbit:false,background:'BLACK'},s=>{
       }
       const chips=[];
       for(let i=0;i<6;i++){
-        const c=v.box('wood-chip-'+i,{width:0.065,height:0.07,depth:0.055,fill:i%2?'LIGHT_BROWN':'DARK_BROWN',position:[0.47,1.66,0.30],opacity:0});chips.push(c);
+        const c=v.box('wood-chip-'+i,{width:0.065,height:0.07,depth:0.055,fill:i%2?'LIGHT_BROWN':'DARK_BROWN',position:[0.47,1.66,0.30],opacity:0,texture:{pattern:'wood',color:'GREY_BROWN',scale:3,seed:19,bumpStrength:.002},material:{roughness:.95,specular:.06}});chips.push(c);
       }
       // A separate inventory representation appears only when the world block leaves.
       const drop=model('collected-log',[[0,0,0,0.31,0.31,0.31,'GREY_BROWN'],[0,0.159,0,0.27,0.012,0.27,'GOLD_E'],

@@ -47,6 +47,7 @@
       <button type="button" data-scene="function-graph" aria-pressed="true" disabled><span>01</span>Function</button>
       <button type="button" data-scene="parametric-flower" aria-pressed="false" disabled><span>02</span>Flower</button>
       <button type="button" data-scene="solids-and-tubes" aria-pressed="false" disabled><span>03</span>Solids & tubes</button>
+      <button type="button" data-scene="procedural-textures" aria-pressed="false" disabled><span>04</span>Textures</button>
     </nav>
     <pre id="error" role="alert" hidden></pre>
     <div class="study">
@@ -56,7 +57,7 @@
         <div class="stage-bottom"><p>Drag to orbit · Shift-drag to pan</p><button id="reset" type="button" disabled>Reset view ↗</button></div>
       </section>
       <aside aria-labelledby="title">
-        <div id="number" class="eyebrow">Study 01 / 03</div>
+        <div id="number" class="eyebrow">Study 01 / 04</div>
         <h1 id="title">A function, in space.</h1>
         <p id="description"></p>
         <div id="formula" class="formula"></div>
@@ -83,7 +84,7 @@
       const scene = spatialScenes.find(scene => scene.id === id);
       if (!scene) return;
       for (const key of ['title','description','formula','category','detail']) query('#'+key).textContent = scene[key];
-      query('#number').textContent = 'Study '+scene.number+' / 03';
+      query('#number').textContent = 'Study '+scene.number+' / 04';
       player.canvas.setAttribute('aria-label',scene.category+'. Drag to orbit or Shift-drag to pan.');
       for (const button of buttons) button.setAttribute('aria-pressed',String(button.dataset.scene === id));
     };

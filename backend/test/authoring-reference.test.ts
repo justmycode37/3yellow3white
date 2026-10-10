@@ -21,9 +21,19 @@ test('retains every authoring section verbatim while excluding host and developm
     expect(output).not.toContain(heading);
   }
   expect(output.length).toBeLessThan(reference.length);
-  for (const heading of ['### Shaded meshes', '### Function and parametric surfaces',
+  for (const heading of ['### Shaded meshes', '### Procedural textures and materials', '### Function and parametric surfaces',
     '### Basic solids and swept tubes', '### Curved paths and organic shapes', '### Reactive sliders (prototype)']) {
     expect(output).toContain(heading);
+  }
+});
+
+test('retains the complete texture/material contract including limits and control semantics', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('### Procedural textures and materials', '### Function and parametric surfaces'));
+  for (const term of ['bumpStrength', 'metalness', 'roughness', 'emissiveIntensity',
+    'localPosition * scale + offset', 'They are not `animate` or reactive `s.bind`',
+    'No configurable lights, environment maps, shadows, image/video textures']) {
+    expect(output).toContain(term);
   }
 });
 

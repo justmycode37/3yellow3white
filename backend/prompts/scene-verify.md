@@ -24,6 +24,16 @@ do not demand their replacement with spheres or a flat diagram. Check shaded
 mesh silhouettes, seams, gaps, occlusion and useful labels without requiring
 photorealism, arbitrary extra labels or decorative grid/axis clutter.
 
+For textured/material surfaces, inspect visible pattern scale, aliasing, seams,
+contrast, highlight clipping and color-role continuity at the supplied distances
+and motion samples. Patterns should follow rigid objects; local-coordinate
+resampling during mesh deformation is an API property, not evidence of drift by
+itself. Check finish does not hide topology, contact or the surface/path relation.
+Bump changes lighting only: do not credit it as geometric relief or flag unchanged
+silhouettes as a defect. Stylized reflections do not promise physical environment
+reflections, shadows or photorealism. Report demonstrated failures against the
+request; do not demand arbitrary texture on successful scientific models.
+
 Use the last image only as a style reference: black background, mathematical
 serif/vector text, restrained stable colors and sparse explanatory geometry.
 Do not copy its topic or layout. Inspect both aspect ratios. Native renders omit

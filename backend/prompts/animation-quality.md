@@ -9,6 +9,17 @@ a dashboard, branded UI, photorealistic graphics, or a new palette. Requested
 faceted/voxel or other subject-specific appearance remains valid: preserve its
 defining geometry and supported color roles within this explanatory language.
 
+Procedural textures and stylized materials can clarify wood, metal, cloth,
+stone or a surface's structure without changing that language. Keep black stage,
+stable concept colors and quiet scaffold; choose related primary/secondary palette
+colors, restrained contrast and pattern frequency that remains readable at delivery
+size. Fine relief can use matching colors with a small bump. Preserve elemental or
+quantitative color identities. Do not add arbitrary grain to scientific data or
+make a material highlight obscure the geometry, trajectory or active contact.
+Use finish where useful, not a requirement to texture every object. Requested
+texture belongs in the initial generation, followed by the existing first
+verification and only then a targeted repair if findings require it.
+
 ## Composition and attention
 
 The subject's construction owns the frame. Select only objects needed for the

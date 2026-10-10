@@ -1,0 +1,34 @@
+[
+  {
+    "id": "dna",
+    "duration": 14,
+    "unchangedFrames": 8,
+    "elements": 5,
+    "textured": 5,
+    "material": 5
+  },
+  {
+    "id": "gradient",
+    "duration": 16,
+    "unchangedFrames": 8,
+    "elements": 17,
+    "textured": 1,
+    "material": 1
+  },
+  {
+    "id": "engine",
+    "duration": 16.000000000000135,
+    "unchangedFrames": 9,
+    "elements": 82,
+    "textured": 76,
+    "material": 77
+  },
+  {
+    "id": "minecraft",
+    "duration": 16,
+    "unchangedFrames": 11,
+    "elements": 91,
+    "textured": 33,
+    "material": 70
+  }
+]

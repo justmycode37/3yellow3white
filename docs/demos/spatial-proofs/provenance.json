@@ -5,8 +5,8 @@
       "id": "dna",
       "title": "DNA, atom by atom.",
       "source": "dna.js",
-      "sha256": "0169b2556970f794bc2d11a2e86e0ba0eb462a59594a80064e6baf86597874b1",
-      "sourceBytes": 35267,
+      "sha256": "42ddedddb22f6c13e72722be5c946d5f288027015b6f9370d6355c98f5b3f0e2",
+      "sourceBytes": 35372,
       "sampleTimes": [
         0,
         2,
@@ -21,8 +21,8 @@
       "id": "engine",
       "title": "Motion inside the machine",
       "source": "engine.js",
-      "sha256": "9aeeed0b4ae77b78efe7caba4ba746de9b87933543302613b432a7cf88d50a05",
-      "sourceBytes": 6797,
+      "sha256": "41d4098bfa0191b3fa3cf4bca32543644e13c17c03a928c3042da06057f0be50",
+      "sourceBytes": 7578,
       "sampleTimes": [
         0,
         2.75,
@@ -38,8 +38,8 @@
       "id": "gradient",
       "title": "A neural loss landscape",
       "source": "gradient.js",
-      "sha256": "26437975da38ee5857216a43313573eb9251079b16dc2355d0225cf339c1bb7b",
-      "sourceBytes": 229910,
+      "sha256": "7aace3c89bb23bbd32072e14657df43903c93ee3c7727e4e9e39703a43f9cb08",
+      "sourceBytes": 230054,
       "sampleTimes": [
         0.5,
         2.5,
@@ -53,8 +53,8 @@
       "id": "minecraft",
       "title": "One block at a time.",
       "source": "minecraft.js",
-      "sha256": "fa2b22305d661bece29473fbef3bd8846896d860a3dff3ec146d4605a60c3f8a",
-      "sourceBytes": 10114,
+      "sha256": "c4ba5c94c71c35eb0a0c3c08c70c899560f572d30ec4e8efafcb6d269a85907d",
+      "sourceBytes": 11854,
       "sampleTimes": [
         0,
         2.15,

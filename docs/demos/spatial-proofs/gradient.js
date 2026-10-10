@@ -7,7 +7,9 @@ export default scene({mode:'3d',orbit:false,end:'hold',background:'BLACK'},s=>{
       model=v;
       v.surface('loss-surface',{fn:(x,y)=>data.heights[Math.round((x+3.9)/7.8*80)][Math.round((y+3.9)/7.8*80)],
         xRange:[-3.9,3.9],yRange:[-3.9,3.9],xSegments:80,ySegments:80,
-        rotation:[-Math.PI/2,0,0],fill:'BLUE_D',shading:'smooth',stroke:'none'});
+        rotation:[-Math.PI/2,0,0],fill:'BLUE_D',shading:'smooth',stroke:'none',
+        texture:{pattern:'checker',color:'BLUE_C',scale:[1/0.65,1/0.65,0.001],offset:[0,0,.25]},
+        material:{roughness:.82,specular:.18}});
       for(let i=0;i<data.sections.length;i++){
         v.path('coordinate-section-'+i,{points:data.sections[i],stroke:'TEAL_D',strokeWidth:0.016,strokeProfile:'round',fill:'none'});
       }

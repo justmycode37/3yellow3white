@@ -9,6 +9,10 @@ Preserve requested geometric fidelity, topology, constraints and data provenance
 Do not solve occlusion by deleting necessary model detail or replacing a complex
 surface/assembly with a coarse icon. Prefer local annotation/framing corrections
 or the smallest correction to the shared geometry/kinematic model.
+Preserve successful textures/materials and semantic color roles. For a demonstrated
+finish defect, prefer a local pattern scale/offset, contrast, bump, roughness or
+highlight correction. Do not regenerate working geometry, remove all texture, or
+invent UV/image maps, displacement or lights to repair a supported finish.
 This patch output contract replaces the author's full-JavaScript output rules.
 
 Submit JSON with exactly sourceSha256 and edits:

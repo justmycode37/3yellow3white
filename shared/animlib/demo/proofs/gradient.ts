@@ -84,6 +84,7 @@ export const gradientProof = {
     'Gold trajectory: 33 accepted gradient steps, MSE 6.251854 → 0.359909. Surface, derivative, line search and every trail sample use the same network. Marker centers have a small clearance for visibility.',
     'Teal curves are coordinate sections of the same surface. The low white rectangle is the parameter domain. Orbit the model to inspect ridges, valleys and the path; the camera does not drift.',
     'Numerical samples are deterministically computed once from the visible model code, then embedded in the standalone sandbox scene. No network calls, physics callbacks or extended execution limits are needed.',
+    'The subtle checker texture marks equal intervals in the displayed parameter plane. It is not additional loss data; the surface heights and optimization path are unchanged. No bump displacement is applied to the mathematical surface.',
   ],
   sampleTimes: [0.5, 2.5, 5, 8, 11.5, 15],
   source: `export default scene({mode:'3d',orbit:false,end:'hold',background:'BLACK'},s=>{
@@ -95,7 +96,9 @@ export const gradientProof = {
       model=v;
       v.surface('loss-surface',{fn:(x,y)=>data.heights[Math.round((x+3.9)/7.8*80)][Math.round((y+3.9)/7.8*80)],
         xRange:[-3.9,3.9],yRange:[-3.9,3.9],xSegments:80,ySegments:80,
-        rotation:[-Math.PI/2,0,0],fill:'BLUE_D',shading:'smooth',stroke:'none'});
+        rotation:[-Math.PI/2,0,0],fill:'BLUE_D',shading:'smooth',stroke:'none',
+        texture:{pattern:'checker',color:'BLUE_C',scale:[1/0.65,1/0.65,0.001],offset:[0,0,.25]},
+        material:{roughness:.82,specular:.18}});
       for(let i=0;i<data.sections.length;i++){
         v.path('coordinate-section-'+i,{points:data.sections[i],stroke:'TEAL_D',strokeWidth:0.016,strokeProfile:'round',fill:'none'});
       }

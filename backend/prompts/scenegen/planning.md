@@ -34,6 +34,16 @@ coverage, running example, timing contract and classic/interactive mode.
 - Match requested subject appearance, including faceted or voxel objects when
   appropriate, within established restrained explanatory style. Do not require
   a fixed text gutter, decorative setting or generic recap card.
+- If texture is requested or surface finish identifies a meaningful material,
+  include it in visualDescription: relevant parts, primary/secondary color roles,
+  local pattern direction/scale, and restrained relief or reflectance. The library
+  supports procedural checker, stripes, noise, marble and wood patterns plus
+  stylized metalness, roughness, specular and emission. Preserve semantic colors
+  and geometric/data fidelity; distinguish lighting-only bump from real shape.
+  Plan finish as part of initial construction, preserving an existing model when
+  requested, without adding a repair before the first rendered verification.
+  Do not plan image/UV textures, displacement, external assets or configurable
+  lights as though those APIs exist.
 - Honor videoMode: classic uses `interactions: []`; interactive uses only useful
   supported controls with coherent defaults. Describe what changes and what stays
   invariant. Geometry-changing controls require rebuilding geometry; avoid
