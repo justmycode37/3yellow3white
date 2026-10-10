@@ -40,3 +40,13 @@ test('authoritative refresh removes deleted server videos and reflects generatio
   assert.equal(merged[0].demo, false)
   assert.equal(merged[0].subtitle, 'Visual explanation')
 })
+
+test('generated thumbnails arrive through refresh and replace stale browser-local artwork', () => {
+  const video = manifest()
+  const previous = videoLesson(video)
+  video.thumbnail = { styleVersion: 1, paths: [{ d: 'M100 200L280 80', fill: 'none', stroke: 'currentColor', strokeWidth: 13 }] }
+  const [updated] = mergeVideoLessons([video], [previous])
+  assert.deepEqual(updated.thumbnail, video.thumbnail)
+  assert.equal(updated.artwork, previous.artwork)
+  assert.equal(mergeVideoLessons([manifest()], [updated])[0].thumbnail, undefined)
+})

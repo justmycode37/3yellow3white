@@ -8,7 +8,7 @@ conversation and only a `validate_output` tool. Shell, file access, discovered
 extensions, skills, and local instructions are disabled. Scene validation uses
 the existing QuickJS compiler with memory and execution limits.
 
-One model runtime owns credentials. Pi persists subscription refreshes with file
+The scene and thumbnail runners share the configured login. Pi persists subscription refreshes with file
 locking. The host saves scripts, narration IDs, and validated scene sources per
 video under `AGENT_DATA_DIR`; completed stages are reused on restart. `lesson.json`
 is the authoritative versioned plan/script envelope; `script.md` is a readable
@@ -18,6 +18,40 @@ overlaps later speech. Code agents run sequentially with the previous scene’s 
 end-state. Scenes are published progressively with audio, word timings, and captions.
 
 ## Planning and scene quality
+
+### Generated thumbnails
+
+New Pi videos generate a thumbnail alongside script/scene work, using a separate
+Pi conversation with `THUMBNAIL_MODEL=gpt-6.1-sol` and low reasoning. It uses the
+same `AGENT_PROVIDER`, auth mode and credential directory as other backend AI.
+The task receives the title, bounded topic/document excerpts and uploaded images,
+plus `backend/prompts/thumbnail.md` and six actual SVG examples exported from
+`frontend/app/src/Artwork.tsx`. Keep those examples and the style guide aligned
+when the app's artwork changes.
+
+The validator accepts only bounded paths/groups, monochrome paints and simple
+transforms, then converts the SVG to typed path geometry. The manifest persists
+that geometry and thumbnail status in SQLite. React renders explicit path elements
+with the app's ink colors; it never injects model-authored markup. Existing artwork
+remains visible while generation runs or if it fails. Thumbnail failures do not
+fail the video. Scenes stream while the thumbnail is pending; the final video
+status waits for both. Deletion/shutdown cancels both tasks. An interrupted
+thumbnail resumes with its video; a saved thumbnail is reused. Completed older
+videos and simulated videos retain their existing artwork.
+
+To try six varied topics without generating narration, run:
+
+```sh
+npm run agents:thumbnails
+# Or one custom topic:
+npm run agents:thumbnails -- "Recursion" "A smaller version of the same problem, ending at a base case."
+```
+
+This uses the production Pi task and consumes model usage. Prompts, raw SVGs,
+normalized geometry and timings are saved privately under
+`AGENT_DATA_DIR/thumbnail-trials/TIMESTAMP/`. No videos are added to the library.
+
+### Lesson planning
 
 `backend/prompts/guidance.md` contains compact explanation guidance adapted from
 PR #19. Requested audience, scene count, duration, and pause preferences take

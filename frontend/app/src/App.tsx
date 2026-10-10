@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, ArrowUpRight, Atom, Bookmark, Check, ChevronDown, FileText, MenuGlyph, Search, SlidersHorizontal, X } from './Icons'
-import Artwork from './Artwork'
+import ThumbnailArtwork from './ThumbnailArtwork'
 import LessonPlayer from './LessonPlayer'
 import NavigationDrawer from './NavigationDrawer'
 import SettingsPage from './SettingsPage'
@@ -22,7 +22,7 @@ function VideoThumbnail({ lesson, onOpen }: { lesson: Lesson, onOpen: () => void
   const progress = Math.max(0, Math.min(lesson.progress ?? 0, 1))
   const barFill = progress === 0 ? 1 : progress
   return <button className={`video-thumbnail ${lesson.color}`} aria-label={`Play ${lesson.title}`} onClick={onOpen}>
-      <span className="thumbnail-art"><Artwork kind={lesson.artwork}/></span>
+      <span className="thumbnail-art"><ThumbnailArtwork drawing={lesson.thumbnail} fallback={lesson.artwork}/></span>
       <span className="thumbnail-bottom">
         <h4 className="thumbnail-title">{lesson.title}</h4>
         <span className="thumbnail-playback" aria-hidden="true"><span className="thumbnail-progress"><span style={{ width: `${barFill * 100}%` }}/></span><span className="thumbnail-time">{formatTime(lesson.duration)}</span></span>
