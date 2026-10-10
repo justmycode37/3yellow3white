@@ -578,8 +578,9 @@ export default scene({ mode: '3d', orbit: true }, s => {
 `ProceduralTexture` is exported as a TypeScript type from both package entry points:
 
 - `pattern` (required): `'checker'`, `'stripes'`, `'noise'`, `'marble'`, or `'wood'`.
-  Checker alternates 3D cells; stripes run across local X; noise is smooth 3D
-  value noise; marble distorts X bands with noise; wood distorts rings around
+  Checker alternates 3D cells; stripes run across local X; noise combines three
+  independently filtered scales of 3D value noise with subtle color variation;
+  marble distorts X bands with noise; wood distorts rings around
   local Y. These are stylized color patterns, not simulated physical materials.
 - `color` (required): the secondary `ColorValue`. The element's `fill` supplies
   the primary color. Both accept palette tokens or `{ color, opacity }`.
@@ -594,8 +595,10 @@ export default scene({ mode: '3d', orbit: true }, s => {
   checker and stripes ignore it. Independent of the scene's random seed.
 - `bumpStrength`: signed height in local scene units, from `-1` to `1`, default
   `0`. Perturbs the lighting normal using the filtered pattern as a height field.
-  Positive values raise the secondary-color regions; negative values invert the
-  relief. Start around `0.02`–`0.15`. Use matching fill and texture colors for
+  For noise, height uses weaker, finer detail independently of the broad color
+  variation. Other patterns raise the secondary-color regions. Negative values
+  invert the relief. Start around `0.02`–`0.15`, reducing strength for finer scales.
+  Use matching fill and texture colors for
   relief without color variation. Requires sphere lighting or flat/smooth mesh
   shading; works with both simple lighting and configurable materials.
 
