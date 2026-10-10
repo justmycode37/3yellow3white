@@ -123,6 +123,28 @@ How to build 3D with animlib:
   `s.camera.to2D(...)` (or the view's camera) as an animated transition. See reference
   section 6 and the chemistry scene in the demo.
 
+Alignment (strict; misplaced parts are the most visible kind of jank):
+- Everything that belongs to a 3D model lives in the SAME 3D view as the model:
+  create it inside that `s.view(...)` builder callback (with `opacity: 0` if it
+  appears later, then fade it in). Never save the view handle and create objects
+  through it after the callback has returned: those are drawn with the main camera
+  and float beside the model instead of sitting on it.
+- Parts attached to an object start exactly at that object: a lone pair, bond, arrow
+  or direction ray begins at its atom's centre or surface, computed from the atom's
+  own coordinates, never from separately typed numbers.
+- Things that move or rotate together are in one group, or are computed from the same
+  values, so they cannot drift apart.
+- Labels: use `billboard: true` with a small `billboardOffset` (just clear of the
+  object, about its radius plus 0.2) so the label stays beside its object while the
+  view rotates. To move a label, change the offset, not its world position.
+- Rounded 3D bodies (atoms, lobes, clouds) are built from spheres, which are shaded;
+  a `mesh` is drawn flat, so a lobe made of one mesh reads as a 2D blob.
+- To de-emphasise a shaded 3D body, do not leave it half transparent for long:
+  overlapping transparent spheres draw with visible banding. Fade it fully, or keep
+  it opaque and dim the other things instead.
+- Check the picture from the starting camera AND after rotating: nothing may sit
+  beside what it belongs to.
+
 Layout (keep it identical in every scene):
 - Geometry (2D or 3D) on the left two thirds of the frame; the right third is a fixed text
   area for formulas and matrices. It is just empty space: NO box, border, frame,

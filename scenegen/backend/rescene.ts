@@ -5,6 +5,7 @@
 // Run from backend/:
 //   bun ../scenegen/backend/rescene.ts <videoId> <sceneIndex>           # write a candidate only
 //   bun ../scenegen/backend/rescene.ts <videoId> <sceneIndex> --apply   # also show it in the app
+//   bun ../scenegen/backend/rescene.ts <videoId> 3 --pending 2=<candidate.js> --apply   # change 2 and 3 together
 //
 // --apply replaces that scene's source in the video's saved manifest after checking
 // that every later scene still compiles on top of it. The previous source is kept
@@ -18,7 +19,7 @@ import { PiAgentRunner, validationMessage } from "../../backend/src/agents/runti
 import { sceneSource } from "../../backend/src/agents/generator.js";
 import { validateScenePlan } from "../../backend/src/agents/scene-plan.js";
 import { SCENE_AGENT_INSTRUCTIONS } from "../../backend/src/narration/handoff.js";
-import { latexErrors, LATEX_HINT } from "./latex-check.ts";
+import { renderProblems } from "./scene-checks.ts";
 
 const [videoId, indexArg, ...flags] = process.argv.slice(2);
 const index = Number(indexArg);
@@ -31,9 +32,35 @@ const directory = join(config.dataDir, videoId);
 const outDir = new URL(`../../out/visualization-tests/${videoId}/`, import.meta.url);
 await mkdir(outDir, { recursive: true });
 
+// --pending <index>=<file> (repeatable): earlier candidates that were written but not
+// applied yet, e.g. when two neighbouring scenes must change together.
+const pending = new Map<number, string>();
+for (let i = 0; i < flags.length; i++) {
+  if (flags[i] !== "--pending") continue;
+  const [at, file] = (flags[i + 1] ?? "").split(/=(.*)/s);
+  pending.set(Number(at), await readFile(file, "utf8"));
+}
+
 const input = JSON.parse(await readFile(join(directory, `scene-${index}.input.json`), "utf8"));
 const lesson = JSON.parse(await readFile(join(directory, "lesson.json"), "utf8").catch(() => "{}"));
 const planned = lesson.plan?.scenes?.[index];
+
+// Start from where the video's CURRENT earlier scenes end (they may have been
+// regenerated since the saved input was written).
+if (index > 0) {
+  const db = new Database(process.env.VIDEO_DB_PATH ?? "data/videos.sqlite", { readonly: true });
+  const row = db.query("SELECT manifest FROM videos WHERE id = ?").get(videoId) as { manifest: string } | null;
+  db.close();
+  const earlier = row ? (JSON.parse(row.manifest).scenes as { id: string; source: string }[]).slice(0, index)
+    .map((scene, i) => ({ ...scene, source: pending.get(i) ?? scene.source })) : [];
+  if (earlier.length === index) {
+    const sequence = new SceneSequence();
+    try {
+      const loaded = await sequence.submit({ type: "load", scenes: earlier.map(s => ({ id: s.id, source: s.source })) });
+      if (loaded.ok) input.previousFrame = sequence.frame(index - 1, sequence.compiled[index - 1].duration);
+    } finally { sequence.dispose(); }
+  }
+}
 
 async function validate(output: string) {
   const compiled = await compileSource(sceneSource(output), { previous: input.previousFrame });
@@ -45,8 +72,8 @@ async function validate(output: string) {
     throw new Error(`The scene must last ${duration} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
   }
   if (planned) validateScenePlan(compiled, evaluateScene(compiled, duration), planned);
-  const broken = latexErrors(compiled);
-  if (broken.length) throw new Error(`${broken.join("\n")}\n${LATEX_HINT}`);
+  const problems = renderProblems(compiled);
+  if (problems.length) throw new Error(problems.join("\n\n"));
 }
 
 /** Swap the scene into the saved manifest once all later scenes still build on it. */
@@ -58,8 +85,11 @@ async function apply(source: string) {
     const manifest = JSON.parse(row.manifest);
     if (!manifest.scenes[index]) throw new Error(`The video has no published scene ${index} yet.`);
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    await writeFile(new URL(`scene-${index}.before-${stamp}.js`, outDir), manifest.scenes[index].source);
-    manifest.scenes[index].source = source;
+    for (const [at, replacement] of [...pending, [index, source] as const]) {
+      if (!manifest.scenes[at]) throw new Error(`The video has no published scene ${at}.`);
+      await writeFile(new URL(`scene-${at}.before-${stamp}.js`, outDir), manifest.scenes[at].source);
+      manifest.scenes[at].source = replacement;
+    }
     const sequence = new SceneSequence();
     try {
       const result = await sequence.submit({ type: "load", scenes: manifest.scenes.map((s: { id: string; source: string }) => ({ id: s.id, source: s.source })) });
@@ -67,7 +97,7 @@ async function apply(source: string) {
     } finally { sequence.dispose(); }
     manifest.revision++;
     db.query("UPDATE videos SET manifest = ? WHERE id = ?").run(JSON.stringify(manifest), videoId);
-    console.log(`Applied to video ${videoId}, scene ${index}. Reload http://localhost:${process.env.PORT ?? 8080}/watch/${videoId}`);
+    console.log(`Applied to video ${videoId}, scene(s) ${[...pending.keys(), index].join(", ")}. Reload http://localhost:${process.env.PORT ?? 8080}/watch/${videoId}`);
   } finally { db.close(); }
 }
 

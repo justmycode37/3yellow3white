@@ -16,7 +16,7 @@ import type { AgentRunner, AgentTask } from "../../backend/src/agents/runtime.js
 import { compileSource } from "animlib/core";
 import type { Frame } from "animlib/core";
 import { createPiGenerator, sceneSource } from "../../backend/src/agents/generator.js";
-import { latexErrors, LATEX_HINT } from "./latex-check.ts";
+import { renderProblems } from "./scene-checks.ts";
 import { PLANNING_CONTRACT } from "../../backend/src/agents/planning.js";
 
 const CRAFT = new URL("../../backend/prompts/scene-craft.md", import.meta.url);
@@ -53,10 +53,10 @@ export class VisualizationPromptRunner implements AgentRunner {
     const validate = task.validate && (async (output: string) => {
       await task.validate!(output);
       if (planned3D && !IS_3D.test(output)) throw new Error('This scene is planned in 3D, but the source is flat. Build it in real 3D: mode: "3d" with orbit: true, or an s.view(...) region, with spheres / line3D / arrow3D / meshes at real z coordinates, so the viewer can rotate it.');
-      // Formulas are only laid out in the player; check them here so a bad one cannot be published.
+      // Formulas and view membership only show up in the player; check them here so a broken scene cannot be published.
       const compiled = await compileSource(sceneSource(output), { previous: previousFrame(task.prompt) });
-      const broken = latexErrors(compiled);
-      if (broken.length) throw new Error(`${broken.join("\n")}\n${LATEX_HINT}`);
+      const problems = renderProblems(compiled);
+      if (problems.length) throw new Error(problems.join("\n\n"));
     });
     return this.inner.run({ ...task, systemPrompt, validate });
   }

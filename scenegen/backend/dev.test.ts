@@ -52,6 +52,28 @@ test("a scene with a formula the player cannot render is rejected", async () => 
   expect(results[1]).toBe("ok");
 });
 
+test("a 3D part created outside its model's view is rejected", async () => {
+  const craft = await readFile(new URL("../../backend/prompts/scene-craft.md", import.meta.url), "utf8");
+  const scene = (late: boolean) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    let view;
+    s.view("model", { rect: [0, 0, 0.6, 1], orbit: true, camera: { target: [0, 0, 0], height: 6, distance: 10 } }, v => {
+      view = v;
+      v.sphere("atom", { radius: 0.5, position: [0, 0, 0], fill: Color.RED });
+      ${late ? "" : 'v.sphere("corner", { radius: 0.1, position: [1, 1, 1], fill: Color.GREY });'}
+    });
+    ${late ? 'view.sphere("corner", { radius: 0.1, position: [1, 1, 1], fill: Color.GREY });' : ""}
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new VisualizationPromptRunner({ run: async task => {
+    for (const output of [scene(true), scene(false)]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: craft, prompt: `Generate this scene:\n${JSON.stringify({ planning: { current: { visualDescription: "3D: a model" } } })}`, validate: async () => {} });
+  expect(results[0]).toContain("corner");
+  expect(results[1]).toBe("ok");
+});
+
 test("a lesson plan must mark every scene as 3D or 2D with a reason", async () => {
   const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
   const plan = (description: string) => JSON.stringify({ plan: { scenes: [{ id: "beat-1", visualDescription: description }] } });
