@@ -85,5 +85,6 @@ class CourseCrawlResult:
     folder_name: str
     resources: List[PDFResource] = field(default_factory=list)
     downloads: List[DownloadResult] = field(default_factory=list)
+    course_description_path: Optional[Path] = None
     success: bool = True
     error_message: Optional[str] = None

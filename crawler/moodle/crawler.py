@@ -16,6 +16,7 @@ from crawler.models import (
 )
 from crawler.moodle.auth import login_eth_moodle
 from crawler.moodle.parser import extract_pdf_resources_from_page
+from crawler.vvz.crawler import save_course_description
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class MoodleCrawler:
         output_dir: Union[Path, str] = "./downloads",
         headless: bool = True,
         timeout: int = 30000,
+        enable_vvz: bool = True,
     ):
         if isinstance(course_urls, str):
             self.course_urls = [course_urls]
@@ -43,6 +45,7 @@ class MoodleCrawler:
         self.output_dir = Path(output_dir).expanduser().resolve()
         self.headless = headless
         self.timeout = timeout
+        self.enable_vvz = enable_vvz
 
     def crawl(self) -> List[CourseCrawlResult]:
         """
@@ -138,6 +141,7 @@ class MoodleCrawler:
                         sync_cookies_to_session(context, session)
 
                         # 6. Download all resources to course subfolder
+                        download_results = []
                         if resources:
                             download_results = download_all(
                                 session=session,
@@ -146,7 +150,22 @@ class MoodleCrawler:
                             )
                         else:
                             logger.warning("No PDF resources matching criteria were found for this course.")
-                            download_results = []
+                        # 7. Fetch and save course description from Course Catalogue (VVZ)
+                        desc_file = None
+                        if self.enable_vvz:
+                            try:
+                                desc_file = save_course_description(
+                                    folder_path=course_output_dir,
+                                    folder_name=folder_name,
+                                    session=session,
+                                    timeout=max(10, self.timeout // 1000),
+                                )
+                            except Exception as e:
+                                logger.warning(
+                                    "Could not fetch VVZ course description for %s: %s",
+                                    folder_name,
+                                    e,
+                                )
 
                         results.append(
                             CourseCrawlResult(
@@ -154,6 +173,7 @@ class MoodleCrawler:
                                 folder_name=folder_name,
                                 resources=resources,
                                 downloads=download_results,
+                                course_description_path=desc_file,
                                 success=True,
                             )
                         )

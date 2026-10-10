@@ -69,6 +69,11 @@ def parse_args(args=None) -> argparse.Namespace:
         help="Navigation and network timeout in seconds",
     )
     parser.add_argument(
+        "--no-vvz",
+        action="store_true",
+        help="Disable automatic course description fetching from Course Catalogue (VVZ)",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -137,6 +142,7 @@ def main(args=None) -> int:
         output_dir=output_dir,
         headless=not parsed.headed,
         timeout=parsed.timeout * 1000,
+        enable_vvz=not parsed.no_vvz,
     )
 
     try:
@@ -180,6 +186,8 @@ def main(args=None) -> int:
                 size_kb = (d.file_size or 0) / 1024
                 fname = d.file_path.name if d.file_path else "unknown"
                 print(f"    • {fname} ({size_kb:.1f} KB)")
+            if c.course_description_path and c.course_description_path.is_file():
+                print(f"    • {c.course_description_path.name} (Course description from VVZ)")
             for d in failed_dl:
                 has_errors = True
                 print(f"    ✗ {d.resource.title}: {d.error_message}")
