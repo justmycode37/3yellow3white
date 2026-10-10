@@ -219,6 +219,42 @@ export interface Frame {
   views?: (ViewState & { cameraAnimated: boolean })[];
 }
 
+/** Canvas CSS pixels, with x increasing rightwards and y increasing downwards. */
+export interface OverlapBounds { left: number; top: number; right: number; bottom: number; }
+export type OverlapSeverity = "unacceptable";
+export interface OverlapDiagnostic {
+  /** Distinct text/LaTeX element IDs, sorted lexically for stable pair identity. */
+  elements: [string, string];
+  /** Only text-against-text collisions are reported. */
+  severity: OverlapSeverity;
+  kind: "text-overlap";
+  /** Bounding box of actual intersections, not just intersecting element boxes. */
+  bounds: OverlapBounds;
+  elementBounds: [OverlapBounds, OverlapBounds];
+  /** A point inside an actual glyph intersection, suitable for a debug marker. */
+  witness: Vec2;
+}
+export interface OverlapOptions {
+  /** Logical canvas size in CSS pixels. Required: projection depends on aspect ratio. */
+  width: number;
+  height: number;
+  palette?: ColorPalette;
+  /** Skip primitives below this effective alpha, including groups and morph fades. Default 0.01. */
+  minOpacity?: number;
+  /** Intentional overlaps. Group IDs apply to all their descendants; order is irrelevant. */
+  ignorePairs?: readonly (readonly [string, string])[];
+}
+export interface SceneOverlapOptions extends OverlapOptions {
+  /** Explicit local sample times; sorted/deduplicated. Overrides sampleRate. */
+  times?: readonly number[];
+  /** Samples per second, default 10. Includes endpoints, lifecycle events and track boundaries. */
+  sampleRate?: number;
+}
+export interface SceneOverlapSample {
+  time: number;
+  overlaps: OverlapDiagnostic[];
+}
+
 export interface ElementHandle {
   readonly id: string;
   animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset" | "strokeProfile">): AnimationAction;
