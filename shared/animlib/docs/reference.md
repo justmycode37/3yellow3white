@@ -959,7 +959,9 @@ small details when large authored coordinates cancel through object/group transf
 Geometry near uncertain depth clipping boundaries or with a float32-overflowing
 instance transform also uses that path. Subnormal local coordinates/transforms,
 values that would underflow to zero when packed, and unsafe intermediate underflow
-also opt out of retention; ordinary normal-valued geometry remains eligible.
+also opt out of retention. Large normal divisors whose reciprocals approach the
+subnormal range use the CPU path as well, preserving shading across backends.
+Ordinary normal-valued geometry remains eligible.
 GPU handles are rebuilt after recovery;
 geometry unused by the current frame is released. See [performance](performance.md)
 for measurements and remaining limits.

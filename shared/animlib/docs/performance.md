@@ -251,7 +251,11 @@ allowed). Such geometry streams, including nonzero JS values that would round to
 zero. Raw and packed transforms must also be zero or finite normal float32 values.
 The error estimate includes an absolute `32 * 2^-126` allowance for GPU flushing
 of intermediate subnormal results; scales that could amplify this beyond one
-float32 rounding unit in transformed normals also stream. Intermediate affine and
+float32 rounding unit in transformed normals also stream. Large normal divisors
+also stream when their reciprocal is below `2^-126 * (1 + 8 * 2^-24)`: shader
+division may use a reciprocal that flushes to zero. The margin conservatively
+excludes the exact normal/subnormal reciprocal boundary. Lit controls at scales
+`5e37`, `8e37`, and `8.5e37` remain retained. Intermediate affine and
 normal sums must stay within the finite float32 range. These are conservative
 eligibility rules, not an extension of the original world-packing path's precision
 limits. Ordinary normal-valued small-coordinate/large-scale controls remain retained.

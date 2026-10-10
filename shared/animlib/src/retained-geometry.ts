@@ -79,6 +79,10 @@ export function retainedPrecisionSafe(meshes: RetainedMesh[], origin: Vec3, basi
   // Normal dot-product underflow is amplified by division by the object scale.
   // Stream if that absolute error could exceed one normal float32 rounding unit.
   if (FLUSH_ERROR/Math.abs(instance[17]) > ROUNDING_UNIT) return false;
+  // Shader division may lower to multiplication by an approximate reciprocal.
+  // A large *normal* scale can then erase a finite normal numerator. Keep the
+  // reciprocal above the subnormal boundary, with the same roundoff margin.
+  if (1/Math.abs(instance[17]) < FLOAT32_MIN_NORMAL*(1+8*ROUNDING_UNIT)) return false;
   const local: Vec3 = [0,0,0];
   for (const mesh of meshes) for (let axis=0;axis<3;axis++) local[axis]=Math.max(local[axis],mesh.magnitude[axis]);
   const extent=origin.map((_,axis)=>local.reduce((sum,v,i)=>sum+v*Math.abs(basis[i][axis]),0)) as Vec3;

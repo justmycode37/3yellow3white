@@ -121,4 +121,18 @@ export const retainedPrecisionCases = [
     s.play(s.camera.animate({height:8e-32}),{duration:0});s.wait(2);
   });` },
 
+  // The 100 entry is the unchanged R4 lit repro; height scales with geometry
+  // so every boundary/positive control has the same visible footprint.
+  ...[
+    {scale:50,retained:true}, {scale:80,retained:true}, {scale:85,retained:true},
+    {scale:86,retained:false}, {scale:100,retained:false}, {scale:200,retained:false},
+    {scale:2**126/1e36/(1+16*2**-24),retained:true},
+    {scale:2**126/1e36,retained:false},
+    {scale:2**126/1e36*(1+16*2**-24),retained:false},
+  ].map(({scale,retained})=>({name:'lit divisor '+scale+'e36',retained,orbit:false,source:`export default scene({},s=>{
+    let g=s.mesh('m',{vertices:[[-2e-38,-2e-38,0],[2e-38,-2e-38,0],[2e-38,2e-38,0],[-2e-38,2e-38,0]],triangles:[[0,1,2],[0,2,3]],normals:[[0,0,1],[0,0,1],[0,0,1],[0,0,1]],shading:'smooth',scale:${scale},fill:'PURE_RED'});
+    for(let j=0;j<6;j++)g=s.group('g'+j,[g],{scale:1e6});
+    s.play(s.camera.animate({height:${scale*.08}}),{duration:0});s.wait(2);
+  });`})),
+
 ];
