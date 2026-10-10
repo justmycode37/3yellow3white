@@ -24,8 +24,9 @@ the library handles reproducible playback, scene handoffs, and live updates.
   and morphs carried objects where their identity matters. Unrelated subjects
   should have deliberate exits and entrances, without whole-scene crossfades or
   arbitrary reuse of an atom as a sorting bar.
-- **Support useful morphs and readable mathematics.** Compatible shapes match
-  points automatically. LaTeX morphs use explicit mappings between named parts;
+- **Support useful morphs and readable mathematics.** Compatible curved paths
+  interpolate corresponding control points; other compatible single outlines
+  match points automatically. LaTeX morphs use explicit mappings between named parts;
   unmatched parts fade in or out. Authors need stable formula anchors and numbers
   that count between values without shifting surrounding symbols. Text, arrows,
   and borders should remain clean throughout an animation.
@@ -48,12 +49,33 @@ the library handles reproducible playback, scene handoffs, and live updates.
 ## Scope
 
 The core provides shapes, paths, text, LaTeX, meshes, groups, animation, and player
-behavior. The default player renders and handles input on its canvas; it creates
+behavior. Paths support straight segments, smooth curves through points, and SVG
+path data for Bézier curves, arcs, and compound shapes with holes. Both GPU
+backends render these through the same geometry pipeline. The default player
+renders and handles input on its canvas; it creates
 no surrounding DOM. Generic drag/spring/custom behaviors and live attachments or
 connectors compose with the authored timeline. Isolated groups let overlapping
 parts fade as one object. Domain helpers for matrices, molecules, arrays, and graphs belong in the
 surrounding app. Internal dependencies are allowed; the public API requires no
 framework.
+
+Spatial builders include `surface` for `z = f(x, y)`, `parametricSurface` for
+two-parameter maps (including curved petals), `box`, `cylinder`, `cone`, `torus`,
+and `tube` for a constant-radius sweep through 3D points. They produce ordinary
+mesh handles with smooth shading by default (flat for boxes) and no stroke.
+Raw `mesh` remains unlit unless given `shading: 'flat'` or `'smooth'`; both GPU
+backends support the same simple directional lighting. Geometry-changing controls
+use ordinary numeric sliders to rebuild meshes, not retained `s.bind` callbacks.
+See [shaded meshes and sampled surfaces](docs/reference.md#shaded-meshes) for
+examples, periodic seams, invalid-sample holes, segment defaults, and geometry
+budgets. Start with modest sampling; the 20,000-vertex/20,000-triangle per-mesh
+limits are validation ceilings, not frame-rate guarantees.
+
+Open `http://localhost:5173/spatial.html` for interactive function, flower, and
+solid/tube studies. The [scene sources](demo/spatial.ts) use the production player
+and support orbit, shading comparisons, and parameter controls. After building,
+run `node shared/animlib/bench/spatial.mjs --json` from the repository root for
+compilation and CPU rendering measurements (GPU calls are stubbed).
 
 The library enforces a color palette, defaulting to 3Blue1Brown's Manim colors
 with a black background and white foreground. Scene styles use typed tokens such
@@ -78,6 +100,8 @@ The [demo scenes](demo/scenes.ts) exercise the three subject areas. The demo use
 fullscreen black canvas, mostly white drawing with selective color accents, and a
 bottom progress bar with play/pause controls and native scene controls. Open
 `http://localhost:5173/?interactive` for a two-view interaction example.
+Open `http://localhost:5173/?reactive` for the [reactive slider prototype](docs/reactive-controls.md):
+JavaScript bindings update object properties without rerunning their scene builder.
 Open `http://localhost:5173/behaviors.html` for a canvas-only example: draggable
 atoms, spring return, attached labels, a surface-clipped bond, pan/orbit and a
 composited object fade. All interaction is declared in the scene.
@@ -94,6 +118,15 @@ s.play(object.fadeOut(), { duration: 1 });
 Drag and spring are independent behaviors. Hosts can register additional behavior
 factories through `createPlayer({ canvas, behaviors })`; compiled scenes contain
 only declarative data. See [behaviors and bindings](docs/reference.md#behaviors-and-live-bindings).
+
+Open `http://localhost:5173/plant.html` for a plant built from curved paths, with
+replayable leaf growth and Bézier bending. `s.path` accepts SVG path data in `d`
+or `points` with `curve: 'smooth'`; see
+[curved paths](docs/reference.md#curved-paths-and-organic-shapes).
+The [plant scene source](demo/plant.ts) uses the production player and renderer.
+The demo opens on the finished plant; **Replay growth** plays the animation.
+Use `plant.html?capture` to hide the replay button for screenshots.
+
 DOM controls now require an explicit `controlsRoot`; existing applications that
 want the native overlay should pass `canvas.parentElement` or another host.
 
@@ -103,15 +136,18 @@ Use Node.js 22.16 or newer. From the repository root:
 
 ```sh
 npm ci
+npm run build        # library JS and declarations; required by consumers in tests
 npm run dev          # demo at http://localhost:5173
 npm run typecheck
 npm test
-npm run build        # library JS and TypeScript declarations
 npm run demo:build   # bundled static demo
 ```
 
 The library is a private npm workspace named `animlib` in `shared/animlib`.
 Build it before importing it elsewhere in this project.
+
+See [interaction performance](docs/performance.md) for slider/orbit profiling,
+measured bottlenecks, and reproducible browser and CPU benchmarks.
 
 ## Shared scene evaluation
 
@@ -178,9 +214,11 @@ and limits.
 
 ### WebGL2 browser checks
 
-Start `npm run dev -- --port 5178 --strictPort` and open
+Start `npm --workspace animlib run dev -- --port 5178 --strictPort` and open
 `http://localhost:5178/webgl-test.html`. Click **Run browser tests**; the page runs
 real rendering/readback and playback assertions with WebGPU forced unavailable.
+These include curved fills, compound-path holes, Bézier morphing, and the plant's
+growth and deterministic seeking.
 `window.webglTests` resolves to the report (`failed: 0` means success). These checks
 are separate from portable mocked unit tests and native `test:gpu` checks.
 

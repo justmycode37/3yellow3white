@@ -15,11 +15,12 @@ import type {PaletteColor} from '../src/types.js';
 import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
+import {reactiveCases} from './reactive-cases.js';
 import {transparencyCases} from './transparency-cases.js';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
 // This is a development test adapter, never a browser renderer fallback.
-describe('native Vulkan WebGPU rendering',()=> {
+describe('native WebGPU rendering',()=> {
   const width=640,height=480;
   let gpu:GPU|undefined,device:GPUDevice|undefined,texture:GPUTexture|undefined;
   let renderer:CanvasRenderer,sequence:SceneSequence,canvas:HTMLCanvasElement;
@@ -29,9 +30,10 @@ describe('native Vulkan WebGPU rendering',()=> {
     for(const [name,value] of Object.entries(globals))vi.stubGlobal(name,value);
     vi.stubGlobal('ResizeObserver',class {observe(){}disconnect(){}});
     vi.stubGlobal('devicePixelRatio',1);
-    gpu=create(['backend=vulkan']);
+    // Match production frame rendering: let Dawn select the native platform backend.
+    gpu=create([]);
     const adapter=await gpu.requestAdapter();
-    if(!adapter)throw new Error('Native WebGPU smoke test requires a Vulkan adapter; this is not a rendering fallback.');
+    if(!adapter)throw new Error('Native WebGPU smoke test requires a native adapter; this is not a rendering fallback.');
     device=await adapter.requestDevice();
     device.addEventListener('uncapturederror',event=>errors.push(event.error.message));
     format=gpu.getPreferredCanvasFormat();
@@ -49,7 +51,7 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(result).toEqual({ok:true,revision:1,diagnostics:[]});
   });
   afterAll(()=> {
-    texture?.destroy();renderer?.dispose();device?.destroy();gpu=undefined;vi.unstubAllGlobals();
+    sequence?.dispose();texture?.destroy();renderer?.dispose();device?.destroy();gpu=undefined;vi.unstubAllGlobals();
   });
   async function pixels():Promise<Uint8Array> {
     const width=texture!.width,height=texture!.height;
@@ -85,6 +87,24 @@ describe('native Vulkan WebGPU rendering',()=> {
       if(t===time)for(const [x,y,rgb] of samples)for(let c=0;c<3;c++)expect(Math.abs(image[(y*width+x)*4+c]-rgb[c])).toBeLessThanOrEqual(2);
     }
     expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it.each(reactiveCases)('reactive/rebuilt pixels: $name',async fixture=>{
+    const legacy=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+    renderer.resetInteraction();
+    try {
+      expect((await legacy.submit({type:'load',scenes:[{id:'a',source:fixture.legacy}]})).ok).toBe(true);
+      expect((await sequence.submit({type:'load',scenes:[{id:'a',source:fixture.reactive}]})).ok).toBe(true);
+      for(const value of [0.1,2.5,1]) {
+        for(const id of ['x','y']) {await legacy.setControl('a',id,value);await sequence.setControl('a',id,value);}
+        for(const time of [0,1.5,3]) {
+          renderer.render(legacy.frame(0,time),legacy.compiled[0].options);const expected=Buffer.from(await pixels());
+          renderer.render(sequence.frame(0,time),sequence.compiled[0].options);
+          expect(Buffer.from(await pixels()).equals(expected),`${fixture.name} ${value} @ ${time}`).toBe(true);
+        }
+      }
+      expect(errors).toEqual([]);
+    }finally{legacy.dispose();}
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it.each(transparencyCases)('$name',async ({source,x,y,red})=>{
@@ -325,6 +345,27 @@ describe('native Vulkan WebGPU rendering',()=> {
     renderer.render(sequence.frame(0,0),sequence.compiled[0].options);const image=await pixels();await artifact('translucent-depth',image);
     for(const x of [width/2-40,width/2+40]){const at=(height/2*width+x)*4;expect(image[at]).toBeGreaterThan(40);expect(image[at+2]).toBeGreaterThan(40);}
     expect(errors).toEqual([]);
+  });
+  it('lights both mesh windings identically and interpolates smooth vertex normals',async()=> {
+    renderer.resetInteraction();
+    const result=await sequence.submit({type:'load',scenes:[{id:'mesh-lighting',source:`export default scene({background:'BLACK'},s=>{
+      s.mesh('surface',{vertices:[[-2,-2,0],[2,-2,0],[0,2,0]],triangles:[[0,1,2]],shading:'flat',fill:'WHITE',stroke:'none'});s.wait(1);
+    });`}]});expect(result.ok).toBe(true);
+    const frame=sequence.frame(0,0),mesh=frame.elements.find(element=>element.id.endsWith('surface'))!;
+    const at=(image:Uint8Array,x=width/2,y=height/2)=>image[(y*width+x)*4];
+    renderer.render(frame,sequence.compiled[0].options);const front=await pixels();
+    const expected=Math.round(255*(0.32+0.68/Math.hypot(-0.4,0.65,1)));
+    expect(Math.abs(at(front)-expected)).toBeLessThanOrEqual(1);
+    mesh.geometry.triangles=[[2,1,0]];
+    renderer.render(frame,sequence.compiled[0].options);const back=await pixels();
+    expect(at(back)).toBe(at(front));
+    mesh.geometry.shading='unlit';
+    renderer.render(frame,sequence.compiled[0].options);expect(at(await pixels())).toBe(255);
+    mesh.geometry.triangles=[[0,1,2]];mesh.geometry.shading='smooth';
+    mesh.geometry.normals=[[-1,0,1],[1,0,1],[0,0,1]];
+    renderer.render(frame,sequence.compiled[0].options);const smooth=await pixels();
+    expect(at(smooth,width/2-40)-at(smooth,width/2+40)).toBeGreaterThan(8);
+    await artifact('mesh-smooth-lighting',smooth);expect(errors).toEqual([]);
   });
   it('slides a grouped 3D element outside an ultrawide viewport under retained orbit',async()=> {
     const result=await sequence.submit({type:'load',scenes:[{id:'exit',source:String.raw`export default scene({mode:"3d",orbit:true,background:"BLACK"},s=>{

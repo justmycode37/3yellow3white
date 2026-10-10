@@ -1,5 +1,9 @@
 import type { Color, PaletteColor } from "./palette.js";
+import type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
+import type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
 export type { Color, PaletteColor } from "./palette.js";
+export type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
+export type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
 
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
@@ -25,11 +29,19 @@ export interface Geometry {
   height?: number;
   points?: Position[];
   closed?: boolean;
+  /** SVG path data in local XY coordinates (positive Y up); Z closes each contour. */
+  d?: string;
+  /** Smooth Catmull–Rom interpolation through path points; omitted means straight edges. */
+  curve?: "linear" | "smooth";
   text?: string;
   tex?: string;
   fontSize?: number;
   vertices?: Position[];
   triangles?: [number, number, number][];
+  /** Mesh lighting; omitted preserves unlit rendering. Smooth normals share vertex indices. */
+  shading?: "unlit" | "flat" | "smooth";
+  /** Optional per-vertex local normals for smooth mesh shading; normalized when rendered. */
+  normals?: Vec3[];
   children?: string[];
   /** Composite this group's children before applying its opacity. */
   isolated?: boolean;
@@ -152,7 +164,22 @@ export interface ControlDefinition extends ControlPlacement {
   max?: number;
   step?: number;
   options?: string[];
+  /** Opt-in runtime input; its value is consumed by s.bind callbacks. */
+  reactive?: boolean;
 }
+
+export interface SliderHandle { readonly id: string; readonly reactive: true }
+export interface SliderOptions extends ControlPlacement {
+  label?: string; default: number; min: number; max: number; step?: number;
+}
+/** Prototype bindings own a fixed set of properties, independent of scene time. */
+export type ReactiveProperties = Pick<ElementStyle, 'position' | 'rotation' | 'scale' | 'opacity' | 'fill'> & Pick<Geometry, 'radius'>;
+export interface ReactiveBinding {
+  target: string;
+  controls: string[];
+  properties: ReactiveProperties;
+}
+export interface ReactiveUpdate { target: string; properties: ReactiveProperties }
 
 export interface Lifecycle {
   time: number;
@@ -172,6 +199,8 @@ export interface CompiledScene {
   tracks: Track[];
   behaviors?: BehaviorDeclaration[];
   bindings?: BindingDeclaration[];
+  /** Serializable outputs; callback functions stay in the sandbox runtime. */
+  reactiveBindings?: ReactiveBinding[];
 }
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -284,6 +313,15 @@ export interface SceneContext {
   text(id: string, props: ElementProps): ElementHandle;
   latex(id: string, props: ElementProps): ElementHandle;
   mesh(id: string, props: ElementProps): ElementHandle;
+  /** Sample z = fn(x, y) into a shaded triangle mesh. */
+  surface(id: string, props: SurfaceProps): ElementHandle;
+  /** Sample a two-parameter map into a shaded triangle mesh. */
+  parametricSurface(id: string, props: ParametricSurfaceProps): ElementHandle;
+  box(id: string, props?: BoxProps): ElementHandle;
+  cylinder(id: string, props?: CylinderProps): ElementHandle;
+  cone(id: string, props?: ConeProps): ElementHandle;
+  torus(id: string, props?: TorusProps): ElementHandle;
+  tube(id: string, props: TubeProps): ElementHandle;
   group(id: string, children: ElementHandle[], options?: { isolated?: boolean }): ElementHandle;
   behavior(target: ElementHandle, behavior: BehaviorSpec): void;
   attach(target: ElementHandle, source: ElementHandle, options?: { offset?: Position }): void;
@@ -293,7 +331,9 @@ export interface SceneContext {
   keep(element: ElementHandle): void;
   remove(element: ElementHandle): void;
   view(id: string, options: ViewOptions, builder: (context: ViewContext) => void): void;
-  slider(id: string, options: ControlPlacement & { label?: string; default: number; min: number; max: number; step?: number }): number;
+  slider(id: string, options: SliderOptions & { reactive: true }): SliderHandle;
+  slider(id: string, options: SliderOptions & { reactive?: false }): number;
+  bind(target: ElementHandle, controls: SliderHandle[], callback: (...values: number[]) => ReactiveProperties): void;
   toggle(id: string, options: ControlPlacement & { label?: string; default: boolean }): boolean;
   select(id: string, options: ControlPlacement & { label?: string; default: string; options: string[] }): string;
   previous: { get(id: string): ElementHandle; exiting(): ElementHandle };

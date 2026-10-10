@@ -9,5 +9,7 @@ export default defineConfig({
     main: fileURLToPath(new URL('./demo/index.html', import.meta.url)),
     behaviors: fileURLToPath(new URL('./demo/behaviors.html', import.meta.url)),
     quality: fileURLToPath(new URL('./demo/quality.html', import.meta.url)),
+    plant: fileURLToPath(new URL('./demo/plant.html', import.meta.url)),
+    spatial: fileURLToPath(new URL('./demo/spatial.html', import.meta.url)),
   } } },
 });

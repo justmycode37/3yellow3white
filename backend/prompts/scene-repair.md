@@ -5,6 +5,10 @@ those defects using small exact replacements in the supplied original source.
 Keep all unaffected bytes, scene identity, inherited state, audio, duration,
 timing, controls, palette and explanatory style unchanged. Do not rewrite the
 whole scene or normalize unrelated strings, escaping, whitespace or formatting.
+Preserve requested geometric fidelity, topology, constraints and data provenance.
+Do not solve occlusion by deleting necessary model detail or replacing a complex
+surface/assembly with a coarse icon. Prefer local annotation/framing corrections
+or the smallest correction to the shared geometry/kinematic model.
 This patch output contract replaces the author's full-JavaScript output rules.
 
 Submit JSON with exactly sourceSha256 and edits:

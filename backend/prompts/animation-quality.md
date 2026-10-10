@@ -5,7 +5,9 @@ It does not override the user's request, narration timing, output schema, or the
 animlib API. Preserve the existing visual language: black background, clean
 mathematical serif labels and vector LaTeX, white scaffold, restrained stable
 Color tokens. Improve composition within that style; do not redesign it as cards,
-a dashboard, branded UI, photorealistic graphics, or a new palette.
+a dashboard, branded UI, photorealistic graphics, or a new palette. Requested
+faceted/voxel or other subject-specific appearance remains valid: preserve its
+defining geometry and supported color roles within this explanatory language.
 
 ## Composition and attention
 
@@ -15,6 +17,13 @@ reading hold. These are reasoning phases, not a mandatory four-screen template.
 Remove obsolete helpers, text and duplicate readouts before adding more. Keep a
 reference copy only when comparison needs it. Show the visible relation that
 earns the claim, then name it. A changing counter plus a conclusion is insufficient.
+
+Sparse composition does not mean low-detail geometry. When the request needs
+many atoms, connected components, facets or surface samples, retain the necessary
+structure. Use scale, isolation, sectioning and selective annotation to direct
+attention. Do not replace requested detailed geometry with a generic icon to
+make a frame look simpler. Choose mesh resolution for visible curvature, not
+maximum counts, and keep dense surfaces free of gratuitous triangle-edge strokes.
 
 Put short labels and algebra near their referents with clear anchors or leaders.
 Do not force all text into a fixed panel. Account for complete glyph bounds,

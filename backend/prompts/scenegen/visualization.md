@@ -1,156 +1,164 @@
-# Visualization prompt (scenegen)
+# Spatial visualization and model construction
 
-<!-- This file replaces backend/prompts/scene-craft.md when the app runs through
-     scenegen/backend/dev.ts. Edit it freely: it is re-read for every scene, so the next
-     generated scene uses your changes without a restart. Narration, audio, captions,
-     the lesson plan and the animlib reference are added by the backend, unchanged. -->
+This is active scene-author guidance, read for every new scene together with
+scene-craft, the current animation quality policy, the lesson/narration packet,
+and the installed animlib reference. The reference defines the callable API;
+the quality policy defines composition and targeted orbit. Honor the requested
+subject, fidelity and style. These techniques are choices, not a checklist of
+objects to insert into every scene.
 
-## Contract with the rest of the pipeline (from the backend's scene-craft.md)
+## Represent the actual subject
 
-Make the scene's purpose visible. Show a concrete change before naming its rule; every causal claim needs a visible reason, such as a correspondence, comparison, or quantity changing together with its geometry. Use the running example and exact values established in the script. Do not choose new values that contradict the speech.
+Build geometry needed to explain the mechanism, including complex 3D forms when
+the subject calls for them. Do not replace a spatial object with a flat icon,
+a few arbitrary balls, or a tilted diagram merely because that is easier.
+Match silhouette, proportions, internal organization and meaningful motion.
+Use supplied reference data and the running example; do not invent precise
+measurements or claim a procedural approximation is an observed structure.
 
-Use the lesson outline to avoid repeating earlier explanations or revealing later answers. Set up the next scene's needs. The planned end picture is an intention; the evaluated previousFrame is the authoritative starting state. Retrieve carried objects with s.previous.get(id), animate the same object, and keep the declared carry IDs. Do not recreate a lookalike under a different ID. If the previous frame differs from the plan, build from the actual state without teleporting it.
+Choose detail deliberately: overview, component, subcomponent, or atomic detail.
+A detailed model can contain many necessary parts while remaining visually clear.
+Reduce competing annotations, isolate the active region, or use a cutaway/close-up
+before deleting detail the user explicitly requested. Do not label every repeated
+part. Preserve enough context to locate the close-up in the original object.
+Selective detail is not permission to omit the mechanism.
 
-Keep the fewest objects that explain the idea. Temporary copies, highlights, construction lines, and intermediate equations should leave once their purpose is served. Keep planned concept colors stable across the lesson using Color tokens. Neutral labels may use WHITE. Color alone should not be the only way to distinguish concepts.
+Keep established black background, mathematical serif/vector annotation, stable
+concept colors and purposeful motion. A specifically requested voxel, faceted or
+other recognizable subject style determines that object's geometry; do not smooth
+away its defining shape. Match distinctive proportions and color roles within the
+supported palette. Geometry detail does not require dashboard panels, decorative
+props, perpetual orbit or photorealistic materials.
 
-Use motion to explain instead of filling the canvas with the narration. Prefer geometry, short labels, formulas, and meaningful numbers; use brief explanatory text when the topic needs it. Choose a layout suited to the subject, with readable labels and clear margins. A fixed formula area is useful when geometry would otherwise collide with equations, but is not required for every lesson. Labels should move with the thing they name. Check the middle of motions as well as endpoints for overlap and clipping.
+## Choose geometry by its job
 
-The player overlays a title/menu near the top-left and playback controls near the bottom. Keep essential labels and the main inference clear of those areas. Do not assume an empty fullscreen canvas when choosing framing.
+Use these actual constructors on `s` or the model's `v` builder. IDs are stable
+and unique across the scene. Do not invent `plane`, `axes3D`, `plot3D`,
+`importModel`, boolean-solid, skinning or physics APIs.
 
-Animate the same arrow as its length or direction changes; avoid accidentally leaving a shorter arrowhead inside a longer arrow. If the lesson deliberately compares collinear reference and result vectors, distinguish them clearly through labels, styling, or a separate comparison area. Derive coupled geometry and readouts from the same values. For rotations, interpolate the angle; choose interpolation that preserves the relevant mathematical structure rather than assuming arbitrary shape morphs are true intermediate states.
+| Need | Construction | Important convention |
+| --- | --- | --- |
+| Height graph | `surface(id, { fn:(x,y)=>z, xRange, yRange, xSegments, ySegments, ... })` | Local graph is **Z=f(X,Y)**, not Y=f(X,Z). |
+| General sheet, organic surface, finite plane | `parametricSurface(id, { fn:(u,v)=>[x,y,z], uRange, vRange, uSegments, vSegments, ... })` | Choose basis/map explicitly; periodic axes may use `closedU`/`closedV`. |
+| Bespoke shell, polyhedron, cutaway or repeated geometry | `mesh(id, { vertices, triangles, shading, ... })` | Triangle triples index vertices; preserve winding and hard-edge vertex splits. |
+| Block or rectangular rigid part | `box(id, { width, height, depth, ... })` | Centered at origin; dimensions follow X/Y/Z. Flat shading by default. |
+| Shaft, chamber or tapered part | `cylinder` / `cone` with `radius`, `height`, `radialSegments`, `capped` | Axis is local Y; rotate into the assembly. |
+| Ring | `torus(id, { radius, tubeRadius, radialSegments, tubularSegments, ... })` | Ring lies in XZ about Y; radius measures to tube center. |
+| Curved backbone, cable, vessel or pipe | `tube(id, { points, radius, radialSegments, capped, closed, ... })` | Sweeps supplied 3D polyline; sample a curved centerline yourself. |
+| Atom, bead or round component | `sphere` | Actual shaded body; choose radii consistently with model convention. |
+| Bond, direction, axis or trajectory | `line3D`, `arrow3D`, or sampled `path` with `strokeProfile:'round'` | Derive coordinates from the same geometry/data; ordinary strokes are flat. |
 
-Give the main inference room to be seen. Usually make one major explanatory change at a time and hold its result when the narration allows. Exact audio cues and measured duration take priority over suggested pacing. Do not extend the scene, compress speech, shift audio, or reveal an answer during a thinking pause. Cuts and deliberate discontinuities are allowed when motivated and explicit.
+For a finite plane use p(u,v)=origin+u*basisU+v*basisV, a four-vertex mesh,
+or an oriented planar rectangle. Use a thin box only when thickness has meaning.
+Axes, ticks, contours and coordinate curves are authored from lines/paths and
+local labels; the library does not generate them automatically. Draw only those
+that help interpret the surface or motion.
 
-Use 3D for spatial subjects when it helps explain them. Add interactions only when planned: every control should drive real geometry and all dependent labels/formulas at every time, while preserving the scene duration and a coherent default example. Do not add decorative controls or require interactions to understand the narrated default path.
+Raw meshes are unlit by default: choose `shading:'smooth'` for organic forms or
+`'flat'` for facets. Surface/solid/tube helpers produce shaded mesh handles
+(smooth except boxes), with no edge stroke by default. Smooth lighting does not
+make a planar silhouette volumetric. Optional mesh normals must match vertex
+count; shared indices smooth across faces, split indices retain creases. Lighting
+is simple directional shading, not a programmable material/light system. Prefer
+opaque cutaways or separated parts to intersecting transparent shells; triangle
+sorting does not guarantee correct transparency at intersections.
 
-Before calling validate_output, review the source for: the purpose actually shown; facts and values agreeing with speech; no premature reveal; readable text; no leftover copies; smooth, meaningful motion; planned carry/cleanup IDs; and a clean final picture. On a diagnostic, change only what is needed to fix it, retaining the narration, example values, inherited state, IDs, and timing. Return the complete corrected source.
+## Build coherent models, not independent decorations
 
-## Visual style (scenegen)
+Write small deterministic local helpers returning meaningful handles/groups:
+a repeated structural unit, jointed part, bounded surface patch or block assembly.
+Use parameter/data arrays and loops, not hundreds of unrelated coordinates.
+Center/scale data once. Keep explicit units, axes and semantic IDs. Mesh normals,
+trajectories, connectors and labels must use the same coordinate convention.
 
-Where a rule below is about time, the measured narration timing always wins: fit the
-motion inside the given audio cues and durationSec.
+Give independently moving parts independent handles. Group rigid parts; place
+nested group origins at mechanical/anatomical joints and use fixed local offsets.
+Animate rotations about those pivots, not unrelated endpoint interpolations.
+For constrained mechanisms, derive all positions/orientations from the same
+driver and actual kinematics. For a contact action, position the tool at the
+target when impact occurs; show the consequence at that contact, not elsewhere
+or before contact. Stylized motion still needs coherent relationships.
 
-Visual style: 3Blue1Brown-like explanatory animation.
-- Dark background, few bright colours. Each colour means ONE concept for the whole
-  film (e.g. green = first basis vector, red = second). Never recolour an object
-  to mean something else.
-- Show before you name: let a concrete object move or change, then put the
-  formula on screen to confirm what the viewer already saw.
-- Every "therefore" needs a visible reason: a moving vector, a sliding value, a
-  highlighted correspondence between a number and a piece of geometry.
-- Keep identities: the same object stays the same object across scenes. Move,
-  transform or recolour it in place; do not fade it out and draw a lookalike.
-- Continuous motion driven by real values (one animated parameter), so
-  intermediate frames are mathematically true, not arbitrary morphs.
-- Unhurried pacing: give the viewer time to watch and think. Build a result
-  calmly, then hold it still for 2-3 s before the next change; after a key insight,
-  hold longer (3-4 s). Never stack several changes back to back.
-- Text is secondary to geometry: short labels, large enough to read comfortably,
-  never overlapping geometry. Formulas stay fixed to the screen.
-- No full-screen clears without a narrative reason. No decorative motion.
+Use `connect` for links whose endpoints move and `attach` for following labels.
+Neither creates a physics solver or enforces constant link length. Geometry and
+pivots must enforce rigid/articulated relationships. Follow scene-craft's handoff
+rules: retrieve carried IDs, preserve the incoming pose, and re-declare bindings
+and behaviors in the receiving scene.
 
-Simplicity (the most important rule; clutter is the most common failure):
-- Less is more. Show the fewest objects that make the point; one idea at a time.
-- Never leave duplicates behind. When a vector is stretched, scaled, moved or
-  rotated, animate THAT object; do not keep the original next to a stretched copy.
-  A temporary helper copy must be removed as soon as it has done its job.
-- A scene ends with only the core objects the story still needs (e.g. grid, basis
-  vectors, the example vector, the current matrix). Helper constructions,
-  highlights, counters and intermediate equations are cleared before the scene ends.
-- No numeric counters/decimal readouts on the geometry; put numbers in the text area.
+Create related parts through the same view builder. Its methods retain view
+ownership if called later during the synchronous scene builder. Outer `s`
+creates main-scene objects; do not mix coordinate spaces accidentally. Whole
+scene `orbit:false`; model view `orbit:true, orbitHitTest:'geometry'` only when
+rotation supports the plan. Keep explanatory formulas outside the orbiting view;
+part labels may be billboards attached to referents. Place labels clear of the
+entire swept geometry, not just the initial pose.
 
-Smooth motion (strict; jarring motion ruins the explanation):
-- Nothing changes instantly. Every visible change is an animation with a smooth
-  easing; never change/add/remove something visible
-  between frames.
-- Whole-plane transformations (grid + vectors) take at least 3 s, driven by one
-  animated parameter. Interpolate rotations by angle and other maps by blending the
-  matrix entries from the identity, so the motion is calm and continuous.
-- No sudden flips or resets: never snap the plane back to the identity. If a scene
-  needs a fresh plane, undo the motion smoothly (>= 2.5 s) or cross-fade slowly.
-  A map with negative determinant is shown slowly (>= 4 s) so the flip is legible.
-- One major motion at a time; pause about 1 s between big motions. No camera
-  shakes, no fast zooms, no flashes.
+## Accuracy at different scales
 
-On-screen text (strict):
-- Only necessary text: short object labels (e.g. v, î, A), formulas, matrices and
-  numbers that are part of the mathematics. Nothing else.
-- NO explanatory sentences or captions in the animation ("Lines stay straight",
-  "Record where î lands", "Order matters!", titles, bullet points). The motion itself
-  must carry the explanation; a narrator will add the words later.
-- If a word seems necessary, show the idea visually instead (highlight, colour,
-  motion, side-by-side comparison).
+For molecular/atomic detail, use available atom coordinates and explicit bond
+topology, element identities, stereochemistry and consistent units. Preserve
+chemical connectivity, bond order and selected sequence/conformation through
+motion. Derive repeating units from those data. Ball-and-stick radii may serve
+visibility, but are not physical atomic boundaries. A double helix with one bead
+per base is a coarse schematic, not atom-resolved. When coordinates/topology are
+unavailable, build a clearly described idealized model at the justified level;
+never invent atom-accurate provenance. Scene code cannot fetch external
+structures. Use data already in the authoring context.
 
-LaTeX (strict; one unsupported command stops the whole lesson from playing):
-- Formulas are rendered by MathJax with only the base, ams, newcommand and html
-  packages. Use plain, common commands: fractions, sub/superscripts, Greek letters,
-  \vec, \mathbf, \hat, \overrightarrow, \mathrm, \text, \mathbb, \mathcal,
-  matrices (bmatrix, pmatrix), \xrightarrow, \rightleftharpoons, \underbrace, ^\circ.
-- NOT available: \boldsymbol and \bm (use \mathbf or \vec), \color and \textcolor
-  (colour a formula with its fill, or its parts with \animpart), \ce (write
-  \mathrm{H_2O}), \cancel, \si, \bra / \ket, \degree, \require, \unicode.
-- When unsure whether a command exists, use a simpler one.
+For machinery and articulated/block characters, identify rigid bodies, joints,
+driver, constraints and contact sequence before scheduling animation. Sectioned
+housings or separated assemblies can reveal hidden motion. A cutaway is authored
+geometry, not an unsupported boolean operation. Block characters and voxel
+environments can use grouped boxes or consolidated meshes; retain right angles,
+grid alignment, recognizable proportions and articulated limbs. No
+character-specific recipe is mandatory for other subjects.
 
-3D is the default (strict):
-- Show the subject in real 3D unless a flat view is clearly much better for
-  understanding. Anything with a real spatial shape or arrangement MUST be 3D:
-  molecules, atoms and bonds, orbitals, crystals, proteins, cells, organs, physical
-  objects, forces and fields in space, surfaces, solids. Give them true shapes,
-  proportions and angles, and let the viewer rotate the view with the mouse.
-- 2D is the exception and needs a reason: the idea itself lives in a plane (vectors
-  and matrices acting on a 2D grid, a graph of a function, a number line, a flow
-  chart, an energy diagram) or a flat diagram is clearly more intuitive at that
-  moment (a Lewis structure, a reaction scheme, a cross-section).
-- When you do go flat for a subject that has a 3D shape, make it a visible
-  transformation of the same object: the 3D model turns to face the viewer and
-  flattens or simplifies into the diagram, and returns to 3D when that step is
-  done. Never leave the student with only the abstraction.
-- A "3D" scene that is really a flat drawing does not count: the depth must be real
-  (objects at different z, a perspective camera, rotation shows new sides).
+For optimization or spatial fields, define the actual scalar/vector function
+first. Derive sampled surface, gradient, iterates, traces and readouts from the
+same function. A high-dimensional objective cannot be shown in full on one
+height graph: identify the two-parameter slice or projection, fixed parameters,
+and what height means. Do not imply a projected path is gradient descent on the
+displayed slice unless that follows mathematically. Preserve the real update
+rule and step sizes; a pretty downhill spline is not an optimizer. To keep a
+marker on a nonlinear surface between iterates, sample/re-evaluate height along
+its path at sufficient resolution, rather than tweening endpoint heights through
+the terrain. State approximations where they affect the claim.
 
-Interactivity:
-- Keep interactive elements wherever they help: a planned slider, toggle or select
-  must be built and must drive the real geometry; 3D views are rotatable.
-  Do not drop a planned interaction to simplify the scene.
+## Animation, controls and construction limits
 
-How to build 3D with animlib:
-- Follow the plan: if the scene's visualDescription starts with "3D:", the scene must
-  be 3D; if it starts with "2D (because ...):", keep it flat.
-- For a 3D scene use `mode: "3d"` with `orbit: true`, or put the 3D objects in an
-  `s.view(id, { rect, camera }, v => { ... })` region (its camera is 3D and rotatable by
-  default) and keep formulas outside it. Use `sphere`, `line3D`, `arrow3D`, `mesh` and
-  real z coordinates. Move between flat and spatial views with `s.camera.to3D(...)` /
-  `s.camera.to2D(...)` (or the view's camera) as an animated transition. See reference
-  section 6 and the chemistry scene in the demo.
+Surface callbacks run at compilation, not every frame. Helpers return ordinary
+mesh handles: animate position, rotation, uniform scale, opacity or supported
+style properties. Construction keys (`fn`, segment counts, dimensions, tube
+points, shading) are not animatable properties. `scale` is a positive scalar,
+not a vector. For deformation, author compatible mesh targets with matching
+vertex meaning/topology; do not morph arbitrary surfaces and assume validity.
+For a necessary topology change, use an explicit, explained replacement/cut.
 
-Alignment (strict; misplaced parts are the most visible kind of jank):
-- Everything that belongs to a 3D model lives in the SAME 3D view as the model:
-  create it inside that `s.view(...)` builder callback (with `opacity: 0` if it
-  appears later, then fade it in). Never save the view handle and create objects
-  through it after the callback has returned: those are drawn with the main camera
-  and float beside the model instead of sitting on it.
-- Parts attached to an object start exactly at that object: a lone pair, bond, arrow
-  or direction ray begins at its atom's centre or surface, computed from the atom's
-  own coordinates, never from separately typed numbers.
-- Things that move or rotate together are in one group, or are computed from the same
-  values, so they cannot drift apart.
-- Labels: use `billboard: true` with a small `billboardOffset` (just clear of the
-  object, about its radius plus 0.2) so the label stays beside its object while the
-  view rotates. To move a label, change the offset, not its world position.
-- Rounded 3D bodies (atoms, lobes, clouds) are built from spheres, which are shaded;
-  a `mesh` is drawn flat, so a lobe made of one mesh reads as a 2D blob.
-- To de-emphasise a shaded 3D body, do not leave it half transparent for long:
-  overlapping transparent spheres draw with visible banding. Fade it fully, or keep
-  it opaque and dim the other things instead.
-- Check the picture from the starting camera AND after rotating: nothing may sit
-  beside what it belongs to.
+An ordinary numeric slider recompiles geometry at current time: use it for
+surface parameters, dimensions, tube points, generated labels or topology.
+Retained `reactive:true` sliders and `s.bind` cover only the reference's supported
+properties; they cannot rebuild meshes or update arbitrary text. Do not give a
+binding and timeline ownership of the same property. Keep dependent geometry,
+readouts and duration consistent for all planned control values. Do not add
+controls in classic mode or require interaction to understand the default path.
 
-Layout (keep it identical in every scene):
-- Geometry (2D or 3D) on the left two thirds of the frame; the right third is a fixed text
-  area for formulas and matrices. It is just empty space: NO box, border, frame,
-  backing rectangle or panel shape around text anywhere. Geometry never enters the
-  text area; text never sits on the grid except short object labels.
-- Labels sit beside what they name with a visible gap and move with it; nothing
-  touches or overlaps, including during motion.
-- Minimum text height about 0.35 scene units; keep 0.4+ margin from the frame edge.
-- Draw vectors with clearly thicker strokes than grid lines so they stay crisp.
+Use bounded synchronous deterministic code; no imports, network calls, animation
+frame callbacks or physics loops. Start near 24–32 surface segments per axis and
+raise only where curvature/silhouette needs it. Per-mesh 20,000 vertices and
+20,000 triangles are ceilings, not targets; aggregate scene/VM budgets still
+apply. A 32×32 open grid has 1,089 vertices and up to 2,048 triangles; doubling
+both axes roughly quadruples work. Keep dense surfaces stroke-free; draw a few
+meaningful coordinate curves separately. Batch repeated static detail where it
+preserves needed identity; keep parts separate when later motion needs them.
+
+Closed parametric axes require periodic maps; they join seams, not caps. Missing
+finite surface samples create holes, not bridges. Tubes have constant radius,
+do not smooth their centerline automatically, and reject immediate reversals;
+keep bends/radius sensible. Never silently lower requested scientific fidelity
+to meet a budget: narrow the visible region or use an explicit multiscale view.
+
+Before submission, check setup, operation interiors, closest approaches and
+final hold: depth/silhouette, topology/constraints, readable upright labels,
+correct surface-path relationship, view ownership, camera/control clearance and
+handoff. Compiler success alone cannot establish these. Keep output protocol,
+measured narration timing, verification-first repair and exact duration unchanged.

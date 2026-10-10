@@ -20,7 +20,7 @@ const hostname = process.env.HOST ?? (localNarration ? "127.0.0.1" : "0.0.0.0");
 if (localNarration && !["127.0.0.1", "localhost", "::1"].includes(hostname)) {
   throw new Error("NARRATION_ALLOW_LOCAL requires a backend bound to loopback. Disable it when using a shared server.");
 }
-const handler = createHandler(undefined, videos, narration);
+const handler = createHandler(process.env.FRONTEND_DIR || undefined, videos, narration);
 const server = Bun.serve({
   hostname,
   port: Number(process.env.PORT ?? 8080),

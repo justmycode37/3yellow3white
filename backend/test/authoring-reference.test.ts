@@ -21,6 +21,10 @@ test('retains every authoring section verbatim while excluding host and developm
     expect(output).not.toContain(heading);
   }
   expect(output.length).toBeLessThan(reference.length);
+  for (const heading of ['### Shaded meshes', '### Function and parametric surfaces',
+    '### Basic solids and swept tubes', '### Curved paths and organic shapes', '### Reactive sliders (prototype)']) {
+    expect(output).toContain(heading);
+  }
 });
 
 test('normalizes line endings deterministically without changing authoring prose', () => {

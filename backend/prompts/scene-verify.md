@@ -13,6 +13,17 @@ connectors intentionally hide inside overlapping surfaces; perspective changes
 are not proof that world-space lengths changed. Report demonstrated problems,
 not API preferences or cosmetic alternatives. Never invent unsampled evidence.
 
+Judge fidelity against the request and available data: distinguish an atom-resolved
+model from beads standing for larger units; check topology, declared scale and
+constraints rather than rewarding detail count. For mechanisms, inspect pivots,
+rigid links and contact consequences. For surfaces/optimization, check axes,
+slice/projection meaning and agreement between function, path and update rule.
+Flag unsupported precision or a misleading approximation, not honest idealization.
+Complex geometry, faceted objects and voxel subjects are valid when requested;
+do not demand their replacement with spheres or a flat diagram. Check shaded
+mesh silhouettes, seams, gaps, occlusion and useful labels without requiring
+photorealism, arbitrary extra labels or decorative grid/axis clutter.
+
 Use the last image only as a style reference: black background, mathematical
 serif/vector text, restrained stable colors and sparse explanatory geometry.
 Do not copy its topic or layout. Inspect both aspect ratios. Native renders omit

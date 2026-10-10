@@ -5,12 +5,16 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md",
-      "sha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3"
+      "sha256": "c0fec258234cfd577fe5ab46df6200a6c60c9aaa7fb0bc165952dbef911e324c",
+      "importedSha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3",
+      "revision": "2026-10-10: maintained spatial authoring guidance for animlib surfaces, solids, tubes, fidelity and constrained motion"
     },
     {
       "file": "planning.md",
       "source": "scenegen/prompts/planning.md",
-      "sha256": "36af6cbcaaa3f858e515c1f8709f0893a537f73e8528a2e47875a27e21428533"
+      "sha256": "ba41f4ea8b4c7c571672ba22a269b1278e251e4853a8a5c6ef9f4a5a20162fb3",
+      "importedSha256": "36af6cbcaaa3f858e515c1f8709f0893a537f73e8528a2e47875a27e21428533",
+      "revision": "2026-10-10: maintained spatial authoring guidance for animlib surfaces, solids, tubes, fidelity and constrained motion"
     },
     {
       "file": "topics-system.md",
@@ -24,5 +28,11 @@
       "symbol": "FORMAT",
       "sha256": "260ba64060e06134c8208ba90533bdfeccbe28cff6d92bdb07d9d8e79a03afb7"
     }
+  ],
+  "note": "commit and source fields identify original PR #36 imports. Revised files record original and current hashes; active prose is intentionally maintained.",
+  "libraryCommits": [
+    "90fb51e",
+    "4aa7113",
+    "7fb55ab"
   ]
 }

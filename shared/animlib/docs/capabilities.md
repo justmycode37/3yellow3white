@@ -10,15 +10,19 @@ Keep these instructions in nonspoken planning; they are not narration.
 ## Visual building blocks
 
 - **2D geometry:** circles, rectangles, open or closed paths, lines, arrows,
-  and groups. Curves and plots can be constructed from sampled points. Use these
-  for diagrams, axes, grids, bars, regions, vectors, and correspondences.
+  and groups. Paths support smooth curves through points, precise Bézier curves,
+  SVG path data, and compound outlines with holes. Use these for organic shapes
+  such as leaves, curved diagrams, plots, axes, grids, bars, regions, and vectors.
 - **Text and mathematics:** short vector-rendered labels and mathematical LaTeX,
   including fractions, scripts, and matrices. Named formula parts allow specific
   symbols or terms to move between equations; anchored parts can stay fixed.
   Numeric slots can count between values without shifting surrounding symbols.
-- **3D geometry:** spheres, explicit triangle meshes, round lines and arrows,
-  and grouped objects. Useful for spatial vectors, simple surfaces, and schematic
-  molecules. Labels can face the camera and remain attached to objects.
+- **3D geometry:** shaded spheres, boxes, cylinders, cones, tori, swept tubes,
+  function graphs `z = f(x, y)`, two-parameter surfaces, explicit triangle meshes,
+  round lines and arrows, and groups. Use these for spatial vectors, curved sheets,
+  flower petals, stems, and schematic molecules. Meshes support flat or smooth
+  directional shading; raw meshes remain unlit unless shading is requested.
+  Labels can face the camera and remain attached to objects.
 - **Views:** a main camera plus clipped rectangular regions with independent
   cameras. Side-by-side views can compare the same construction from different
   angles. Screen-space labels can remain fixed while world geometry moves.
@@ -32,12 +36,21 @@ Objects can move, rotate, scale, change style, fade in or out, and animate toget
 or in sequence, with explicit holds. Groups can move as one object; isolated
 groups let overlapping components fade as one composited object.
 
-Compatible closed outlines (circles, rectangles, closed paths) can morph into
-each other; compatible open outlines (paths, lines, arrows) can also morph.
+Compatible single closed outlines (circles, rectangles, single-contour closed
+paths) can morph into each other; compatible open outlines (paths, lines, arrows)
+can also morph.
+Curved paths with matching segment structures can bend by interpolating their
+control points; corresponding parts such as leaf veins need coordinated morphs.
+Compound paths can morph when their contours and segment structures correspond;
+incompatible compound paths crossfade. The author must preserve contour order
+and meaningful correspondence rather than relying on semantic shape matching.
 Arrow-to-arrow morphs retain arrowheads. Formula morphs require explicit
 one-to-one correspondence between named parts; unmatched parts fade in or out.
 Mesh morphs need corresponding vertices and compatible topology. Other
 incompatible representations crossfade.
+Sampled surfaces, solids, and tubes are ordinary meshes with the same rules;
+changing sample counts, holes, or caps can break correspondence. Shape callbacks
+are sampled during compilation, not evaluated as a per-frame animation.
 
 A geometric morph does not establish a mathematical or physical transformation.
 If intermediate states matter, ask for geometry calculated from the underlying
@@ -103,6 +116,10 @@ what the viewer should discover. The current lesson-plan contract permits
 0–2 such controls per scene; no controls is the default. Control changes must
 preserve the measured scene duration.
 
+An ordinary slider can resample a surface or rebuild a solid/tube together with
+its dependent labels. Retained property bindings do not rebuild mesh geometry.
+Keep sampling modest so planned controls remain responsive.
+
 Animlib also supports requested orbit rotation in 3D, independent rotation of
 view regions, draggable objects, spring return, attached labels, and connectors
 that follow object endpoints. These are scene-authored behaviors, not additional
@@ -124,6 +141,12 @@ not built into animlib. Suitable requests include:
   and clear the comparison highlight before the next step.
 - Plot a sampled function and vary one parameter with a slider, updating the
   curve and its numeric label together.
+- Show a shaded two-variable height graph, then vary its amplitude with a slider.
+- Build a spatial flower from parametric petals and a swept tube stem, grouping
+  parts that rotate together. Surface maps and tube centerlines must be authored;
+  there is no botanical growth or automatic modeling system.
+- Grow a plant from a stem, curved leaves, and branching roots; group each leaf
+  with its vein at the attachment point and coordinate their bends.
 
 State the exact example values and teaching relation. Do not assume symbolic
 algebra, chemistry simulation, automatic graph layout, or an algorithm simulator.
@@ -135,6 +158,14 @@ run asynchronous builders.
 
 - No images or video textures, imported 3D models, photorealistic materials,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
+- SVG support accepts path geometry, not complete SVG files or their styling.
+  Filled contours must be closed, simple, and nonintersecting; nested contours
+  create holes. Open paths are stroked. Smooth curves through points can overshoot;
+  explicit Bézier controls give more precise boundaries and pointed leaf tips.
+- Curved paths use bounded tessellation, so extreme zoom or very complex shapes
+  can expose approximation limits. Curved outlines do not add general path
+  picking or automatic surface-clipped connectors; those retain their existing
+  supported shapes.
 - Text uses bundled glyphs. Custom fonts, emoji, broad international text
   coverage, full document TeX, and automatic multiline text layout are not
   available. Use short labels and supported mathematical notation; narration
@@ -144,6 +175,12 @@ run asynchronous builders.
   a deliberate exit and entrance.
 - Transparent intersecting surfaces may render incorrectly. Prefer opaque
   geometry or views that do not depend on correct transparency ordering.
+- Surface and solid helpers produce bounded triangle meshes with simple lighting,
+  not physically based materials. Each mesh is limited to 20,000 vertices and
+  20,000 triangles; 32 segments per surface axis is the default. Nonfinite numeric
+  samples leave holes. Closed parameter axes require periodic maps. Tubes have
+  constant radius and authored centerline samples; avoid immediate reversals and
+  self-intersections. Caps close ends but do not resolve intersecting geometry.
 - No branching lesson navigation, infinite scenes, playback-rate controls, or
   built-in video export. Interactive controls vary visuals within the lesson.
 - Target modest explanatory scenes rather than dense particle simulations or

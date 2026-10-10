@@ -6,44 +6,14 @@ import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html.js';
 import 'mathjax-full/js/input/tex/ams/AmsConfiguration.js';
 import 'mathjax-full/js/input/tex/newcommand/NewcommandConfiguration.js';
 import 'mathjax-full/js/input/tex/html/HtmlConfiguration.js';
-import { SVGPathData } from 'svg-pathdata';
+import { flattenSvgPath } from './path.js';
+export { flattenSvgPath } from './path.js';
 import type { Geometry, Vec3 } from './types.js';
 
 export interface LatexPath { contours: Vec3[][]; part?: string }
 export interface LatexNumericSlot { id:string; contours:Vec3[][]; baseline:number; scale:number; part?:string }
 export interface LatexLayout { paths: LatexPath[]; parts: Set<string>; width: number; height: number; baseline:number; numericSlots:LatexNumericSlot[] }
 
-/** Preserve SVG command corners; subdivide curves by geometric error, not arclength. */
-export function flattenSvgPath(source:string,tolerance=1.2):Vec3[][] {
-  const commands=new SVGPathData(source).toAbs().normalizeST().qtToC().aToC().normalizeHVZ(false,true,true).commands;
-  const contours:Vec3[][]=[];let contour:Vec3[]=[];let current:Vec3=[0,0,0];
-  const midpoint=(a:Vec3,b:Vec3):Vec3=>[(a[0]+b[0])/2,(a[1]+b[1])/2,0];
-  const distance=(p:Vec3,a:Vec3,b:Vec3):number=>{
-    const dx=b[0]-a[0],dy=b[1]-a[1],length=dx*dx+dy*dy;
-    const t=length?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/length)):0;
-    return (p[0]-a[0]-t*dx)**2+(p[1]-a[1]-t*dy)**2;
-  };
-  const curve=(a:Vec3,b:Vec3,c:Vec3,d:Vec3,depth=0):void=>{
-    if(depth>=12||Math.max(distance(b,a,d),distance(c,a,d))<=tolerance*tolerance){contour.push(d);return;}
-    const ab=midpoint(a,b),bc=midpoint(b,c),cd=midpoint(c,d),abc=midpoint(ab,bc),bcd=midpoint(bc,cd),center=midpoint(abc,bcd);
-    curve(a,ab,abc,center,depth+1);curve(center,bcd,cd,d,depth+1);
-  };
-  for(const command of commands) {
-    if(command.type===SVGPathData.MOVE_TO) {
-      if(contour.length)contours.push(contour);
-      current=[command.x,command.y,0];contour=[current];
-    } else if(command.type===SVGPathData.LINE_TO) {
-      current=[command.x,command.y,0];contour.push(current);
-    } else if(command.type===SVGPathData.CURVE_TO) {
-      const end:Vec3=[command.x,command.y,0];curve(current,[command.x1,command.y1,0],[command.x2,command.y2,0],end);current=end;
-    } else if(command.type===SVGPathData.CLOSE_PATH) {
-      if(contour.length&&Math.hypot(current[0]-contour[0][0],current[1]-contour[0][1])>1e-9)contour.push([...contour[0]]);
-      current=contour[0]??current;
-    }
-  }
-  if(contour.length)contours.push(contour);
-  return contours;
-}
 type Matrix = [number,number,number,number,number,number];
 const identity: Matrix = [1,0,0,1,0,0];
 function multiply(a:Matrix,b:Matrix): Matrix {
