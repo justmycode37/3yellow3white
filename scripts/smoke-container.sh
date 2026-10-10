@@ -43,6 +43,7 @@ cleanup() {
 trap cleanup EXIT
 "${compose[@]}" config --quiet
 "${compose[@]}" run --rm --no-deps app scripts/smoke-release.ts
+"${compose[@]}" run --rm --no-deps app scripts/smoke-scene-preview.ts
 "${compose[@]}" up --detach --wait --wait-timeout 60
 container=$("${compose[@]}" ps --quiet app)
 wait_healthy() {
