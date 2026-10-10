@@ -23,6 +23,8 @@ npm run app:test
 
 ## Integration points
 
+- `src/CanvasQuestion.tsx`: right-click the canvas to open a compact input and black circular send icon; successive questions cycle through the widget colours. The draft retains the lesson, timestamp, pixel and normalized location, and detached scene frame locally. Playback pauses while the input is open. Escape or clicking outside dismisses it. Sending is disabled; no question API is called.
+
 - `videoMode: 'classic' | 'interactive'`: the selected viewing experience, separate from the input method. The repository frontend sends it in JSON and multipart creation requests and preserves it in browser-local lesson metadata across library refreshes. The standalone prototype saves it on its sample lesson. This change does not enable interactive generation: the future backend must validate, persist, and pass it to generation/rendering as described in `backend/prompts/guidance.md` (repository path). Requests without a mode default to Classic in that contract.
 
 - `src/WorkspacePage.tsx` → `createVideo`: reads documents from the active input mode and submits topic/source text through `src/videos.ts`. No subject selection or course setup is required. The player opens immediately while generation continues on the server. Curriculum subject, chapter, and source metadata remain attached across library refreshes.

@@ -7,6 +7,8 @@ import { LessonPlayback } from './lessonPlayback'
 import type { LessonPlaybackState } from './lessonPlayback'
 import { lessonScenes } from './lessonScenes'
 import { watchVideo } from './videos'
+import type { Player } from 'animlib'
+import CanvasQuestion, { useCanvasQuestion } from './CanvasQuestion'
 
 const loadingState: LessonPlaybackState = { time: 0, duration: 0, playing: false, ended: false, ready: false, error: '' }
 const getLoadingState = () => loadingState
@@ -17,10 +19,10 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
 }) {
   const canvasHost = useRef<HTMLDivElement>(null)
   const screen = useRef<HTMLDivElement>(null)
+  const renderer = useRef<Player | undefined>(undefined)
   const latestLesson = useRef(lesson)
   latestLesson.current = lesson
   const suspended = useRef(menuOpen || overlayOpen)
-  suspended.current = menuOpen || overlayOpen
   const [playback, setPlayback] = useState<LessonPlayback>()
   const [startupError, setStartupError] = useState('')
   const [connection, setConnection] = useState('')
@@ -29,18 +31,29 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   const [cursorHidden, setCursorHidden] = useState(false)
   const cursorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const state = useSyncExternalStore(playback?.subscribe ?? subscribeLoading, playback?.getState ?? getLoadingState)
+  const { draft, openQuestion, closeQuestion, changeQuestion } = useCanvasQuestion({
+    lesson, time: state.time, disabled: menuOpen || overlayOpen || !state.ready || Boolean(startupError || state.error),
+    getScene: () => {
+      const player = renderer.current
+      if (!player) return undefined
+      const current = player.getState()
+      return { id: current.scene, time: current.time, frame: player.getInteractionSnapshot()?.frame }
+    },
+  })
+  const questionOpen = Boolean(draft)
+  suspended.current = menuOpen || overlayOpen || questionOpen
   const error = startupError || state.error
   const duration = state.duration || lesson.duration
   const progress = duration ? Math.min(1, state.time / duration) : 0
-  const enabled = state.ready && !error && !menuOpen && !overlayOpen
+  const enabled = state.ready && !error && !menuOpen && !overlayOpen && !questionOpen
   const playbackRequested = state.playing || state.buffering && state.wantsPlay
   const revealCursor = useCallback(() => {
     clearTimeout(cursorTimer.current)
     setCursorHidden(false)
-    if (state.playing && !menuOpen && !overlayOpen) {
+    if (state.playing && !menuOpen && !overlayOpen && !questionOpen) {
       cursorTimer.current = setTimeout(() => setCursorHidden(true), 3000)
     }
-  }, [state.playing, menuOpen, overlayOpen])
+  }, [state.playing, menuOpen, overlayOpen, questionOpen])
 
   useEffect(() => {
     revealCursor()
@@ -67,6 +80,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
       canvas.setAttribute('role', 'img')
       host.append(canvas)
       const player = createPlayer({ canvas, controlsRoot: host.parentElement! })
+      renderer.current = player
       // Keep the lesson canvas black regardless of the surrounding app theme.
       player.setDisplayPalette(THREE_BLUE_ONE_BROWN_PALETTE)
       controller = new LessonPlayback(player, !lesson.videoId)
@@ -87,10 +101,10 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     }).catch(error => {
       if (active) setStartupError(error instanceof Error ? error.message : String(error))
     })
-    return () => { active = false; disconnect?.(); controller?.dispose(); host?.replaceChildren() }
+    return () => { active = false; disconnect?.(); renderer.current = undefined; controller?.dispose(); host?.replaceChildren() }
   }, [lesson.id, lesson.videoId, attempt])
 
-  useEffect(() => { void playback?.setSuspended(menuOpen || overlayOpen) }, [playback, menuOpen, overlayOpen])
+  useEffect(() => { void playback?.setSuspended(menuOpen || overlayOpen || questionOpen) }, [playback, menuOpen, overlayOpen, questionOpen])
   useEffect(() => {
     const changed = () => setFullscreen(document.fullscreenElement === screen.current)
     document.addEventListener('fullscreenchange', changed)
@@ -98,7 +112,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   }, [])
   useEffect(() => {
     const keys = (event: KeyboardEvent) => {
-      if (menuOpen || overlayOpen || (event.target as HTMLElement).closest('input,select,textarea,button,[contenteditable="true"]')) return
+      if (menuOpen || overlayOpen || questionOpen || (event.target as HTMLElement).closest('input,select,textarea,button,[contenteditable="true"]')) return
       if (event.key === 'Escape') { onHome(); return }
       if (!enabled || !playback) return
       if (event.code === 'Space') { event.preventDefault(); void playback.toggle() }
@@ -107,14 +121,14 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     }
     window.addEventListener('keydown', keys)
     return () => window.removeEventListener('keydown', keys)
-  }, [enabled, playback, onHome, menuOpen, overlayOpen])
+  }, [enabled, playback, onHome, menuOpen, overlayOpen, questionOpen])
 
   const fullscreen = () => {
     const action = document.fullscreenElement ? document.exitFullscreen?.() : screen.current?.requestFullscreen?.()
     void action?.catch(() => {})
   }
 
-  return <div className={`player-page ${state.playing ? 'is-playing' : ''} ${cursorHidden && state.playing && !menuOpen && !overlayOpen ? 'is-player-idle' : ''}`} ref={screen} onPointerMove={revealCursor} onPointerDown={revealCursor} onKeyDown={revealCursor} onFocusCapture={revealCursor}>
+  return <div className={`player-page ${state.playing ? 'is-playing' : ''} ${cursorHidden && state.playing && !menuOpen && !overlayOpen && !questionOpen ? 'is-player-idle' : ''}`} ref={screen} tabIndex={-1} onContextMenu={openQuestion} onPointerMove={revealCursor} onPointerDown={revealCursor} onKeyDown={revealCursor} onFocusCapture={revealCursor}>
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
     {(connection || (state.ready && state.generationError)) && <p className="player-notice" role="status">{state.generationError || connection}</p>}
     <div className="player-stage">
@@ -123,6 +137,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
       {state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}
       {error && <div className="player-status player-error" role="alert"><strong>This lesson couldn’t play.</strong><p>{error}</p><button className="secondary-button" onClick={() => setAttempt(old => old + 1)}>Try again</button></div>}
     </div>
+    {draft && <CanvasQuestion draft={draft} screen={screen} onChange={changeQuestion} onClose={closeQuestion}/>}
     <div className="player-controls">
       <div className="player-control-row">
         <button className="icon-button" disabled={!enabled} aria-label={state.ended ? 'Replay lesson' : playbackRequested ? 'Pause lesson' : 'Play lesson'} onClick={() => { void playback?.toggle() }}>{state.ended ? <RotateCcw size={19}/> : playbackRequested ? <Pause size={19} fill="currentColor"/> : <Play size={19} fill="currentColor"/>}</button>
