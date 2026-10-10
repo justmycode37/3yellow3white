@@ -49,9 +49,9 @@ function MaterialUpload({ subject, nextNote, onAdd, onCancel }: { subject: Cours
   const addMaterial = async () => {
     if (reader.current || (!files.length && !text.trim())) return
     const controller = new AbortController(); reader.current = controller
-    setError(''); setStatus('AI is reading your material and creating topics and lessons…')
+    setError(''); setStatus('Uploading your material…')
     try {
-      const plan = await requestMaterialPlan({ name: `${subject.title} material ${nextNote}`, files, text }, controller.signal)
+      const plan = await requestMaterialPlan({ name: `${subject.title} material ${nextNote}`, files, text }, controller.signal, message => { if (!controller.signal.aborted) setStatus(message) })
       if (!controller.signal.aborted) { onAdd([plan]); setFiles([]); setText('') }
     } catch (error) {
       if (!controller.signal.aborted) setError(error instanceof Error ? error.message : 'Could not organize your material. Your files are still here — try again.')
@@ -60,7 +60,13 @@ function MaterialUpload({ subject, nextNote, onAdd, onCancel }: { subject: Cours
     }
   }
   const cancel = () => { reader.current?.abort(); reader.current = null; setStatus('') }
-  return <div className="subject-upload" aria-label={`Course material for ${subject.title}`} aria-busy={busy}>
+  return <div className="subject-upload" aria-label={`Course material for ${subject.title}`} aria-busy={busy} onPaste={event => {
+    const pasted = Array.from(event.clipboardData.files)
+    if (!pasted.length) return
+    event.preventDefault()
+    if (busy) return
+    selectFiles(pasted); setMode('files')
+  }}>
     <div className="subject-upload-intro">
       <span className="subject-upload-symbol"><BookOpen size={24}/></span>
       <div className="subject-upload-copy"><h3>Add your course material</h3><p>AI groups your material into topics. Each lesson becomes one short video.</p></div>
@@ -72,10 +78,10 @@ function MaterialUpload({ subject, nextNote, onAdd, onCancel }: { subject: Cours
     </div>
     <div id="material-files-panel" role="tabpanel" aria-labelledby="material-files-tab" hidden={mode !== 'files'}>
       <input hidden type="file" multiple ref={picker} disabled={busy} aria-label={`Upload course material for ${subject.title}`} onChange={event => { selectFiles(Array.from(event.target.files || [])); event.target.value = '' }}/>
-      <div className={`subject-dropzone ${dragging ? 'dragging' : ''} ${files.length ? 'has-files' : ''}`} onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true) }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false) }} onDrop={event => { event.preventDefault(); setDragging(false); selectFiles(Array.from(event.dataTransfer.files)) }}>
+      <div className={`subject-dropzone ${dragging ? 'dragging' : ''} ${files.length ? 'has-files' : ''}`} tabIndex={0} role="group" aria-label="Drop files or paste screenshots here" onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true) }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false) }} onDrop={event => { event.preventDefault(); setDragging(false); selectFiles(Array.from(event.dataTransfer.files)) }}>
         {files.length ? <ul className="material-file-list" aria-label="Selected files">{files.map((file, index) => <li key={`${file.name}-${file.size}-${file.lastModified}`}>
           <span className="material-file-icon"><FileText size={21}/></span><span className="material-file-info"><strong>{file.name}</strong><small>{file.size < 1024 * 1024 ? `${Math.max(1, Math.ceil(file.size / 1024))} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}</small></span><button type="button" className="icon-button" disabled={busy} aria-label={`Remove ${file.name}`} onClick={() => { setFiles(current => current.filter((_, i) => i !== index)); setError('') }}><X size={16}/></button>
-        </li>)}</ul> : <><Upload size={25}/><strong>Drop your material here</strong><span>Documents, slides, images, recordings, or notes</span></>}
+        </li>)}</ul> : <><Upload size={25}/><strong>Drop files or paste a screenshot</strong><span>PDFs, screenshots, photos, slides, spreadsheets, recordings, or notes</span></>}
         <button type="button" className="subject-upload-link" disabled={busy} onClick={() => picker.current?.click()}>{files.length ? 'Add more files' : 'Choose files'} <Plus size={14}/></button>
         <span>Up to 10 files · 50 MB per file</span>
       </div>

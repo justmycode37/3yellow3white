@@ -43,7 +43,7 @@ export function createHandler(frontendDir = defaultFrontendDir, videoService?: V
     try { path = decodeURIComponent(new URL(request.url).pathname); }
     catch { return Response.json({ detail: "Invalid URL" }, { status: 400 }); }
     if (path.includes("\0")) return Response.json({ detail: "Invalid URL" }, { status: 400 });
-    if (path === '/api/study-plans') return studyPlans(request);
+    if (path === '/api/study-plans' || path.startsWith('/api/study-plans/')) return studyPlans(request);
     if (path === '/api/videos' || path.startsWith('/api/videos/')) {
       videos ??= new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite');
       return videos.handle(request);

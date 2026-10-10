@@ -85,15 +85,23 @@ closes the previous panel; clicking the selected course closes it.
 
 `POST /api/study-plans` accepts multipart files plus notes, or the existing JSON
 text-document request. It reads PDF (including scans), DOCX, PPTX, XLSX,
-OpenDocument, images, and UTF-8 text such as Markdown, CSV, code, and subtitles.
+OpenDocument, screenshots/images (PNG, JPEG, WebP, GIF, BMP, AVIF), and UTF-8 text
+such as Markdown, CSV, code, and subtitles. Screenshots can also be pasted directly
+into the upload area or notes field; short readable formulas are accepted.
 Audio/video recordings use ElevenLabs Scribe transcription with the server's
 `ELEVENLABS_API_KEY`. Unsupported binary formats return an actionable error.
 Uploads allow 10 files, 50 MB each, 100 MB total, and up to 200,000 extracted
 characters. PDFs allow 500 pages, including up to 20 scanned pages per file.
 
 Classification uses the existing Pi login, defaulting to `gpt-6.1-sol`; set
-`STUDY_PLAN_MODEL=gpt-6-astra` to use Astra. Planning runs for at most three minutes
-with two concurrent requests per server. AI is required; missing credentials,
+`STUDY_PLAN_MODEL=gpt-6-astra` to use Astra. The frontend requests background
+processing with `Prefer: respond-async`: POST returns a job ID immediately after
+upload, GET `/api/study-plans/:id` polls reading/planning progress and the result,
+and DELETE cancels it. This avoids gateway timeouts during long model calls.
+Jobs run for up to ten minutes with two concurrent requests per server; results
+are available for fifteen minutes, with at most twenty jobs retained in memory.
+Jobs are scoped to the proxy user and expire on server restart. Legacy clients
+without the preference still receive a synchronous response. AI is required; missing credentials,
 processing errors, and cancellation leave the staged files and notes available to
 retry. The local preview needs `npm run agents:login` before real inference.
 Saved plans and source names remain in browser storage; raw files remain in memory

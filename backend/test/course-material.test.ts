@@ -126,3 +126,21 @@ test('PDF text retains page references and scanned pages use vision', async () =
   expect(scanned).toBe(true);
   expect(scan.lines[0]).toEqual({ text: notes, page: 1 });
 });
+
+test('recognize screenshots without file extensions or content types', async () => {
+  const file = new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], 'clipboard');
+  const doc = await readCourseFile(file, { run: async task => {
+    expect(task.images?.[0].mimeType).toBe('image/png'); return 'AᵀA x = Aᵀb';
+  } }, signal());
+  expect(doc.lines[0].text).toBe('AᵀA x = Aᵀb');
+});
+
+test('AVIF screenshots are converted to a supported vision format', async () => {
+  const { createCanvas } = await import('@napi-rs/canvas');
+  const canvas = createCanvas(32, 32);
+  const file = new File([new Uint8Array(await canvas.encode('avif'))], 'screenshot.avif', { type: 'image/avif' });
+  const doc = await readCourseFile(file, { run: async task => {
+    expect(task.images?.[0].mimeType).toBe('image/png'); return notes;
+  } }, signal());
+  expect(doc.lines[0].text).toBe(notes);
+});
