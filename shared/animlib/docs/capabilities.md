@@ -1,0 +1,126 @@
+# Animlib capabilities for storyboard planning
+
+Plan code-authored explanatory animations using the capabilities below. Animlib
+renders geometric scenes in a browser canvas, with reproducible playback,
+seeking, and optional interaction. The scene author chooses exact layout,
+geometry, camera choreography, and API calls. Your storyboard should specify
+what changes, why it teaches the idea, what stays the same, and the reveal order.
+Keep these instructions in nonspoken planning; they are not narration.
+
+## Visual building blocks
+
+- **2D geometry:** circles, rectangles, open or closed paths, lines, arrows,
+  and groups. Curves and plots can be constructed from sampled points. Use these
+  for diagrams, axes, grids, bars, regions, vectors, and correspondences.
+- **Text and mathematics:** short vector-rendered labels and mathematical LaTeX,
+  including fractions, scripts, and matrices. Named formula parts allow specific
+  symbols or terms to move between equations; anchored parts can stay fixed.
+  Numeric slots can count between values without shifting surrounding symbols.
+- **3D geometry:** spheres, explicit triangle meshes, round lines and arrows,
+  and grouped objects. Useful for spatial vectors, simple surfaces, and schematic
+  molecules. Labels can face the camera and remain attached to objects.
+- **Views:** a main camera plus clipped rectangular regions with independent
+  cameras. Side-by-side views can compare the same construction from different
+  angles. Screen-space labels can remain fixed while world geometry moves.
+- **Color:** named palette tokens such as BLUE, GREEN, RED, YELLOW, TEAL, GOLD,
+  PURPLE, GREY, and WHITE. The default is a black background with white foreground
+  and selective accents. Keep each concept's color consistent across scenes.
+
+## Motion and transformation
+
+Objects can move, rotate, scale, change style, fade in or out, and animate together
+or in sequence, with explicit holds. Groups can move as one object; isolated
+groups let overlapping components fade as one composited object.
+
+Compatible closed outlines (circles, rectangles, closed paths) can morph into
+each other; compatible open outlines (paths, lines, arrows) can also morph.
+Arrow-to-arrow morphs retain arrowheads. Formula morphs require explicit
+one-to-one correspondence between named parts; unmatched parts fade in or out.
+Mesh morphs need corresponding vertices and compatible topology. Other
+incompatible representations crossfade.
+
+A geometric morph does not establish a mathematical or physical transformation.
+If intermediate states matter, ask for geometry calculated from the underlying
+parameter or rule. For example, a rotating vector should retain its length
+through the rotation, and a linear map should act consistently on the grid and
+vectors. The scene author must construct those states.
+
+The camera can pan, zoom, rotate, and transition between an orthographic 2D view
+and a perspective 3D view. Camera movement does not create depth, extrude shapes,
+or infer molecular structure; the author must supply spatial geometry.
+
+## Scene continuity and timing
+
+Each scene has a local timeline. Objects carry into the next scene only when
+explicitly kept. Use stable entity IDs and preserve their meanings and colors;
+describe deliberate exits for temporary helpers and entrances for new concepts.
+A carried object can change representation while retaining its identity.
+The evaluated previous scene's end is the actual next starting state; planned
+end pictures express intent and do not replace that state.
+
+Playback can pause, seek, and reconstruct later scenes. One optional audio track
+per scene follows playback. In this app, narration is generated externally;
+measured audio and alignment determine scene duration and reveal cues. Estimate
+scope and pacing, but do not invent exact timestamps. The narrated default must
+explain the lesson without requiring viewer actions.
+
+## Interaction
+
+Sliders, toggles, and selects can change scene inputs and redraw even while
+paused. Request a control only when varying a quantity exposes a useful pattern;
+specify the quantity, sensible range/options, dependent geometry/readouts, and
+what the viewer should discover. The current lesson-plan contract permits
+0–2 such controls per scene; no controls is the default. Control changes must
+preserve the measured scene duration.
+
+Animlib also supports requested orbit rotation in 3D, independent rotation of
+view regions, draggable objects, spring return, attached labels, and connectors
+that follow object endpoints. These are scene-authored behaviors, not additional
+slider/toggle/select plan types. Drag and spring affect the viewer's presentation;
+do not make later narration or canonical scene handoffs depend on where a viewer
+dragged an object. Custom behaviors require host-registered implementations.
+
+## Diagrams assembled by scene code
+
+Matrices, coordinate systems, charts, molecules, arrays, graphs, trees, and
+algorithm traces are built from the primitives above; dedicated domain APIs are
+not built into animlib. Suitable requests include:
+
+- Show a matrix acting on two basis vectors and a small grid, with the same
+  vectors carried into a second view.
+- Show a schematic molecule using spheres and bonds, then reveal its explicitly
+  authored spatial arrangement.
+- Show array entries as labeled rectangles; move two entries to explain a swap
+  and clear the comparison highlight before the next step.
+- Plot a sampled function and vary one parameter with a slider, updating the
+  curve and its numeric label together.
+
+State the exact example values and teaching relation. Do not assume symbolic
+algebra, chemistry simulation, automatic graph layout, or an algorithm simulator.
+Scene code can calculate modest examples with JavaScript and provided math
+helpers; it cannot import packages, fetch data, access the surrounding page, or
+run asynchronous builders.
+
+## Current boundaries
+
+- No images or video textures, imported 3D models, photorealistic materials,
+  full physics solver, or automatic extrusion. Prefer schematic geometry.
+- Text uses bundled glyphs. Custom fonts, emoji, broad international text
+  coverage, full document TeX, and automatic multiline text layout are not
+  available. Use short labels and supported mathematical notation; narration
+  language support does not imply matching on-canvas glyph support.
+- No automatic semantic shape matching, arbitrary mesh correspondence, or
+  formula part split/merge morphs. Describe meaningful correspondence or use
+  a deliberate exit and entrance.
+- Transparent intersecting surfaces may render incorrectly. Prefer opaque
+  geometry or views that do not depend on correct transparency ordering.
+- No branching lesson navigation, infinite scenes, playback-rate controls, or
+  built-in video export. Interactive controls vary visuals within the lesson.
+- Target modest explanatory scenes rather than dense particle simulations or
+  huge datasets. There is no large-scene performance guarantee. Compiler
+  ceilings include 2,000 object IDs per builder and 32 view regions; these are
+  hard limits, not recommended scene sizes.
+
+For implementation details, the scene author receives the full
+[API reference](reference.md). Maintain this summary alongside changes to that
+reference and the public [scene types](../src/types.ts).

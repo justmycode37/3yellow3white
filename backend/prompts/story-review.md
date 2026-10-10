@@ -10,6 +10,8 @@ Read the parsed speech blocks in scene order. Essential reasoning belongs in the
 
 Check each scene's purpose and whyNow against the actual previous and next scripts, the shared goal, and the full outline. Opening and closing scenes must not invent neighbors. Planned key points, exact example values, concept meanings/colors, visuals, end picture, and carry/cleanup declarations should agree with the speech and adjacent plans. Prevent a planned visual from revealing an answer during a thinking pause. Do not prescribe exact layout, camera choices, or API calls as editorial preferences.
 
+Check visual feasibility against the supplied animlib capabilities. Diagrams assembled from supported primitives are valid even without dedicated domain APIs. Flag a dependence on unavailable rendering or interaction features as a material error and request a feasible representation that preserves the teaching goal.
+
 Return only JSON:
 {"schemaVersion":1,"verdict":"pass","summary":"Brief assessment","issues":[],"checks":["Specific claim or continuity check and its result"]}
 

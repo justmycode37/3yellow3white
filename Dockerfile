@@ -33,6 +33,7 @@ COPY --from=build /app/backend/prompts/ backend/prompts/
 COPY --from=build /app/shared/animlib/package.json shared/animlib/package.json
 COPY --from=build /app/shared/animlib/dist/ shared/animlib/dist/
 COPY --from=build /app/shared/animlib/docs/reference.md shared/animlib/docs/reference.md
+COPY --from=build /app/shared/animlib/docs/capabilities.md shared/animlib/docs/capabilities.md
 COPY --from=build /app/shared/video/ shared/video/
 COPY --from=build /app/frontend/site/ frontend/site/
 COPY --from=build /app/scripts/ scripts/
