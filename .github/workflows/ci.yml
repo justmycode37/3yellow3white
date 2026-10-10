@@ -128,12 +128,33 @@ jobs:
         if: steps.current.outputs.deploy == 'true'
         env:
           DEPLOY_REVISION: ${{ github.sha }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          # Alice - Clear, Engaging Educator; verified with the demo account.
+          ELEVENLABS_VOICE_ID: Xb7hH8MSUJpSbSDYk0k2
+          ELEVENLABS_MODEL_ID: eleven_multilingual_v2
+          NARRATION_PUBLIC_ORIGIN: https://11.hackathon.ethz.ch
         run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          os.umask(0o077)
+          lines = []
+          for name in ('ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID', 'ELEVENLABS_MODEL_ID', 'NARRATION_PUBLIC_ORIGIN'):
+              value = os.environ.get(name, '')
+              if not value or any(char in value for char in '\r\n\x00'):
+                  raise SystemExit(f'Missing or invalid deployment setting: {name}')
+              escaped = value.replace('\\', '\\\\').replace('"', '\\"')
+              lines.append(f'{name}="{escaped}"\n')
+          path = Path(os.environ['RUNNER_TEMP']) / 'aha-ssh' / 'deployment.env'
+          path.write_text(''.join(lines))
+          path.chmod(0o600)
+          PY
           (cd release && sha256sum --check release.sha256)
           config="$RUNNER_TEMP/aha-ssh/config"
           remote_dir=".cache/aha-deploy/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          ssh -F "$config" aha-prod "mkdir -p -- '$remote_dir'"
+          ssh -F "$config" aha-prod "umask 077 && mkdir -p -- '$remote_dir'"
           scp -F "$config" release/release.tar.gz release/release.sha256 scripts/deploy-release.sh "aha-prod:$remote_dir/"
+          scp -F "$config" "$RUNNER_TEMP/aha-ssh/deployment.env" "aha-prod:$remote_dir/deployment.env"
           ssh -F "$config" aha-prod "cd '$remote_dir' && sha256sum --check release.sha256 && bash deploy-release.sh release.tar.gz '$DEPLOY_REVISION'"
       - name: Remove uploaded archive and temporary credentials
         if: always()

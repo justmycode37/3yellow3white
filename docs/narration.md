@@ -53,7 +53,7 @@ Limits: 50,000 Markdown characters, 20,000 spoken characters, 100 scenes, 500 bl
 From the repository root, install dependencies with `npm ci`, copy `backend/.env.example` to `backend/.env.local`, and configure:
 
 - `ELEVENLABS_API_KEY`: server-only ElevenLabs key, with text-to-speech access.
-- `ELEVENLABS_VOICE_ID`: `hIru3zkEJ3dBYHTbMy2V`, verified as **Alexander - Clear, Steady and Refined** in the project's account. Voice access must also be available to the runtime key; another account may need to add the same voice.
+- `ELEVENLABS_VOICE_ID`: `Xb7hH8MSUJpSbSDYk0k2`, verified as **Alice - Clear, Engaging Educator** with the demo account. Voice access must also be available to the runtime key; another account may need to select a different voice.
 - `ELEVENLABS_MODEL_ID`: defaults to `eleven_multilingual_v2`.
 - `NARRATION_DATA_DIR`: an absolute writable directory, e.g. a `.narration` directory in the checkout.
 - `NARRATION_ALLOW_LOCAL=1`: is a legacy local binding option; the backend then defaults to a loopback bind. It refuses a shared bind with this bypass enabled and ignores it in production.

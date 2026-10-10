@@ -67,6 +67,7 @@ The existing repository configuration is reused:
 
 - Secret `VM_SSH_PRIVATE_KEY`: dedicated deployment private key.
 - Secret `VM_SSH_KNOWN_HOSTS`: verified VM host-key line.
+- Secret `ELEVENLABS_API_KEY`: demo account key with text-to-speech access.
 - Variable `VM_HOST`: `11-direct.viscon-hackathon.ch`.
 - Variable `VM_SSH_USER`: `deploy`.
 
@@ -77,7 +78,14 @@ limited to `main`. No new registry credentials are needed.
 ## Runtime configuration and storage
 
 Settings are read from `/srv/apps/3yellow3white/.env`, then
-`/etc/3yellow3white/environment` (later values win). Use one `KEY=value` per line;
+`/etc/3yellow3white/environment` (later values win). GitHub Actions supplies a
+private `deployment.env` beside the uploaded archive; its values take precedence
+over both VM files. It contains the GitHub ElevenLabs key and the workflow's public
+voice, model, and origin settings. Secrets are supplied during deployment, outside
+the Docker image and uploaded build artifact. Missing secrets stop deployment
+before production is replaced. Temporary runner/upload copies are removed by
+workflow cleanup; each release retains its mode-600 runtime file for restart and rollback.
+Use one `KEY=value` per line;
 whole values can be single/double quoted. Root-owned files are read through sudo
 without logging their values. Shell commands and `$` references are
 never executed/interpolated; single-line backslash escapes follow systemd's
@@ -106,9 +114,11 @@ The three data directories must be separate, without nesting. Paths must be outs
 ownership is not changed. Configured paths should match those used by the old
 service before migration.
 
-Set `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` for both video and
-narration origin validation behind the gateway. Narration additionally requires
-`ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`. Never run a second writer
+The workflow sets `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` for both
+video and narration origin validation behind the gateway, and supplies
+`ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`. Manual deployments can supply
+`deployment.env` beside the archive or configure these values in the VM files.
+Never run a second writer
 or the narration CLI against the active data directory. See [narration](narration.md).
 
 ## Build and verify without activating production
