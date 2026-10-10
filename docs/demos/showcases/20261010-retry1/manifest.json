@@ -1,0 +1,1467 @@
+{
+  "batch": "20261010-retry1",
+  "createdAt": "2026-10-10T21:18:51.181Z",
+  "commit": "bfefe25d4453cf7bc6526b5f022fa8ab67a28a22",
+  "model": "gpt-6-astra",
+  "thinking": "high",
+  "provider": "openai-codex",
+  "outputMode": "validated-reference",
+  "timingMode": "host",
+  "promptFiles": [
+    {
+      "path": "backend/prompts/scene-craft.md",
+      "sha256": "177b81e79c216bcbf90e60ba31b4226f09df7d33a4b7b70483aaa11a54fb060c"
+    },
+    {
+      "path": "backend/prompts/scenegen/visualization.md",
+      "sha256": "e7378c4958fd4a47d65b0062b5f298161f8cf2c542f140d26635b41b2569dd56"
+    },
+    {
+      "path": "backend/prompts/scene-verify.md",
+      "sha256": "68d92b37389b31d5d659baf817b0806d2c58d1089c6ecb03497063fc6c27fbb4"
+    },
+    {
+      "path": "backend/prompts/scene-repair.md",
+      "sha256": "952cc303d610d8946e1f021e7dc91d5f8e515c9d67b7467c37d91ca54dbf0ef8"
+    },
+    {
+      "path": "backend/prompts/animation-quality.md",
+      "sha256": "ed621a317789f9bf3b10f1607fb0d961dfcd96d893582fb34e1866a77bfc0721"
+    },
+    {
+      "path": "shared/animlib/docs/reference.md",
+      "sha256": "16e3234950d171ca54f2d54e482f72b69d096d586348e67458f8e9d9fd3cb62a"
+    }
+  ],
+  "runtimeFiles": [
+    {
+      "path": "backend/src/agents/generator.ts",
+      "sha256": "0b8b882c8c936584cdf5c8155d3457a6aaf1dd8ee521d08d624b0c4b3193f77b"
+    },
+    {
+      "path": "backend/src/agents/runtime.ts",
+      "sha256": "42d9472a732c777b62935d2e90002ffd47d06bf755a0957d7d48b46e593dcb78"
+    },
+    {
+      "path": "backend/src/agents/visual-gate.ts",
+      "sha256": "da09905516c6edd1eee8f326ca3fb71f8fe5012c7e367f5cc9ab3d04363ad6ca"
+    },
+    {
+      "path": "backend/src/agents/frame-renderer.ts",
+      "sha256": "ddf9abd5ce629fbdba41ee2371263c612d9d57ce802eae46eff6de905d79628d"
+    },
+    {
+      "path": "backend/src/narration/handoff.ts",
+      "sha256": "02714f83f39c9e94fadbde7010b7c96c626d18cd2fa929d3c1cd344ef2b93912"
+    }
+  ],
+  "port": 5212,
+  "boundary": "Actual createPiGenerator scene stage and PiAgentRunner tools; fixed one-scene planning and 20-second silent timing fixtures replace editorial planning and TTS. Generated source is never manually edited. Failed scenes remain unapproved.",
+  "runs": [
+    {
+      "id": "fourier",
+      "title": "Fourier epicycles",
+      "category": "Mathematics",
+      "mode": "2d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Fourier epicycles. Reconstruct a closed asymmetric curve with at least eight complex Fourier terms. Show rotating vectors, their chained endpoint, and the growing trace in one coherent view. Derive every endpoint from the same coefficients; retain the full trace at the end. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "3224c7637f4233e10eb1752c8600911edb5ab6c696c6c438681e5e41b018fa2d",
+      "videoId": "812f6738-0967-4416-bd50-9eaf944bbb3e",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "convolution",
+      "title": "Continuous convolution",
+      "category": "Mathematics",
+      "mode": "2d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Continuous convolution. Slide a compact triangular kernel across a two-pulse signal. Show the pointwise product, shaded overlap and corresponding convolution output growing together. Compute the integral numerically from the displayed functions; make the input-to-output correspondence visible. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "469ddec1ae1db5c6d6022ead0ca35a084572dd36cf883635fcd839ee621e0472",
+      "videoId": "d2bd2c67-3cdb-4797-9ebf-a16993ed4284",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "mobius",
+      "title": "Complex Möbius map",
+      "category": "Mathematics",
+      "mode": "2d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Complex Möbius map. Transform a complex-plane grid with w=(z-1)/(z+1). Track a selected circle and point continuously; handle the pole at z=-1 by splitting or clipping paths rather than joining across infinity. Show the original and mapped geometry with a clear correspondence. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "3e166ea0c3ef688bb9c51d7e14c9d59e1c5b4baca61b15627829ded46b843f34",
+      "videoId": "d28d8eb8-7609-4372-9975-3af64ec12a44",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "svd",
+      "title": "Singular-value decomposition",
+      "category": "Mathematics",
+      "mode": "2d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Singular-value decomposition. Show a nonsymmetric real 2x2 matrix acting on a unit circle and grid via its SVD: rotate, stretch along principal axes, rotate. Use one actual matrix and consistent factors, preserve reference vectors, and show the final ellipse and transformed basis. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "b0b29400897ac40c59b25abbb46af445d1bc136ac2f4358642b186572713e56c",
+      "videoId": "3365f66f-ff2a-4258-acc6-4d5d3ed35770",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "bezier",
+      "title": "Bicubic surface patch",
+      "category": "Geometry",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Bicubic surface patch. Show a bicubic Bézier surface with a 4x4 control lattice. Move one interior control point and deform the entire surface from Bernstein weights; retain boundary continuity, mesh topology and a visible local normal. Use a restrained parametric grid. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "136ceb5ed83ed0989a3a58b23be638d82f6ea7a41e90ba4363c298ccc6b28f89",
+      "videoId": "cba4d0ab-5fee-4ba0-9593-15b8ce70dcb4",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "torus-knot",
+      "title": "Torus knot and moving frame",
+      "category": "Geometry",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Torus knot and moving frame. Construct a smooth (2,3) torus knot as a swept tube, with a small moving tangent-normal-binormal frame. Make the knot pass correctly over and under itself, with stable tube cross-section and a restrained matte material. No self-intersection caused by incorrect closure. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "5feca326e919d22ca21bc79625874dffe5b443aa5046befdff66f3b13a272423",
+      "videoId": "c2d33421-b714-4405-82d8-05a8f27ba940",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "interference",
+      "title": "Two-source wave interference",
+      "category": "Physics",
+      "mode": "2d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Two-source wave interference. Visualize two coherent circular wave sources, their superposed scalar field and fixed interference nodes. Use one shared wave formula and synchronized time; show constructive and destructive interference through geometry or field intensity, not a page of labels. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "b69e9fbb8b5f91a5c991d2b35d1cb84719c6073ae12257939a7605a4241d0e23",
+      "videoId": "d22137a1-4d82-4e58-8ee7-9fec28a03637",
+      "status": "complete",
+      "scenes": [
+        {
+          "id": "beat-1",
+          "index": 0,
+          "source": "const __narration=(()=>{const data=JSON.parse(\"{\\\"audioAssetId\\\":\\\"silent-interference\\\",\\\"endMode\\\":\\\"hold\\\",\\\"durationSec\\\":20,\\\"words\\\":{}}\");const get=(id,index)=>{if(!Object.hasOwn(data.words,id))throw new Error('Unknown narration word ID: '+id);return data.words[id][index];};return Object.freeze({audioAssetId:data.audioAssetId,endMode:data.endMode,durationSec:data.durationSec,start:id=>get(id,0),end:id=>get(id,1)});})();\nexport default scene({ mode: '2d', orbit: false, background: Color.BLACK, audio: __narration.audioAssetId, end: __narration.endMode }, s => {\n  const D = __narration.durationSec;\n  let cursor = 0;\n  const play = (actions, duration) => { s.play(actions, { duration, ease: 'linear' }); cursor += duration; };\n  s.play(s.camera.to2D({ height: 8.8, target: [0,0,0] }), { duration: 0 });\n  // Equal-amplitude idealization: u/2 = cos(k(r1-r2)/2) cos(k(r1+r2)/2 - omega*t).\n  const a = 1.5, wavelength = 1.6;\n  const k = 2*Math.PI/wavelength, period = D*0.3, omega = 2*Math.PI/period;\n  const xmax = 4.8, ymax = 2.6;\n  const nx = 80, ny = 44, phases = 16, levels = 4;\n  const buckets = Array.from({ length: phases*levels }, () => ({ vertices: [], triangles: [] }));\n  const dx = 2*xmax/nx, dy = 2*ymax/ny;\n  for (let j=0; j<ny; j++) for (let i=0; i<nx; i++) {\n    const x = -xmax+(i+0.5)*dx, y = -ymax+(j+0.5)*dy;\n    const r1 = Math.hypot(x+a,y), r2 = Math.hypot(x-a,y);\n    const envelope = Math.cos(k*(r1-r2)/2);\n    if (Math.abs(envelope)<0.035) continue;\n    const phase = k*(r1+r2)/2+(envelope<0 ? Math.PI : 0);\n    const p = ((Math.round(phase*phases/(2*Math.PI))%phases)+phases)%phases;\n    const level = Math.min(levels-1,Math.floor(Math.abs(envelope)*levels));\n    const b = buckets[p*levels+level], n = b.vertices.length;\n    b.vertices.push([x-dx/2,y-dy/2,0],[x+dx/2,y-dy/2,0],[x+dx/2,y+dy/2,0],[x-dx/2,y+dy/2,0]);\n    b.triangles.push([n,n+1,n+2],[n,n+2,n+3]);\n  }\n  // Sampled scalar field: amplitude bins are static children of shared phase\n  // groups. Both signs use the same clock; zero amplitude remains black.\n  const layers = [], parts = [];\n  for (let p=0; p<phases; p++) for (const sign of [1,-1]) {\n    const children = [];\n    for (let level=0; level<levels; level++) {\n      const b = buckets[p*levels+level];\n      if (!b.vertices.length) continue;\n      children.push(s.mesh(`field-${p}-${level}-${sign}`,{\n        vertices:b.vertices,triangles:b.triangles,shading:'unlit',\n        fill:sign===1 ? Color.BLUE : Color.PURPLE,stroke:Color.NONE,\n        opacity:0.88*(level+0.5)/levels\n      }));\n    }\n    const phase = 2*Math.PI*p/phases;\n    const opacityAt = t => Math.max(0,sign*Math.cos(phase-omega*t));\n    const mesh = s.group(`phase-${p}-${sign}`,children,{opacity:opacityAt(0)});\n    layers.push({mesh,opacityAt}); parts.push(mesh);\n  }\n  const field = s.group('superposed-field',parts,{opacity:0});\n  const sources = [];\n  for (let index=0; index<2; index++) {\n    const x = index===0 ? -a : a;\n    s.circle(`source-${index+1}-backing`,{position:[x,0,0.1],radius:0.23,fill:Color.BLACK,stroke:Color.NONE});\n    const ring = s.circle(`source-${index+1}-oscillator`,{position:[x,0,0.2],radius:0.17,fill:Color.NONE,stroke:Color.WHITE,strokeWidth:0.025});\n    const point = s.circle(`source-${index+1}`,{position:[x,0,0.3],radius:0.065,fill:Color.WHITE,stroke:Color.NONE});\n    const label = s.latex(`source-${index+1}-label`,{tex:`S_${index+1}`,fontSize:0.25,fill:Color.WHITE});\n    s.attach(label,point,{offset:[0,-0.39,0.1]});\n    sources.push(ring);\n  }\n  s.text('model-note',{text:'Equal-amplitude model',position:[-2.65,3.1],fontSize:0.25,fill:Color.GREY_A});\n  const nodeLabel = s.text('node-label',{text:'Fixed nodes',position:[2.75,3.1],fontSize:0.28,fill:Color.YELLOW,opacity:0});\n  s.latex('shared-wave-formula',{\n    tex:String.raw`u=\\cos(kr_1-\\omega t)+\\cos(kr_2-\\omega t)`,\n    position:[0,-3.16],fontSize:0.31,fill:Color.WHITE\n  });\n  const nodes = [];\n  for (let m=0; (m+0.5)*wavelength<2*a; m++) {\n    const h = (m+0.5)*wavelength/2, b = Math.sqrt(a*a-h*h);\n    for (const sign of [-1,1]) {\n      const points = [];\n      for (let j=0; j<=80; j++) {\n        const y = -ymax+2*ymax*j/80;\n        points.push([sign*h*Math.sqrt(1+y*y/(b*b)),y,0.08]);\n      }\n      nodes.push(s.path(`node-${m}-${sign}`,{points,stroke:Color.YELLOW,strokeWidth:0.014,fill:Color.NONE,opacity:0}));\n    }\n  }\n  const ly = 2.52, lh = 1.5*wavelength/2;\n  const lx = lh*Math.sqrt(1+ly*ly/(a*a-lh*lh));\n  const leader = s.line('node-leader',{points:[[2.75,2.9,0.1],[lx,ly,0.1]],stroke:Color.YELLOW,strokeWidth:0.014,opacity:0});\n  // Reveal stationary cancellation after one cycle, continue through two more,\n  // and retain the final field for a short frozen inspection.\n  const motionEnd = D*0.9, steps = 36;\n  for (let step=1; step<=steps; step++) {\n    const t = motionEnd*step/steps;\n    const actions = layers.map(({mesh,opacityAt}) => mesh.animate({opacity:opacityAt(t)}));\n    for (const ring of sources) actions.push(ring.scaleTo(0.76+0.24*Math.cos(omega*t)));\n    if (step===1) actions.push(field.fadeIn());\n    if (step===13) {\n      for (const node of nodes) actions.push(node.fadeIn());\n      actions.push(nodeLabel.fadeIn(),leader.fadeIn());\n    }\n    play(actions,t-cursor);\n  }\n  s.wait(D-cursor);\n});",
+          "duration": 20,
+          "audio": {
+            "id": "silent-interference",
+            "url": "http://127.0.0.1:5212/silence.wav"
+          },
+          "narration": "",
+          "visualDescription": "2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Two-source wave interference. Visualize two coherent circular wave sources, their superposed scalar field and fixed interference nodes. Use one shared wave formula and synchronized time; show constructive and destructive interference through geometry or field intensity, not a page of labels. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+          "words": [],
+          "captions": []
+        }
+      ],
+      "stage": "finished",
+      "review": {
+        "approved": true,
+        "sourceSha256": "6897386437c52085ea699b77e06ea744a6ee7376a5b4627b9e32b4f115b85721",
+        "attempt": 0,
+        "review": {
+          "approved": true,
+          "findings": []
+        }
+      },
+      "evidenceAttempt": 0,
+      "elapsedMs": 178762.5647,
+      "metrics": {
+        "providerCalls": 5,
+        "inputTokens": 54621,
+        "outputTokens": 8698,
+        "cacheReadTokens": 127488,
+        "failedValidations": 2
+      }
+    },
+    {
+      "id": "electromagnetic",
+      "title": "Electromagnetic plane wave",
+      "category": "Physics",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Electromagnetic plane wave. Show a linearly polarized traveling plane wave: orthogonal electric and magnetic vectors in phase, both perpendicular to propagation. Use synchronized sinusoidal samples and restrained E/B colors. Field arrows must reverse direction through zero; make propagation direction unmistakable. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "a9b8a720bf89a7aa9bb86223c427e20c05e1fe74906bf70cc7dc13e07c7f21d5",
+      "videoId": "9a7dbe4c-f466-4f18-bf49-b8760bc2172b",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "kepler",
+      "title": "Kepler orbit and equal areas",
+      "category": "Astronomy",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Kepler orbit and equal areas. Show an eccentric bound Kepler orbit around a focus, integrated or solved with correct nonuniform orbital speed. Sweep equal-time area sectors near periapsis and apoapsis. Use a restrained orbital plane and a real 3D planet; do not mistake the ellipse center for the focus. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "2a0f35cb48f0880881a0cadd35ec6a01c75d930a5c31b86364ba97925524f075",
+      "videoId": "4708d975-7520-4e17-b7ef-e0188d105a93",
+      "status": "failed",
+      "scenes": [
+        {
+          "id": "beat-1",
+          "source": "const __narration=(()=>{const data=JSON.parse(\"{\\\"audioAssetId\\\":\\\"silent-kepler\\\",\\\"endMode\\\":\\\"hold\\\",\\\"durationSec\\\":20,\\\"words\\\":{}}\");const get=(id,index)=>{if(!Object.hasOwn(data.words,id))throw new Error('Unknown narration word ID: '+id);return data.words[id][index];};return Object.freeze({audioAssetId:data.audioAssetId,endMode:data.endMode,durationSec:data.durationSec,start:id=>get(id,0),end:id=>get(id,1)});})();\nexport default scene({ mode: '3d', orbit: false, background: Color.BLACK, audio: __narration.audioAssetId, end: __narration.endMode }, s => {\n  const duration = __narration.durationSec;\n  let cursor = 0;\n  const play = (actions, dt) => { s.play(actions, { duration: dt, ease: 'linear' }); cursor += dt; };\n  const waitTo = t => { if (t > cursor) { s.wait(t - cursor); cursor = t; } };\n  play(s.camera.to2D({ height: 8 }), 0);\n\n  // Idealized, dimensionless two-body solution. The ellipse center is the\n  // origin; the gravitating body is at +ae, NOT at the ellipse center.\n  const a = 4, eccentricity = 0.65;\n  const b = a * Math.sqrt(1 - eccentricity * eccentricity);\n  const focusPosition = [a * eccentricity, 0, 0];\n  const period = duration * 0.8;\n  const startTime = duration * 0.05;\n  const meanStart = -Math.PI / 8;\n  function eccentricAnomaly(mean) {\n    let E = mean;\n    for (let j = 0; j < 12; j++) {\n      E -= (E - eccentricity * Math.sin(E) - mean) / (1 - eccentricity * Math.cos(E));\n    }\n    return E;\n  }\n  function point(mean, z = 0) {\n    const E = eccentricAnomaly(mean);\n    return [a * Math.cos(E), b * Math.sin(E), z];\n  }\n  const fanSegments = 64;\n  function sectorGeometry(begin, end) {\n    const vertices = [[focusPosition[0], 0, -0.018]];\n    for (let j = 0; j <= fanSegments; j++) {\n      vertices.push(point(begin + (end - begin) * j / fanSegments, -0.018));\n    }\n    const triangles = [];\n    for (let j = 0; j < fanSegments; j++) triangles.push([0, j + 1, j + 2]);\n    return { vertices, triangles, shading: 'unlit' };\n  }\n\n  s.text('model-note', { text: 'Idealized two-body orbit', position: [0, 2.82], fontSize: 0.29, fill: Color.GREY_A });\n  let v, planet, star, radius, periSector, apoSector;\n  s.view('orbital-model', {\n    rect: [0.025, 0.12, 0.95, 0.76], orbit: false,\n    camera: { yaw: -0.10, pitch: 0.88, height: 5.6, distance: 18, perspective: 0.15 }\n  }, view => {\n    v = view;\n    const planeVertices = [[0, 0, -0.07]];\n    const planeTriangles = [];\n    const orbitPoints = [];\n    for (let j = 0; j <= 192; j++) {\n      const E = 2 * Math.PI * j / 192;\n      const p = [a * Math.cos(E), b * Math.sin(E), 0];\n      orbitPoints.push(p);\n      planeVertices.push([p[0], p[1], -0.07]);\n      if (j > 0) planeTriangles.push([0, j, j + 1]);\n    }\n    v.mesh('orbital-plane', { vertices: planeVertices, triangles: planeTriangles, fill: Color.GREY_E, opacity: 0.16, stroke: Color.NONE, shading: 'unlit' });\n    v.path('kepler-ellipse', { points: orbitPoints, fill: Color.NONE, stroke: Color.GREY_A, strokeWidth: 0.023 });\n    star = v.sphere('central-body-at-focus', {\n      position: focusPosition, radius: 0.20, fill: Color.GOLD,\n      texture: { pattern: 'noise', color: Color.GOLD_B, scale: 12, seed: 31, bumpStrength: 0.001 },\n      material: { roughness: 0.8, specular: 0.15, emissive: Color.GOLD, emissiveIntensity: 0.18 }\n    });\n    planet = v.sphere('orbiting-planet', {\n      position: point(meanStart), radius: 0.145, fill: Color.BLUE_B,\n      texture: { pattern: 'marble', color: Color.BLUE_E, scale: [4, 9, 4], seed: 12, bumpStrength: 0.001 },\n      material: { roughness: 0.65, specular: 0.25 }\n    });\n    radius = v.line3D('instantaneous-radius', { stroke: Color.GOLD, strokeWidth: 0.019 });\n    v.connect(radius, star, planet);\n    const focusLabel = v.text('focus-label', { text: 'focus', fontSize: 0.23, fill: Color.GOLD, billboard: true });\n    v.attach(focusLabel, star, { offset: [0, 3.05, 0.045] });\n    const peri = v.sphere('periapsis-mark', { radius: 0.027, position: [a, 0, 0], fill: Color.WHITE });\n    const apo = v.sphere('apoapsis-mark', { radius: 0.027, position: [-a, 0, 0], fill: Color.WHITE });\n    const periLabel = v.text('periapsis-label', { text: 'periapsis', fontSize: 0.23, billboard: true, fill: Color.GREY_A });\n    const apoLabel = v.text('apoapsis-label', { text: 'apoapsis', fontSize: 0.23, billboard: true, fill: Color.GREY_A });\n    v.attach(periLabel, peri, { offset: [-0.1, -2.0, 0.04] });\n    v.attach(apoLabel, apo, { offset: [0.1, 2.0, 0.04] });\n  });\n\n  function boundary(id, mean, color) {\n    const marker = v.sphere(id + '-point', { position: point(mean), radius: 0.034, fill: color });\n    const ray = v.line3D(id + '-ray', { stroke: { color, opacity: 0.65 }, strokeWidth: 0.014 });\n    v.connect(ray, star, marker);\n  }\n  function readout(id, subscript, x, color) {\n    return s.latex(id, {\n      tex: '\\\\Delta t_{\\\\mathrm{' + subscript + '}}/T = \\\\animnum{elapsed}',\n      numbers: { elapsed: 0 }, numberFormat: { decimals: 3, digits: 1 },\n      position: [x, -2.66], fontSize: 0.30, fill: color\n    });\n  }\n  waitTo(startTime);\n  const periBegin = -Math.PI / 8, periEnd = Math.PI / 8;\n  const apoBegin = 7 * Math.PI / 8, apoEnd = 9 * Math.PI / 8;\n  periSector = v.mesh('periapsis-swept-area', { ...sectorGeometry(periBegin, periBegin), fill: Color.BLUE, opacity: 0.43, stroke: Color.NONE });\n  boundary('peri-sector-start', periBegin, Color.BLUE);\n  const periTime = readout('peri-elapsed-time', 'p', 3.0, Color.BLUE_B);\n  let apoTime;\n\n  // Constant increments of mean anomaly give constant increments of physical\n  // time. The 50 ms chords approximate the exact solved orbit, not constant\n  // speed in eccentric anomaly or a decorative eased ellipse traversal.\n  const steps = 320;\n  for (let i = 0; i < steps; i++) {\n    if (i === 160) {\n      apoSector = v.mesh('apoapsis-swept-area', { ...sectorGeometry(apoBegin, apoBegin), fill: Color.TEAL, opacity: 0.43, stroke: Color.NONE });\n      boundary('apo-sector-start', apoBegin, Color.TEAL);\n      apoTime = readout('apo-elapsed-time', 'a', -3.0, Color.TEAL_A);\n    }\n    const nextMean = meanStart + 2 * Math.PI * (i + 1) / steps;\n    const actions = [planet.moveTo(point(nextMean))];\n    if (i < 40) {\n      actions.push(periSector.morphTo({ kind: 'mesh', ...sectorGeometry(periBegin, nextMean) }));\n      actions.push(periTime.countTo({ elapsed: (i + 1) / steps }));\n    }\n    if (i >= 160 && i < 200) {\n      actions.push(apoSector.morphTo({ kind: 'mesh', ...sectorGeometry(apoBegin, nextMean) }));\n      actions.push(apoTime.countTo({ elapsed: (i + 1 - 160) / steps }));\n    }\n    play(actions, period / steps);\n    if (i === 39) {\n      boundary('peri-sector-end', periEnd, Color.BLUE);\n      v.latex('peri-area-label', { tex: 'A_{\\\\mathrm p}', position: [3.35, 0.65, 0.08], fontSize: 0.32, fill: Color.BLUE_A, billboard: true });\n    }\n    if (i === 199) {\n      boundary('apo-sector-end', apoEnd, Color.TEAL);\n      v.latex('apo-area-label', { tex: 'A_{\\\\mathrm a}', position: [-2.65, 0, 0.08], fontSize: 0.32, fill: Color.TEAL_A, billboard: true });\n      s.latex('equal-areas', { tex: 'A_{\\\\mathrm p}=A_{\\\\mathrm a}', position: [0, -2.66], fontSize: 0.37, fill: Color.WHITE });\n    }\n  }\n  play(radius.fadeOut(), duration * 0.02);\n  waitTo(duration);\n});",
+          "duration": 20,
+          "audio": {
+            "id": "silent-kepler",
+            "url": "http://127.0.0.1:5212/silence.wav"
+          }
+        }
+      ],
+      "stage": "finished",
+      "error": "Automatic visual review rejected the scene after one targeted repair; no scene was published. See saved frame evidence and findings.",
+      "evidenceAttempt": 1,
+      "review": {
+        "sourceSha256": "3320bc06846eb86ae9111b544262cfef452a91cf45d6aa0e632bb3593bb3704f",
+        "sampleMap": [
+          {
+            "image": 1,
+            "width": 1280,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              0,
+              0.5,
+              2.9249999999999976,
+              4.149999999999993,
+              5.374999999999989,
+              7.824999999999981
+            ]
+          },
+          {
+            "image": 2,
+            "width": 1280,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              10.25000000000001,
+              12.675000000000045,
+              13.900000000000063,
+              15.12500000000008,
+              17.400000000000105,
+              20
+            ]
+          },
+          {
+            "image": 3,
+            "width": 960,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              0,
+              0.5,
+              2.9249999999999976,
+              4.149999999999993,
+              5.374999999999989,
+              7.824999999999981
+            ]
+          },
+          {
+            "image": 4,
+            "width": 960,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              10.25000000000001,
+              12.675000000000045,
+              13.900000000000063,
+              15.12500000000008,
+              17.400000000000105,
+              20
+            ]
+          }
+        ],
+        "approved": false,
+        "findings": [
+          {
+            "timeSec": 12.675,
+            "objectIds": [
+              "focus-label",
+              "central-body-at-focus"
+            ],
+            "problem": "The text crossings are resolved, but the displaced focus label now sits immediately above the sector's upper orbital endpoint, far from the gold body, without a leader. This makes the location of the focus ambiguous in both aspect ratios.",
+            "fix": "Retain the collision-free placement and add a quiet leader clearly linking the focus label to the gold body, without crossing any lettering."
+          }
+        ]
+      },
+      "elapsedMs": 239549.43370000005,
+      "metrics": {
+        "providerCalls": 5,
+        "inputTokens": 166938,
+        "outputTokens": 9065,
+        "cacheReadTokens": 30208,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "dipole",
+      "title": "Electric dipole field",
+      "category": "Physics",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Electric dipole field. Show equal positive and negative point charges with a sparse 3D vector field and smooth field-line traces calculated from their inverse-square fields. Terminate lines near singularities, keep arrow direction correct and expose depth without clutter. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "70bcc7d46f32b8f327f76f5c00e48bbac9f200d3950eeb9b1d2575a9f2a023d6",
+      "videoId": "50613dbf-4a2d-4325-a269-dd26b59e474a",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "snell",
+      "title": "Refraction through a prism",
+      "category": "Optics",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Refraction through a prism. Trace several visible-light rays through a triangular glass prism using Snell law at both faces and wavelength-dependent refractive indices. Show entry, interior and exit segments with correct surface normals and a subtle cutaway or transparency strategy that does not hide rays. Use an explicitly illustrative dispersion model. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "93683b856ea4afc561c79b6978a46c4009d5b1a54c6e4eb59000bf0edd9ee209",
+      "videoId": "3abe92e4-8609-4074-aa08-4268537133aa",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "gyroscope",
+      "title": "Gyroscope orientation",
+      "category": "Mechanics",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Gyroscope orientation. Show a spinning gyroscope rotor, axle and support with a clearly labeled idealized prescribed precession. Distinguish fast spin from slow precession using coherent transforms, a small angular-momentum arrow and fixed pivot. Do not claim a full torque-integrated simulation. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "cb6145e4bf6f071e3b002ce271f8ae8b24e0af3038e3af817e29833be92fc7c7",
+      "videoId": "0d6a39a1-520d-4f8b-b2ff-0f4ef92948b9",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "salt-crystal",
+      "title": "Rock-salt crystal lattice",
+      "category": "Chemistry",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Rock-salt crystal lattice. Show a small NaCl rock-salt lattice with alternating ion sublattices, a selected unit cell and octahedral sixfold nearest-neighbor coordination around an interior ion. Use atoms as spheres, explain display radius scaling locally, and avoid pretending this is a molecular NaCl dimer or measured dynamics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "f26d9b12ba4a93e53acd80fa9c671f24a8cf86966f29dfaf490c7e95e5fa3b05",
+      "videoId": "4c5cdfbc-993f-414f-86b4-b745fbd3ef5d",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "lipid",
+      "title": "Membrane and ion channel",
+      "category": "Biology",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Membrane and ion channel. Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "f9412ddfe3ee93ea479be1230c02909345b440ad074e9bbc00c4e3d45899bd47",
+      "videoId": "da68f2be-7c88-4fd4-8618-af6fa124060f",
+      "status": "complete",
+      "scenes": [
+        {
+          "id": "beat-1",
+          "index": 0,
+          "source": "const __narration=(()=>{const data=JSON.parse(\"{\\\"audioAssetId\\\":\\\"silent-lipid\\\",\\\"endMode\\\":\\\"hold\\\",\\\"durationSec\\\":20,\\\"words\\\":{}}\");const get=(id,index)=>{if(!Object.hasOwn(data.words,id))throw new Error('Unknown narration word ID: '+id);return data.words[id][index];};return Object.freeze({audioAssetId:data.audioAssetId,endMode:data.endMode,durationSec:data.durationSec,start:id=>get(id,0),end:id=>get(id,1)});})();\nexport default scene({ mode: '3d', orbit: false, background: Color.BLACK, audio: __narration.audioAssetId, end: __narration.endMode }, s => {\n  const D = __narration.durationSec;\n  let cursor = 0;\n  const hold = duration => { s.wait(duration); cursor += duration; };\n  const play = (actions, duration, ease = 'smooth') => {\n    s.play(actions, { duration, ease }); cursor += duration;\n  };\n  // Coordinates: X spans the membrane, Y is its normal, Z is depth.\n  // This is an idealized molecular-scale construction, not atom coordinates.\n  let ions = [];\n  s.view('membrane-view', {\n    rect: [0, 0, 1, 1], orbit: true, orbitHitTest: 'geometry',\n    camera: { yaw: 0.20, pitch: 0.28, height: 10.4, distance: 24, perspective: 0 }\n  }, v => {\n    const membraneParts = [];\n    const headY = 1.36;\n    for (let ix = -5; ix <= 5; ix++) {\n      for (let iz = -3; iz <= 3; iz++) {\n        const x = ix * 0.65;\n        const z = iz * 0.60;\n        // A cylindrical protein footprint plus a front inspection cutaway.\n        if (Math.hypot(x, z) < 1.48 || (z >= 0 && Math.abs(x) < 1.5)) continue;\n        for (const side of [-1, 1]) {\n          const id = `lipid-${ix + 5}-${iz + 3}-${side > 0 ? 'outer' : 'inner'}`;\n          const parts = [];\n          parts.push(v.sphere(`${id}-head`, {\n            position: [x, side * headY, z], radius: 0.245,\n            fill: Color.BLUE, stroke: Color.NONE,\n            material: { roughness: 0.72, specular: 0.18 }\n          }));\n          for (let tail = 0; tail < 2; tail++) {\n            const points = [];\n            for (let j = 0; j <= 7; j++) {\n              const f = j / 7;\n              const kink = tail === 1 && j > 4 ? (j - 4) * 0.028 : 0;\n              points.push([\n                x + (tail === 0 ? -0.115 : 0.115) + (j % 2 ? 0.035 : -0.035) + kink,\n                side * (1.23 - 1.10 * f),\n                z + (tail === 0 ? -0.025 : 0.025)\n              ]);\n            }\n            parts.push(v.tube(`${id}-tail-${tail}`, {\n              points, radius: 0.064, radialSegments: 6,\n              fill: Color.GREY_B, stroke: Color.NONE,\n              material: { roughness: 0.9, specular: 0.1 }\n            }));\n          }\n          membraneParts.push(v.group(id, parts));\n        }\n      }\n    }\n    v.group('bilayer', membraneParts);\n\n    // Thick, fluted protein wall with a continuous aqueous lumen.\n    // Remove only the observer-facing sector; cap its exposed section faces.\n    const a0 = 1.12, a1 = 2 * Math.PI - 0.72;\n    const sectors = 7;\n    const proteinParts = [];\n    const innerRadius = y => 0.49 + 0.20 * Math.pow(Math.abs(y) / 1.76, 3);\n    const outerRadius = (a, y) => 1.08 + 0.10 * Math.cos(6 * a) + 0.09 * Math.cos(y * 1.6) + 0.035 * Math.sin(a * 3 + y);\n    for (let k = 0; k < sectors; k++) {\n      const start = a0 + (a1 - a0) * k / sectors;\n      const finish = a0 + (a1 - a0) * (k + 1) / sectors;\n      const na = 8, ny = 24;\n      const vertices = [], triangles = [];\n      for (let wall = 0; wall < 2; wall++) {\n        for (let j = 0; j <= ny; j++) {\n          const y = -1.76 + 3.52 * j / ny;\n          for (let i = 0; i <= na; i++) {\n            const a = start + (finish - start) * i / na;\n            const r = wall === 0 ? outerRadius(a, y) : innerRadius(y);\n            vertices.push([r * Math.sin(a), y, r * Math.cos(a)]);\n          }\n        }\n      }\n      const layer = (na + 1) * (ny + 1);\n      const index = (wall, j, i) => wall * layer + j * (na + 1) + i;\n      const quad = (a, b, c, d) => { triangles.push([a, b, c], [a, c, d]); };\n      for (let j = 0; j < ny; j++) {\n        for (let i = 0; i < na; i++) {\n          quad(index(0,j,i), index(0,j,i+1), index(0,j+1,i+1), index(0,j+1,i));\n          quad(index(1,j,i), index(1,j+1,i), index(1,j+1,i+1), index(1,j,i+1));\n        }\n      }\n      for (let i = 0; i < na; i++) {\n        quad(index(0,ny,i), index(0,ny,i+1), index(1,ny,i+1), index(1,ny,i));\n        quad(index(0,0,i), index(1,0,i), index(1,0,i+1), index(0,0,i+1));\n      }\n      for (let j = 0; j < ny; j++) {\n        quad(index(0,j,0), index(0,j+1,0), index(1,j+1,0), index(1,j,0));\n        quad(index(0,j,na), index(1,j,na), index(1,j+1,na), index(0,j+1,na));\n      }\n      proteinParts.push(v.mesh(`channel-wall-${k}`, {\n        vertices, triangles, shading: 'smooth', fill: k % 2 ? Color.GOLD_D : Color.GOLD,\n        stroke: Color.NONE, material: { roughness: 0.72, specular: 0.18 }\n      }));\n    }\n    v.group('channel-protein', proteinParts);\n\n    // Local labels stay upright when inspecting the spatial model.\n    v.text('heads-label', {\n      text: 'Hydrophilic heads', position: [-4.15, 2.26, 0.95],\n      fontSize: 0.29, fill: Color.BLUE_A, billboard: true\n    });\n    v.line3D('heads-leader', {\n      points: [[-3.70, 1.97, 0.95], [-3.25, 1.55, 1.20]],\n      stroke: Color.BLUE_A, strokeWidth: 0.016\n    });\n    v.text('tails-label', {\n      text: 'Hydrophobic tails', position: [-5.08, -0.42, 1.55],\n      fontSize: 0.29, fill: Color.WHITE, billboard: true\n    });\n    v.line3D('tails-leader', {\n      points: [[-3.78, -0.42, 1.55], [-3.19, 0.50, 1.8]],\n      stroke: Color.GREY_B, strokeWidth: 0.016\n    });\n    v.text('pore-label', {\n      text: 'Channel pore', position: [2.35, 2.48, 0.2],\n      fontSize: 0.32, fill: Color.GOLD_A, billboard: true\n    });\n    v.line3D('pore-leader', {\n      points: [[1.40, 2.24, 0.2], [0.50, 1.87, 0.2]],\n      stroke: Color.GOLD_A, strokeWidth: 0.016\n    });\n    for (let i = 0; i < 3; i++) {\n      const ion = v.sphere(`ion-${i}`, {\n        radius: 0.18, position: [(i - 1) * 0.8, 2.85, 0],\n        fill: Color.TEAL_A, stroke: Color.NONE,\n        material: { roughness: 0.48, specular: 0.22 }\n      });\n      const charge = v.text(`ion-charge-${i}`, {\n        text: '+', fontSize: 0.25, fill: Color.WHITE, billboard: true,\n        billboardOffset: [0, 0, 0.19]\n      });\n      v.attach(charge, ion, { offset: [0, 0, 0] });\n      ions.push(ion);\n    }\n    v.text('ions-label', {\n      text: 'Ions', position: [-0.2, 3.53, 0], fontSize: 0.30,\n      fill: Color.TEAL_A, billboard: true\n    });\n  });\n  // Screen annotation is deliberately outside the orbiting model.\n  s.text('schematic-note', {\n    text: 'Schematic cutaway - not to scale', space: 'screen',\n    position: [0, 0], viewportOffset: [0, -0.35],\n    fontSize: 19, fill: Color.GREY_A\n  });\n\n  hold(D * 0.12);\n  for (let i = 0; i < ions.length; i++) {\n    // Dock above the entrance; all transmembrane travel stays on the lumen axis.\n    play(ions[i].moveTo([0, 2.15, 0]), D * 0.045);\n    play(ions[i].moveTo([0, -2.15, 0]), D * 0.16, 'linear');\n    // Spread only after completely clearing the lower membrane surface.\n    play(ions[i].moveTo([(i - 1) * 0.8, -2.85, 0]), D * 0.04);\n  }\n  hold(D - cursor);\n});",
+          "duration": 20,
+          "audio": {
+            "id": "silent-lipid",
+            "url": "http://127.0.0.1:5212/silence.wav"
+          },
+          "narration": "",
+          "visualDescription": "3D: Create exactly one 20-second silent single-scene visualization showcase: Membrane and ion channel. Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+          "words": [],
+          "captions": []
+        }
+      ],
+      "stage": "finished",
+      "review": {
+        "approved": true,
+        "sourceSha256": "a5554243f2ba7c162ccb5b09fea9ae23e1771ffa6f0d373223daaa861c9d871e",
+        "attempt": 1,
+        "review": {
+          "approved": true,
+          "findings": []
+        }
+      },
+      "evidenceAttempt": 1,
+      "elapsedMs": 153793.45460000006,
+      "metrics": {
+        "providerCalls": 5,
+        "inputTokens": 165609,
+        "outputTokens": 6003,
+        "cacheReadTokens": 30336,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "capsid",
+      "title": "Icosahedral viral capsid",
+      "category": "Biology",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Icosahedral viral capsid. Show an idealized icosahedral capsid assembled from repeating triangular subunits with correct closed topology. Open a small contiguous section to reveal an interior nucleic-acid schematic. Distinguish this geometric model from a specific experimentally resolved virus; avoid unsupported atomic detail. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "dffcea49727f968db53d094ef2b24ac9d30047089215d310c294a57cd7a872fc",
+      "videoId": "81b8abee-2245-4e29-b519-c609cd78f8db",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "protein",
+      "title": "Protein alpha helix",
+      "category": "Biology",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Protein alpha helix. Show an idealized alpha-helical peptide backbone with consistent 3.6-residue-per-turn geometry and selected i-to-i+4 hydrogen-bond relationships. Use clear molecular backbone geometry with side-chain direction cues, not a generic spring. Label idealized geometry and avoid claiming deposited atom coordinates. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "7d51c74f2fa847d4b9022a9702f4f6aaddb64eff5971e9e4ea30ccf8510b63e0",
+      "videoId": "104734d5-91ed-4034-8545-dacf201a983b",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "planetary",
+      "title": "Planetary gear train",
+      "category": "Engineering",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Planetary gear train. Show a sun gear, three planets, fixed internal ring and moving carrier. Choose compatible tooth counts and derive spin/orbit rates from the gear constraint. Teeth must engage without obviously passing through one another; preserve planet spacing and use subtle machined-metal texture. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "2fac756468b4f27e92bc7101dd1070f840d0b9fffa118414d3c422c337648e84",
+      "videoId": "97a48862-d205-4d69-8924-5b5172670a93",
+      "status": "complete",
+      "scenes": [
+        {
+          "id": "beat-1",
+          "index": 0,
+          "source": "const __narration=(()=>{const data=JSON.parse(\"{\\\"audioAssetId\\\":\\\"silent-planetary\\\",\\\"endMode\\\":\\\"hold\\\",\\\"durationSec\\\":20,\\\"words\\\":{}}\");const get=(id,index)=>{if(!Object.hasOwn(data.words,id))throw new Error('Unknown narration word ID: '+id);return data.words[id][index];};return Object.freeze({audioAssetId:data.audioAssetId,endMode:data.endMode,durationSec:data.durationSec,start:id=>get(id,0),end:id=>get(id,1)});})();\nexport default scene({ mode: '3d', orbit: false, background: Color.BLACK, audio: __narration.audioAssetId, end: __narration.endMode }, s => {\n  const T = __narration.durationSec;\n  let cursor = 0;\n  function play(actions, duration, ease = 'linear') {\n    s.play(actions, { duration, ease });\n    cursor += duration;\n  }\n  function until(time) {\n    if (time > cursor) s.wait(time - cursor);\n    cursor = time;\n  }\n  play(s.camera.to2D({ height: 10 }), 0);\n\n  // Idealized, generated involute geometry, in XY; every shaft is parallel to Z.\n  // Common module and pressure angle. Nr = Ns + 2 Np; (Nr + Ns)/3 is integral.\n  const Ns = 24, Np = 18, Nr = 60, module = 0.1;\n  const rs = module * Ns / 2, rp = module * Np / 2;\n  const orbitRadius = rs + rp;\n  const pressure = 20 * Math.PI / 180;\n  const tau = 2 * Math.PI;\n  const carrierTurn = tau / 3;\n  const sunTurn = carrierTurn * (Ns + Nr) / Ns;\n  const planetRelativeTurn = -carrierTurn * Nr / Np;\n  const gold = Color.GOLD_D, silver = Color.GREY_B, blue = Color.BLUE_D;\n  const finish = color => ({\n    fill: color, stroke: Color.NONE,\n    texture: { pattern: 'stripes', color, scale: [65, 65, 65], offset: [0.23, 0, 0], bumpStrength: 0.0006 },\n    material: { metalness: 0.75, roughness: 0.43, specular: 0.45 }\n  });\n  let assembly, sun, carrier;\n  const planets = [], counts = [];\n\n  s.view('mechanism-view', {\n    rect: [0.04, 0.10, 0.92, 0.76],\n    orbit: true, orbitHitTest: 'geometry',\n    camera: { yaw: 0.20, pitch: 0.42, distance: 20, height: 8.9, target: [0, 0, 0] }\n  }, v => {\n    // A bevelled annular extrusion. Each sample gives [angle, inner radius, outer radius].\n    function annulus(id, samples, thickness, z, color, bevel = 0.012) {\n      const vertices = [], triangles = [], n = samples.length;\n      const levels = [-thickness / 2, -thickness / 2 + bevel, thickness / 2 - bevel, thickness / 2];\n      for (let k = 0; k < 4; k++) {\n        const b = k === 0 || k === 3 ? bevel : 0;\n        for (const [a, inner, outer] of samples) {\n          vertices.push([(inner + b) * Math.cos(a), (inner + b) * Math.sin(a), z + levels[k]]);\n          vertices.push([(outer - b) * Math.cos(a), (outer - b) * Math.sin(a), z + levels[k]]);\n        }\n      }\n      const at = (k, j, side) => 2 * (k * n + (j % n)) + side;\n      for (let i = 0; i < n; i++) {\n        const j = i + 1;\n        triangles.push([at(3,i,0), at(3,i,1), at(3,j,1)], [at(3,i,0), at(3,j,1), at(3,j,0)]);\n        triangles.push([at(0,i,0), at(0,j,1), at(0,i,1)], [at(0,i,0), at(0,j,0), at(0,j,1)]);\n        for (let k = 0; k < 3; k++) {\n          triangles.push([at(k,i,1), at(k,j,1), at(k+1,j,1)], [at(k,i,1), at(k+1,j,1), at(k+1,i,1)]);\n          triangles.push([at(k,i,0), at(k+1,j,0), at(k,j,0)], [at(k,i,0), at(k+1,i,0), at(k+1,j,0)]);\n        }\n      }\n      return v.mesh(id, { vertices, triangles, shading: 'flat', ...finish(color) });\n    }\n    function roundBand(id, inner, outer, thickness, z, color, segments = 96, bevel = 0.01) {\n      return annulus(id, Array.from({length: segments}, (_, i) => [tau * i / segments, inner, outer]), thickness, z, color, bevel);\n    }\n    function axialCylinder(id, radius, height, position, color, segments = 40) {\n      return v.cylinder(id, { radius, height, radialSegments: segments, position, rotation: [Math.PI / 2, 0, 0], ...finish(color) });\n    }\n    function toothProfile(teeth, internal) {\n      const r = module * teeth / 2;\n      const base = r * Math.cos(pressure);\n      const root = r + (internal ? 1.25 : -1.25) * module;\n      const tip = r + (internal ? -1 : 1) * module;\n      const inv = a => Math.tan(a) - a;\n      // Small manufacturing clearance on both wheels; involute working flanks.\n      const half = Math.PI / (2 * teeth) - (0.035 * module) / (2 * r);\n      const width = radius => {\n        const a = Math.acos(Math.min(1, base / radius));\n        return half + (internal ? 1 : -1) * (inv(a) - inv(pressure));\n      };\n      const low = internal ? root : Math.max(root, base);\n      const result = [];\n      const add = (angle, radius) => result.push(internal ? [angle, radius, 3.55] : [angle, teeth === Ns ? 0.88 : 0.58, radius]);\n      for (let t = 0; t < teeth; t++) {\n        const center = tau * t / teeth;\n        add(center - Math.PI / teeth, root);\n        if (!internal && root < base) add(center - width(low), root);\n        for (let j = 0; j <= 4; j++) {\n          const radius = low + (tip - low) * j / 4;\n          add(center - width(radius), radius);\n        }\n        add(center, tip);\n        for (let j = 4; j >= 0; j--) {\n          const radius = low + (tip - low) * j / 4;\n          add(center + width(radius), radius);\n        }\n        if (!internal && root < base) add(center + width(low), root);\n      }\n      return result;\n    }\n    function wheel(id, teeth, color) {\n      const isSun = teeth === Ns;\n      const hub = isSun ? 0.39 : 0.29;\n      const innerRim = isSun ? 0.88 : 0.58;\n      const bore = isSun ? 0.145 : 0.135;\n      const parts = [\n        annulus(id + '-teeth', toothProfile(teeth, false), 0.36, 0, color),\n        roundBand(id + '-hub', bore, hub, 0.44, 0, color, 64)\n      ];\n      for (let k = 0; k < 6; k++) {\n        const a = tau * k / 6;\n        const center = (hub + innerRim) / 2;\n        parts.push(v.box(id + '-spoke-' + k, {\n          width: innerRim - hub + 0.10, height: isSun ? 0.17 : 0.14, depth: 0.18,\n          position: [center * Math.cos(a), center * Math.sin(a), 0], rotation: a,\n          ...finish(color)\n        }));\n      }\n      parts.push(roundBand(id + '-hub-face', bore, hub - 0.035, 0.025, 0.235, color, 64, 0.004));\n      return parts;\n    }\n\n    const fixed = [];\n    fixed.push(annulus('ring-60-teeth', toothProfile(Nr, true), 0.46, 0, silver));\n    fixed.push(roundBand('ring-rear-flange', 3.16, 3.65, 0.12, -0.27, Color.GREY_C));\n    fixed.push(roundBand('ring-machined-face', 3.21, 3.49, 0.025, 0.244, Color.GREY_C, 192, 0.004));\n    for (let i = 0; i < 8; i++) {\n      const a = tau * (i + 0.5) / 8;\n      const p = [3.36 * Math.cos(a), 3.36 * Math.sin(a), 0.285];\n      fixed.push(axialCylinder('ring-bolt-' + i, 0.082, 0.07, p, Color.GREY_A, 6));\n      fixed.push(v.line3D('ring-bolt-slot-' + i, {\n        points: [[p[0] - 0.044, p[1], 0.328], [p[0] + 0.044, p[1], 0.328]],\n        stroke: Color.GREY_D, strokeWidth: 0.013\n      }));\n    }\n    for (let i = 0; i < 4; i++) {\n      const a = Math.PI / 4 + tau * i / 4;\n      const p = [3.55 * Math.cos(a), 3.55 * Math.sin(a), -0.11];\n      fixed.push(v.box('fixed-mount-' + i, { width: 0.46, height: 0.43, depth: 0.34, position: p, rotation: a, ...finish(Color.GREY_C) }));\n      fixed.push(axialCylinder('mount-bolt-' + i, 0.095, 0.05, [3.66 * Math.cos(a), 3.66 * Math.sin(a), 0.085], Color.GREY_A, 6));\n    }\n    const housing = v.group('fixed-ring-housing', fixed);\n\n    const sunParts = wheel('sun-24', Ns, gold);\n    sunParts.push(axialCylinder('sun-input-shaft', 0.14, 1.10, [0,0,0.12], Color.GREY_B));\n    sunParts.push(v.box('sun-shaft-key', { width: 0.055, height: 0.075, depth: 0.24, position: [0.135,0,0.49], ...finish(gold) }));\n    // One small index mark makes input rotation easy to follow.\n    sunParts.push(v.box('sun-index', { width: 0.12, height: 0.045, depth: 0.012, position: [0.99,0,0.191], ...finish(Color.GOLD_A) }));\n    sun = v.group('sun-input', sunParts);\n\n    const moving = [];\n    moving.push(roundBand('carrier-rear-hub', 0.18, 0.49, 0.18, -0.46, blue));\n    // The open front hoop leaves both sun/planet and planet/ring contacts exposed.\n    moving.push(roundBand('carrier-front-hoop', orbitRadius - 0.065, orbitRadius + 0.065, 0.105, 0.47, blue, 192));\n    for (let i = 0; i < 3; i++) {\n      const theta = tau * i / 3;\n      const x = orbitRadius * Math.cos(theta), y = orbitRadius * Math.sin(theta);\n      moving.push(v.box('carrier-rear-arm-' + i, {\n        width: orbitRadius - 0.20, height: 0.27, depth: 0.16,\n        position: [(orbitRadius + 0.20) / 2 * Math.cos(theta), (orbitRadius + 0.20) / 2 * Math.sin(theta), -0.46],\n        rotation: theta, ...finish(blue)\n      }));\n      moving.push(axialCylinder('carrier-rear-boss-' + i, 0.24, 0.18, [x,y,-0.46], blue));\n      moving.push(axialCylinder('planet-axle-' + i, 0.125, 1.01, [x,y,0.005], Color.GREY_A));\n      moving.push(axialCylinder('carrier-front-boss-' + i, 0.205, 0.12, [x,y,0.48], blue));\n      const bearing = roundBand('planet-bearing-' + i, 0.135, 0.24, 0.035, 0.277, Color.GREY_A, 48, 0.004);\n      const parts = wheel('planet-' + i + '-18', Np, silver);\n      parts.push(bearing);\n      const planet = v.group('planet-spin-' + i, parts, { position: [x,y,0], rotation: theta + Math.PI / Np });\n      planets.push({ handle: planet, phase: theta + Math.PI / Np });\n      moving.push(planet);\n    }\n    carrier = v.group('carrier-output', moving);\n    assembly = v.group('planetary-assembly', [housing, sun, carrier]);\n\n    const sunNumber = v.text('sun-tooth-count', { text: '24', fontSize: 0.21, fill: Color.WHITE, billboard: true, position: [0,0,0.73] });\n    v.attach(sunNumber, sun, { offset: [0,0,0.73] });\n    counts.push(sunNumber);\n    for (let i = 0; i < planets.length; i++) {\n      const number = v.text('planet-tooth-count-' + i, { text: '18', fontSize: 0.20, fill: Color.WHITE, billboard: true });\n      v.attach(number, planets[i].handle, { offset: [0,0,0.59] });\n      counts.push(number);\n    }\n  });\n\n  const ringLabel = s.text('fixed-ring-label', { text: 'Ring 60 · fixed', fontSize: 0.30, position: [0,3.60], fill: Color.GREY_A });\n  const inputLabel = s.text('sun-input-label', { text: 'Sun input', fontSize: 0.27, position: [-2.60,-3.35], fill: Color.GOLD });\n  const outputLabel = s.text('carrier-output-label', { text: 'Carrier output', fontSize: 0.27, position: [2.55,-3.35], fill: Color.BLUE });\n  const note = s.text('geometry-note', { text: 'Idealized involute gears · 24 / 18 / 60 teeth', fontSize: 0.26, position: [0,3.16], fill: Color.GREY_B });\n  const labels = [ringLabel, inputLabel, outputLabel, note, ...counts];\n  play([assembly.fadeIn(), ...labels.map(h => h.fadeIn())], T * 0.05, 'smooth');\n  until(T * 0.10);\n  // Willis constraint: Ns(ws-wc)+Nr(wr-wc)=0, with wr=0.\n  // All rotations share one linear clock. Nested carrier transforms preserve\n  // exact orbit radii and 120-degree spacing throughout, not just at keyframes.\n  play([\n    sun.rotateTo(sunTurn),\n    carrier.rotateTo(carrierTurn),\n    ...planets.map(p => p.handle.rotateTo(p.phase + planetRelativeTurn))\n  ], T * 0.75, 'linear');\n  const ratio = s.latex('speed-ratio', { tex: String.raw`\\omega_c=\\frac{2}{7}\\omega_s`, fontSize: 0.31, position: [0,-3.35], fill: Color.WHITE });\n  play(ratio.fadeIn(), T * 0.03, 'smooth');\n  until(T);\n});",
+          "duration": 20,
+          "audio": {
+            "id": "silent-planetary",
+            "url": "http://127.0.0.1:5212/silence.wav"
+          },
+          "narration": "",
+          "visualDescription": "3D: Create exactly one 20-second silent single-scene visualization showcase: Planetary gear train. Show a sun gear, three planets, fixed internal ring and moving carrier. Choose compatible tooth counts and derive spin/orbit rates from the gear constraint. Teeth must engage without obviously passing through one another; preserve planet spacing and use subtle machined-metal texture. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+          "words": [],
+          "captions": []
+        }
+      ],
+      "stage": "finished",
+      "review": {
+        "approved": true,
+        "sourceSha256": "0d98e0ffc8f6c02e624e9b2b1af486980da1a39267c9b5bc403125ede2db9b73",
+        "attempt": 1,
+        "review": {
+          "approved": true,
+          "findings": []
+        }
+      },
+      "evidenceAttempt": 1,
+      "elapsedMs": 304074.7049,
+      "metrics": {
+        "providerCalls": 6,
+        "inputTokens": 148228,
+        "outputTokens": 15146,
+        "cacheReadTokens": 95744,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "crank",
+      "title": "Slider-crank mechanism",
+      "category": "Engineering",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Slider-crank mechanism. Build an oblique cutaway slider-crank with crankshaft, flywheel, rigid connecting rod, wrist pin and constrained piston. Derive piston travel from fixed rod length and crank angle, preserve pin connections throughout a cycle, and use restrained metal materials. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "182a06c3456120268d8fd97e2f79263ce59af5b668ce8d7bf76137785699f7cc",
+      "videoId": "65d11921-66c2-4da6-b284-0e9d8bf44360",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "robot",
+      "title": "Three-joint robot arm",
+      "category": "Robotics",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Three-joint robot arm. Show a three-revolute-joint robot arm following a smooth end-effector path through a bounded workspace. Derive links and end-effector from one forward-kinematics chain; show local joint axes, keep links rigid and joints connected, and avoid presenting an arbitrary floating end point as solved inverse kinematics. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "5f0b9885a4867c40f179816396456337787ea434394e028fe380e2f363de868f",
+      "videoId": "8d324aa6-6a63-44fd-8726-4658290ac717",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "rosenbrock",
+      "title": "Optimization in a curved valley",
+      "category": "Machine learning",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Optimization in a curved valley. Show actual gradient descent with line search on a scaled Rosenbrock loss surface. Draw computed iterates and their connecting trajectory on the same sampled surface, including slow movement along the curved valley. Distinguish this two-parameter example from a full high-dimensional network. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "4fb2a235a17a325f2537bf4d00f7d72b1d9809d9195bd9454e4013d32e1753b5",
+      "videoId": "7f613d33-0939-4c0f-9728-65c9e6df070e",
+      "status": "failed",
+      "scenes": [
+        {
+          "id": "beat-1",
+          "source": "const __narration=(()=>{const data=JSON.parse(\"{\\\"audioAssetId\\\":\\\"silent-rosenbrock\\\",\\\"endMode\\\":\\\"hold\\\",\\\"durationSec\\\":20,\\\"words\\\":{}}\");const get=(id,index)=>{if(!Object.hasOwn(data.words,id))throw new Error('Unknown narration word ID: '+id);return data.words[id][index];};return Object.freeze({audioAssetId:data.audioAssetId,endMode:data.endMode,durationSec:data.durationSec,start:id=>get(id,0),end:id=>get(id,1)});})();\nexport default scene({mode:'3d', orbit:false, background:Color.BLACK, audio:__narration.audioAssetId, end:__narration.endMode}, s => {\n  const T = __narration.durationSec;\n  let cursor = 0;\n  function play(actions, duration) { s.play(actions, {duration, ease:'linear'}); cursor += duration; }\n  function holdTo(t) { if (t > cursor) { s.wait(t-cursor); cursor=t; } }\n  // Analytic two-variable Rosenbrock function, uniformly scaled, not a projection.\n  const F = (x,y) => ((1-x)*(1-x)+100*(y-x*x)*(y-x*x))/100;\n  const grad = (x,y) => [0.02*(x-1)-4*x*(y-x*x), 2*(y-x*x)];\n  const P = (x,y,lift=0) => [2.25*x, 6*F(x,y)-0.9+lift, -1.8*(y-0.8)];\n  const N = 480;\n  const iterates = [[-1,1.5]];\n  // Steepest descent with Armijo backtracking, restarted from alpha=1.\n  for (let k=0;k<N;k++) {\n    const [x,y] = iterates[k];\n    const g = grad(x,y), norm2=g[0]*g[0]+g[1]*g[1];\n    let alpha=1;\n    for (let j=0;j<40;j++) {\n      if (F(x-alpha*g[0],y-alpha*g[1]) <= F(x,y)-1e-4*alpha*norm2) break;\n      alpha *= 0.5;\n    }\n    iterates.push([x-alpha*g[0],y-alpha*g[1]]);\n  }\n  play(s.camera.to2D({height:8}),0);\n  s.latex('loss-definition', {\n    tex:String.raw`F(x,y)=\\frac{(1-x)^2+100(y-x^2)^2}{100}`,\n    position:[0,2.94], fontSize:0.34, fill:Color.WHITE\n  });\n  s.text('method', {text:'Gradient descent / Armijo line search', position:[0,-2.24], fontSize:0.26, fill:Color.WHITE});\n  const readout = s.latex('iterate-readout', {\n    tex:String.raw`k=\\animnum{k}`, numbers:{k:0},\n    numberFormat:{digits:3,decimals:0},\n    position:[-1,-2.64], fontSize:0.29, fill:Color.YELLOW\n  });\n  const lossReadout=s.latex('loss-readout', {\n    tex:String.raw`F=\\animnum{f}`, numbers:{f:F(...iterates[0])},\n    numberFormat:{digits:1,decimals:4},\n    position:[1,-2.64], fontSize:0.29, fill:Color.YELLOW\n  });\n  s.text('scope', {text:'Analytic two-parameter example, not a full network', position:[0,-3.04], fontSize:0.23, fill:Color.GREY_B});\n  let v, marker;\n  s.view('landscape', {\n    rect:[0.04,0.19,0.92,0.57], orbit:true, orbitHitTest:'geometry',\n    camera:{yaw:0.35,pitch:0.92,distance:14,height:7.1,target:[0,0.1,0]}\n  }, view => {\n    v=view;\n    // Curved bounded patch of the actual graph: y=x^2+r.\n    // World Y is height; world Z is the second parameter axis.\n    v.parametricSurface('rosenbrock-surface', {\n      uRange:[-1.25,1.25],vRange:[-0.6,0.6],uSegments:100,vSegments:44,\n      fn:(x,r)=>P(x,x*x+r), fill:Color.BLUE_E, stroke:Color.NONE,\n      shading:'smooth', material:{roughness:0.9,specular:0.12}\n    });\n    for (let j=0;j<=8;j++) {\n      const r=-0.6+0.15*j;\n      const points=Array.from({length:101},(_,i)=>{const x=-1.25+2.5*i/100;return P(x,x*x+r,0.007);});\n      v.path('longitudinal-'+j,{points,stroke:j===4?Color.GREY_B:Color.BLUE_D,strokeWidth:j===4?0.012:0.007,fill:Color.NONE,strokeProfile:'round'});\n    }\n    for (let j=0;j<=10;j++) {\n      const x=-1.25+0.25*j;\n      const points=Array.from({length:45},(_,i)=>P(x,x*x-0.6+1.2*i/44,0.007));\n      v.path('cross-section-'+j,{points,stroke:Color.BLUE_D,strokeWidth:0.007,fill:Color.NONE,strokeProfile:'round'});\n    }\n    v.arrow3D('x-axis',{points:[[-3.05,-1.05,2.6],[3.05,-1.05,2.6]],stroke:Color.GREY_B,strokeWidth:0.016});\n    v.arrow3D('y-axis',{points:[[-3.05,-1.05,2.6],[-3.05,-1.05,-2.65]],stroke:Color.GREY_B,strokeWidth:0.016});\n    v.arrow3D('height-axis',{points:[[-3.05,-1.05,-2.65],[-3.05,2.0,-2.65]],stroke:Color.GREY_B,strokeWidth:0.016});\n    v.latex('x-label',{tex:'x',position:[3.23,-1.05,2.6],fontSize:0.25,billboard:true});\n    v.latex('y-label',{tex:'y',position:[-3.05,-1.05,-2.9],fontSize:0.25,billboard:true});\n    v.latex('height-label',{tex:'F',position:[-3.05,2.23,-2.65],fontSize:0.25,billboard:true});\n    const minimum=v.sphere('minimum',{position:P(1,1,0.045),radius:0.055,fill:Color.GREEN});\n    const minimumLabel=v.text('minimum-label',{text:'minimum (1, 1)',fontSize:0.22,billboard:true,billboardOffset:[0.32,0.34,0],fill:Color.GREEN});\n    v.attach(minimumLabel,minimum);\n    const start=v.sphere('initial-iterate',{position:P(...iterates[0],0.035),radius:0.045,fill:Color.WHITE});\n    const startLabel=v.text('start-label',{text:'start',fontSize:0.23,billboard:true,billboardOffset:[-0.25,0.28,0],fill:Color.WHITE});\n    v.attach(startLabel,start);\n    marker=v.sphere('current-iterate',{position:P(...iterates[0],0.065),radius:0.065,fill:Color.YELLOW});\n  });\n  holdTo(T*0.1);\n  // Twelve readable steps, then a faster iteration clock for the same algorithm.\n  for (let k=0;k<N;k++) {\n    const a=iterates[k], b=iterates[k+1];\n    const duration=k<12 ? T*0.16/12 : T*0.62/(N-12);\n    const distance=Math.hypot(b[0]-a[0],b[1]-a[1]);\n    const samples=Math.max(2,Math.min(64,Math.ceil(distance/0.012)));\n    const points=[];\n    for (let j=0;j<=samples;j++) {\n      const t=j/samples;\n      points.push(P(a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1]),0.027));\n    }\n    for (let j=1;j<=samples;j++) {\n      const t=j/samples;\n      const x=a[0]+t*(b[0]-a[0]), y=a[1]+t*(b[1]-a[1]);\n      // Re-evaluate height along every parameter-space line-search step.\n      play(marker.moveTo(P(x,y,0.065)),duration/samples);\n    }\n    v.path('trajectory-'+k,{points,fill:Color.NONE,stroke:Color.YELLOW,strokeWidth:0.017,strokeProfile:'round'});\n    v.sphere('iterate-'+(k+1),{position:P(...b,0.03),radius:k<12?0.024:0.013,fill:Color.YELLOW});\n    play([readout.countTo({k:k+1}),lossReadout.countTo({f:F(...b)})],0);\n  }\n  holdTo(T);\n});",
+          "duration": 20,
+          "audio": {
+            "id": "silent-rosenbrock",
+            "url": "http://127.0.0.1:5212/silence.wav"
+          }
+        }
+      ],
+      "stage": "finished",
+      "error": "Automatic frame rendering failed (1): Buffer size (341821872) exceeds the max buffer size limit (268435456). This adapter supports a higher maxBufferSize of 2147483648, which can be specified in requiredLimits when calling requestDevice(). Limits differ by hardware, so always check the adapter limits prior to requesting a higher limit.\n - While calling [Device].CreateBuffer([BufferDescriptor \"\"\"\"]).\n\n[Invalid Buffer (unlabeled)] is invalid due to a previous error.\n - While calling [Queue].WriteBuffer([Invalid Buffer (unlabeled)], (0 bytes), data, (170910936 bytes))\n\n[Invalid Buffer (unlabeled)] is invalid due to a previous error.\n - While encoding [RenderPassEncoder (unlabeled)].SetVertexBuffer(0, [Invalid Buffer (unlabeled)], 0, 18446744073709551615).\n - While finishing [CommandEncoder (unlabeled)].\n\n[Invalid CommandBuffer] is invalid due to a previous error.\n - While calling [Queue].Submit([[Invalid CommandBuffer]])\n\n. Check Node, native WebGPU and the animlib build.",
+      "evidenceAttempt": 0,
+      "elapsedMs": 165806.1228,
+      "metrics": {
+        "providerCalls": 3,
+        "inputTokens": 37430,
+        "outputTokens": 6658,
+        "cacheReadTokens": 65152,
+        "failedValidations": 1
+      }
+    },
+    {
+      "id": "attention",
+      "title": "Attention matrix and token mixing",
+      "category": "Computing",
+      "mode": "2d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Attention matrix and token mixing. Show a small concrete query-key dot-product matrix, row-wise softmax weights and weighted value mixing for one selected token. Choose reproducible numeric vectors; connect one highlighted matrix row to the resulting mixed vector without crowding every number onto screen. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "cb90defe7470c994ebfb4c5d7a7e132a1c1feb704a8376f7d10a19cc924fd4aa",
+      "videoId": "35779cf1-6f44-4fe1-8839-26161ddadfd4",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "dijkstra",
+      "title": "Weighted shortest-path frontier",
+      "category": "Computing",
+      "mode": "2d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Weighted shortest-path frontier. Animate Dijkstra on a nontrivial planar weighted graph with at least twelve vertices. Show the actual priority order, distance relaxation and recovered path between two nodes. Keep edge weights readable and animate only the active frontier; never imply breadth-first search is sufficient for unequal weights. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "c78090830cbd2ef9ca69edf81c23d4dd69f9ce5ccb65d8fe1dc2d7c9f0992325",
+      "videoId": "ae4bd107-a812-413e-97d0-4418440e3d54",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    },
+    {
+      "id": "terrain",
+      "title": "Textured river valley",
+      "category": "Spatial worlds",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Textured river valley. Build a continuous terrain mesh with ridges and a connected river valley, using meaningful elevation colors and restrained rock/grass/water materials. Trace a downhill water path from the same terrain function so it follows the valley rather than tunneling through hills. State that terrain and flow are procedural illustrations. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "16eadc204cecca1919b40eaa8524d32fa1a39465970b2db44b13bf96d6dc61fe",
+      "videoId": "5a31c062-d7d1-4126-bcf7-de733f399d3c",
+      "status": "failed",
+      "scenes": [
+        {
+          "id": "beat-1",
+          "source": "const __narration=(()=>{const data=JSON.parse(\"{\\\"audioAssetId\\\":\\\"silent-terrain\\\",\\\"endMode\\\":\\\"hold\\\",\\\"durationSec\\\":20,\\\"words\\\":{}}\");const get=(id,index)=>{if(!Object.hasOwn(data.words,id))throw new Error('Unknown narration word ID: '+id);return data.words[id][index];};return Object.freeze({audioAssetId:data.audioAssetId,endMode:data.endMode,durationSec:data.durationSec,start:id=>get(id,0),end:id=>get(id,1)});})();\nexport default scene({ mode: '3d', orbit: false, background: Color.BLACK, audio: __narration.audioAssetId, end: __narration.endMode }, s => {\n  const T = __narration.durationSec;\n  let cursor = 0;\n  function play(actions, duration) { s.play(actions, { duration, ease: 'linear' }); cursor += duration; }\n  function holdTo(time) { if (time > cursor) { s.wait(time - cursor); cursor = time; } }\n  s.play(s.camera.to2D({ height: 8 }), { duration: 0 });\n  // Y is elevation; positive Z is downstream. This is an idealized watershed.\n  const z0 = -5.2, z1 = 5.2;\n  function center(z) { return 0.74 * Math.sin(0.77 * z) + 0.22 * Math.sin(1.43 * z + 0.5); }\n  function width(z) { return 0.17 + 0.075 * (z - z0) / (z1 - z0); }\n  function bed(z) { return 0.9 - 0.255 * z; }\n  function height(x, z) {\n    const d = Math.abs(x - center(z)), w = width(z);\n    const bank = Math.max(0, d - w);\n    const shoulder = 1 - Math.exp(-1.05 * bank * bank);\n    const ridgeA = Math.exp(-Math.pow((x + 2.65 + 0.38 * Math.sin(z * 0.83)) / 0.88, 2));\n    const ridgeB = Math.exp(-Math.pow((x - 2.7 - 0.42 * Math.cos(z * 0.64)) / 1.05, 2));\n    const lobes = 1.1 + 0.26 * Math.sin(1.63 * z + 0.5 * x) + 0.18 * Math.cos(2.54 * z - x);\n    const detail = 0.075 * Math.sin(6.1 * x + 2.7 * z) * Math.cos(4.9 * z - x) + 0.035 * Math.sin(12.3 * x - 5.4 * z);\n    return bed(z) + 0.12 * Math.pow(Math.min(d / w, 1), 2) + shoulder * (0.48 + (1.4 * ridgeA + 1.65 * ridgeB) * lobes + detail);\n  }\n  let v, land;\n  s.view('valley-view', {\n    rect: [0.035, 0.075, 0.93, 0.715], orbit: true, orbitHitTest: 'geometry',\n    camera: { yaw: -0.2, pitch: 1.02, height: 12.5, distance: 23, target: [0, 1.3, 0], perspective: 0.35 }\n  }, builder => {\n    v = builder;\n    const vertices = [], triangles = [];\n    const nx = 64, nz = 88;\n    for (let j = 0; j <= nz; j++) {\n      const z = z0 + (z1 - z0) * j / nz;\n      for (let i = 0; i <= nx; i++) {\n        const x = -4.4 + 8.8 * i / nx;\n        vertices.push([x, height(x, z), z]);\n      }\n    }\n    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {\n      const a = j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1;\n      triangles.push([a, c, b], [b, c, d]);\n    }\n    const terrain = v.mesh('continuous-terrain', {\n      vertices, triangles, shading: 'smooth', fill: Color.GREEN_E, stroke: Color.NONE,\n      texture: { pattern: 'noise', color: Color.GREEN_D, scale: [8, 5, 8], seed: 27, bumpStrength: 0.004 },\n      material: { roughness: 0.98, specular: 0.08 }\n    });\n    // These elevation skins share the base mesh's triangles and clipped edges.\n    function elevationSkin(id, threshold, above, fill, secondary) {\n      const verts = [], faces = [], original = [], edges = new Map();\n      const inside = vertices.map(p => above ? p[1] >= threshold : p[1] <= threshold);\n      function index(i) {\n        if (original[i] === undefined) {\n          const p = vertices[i]; original[i] = verts.length;\n          verts.push([p[0], p[1] + 0.025, p[2]]);\n        }\n        return original[i];\n      }\n      function crossing(i, j) {\n        const lo = Math.min(i, j), hi = Math.max(i, j), key = lo * vertices.length + hi;\n        if (edges.has(key)) return edges.get(key);\n        const a = vertices[lo], b = vertices[hi], t = (threshold - a[1]) / (b[1] - a[1]);\n        const k = verts.length;\n        verts.push([a[0] + t * (b[0] - a[0]), threshold + 0.025, a[2] + t * (b[2] - a[2])]);\n        edges.set(key, k); return k;\n      }\n      for (let ti = 0; ti < triangles.length; ti++) {\n        const tri = triangles[ti];\n        if (!inside[tri[0]] && !inside[tri[1]] && !inside[tri[2]]) continue;\n        if (inside[tri[0]] && inside[tri[1]] && inside[tri[2]]) {\n          faces.push([index(tri[0]), index(tri[1]), index(tri[2])]); continue;\n        }\n        const poly = [];\n        for (let i = 0; i < 3; i++) {\n          const a = tri[i], b = tri[(i + 1) % 3];\n          if (inside[a]) poly.push(index(a));\n          if (inside[a] !== inside[b]) poly.push(crossing(a, b));\n        }\n        for (let i = 1; i + 1 < poly.length; i++) faces.push([poly[0], poly[i], poly[i + 1]]);\n      }\n      return v.mesh(id, {\n        vertices: verts, triangles: faces, shading: 'smooth', fill, stroke: Color.NONE,\n        texture: { pattern: 'noise', color: secondary, scale: [7, 5, 7], seed: 41, bumpStrength: 0.006 },\n        material: { roughness: 0.94, specular: 0.1 }\n      });\n    }\n    const lowlands = elevationSkin('low-elevation-grass', 1.05, false, Color.GREEN_D, Color.GREEN_E);\n    const rock = elevationSkin('high-elevation-rock', 2.65, true, Color.GREY_C, Color.GREY_D);\n    const riverVertices = [], riverTriangles = [], n = 208;\n    for (let j = 0; j <= n; j++) {\n      const z = z0 + (z1 - z0) * j / n;\n      for (const side of [-1, 1]) riverVertices.push([center(z) + side * width(z), height(center(z), z) + 0.124, z]);\n    }\n    for (let j = 0; j < n; j++) {\n      const a = 2 * j;\n      riverTriangles.push([a, a + 2, a + 1], [a + 1, a + 2, a + 3]);\n    }\n    const river = v.mesh('connected-river', {\n      vertices: riverVertices, triangles: riverTriangles, shading: 'smooth', fill: Color.BLUE_D, stroke: Color.NONE,\n      texture: { pattern: 'noise', color: Color.BLUE_C, scale: [10, 1, 3], seed: 8, bumpStrength: 0.001 },\n      material: { roughness: 0.32, specular: 0.5 }\n    });\n    land = v.group('watershed', [terrain, lowlands, rock, river], { isolated: false });\n  });\n  s.rectangle('grass-key', { position: [-2.45, -2.55], width: 0.18, height: 0.12, fill: Color.GREEN_D, stroke: Color.NONE });\n  s.text('grass-label', { text: 'Lowlands', position: [-1.65, -2.55], fontSize: 0.24, fill: Color.WHITE });\n  s.rectangle('rock-key', { position: [0.05, -2.55], width: 0.18, height: 0.12, fill: Color.GREY_C, stroke: Color.NONE });\n  s.text('rock-label', { text: 'Rocky high ground', position: [1.4, -2.55], fontSize: 0.24, fill: Color.WHITE });\n  s.text('procedural-note', { text: 'Procedural terrain and flow; not measured data', position: [0, -2.9], fontSize: 0.245, fill: Color.GREY_B });\n  play(land.fadeIn(), T * 0.05);\n  holdTo(T * 0.15);\n  function waterPoint(t) {\n    const z = z0 + (z1 - z0) * t, x = center(z);\n    return [x, height(x, z) + 0.15, z];\n  }\n  const marker = v.sphere('flow-front', {\n    position: waterPoint(0), radius: 0.1, fill: Color.BLUE_A,\n    material: { roughness: 0.5, emissive: Color.BLUE_A, emissiveIntensity: 0.4 }\n  });\n  // Dense short chords follow the sampled valley, not an endpoint shortcut through hills.\n  const steps = 156;\n  for (let i = 0; i < steps; i++) {\n    const a = waterPoint(i / steps), b = waterPoint((i + 1) / steps);\n    const trail = v.line3D('flow-trace-' + i, { points: [a, a], stroke: Color.BLUE_A, strokeWidth: 0.055 });\n    play([marker.moveTo(b), trail.morphTo({ kind: 'line', points: [a, b] })], T * 0.65 / steps);\n  }\n  play(marker.fadeOut(), T * 0.025);\n  holdTo(T);\n});",
+          "duration": 20,
+          "audio": {
+            "id": "silent-terrain",
+            "url": "http://127.0.0.1:5212/silence.wav"
+          }
+        }
+      ],
+      "stage": "finished",
+      "error": "Automatic visual review rejected the scene after one targeted repair; no scene was published. See saved frame evidence and findings.",
+      "evidenceAttempt": 1,
+      "review": {
+        "sourceSha256": "4a0ab5b33ddcaf00b4748e42a226e3081cd758c762d344aba535537932c5d696",
+        "sampleMap": [
+          {
+            "image": 1,
+            "width": 1280,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              0,
+              0.5,
+              3,
+              5.374999999999997,
+              7.8333333333333215,
+              10.250000000000004
+            ]
+          },
+          {
+            "image": 2,
+            "width": 1280,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              11.458333333333345,
+              12.666666666666687,
+              15.125000000000037,
+              16.666666666666668,
+              18.333333333333332,
+              20
+            ]
+          },
+          {
+            "image": 3,
+            "width": 960,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              0,
+              0.5,
+              3,
+              5.374999999999997,
+              7.8333333333333215,
+              10.250000000000004
+            ]
+          },
+          {
+            "image": 4,
+            "width": 960,
+            "height": 720,
+            "columns": 2,
+            "times": [
+              11.458333333333345,
+              12.666666666666687,
+              15.125000000000037,
+              16.666666666666668,
+              18.333333333333332,
+              20
+            ]
+          }
+        ],
+        "approved": false,
+        "findings": [
+          {
+            "timeSec": 10.25,
+            "objectIds": [
+              "connected-river",
+              "flow-front",
+              "watershed"
+            ],
+            "problem": "The river is faintly visible during the 0.5-second fade, but disappears against the opaque terrain by 3 seconds in both aspect ratios. Subsequent operation samples show no identifiable advancing front or connected trace; the completed path is also absent from the final hold. The earlier visibility finding remains unresolved.",
+            "fix": "Correct the terrain/water depth or face visibility so the river, advancing front and completed trace remain visible after the terrain becomes opaque. Preserve the terrain-derived downhill coordinates and timing; verify operation interiors and the final hold."
+          },
+          {
+            "timeSec": 20,
+            "objectIds": [
+              "high-elevation-rock",
+              "low-elevation-grass",
+              "continuous-terrain",
+              "rock-label"
+            ],
+            "problem": "Both final frames still show green ridges throughout, with no visible gray rocky-high-ground region corresponding to the legend. The earlier elevation-material finding remains unresolved.",
+            "fix": "Correct the elevation skins' rendering relative to the continuous terrain so their existing thresholds produce visible grass and gray rock regions. Preserve the geometry, palette roles and corrected disclaimer placement."
+          }
+        ]
+      },
+      "elapsedMs": 190803.85530000005,
+      "metrics": {
+        "providerCalls": 6,
+        "inputTokens": 169018,
+        "outputTokens": 8711,
+        "cacheReadTokens": 64768,
+        "failedValidations": 1
+      }
+    },
+    {
+      "id": "voxel",
+      "title": "Voxel excavator at work",
+      "category": "Spatial worlds",
+      "mode": "3d",
+      "prompt": "Create exactly one 20-second silent single-scene visualization showcase: Voxel excavator at work. Show an original block-built tracked excavator digging a small earth bank. Coherent boom-stick-bucket joints, planted tracks and bucket contact must precede removal of a few soil blocks. Use restrained voxel soil and metal textures; finish with the loaded bucket raised and machine intact. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "promptSha256": "802311a026d3da2e5283883266a48cbea18386a0416fe891feb669142a5795a7",
+      "videoId": "b5659e80-0876-4dc6-a0ed-a4880e3fe2e9",
+      "status": "pending",
+      "scenes": [],
+      "metrics": {
+        "providerCalls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "failedValidations": 0
+      }
+    }
+  ],
+  "executions": [
+    {
+      "startedAt": "2026-10-10T21:18:51.216Z",
+      "concurrency": 1,
+      "topics": [
+        "planetary",
+        "interference",
+        "kepler",
+        "lipid",
+        "rosenbrock",
+        "terrain"
+      ]
+    }
+  ],
+  "exportedAt": "2026-10-10T21:40:02.591Z",
+  "artifacts": [
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/lesson.json",
+      "sha256": "08aa08c205970b500dea377e3a3ef1049c530ea04a236020dae5eb612a78138d"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/silent-fixture.json",
+      "sha256": "d88d3a85f5c6b52599754801443d08808fb37cb3b922d289a42c673fef524f8d"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.input.json",
+      "sha256": "8b951aa1bfc4154a680782461ffcd0e27203a64fecb7e47366279fa83abd8548"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.prompt.md",
+      "sha256": "9b6bd9585bb623a436e607e1749460cc9a2b08f7f62265d0dccec9e73f83b50b"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.js",
+      "sha256": "6897386437c52085ea699b77e06ea744a6ee7376a5b4627b9e32b4f115b85721"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.diagnostics.json",
+      "sha256": "22b89fc2d7acb946023a412f86bd46a56079c9b51f3cc7a79991f5edd028a1a8"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/task-0-scene.metrics.json",
+      "sha256": "e243f54d024f06ca2511e7ceab6bc5f391e9cba1698636c65c279c5df8e48256"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/task-1-review.metrics.json",
+      "sha256": "f69ded06fe84c8d16d061e30facfa729450e37626069284e0ec9a9a05a2b4ef0"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/candidate.js",
+      "sha256": "6897386437c52085ea699b77e06ea744a6ee7376a5b4627b9e32b4f115b85721"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/render-input.json",
+      "sha256": "e5a4ae6b92abeaa26ab2f0cff272af3eaa1c6aba0dbe211be481ccae0a3d6a06"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/1280x720-6.png",
+      "sha256": "a706447513d107e23732b382c8c78f3719f038da83094102c8fc190512ebad41"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/review.json",
+      "sha256": "3ed1dcc4bebb59ffa7b2fb2ffd61e31ba9270f2954cc108ca73593f2beb4caca"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/review.prompt.md",
+      "sha256": "cb84c9507f3b1e838619e57713a03c4ce6496c386c79982bc830620fd0aaa7d0"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/review.metrics.json",
+      "sha256": "f69ded06fe84c8d16d061e30facfa729450e37626069284e0ec9a9a05a2b4ef0"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/1280x720-sheet-0.png",
+      "sha256": "d2667c4b9b7a947135e40e40dc44499566ef240276bd6b3ae7b5dea63c3c7ec7"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/1280x720-sheet-1.png",
+      "sha256": "13f9266d1010f041eca48744f597162261c0922a6a1243129ebe13b41aefd20f"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/960x720-sheet-0.png",
+      "sha256": "d0541ea6f3d26b4c1f31592e1a55581ee949cb3fbcfdc255f3342f8604bb21c8"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/960x720-sheet-1.png",
+      "sha256": "72453d8ba331f63d8e9bc20081e87ba2352fa052e0eb944c854baa7bf07bb68a"
+    },
+    {
+      "path": "d22137a1-4d82-4e58-8ee7-9fec28a03637/scene-0.visual/0/1280x720-11.png",
+      "sha256": "a36075f3d423fdc3cd4311ec440ce06085e27c27d75b65482f5e9595efdce65e"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/lesson.json",
+      "sha256": "11c9e06a8bb0609eba7868ed8aaae481ace8cfe3a4ed4b60d3dcde8678cfb768"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/silent-fixture.json",
+      "sha256": "cd27e458ef3432f95ea97426269f3c2419b0120384eef45bd5fcdea7e817cd9f"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.input.json",
+      "sha256": "13a99558b0f1ebc0c1786812333c2b5d4fc0f8adb982a545692f45bf280b16d5"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.prompt.md",
+      "sha256": "b61d043a41e95122d19cbdb98d3a16d8c5327b35abaf6b5a749adb1705ef47f1"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/task-0-scene.metrics.json",
+      "sha256": "7e9c762405aa1b4d59026ecd628c943a23c3c6e8f32ba887b8e4f33f532d5f10"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/task-1-review.metrics.json",
+      "sha256": "36e7355156750a3d07ef124f77b952f342f0b99f1950b8967dae6df5fd15e217"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/task-2-repair.metrics.json",
+      "sha256": "9932830fbe55e125e4c16322a5291d40b13153466e9952a5c84f26b4b2c5c56e"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/task-3-review.metrics.json",
+      "sha256": "f1dda9c705523e3ccbbfae78284cb7fbbaa1b952f8f32790f828a8c9b0432b6c"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/candidate.js",
+      "sha256": "295bea10a444047e168ca5b53753083ddd145670ffc1d18e8dd176ce5aace6a2"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/render-input.json",
+      "sha256": "f2b674a90a830e8d134637ee55670251a82773b5440280f16726dca089e98891"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/1280x720-6.png",
+      "sha256": "cb7ea90e50af94291ed3a236c8e023bbe5de2d0e29a6acf7b6a91459bd13c9a0"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/review.json",
+      "sha256": "3a60e12ab55ca5e488b769fae8f1eef9de3be007664398ac052c38de30406a67"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/repair.json",
+      "sha256": "22a5dd78c9b94c94c41f520869487fa4c1f5b4086949c030964269d89d66ebd3"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/review.prompt.md",
+      "sha256": "d5ee5222eb246f975bf30ae7ac1d586b00dbb6c0ebae893803c59ccefc99c63c"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/repair.prompt.md",
+      "sha256": "c26f4cfaa12b3f9a4049f79580f87e353626ca31df05ea019e59b9bb38ad1dd8"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/review.metrics.json",
+      "sha256": "36e7355156750a3d07ef124f77b952f342f0b99f1950b8967dae6df5fd15e217"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/repair.metrics.json",
+      "sha256": "9932830fbe55e125e4c16322a5291d40b13153466e9952a5c84f26b4b2c5c56e"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/1280x720-sheet-0.png",
+      "sha256": "15d0500227926ddea8227042a09a1fa226bb13ada863a68f37dbca4e97e4019e"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/1280x720-sheet-1.png",
+      "sha256": "1b27f5f54534cee54b978af442fc8a537733e4b19dca7f42d148d12cf24c0655"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/960x720-sheet-0.png",
+      "sha256": "174a7802a6280e9968d154959d5179eeb78e1f07655a0a0591baf59c17b4d691"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/960x720-sheet-1.png",
+      "sha256": "f78cad410942c4d293ad71e985a8062ae5504e7149688d6a5d0ce8ca5b5d431f"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/0/1280x720-11.png",
+      "sha256": "aa72bc79b9645fd46aed7450933d30602477a7a67223aa07e1a0bf278916d9d3"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/candidate.js",
+      "sha256": "3320bc06846eb86ae9111b544262cfef452a91cf45d6aa0e632bb3593bb3704f"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/render-input.json",
+      "sha256": "4997c709c1de1af7ece5ef599b10a9a30598de21245aacf9a3eba363f791d531"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/1280x720-6.png",
+      "sha256": "163876a6e5cfa6946383f1c87e5bfc57cf65425153dae849baf37fc25edb1afa"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/review.json",
+      "sha256": "126cdb5fbf03be978de7e61329034cb50feb8e66ceef87d144a8488399783f05"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/review.prompt.md",
+      "sha256": "df67c3587472a2e42ecdd3ba57c7c54ed5e96f050502405f5e37decb7d77ba8f"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/review.metrics.json",
+      "sha256": "f1dda9c705523e3ccbbfae78284cb7fbbaa1b952f8f32790f828a8c9b0432b6c"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/1280x720-sheet-0.png",
+      "sha256": "9cf7f8412d3f1b3fbf1578ac51c55ffda48aa8f363b2a432bfc96395a7a834ea"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/1280x720-sheet-1.png",
+      "sha256": "98149e99f7103230eed316ff29fc3fe05c89c01fd939df018e7a6381273d2996"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/960x720-sheet-0.png",
+      "sha256": "9bdef57faea937339f0d1adfa1903014622863763df96a9b9b92e5301eda82dc"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/960x720-sheet-1.png",
+      "sha256": "a90cfd18856d0505397c12478ac43be48672c1440d558425a9249bfbbf67095f"
+    },
+    {
+      "path": "4708d975-7520-4e17-b7ef-e0188d105a93/scene-0.visual/1/1280x720-11.png",
+      "sha256": "e2cc21247dcdaa2f8e89c56f515cf1c54f2b099c4ebcbcf35a0c8c57b509022f"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/lesson.json",
+      "sha256": "b211b4b7b5776a2273eb6572aaa7418fcde13f7dab7d171a2f4dfb921bda62d9"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/silent-fixture.json",
+      "sha256": "9598debf9e4e20d6aeeb54be29ebd1b4416a0b9cbe33d7a2e39b48f52c440572"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.input.json",
+      "sha256": "dc4e077bcb32019946451f958f469f6a7f5f50952d34964e29eeccb9ce93448a"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.prompt.md",
+      "sha256": "8a5ed855aa25ae36a1bf1344acc163a8066126d6a77927ca1f40f59df7895998"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.js",
+      "sha256": "a5554243f2ba7c162ccb5b09fea9ae23e1771ffa6f0d373223daaa861c9d871e"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/task-0-scene.metrics.json",
+      "sha256": "9860690c6d660c0d070ead4ed7963910d7911977cd1f5319b3e9262ce729886b"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/task-1-review.metrics.json",
+      "sha256": "637b9d8d6d0fa1c074be74bc375d68a6c4c6c8ec17f8210b57cba1ae83f0c753"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/task-2-repair.metrics.json",
+      "sha256": "bad7d214408596ac0d2ac9ddb84c3e32f026c45a20ea67e693fcdbb602e175b2"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/task-3-review.metrics.json",
+      "sha256": "64497875e665f530766108bcd7f35502f124d03fe090bf661cbf2109d82a1648"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/candidate.js",
+      "sha256": "e0b319b24b977108081db3c8916f967475a3d0fae3400537cb986581eeadba00"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/render-input.json",
+      "sha256": "a048be1d3105cf8d9745cedac8becdbe0bf1014faf0798ef5ba1a1dd51160c75"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/1280x720-6.png",
+      "sha256": "071ba18dea615e7a4dfbff84107f1f7142acfab5820c3e63000bba7675804ed9"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/review.json",
+      "sha256": "ae1cef2eec4e9ba6e65f873edf50817ddee54ea86d65a319454e0ff3b75802f5"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/repair.json",
+      "sha256": "acba798c5c23db419adf49919f731d2493952141270605a59e4f7b452e4d98a1"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/review.prompt.md",
+      "sha256": "d21c9f586ede91dfdcc5726c2fcb001df85f6ce1fd72e2ff4b6860ab1c48f518"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/repair.prompt.md",
+      "sha256": "fb711bb96baf666aacc3f1241061f8c8f230b51c189047af358eb72192333202"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/review.metrics.json",
+      "sha256": "637b9d8d6d0fa1c074be74bc375d68a6c4c6c8ec17f8210b57cba1ae83f0c753"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/repair.metrics.json",
+      "sha256": "bad7d214408596ac0d2ac9ddb84c3e32f026c45a20ea67e693fcdbb602e175b2"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/1280x720-sheet-0.png",
+      "sha256": "dff151c0f885c4e776ff89117eacbad4927eee3b6fe8d309bfc8cc250c0e446a"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/1280x720-sheet-1.png",
+      "sha256": "835bab840996b3dd7545ee2ac180ff08a00c732f14d22778002d3724b799d4ef"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/960x720-sheet-0.png",
+      "sha256": "0685e8b8d31c32dec8d2791fd0814a90f8dec8c27ff1e06e414480a63332cdd9"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/960x720-sheet-1.png",
+      "sha256": "81f306a7bfd4b91ef9b1c260a3c1a3bfe306b404cf440765b96602e828095416"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/0/1280x720-11.png",
+      "sha256": "cf2415e4a4b973468f86c505d41680c8582b7a0b4042a1073c483d8420aee424"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/candidate.js",
+      "sha256": "a5554243f2ba7c162ccb5b09fea9ae23e1771ffa6f0d373223daaa861c9d871e"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/render-input.json",
+      "sha256": "2d5ade879a87762661d8c9866ba04ff7b6987d7c0059ca256a65c8de3d867f2c"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/1280x720-6.png",
+      "sha256": "29fa2450bb361e61538edf8d21e4192e547848013de977d4850a273305ee0981"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/review.json",
+      "sha256": "9e02b8e075792f440f16e8fcfa9f0eb46a2383847f3dd113b77eab7de7b058ed"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/review.prompt.md",
+      "sha256": "8540cdf90a7067e1b33322c59dc6fac8db926d43eccb5b8e10e5789e79a2c9b6"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/review.metrics.json",
+      "sha256": "64497875e665f530766108bcd7f35502f124d03fe090bf661cbf2109d82a1648"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/1280x720-sheet-0.png",
+      "sha256": "b63d4668f7e5948daefcbc5b260abb1fe74ebf848f322c8995efc94359342c8a"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/1280x720-sheet-1.png",
+      "sha256": "ce9ee4362d9aa43f86175ad3a3c692676ee642e5a8c321c86b35f1d96e308382"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/960x720-sheet-0.png",
+      "sha256": "2b758609a17209ecf27b8d3bf3879f418c2d868f58dc49a465f18d64e0df4f16"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/960x720-sheet-1.png",
+      "sha256": "039d6a69d2a793bb73de21f22c64429ffef2ef7029b6ef70f128dc406c2bdea1"
+    },
+    {
+      "path": "da68f2be-7c88-4fd4-8618-af6fa124060f/scene-0.visual/1/1280x720-11.png",
+      "sha256": "a907c174fc049146840884288c7263cbbc14eba25a682e23b8917b9e4ef4105b"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/lesson.json",
+      "sha256": "76dcd5e492f71101dcbeea87f891429183c1f0ca76b0666c79732cba01fb05c8"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/silent-fixture.json",
+      "sha256": "6d590063e8b0c4376186d7ca4bc2a88a06f8fd712a6cdeba711fddec55a5f68d"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.input.json",
+      "sha256": "a4d0a1a689779c1a550ec29d44eb4b55ac60289371eb3d1663467dbf66121c9e"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.prompt.md",
+      "sha256": "e280302107eda3ea128cb070c38d51483e079f990fb9ae23de14f771d7102a27"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.js",
+      "sha256": "0d98e0ffc8f6c02e624e9b2b1af486980da1a39267c9b5bc403125ede2db9b73"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/task-0-scene.metrics.json",
+      "sha256": "c132c260dcb5ec368896277c47e42e87d53a6f2983e68664d9a563979231c607"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/task-1-review.metrics.json",
+      "sha256": "be1ea8799b9466269a4a7fcbff73854a42fa3eff74879fd1908dcf68d70bed86"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/task-2-repair.metrics.json",
+      "sha256": "0ed20674162b0ba0504e1736b815088d997d3e4310bac2846a81798d420458e9"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/task-3-review.metrics.json",
+      "sha256": "8374be86614114aece16baf709a980b725d68cb499336b0fd4e1e4a13d5f1a4f"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/candidate.js",
+      "sha256": "3a086bd13a83ae8a84bd1c3efa43acaf37d925f137de3a9c13eb80903a9436fb"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/render-input.json",
+      "sha256": "d9e40946d851bd470b0f8bfdff7ca889b63a0409491e6d984af88799dcd63e42"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/1280x720-6.png",
+      "sha256": "decc8bead0cf5143b3c57d55aa1e4bd4f3fefdce796dda4ec954f995f3833d7d"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/review.json",
+      "sha256": "aa9e91f914bd8ab8e8b3f2f02415ed49c0d6f4f25f5ac0c7e014de430475fc53"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/repair.json",
+      "sha256": "03bcfe5df2daa492fb6d0e1389baa765e9267baf375c8b856c7743508ea02028"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/review.prompt.md",
+      "sha256": "18a776111f195d0faa9ec5a36fd69c0d36a8f0a3e7ffde2e1357d5929d4a7235"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/repair.prompt.md",
+      "sha256": "99d94441d7bfff7437f8355eea6abff5b09d94a4709abca88201ca8c5ff1aca4"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/review.metrics.json",
+      "sha256": "be1ea8799b9466269a4a7fcbff73854a42fa3eff74879fd1908dcf68d70bed86"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/repair.metrics.json",
+      "sha256": "0ed20674162b0ba0504e1736b815088d997d3e4310bac2846a81798d420458e9"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/1280x720-sheet-0.png",
+      "sha256": "875747b9c840d87c258cade51e1964d576ebfe4b15dd8c5b44d1958aa46ca947"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/1280x720-sheet-1.png",
+      "sha256": "e3ae2d019b9966dedaadec84e6256f5f67c86773d220746be2923bc9f008ef53"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/960x720-sheet-0.png",
+      "sha256": "c7035590eb1ed55cdc0c290758e5922fe4b227c36132b5702543cc187c93b3e6"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/960x720-sheet-1.png",
+      "sha256": "eb6ac0d28e883afca0d06905ae0c0c9a0bc78da965cf0812a7253ff7a392f93e"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/0/1280x720-11.png",
+      "sha256": "f3784085c088ef7c594818f9fdab0a3197ba02915646ed630033695b89984fa6"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/candidate.js",
+      "sha256": "0d98e0ffc8f6c02e624e9b2b1af486980da1a39267c9b5bc403125ede2db9b73"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/render-input.json",
+      "sha256": "8cda9a1a67800201e972ac7ba427f7a46e199ed0b413f1de1e44a3cb1d9a8e92"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/1280x720-6.png",
+      "sha256": "c0033db746bd53f7dbb70a94b9f3167fc68ec78df954aea5ce8e87c437f70afd"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/review.json",
+      "sha256": "28b809163857268fd3fdb2a5047dd5595abe15da975c3231536d86e32ef01dcb"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/review.prompt.md",
+      "sha256": "97eba7ad5bc171189d9af8a26c623e3dd6667365bd9b96c27283bc2895d8aa40"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/review.metrics.json",
+      "sha256": "8374be86614114aece16baf709a980b725d68cb499336b0fd4e1e4a13d5f1a4f"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/1280x720-sheet-0.png",
+      "sha256": "84d97dabc0b854daa979fc396b949c9a90df1767efddd3a233bb4db1662f78ce"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/1280x720-sheet-1.png",
+      "sha256": "11674ec570ef1dac945f0d4a4f083dc031b6070d6d48c4d88fccf02eb8e65ccb"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/960x720-sheet-0.png",
+      "sha256": "4a4f748eab6c56c7591caf2b22f7ce96657885077377b47df04980302ac7fef6"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/960x720-sheet-1.png",
+      "sha256": "3a43e3191d052ad79d5bbd17f5a0b0f5702389b0eec24c7c2dcb52ad1f821ac0"
+    },
+    {
+      "path": "97a48862-d205-4d69-8924-5b5172670a93/scene-0.visual/1/1280x720-11.png",
+      "sha256": "062a1ce014296631a646c63468cf2b5fe63c50091d58ff0bcb7a32465f9b9327"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/lesson.json",
+      "sha256": "8f68da8933d9f97bf3c8b46d0f5c7efb26d1b02dee20cd7eec408a52ed8d73d4"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/silent-fixture.json",
+      "sha256": "d2dca7515614f6ead5d5b64250e93fcb0bf54989b1e348e2574b20c3b965bb93"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/scene-0.input.json",
+      "sha256": "3382a945a4916318dde2f0dfb1e6628f2f4446ae02492fb84a9a7bf719493a09"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/scene-0.prompt.md",
+      "sha256": "f066f07f0c5f067100f587ee7848421aa5e4bcd2fdaf5098e90b92073b061a4b"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/scene-0.diagnostics.json",
+      "sha256": "62fac934b736102cadba8b94440a732fb59b4012abfc1b5331428c3ab62a8512"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/task-0-scene.metrics.json",
+      "sha256": "4216c9744f4f6f40f0e7179340394772b47e034cd339146da942e6fd218dac2d"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/scene-0.visual/0/candidate.js",
+      "sha256": "a3fac2fd87bf8a8af6b29f9fdeaa103f878ab82de7dfc32d1002b1bae266b862"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/scene-0.visual/0/render-input.json",
+      "sha256": "7a3e16c5e3975f0d3d51cac589da68e7296cb30e87a482268279506212b50606"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/scene-0.visual/0/1280x720-6.png",
+      "sha256": "1b52bc80f9fb65847cfc5fa1695953319fe05b2fe1198f663d2a5e78c00961ec"
+    },
+    {
+      "path": "7f613d33-0939-4c0f-9728-65c9e6df070e/scene-0.visual/0/1280x720-sheet-0.png",
+      "sha256": "5f17b3b92275e9be2490666b36bd063bed02e2030213ca2465293be227fa16d8"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/lesson.json",
+      "sha256": "3ed52c7b40db2ddc11e193005e69a92ff2356760a16e413e842554ddc64ae870"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/silent-fixture.json",
+      "sha256": "75d01befd6ff52aff7030dcf3ea12d5ba562cc0a063be90f650434209dae6d9a"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.input.json",
+      "sha256": "8c0830041cb365d798f4ae4e55312f22904650574c732a2c9f845dbaa8e48e08"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.prompt.md",
+      "sha256": "6c720f2d22a6980fc94c3ee4d94037f5808f01b7db40e349c95989bfb9882137"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.diagnostics.json",
+      "sha256": "5485426d0ba9979c71a17c7addf3edf040b6622c95cf9c094e074def49b77e51"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/task-0-scene.metrics.json",
+      "sha256": "3cce6fe3fa94c727fe3b7db0e4f75f5ed56df08309fbad180382cba5d0e4b16f"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/task-1-review.metrics.json",
+      "sha256": "1c087a36105b3aeb2a4bbaeb8068a5dd68a7dcdc4a088ffeeccb39baa794b7a9"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/task-2-repair.metrics.json",
+      "sha256": "56bacbe219b623d826fd168fd23aa1562826b8ab8cfd0be5f9a6b87be74dcbb6"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/task-3-review.metrics.json",
+      "sha256": "e1ad8dea829e5ba52d59f500028df72ea2245697290438f5106ecfdd61da8916"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/candidate.js",
+      "sha256": "569f579d62a90c291e61202fcfa7b74dc2837b69fd1bcfe5e5da10efd4991de2"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/render-input.json",
+      "sha256": "09bc6ab44b88b0dd8e903c8bc34c6a343802d409c0e7e29ac019bcf8b321c4f5"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/1280x720-6.png",
+      "sha256": "8b5194ccb7851208f9daf623876f62eda9ec36495765f9fa6ac2a676c2e381ed"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/review.json",
+      "sha256": "9917d4a63ee0e5736f0e79db126c5f038e457105c3ebf52dcf597d1c181b892f"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/repair.json",
+      "sha256": "adf0837d97efe0484ec0cca9ecd57e6cbbcaa352daff636d18d80c6efc0e7d5a"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/review.prompt.md",
+      "sha256": "8a290ab9ac483b6ba9fe276fc888f7a63cdd5f37b35cd5a1001ec50d60075add"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/repair.prompt.md",
+      "sha256": "5a44529bc11b6dbff1b0a6cd281a92e344ace6ad82bb8705aab9a356514c5f6a"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/review.metrics.json",
+      "sha256": "1c087a36105b3aeb2a4bbaeb8068a5dd68a7dcdc4a088ffeeccb39baa794b7a9"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/repair.metrics.json",
+      "sha256": "56bacbe219b623d826fd168fd23aa1562826b8ab8cfd0be5f9a6b87be74dcbb6"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/1280x720-sheet-0.png",
+      "sha256": "19d680fb3903f33b742ce61fddb89066830abc1acab6f23b30164c4afa8b175c"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/1280x720-sheet-1.png",
+      "sha256": "ff5f6c919b980511f49fc4201aae2c6aa0b72afe3b7051e4759033812dd40d03"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/960x720-sheet-0.png",
+      "sha256": "ca78cdec0935876e2bacc777531785d4aafe978ee7838b8a038e9e1f430b0a62"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/960x720-sheet-1.png",
+      "sha256": "45d73f86d321e239540dde9298a38392d6ab189cad1b0085933aa4e701ce6693"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/0/1280x720-11.png",
+      "sha256": "398a2365b687b1a6c9c4c25d05d9c3ced91da441a3c7852f739802ff2700f4ac"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/candidate.js",
+      "sha256": "4a0ab5b33ddcaf00b4748e42a226e3081cd758c762d344aba535537932c5d696"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/render-input.json",
+      "sha256": "9334de6129a5fcfd2b148cc62df801f911a3ec5954f4e17c9341241f07472147"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/1280x720-6.png",
+      "sha256": "4839d72fc2c9a9facb864a38daf59e82665e699c7c914f244384611f2eb6f4bf"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/review.json",
+      "sha256": "ebed838d17e575c69a20a544c255d87380dd8c605bd8df9c832bb045bf8fc423"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/review.prompt.md",
+      "sha256": "2131b6dcccf3539947890202b608a86fd7bcf15a77cd590a4f930a99128c79c6"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/review.metrics.json",
+      "sha256": "e1ad8dea829e5ba52d59f500028df72ea2245697290438f5106ecfdd61da8916"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/1280x720-sheet-0.png",
+      "sha256": "e02719ba4fb894ccc99f6e193ab7a0f166bdd81d8a23637e46f72b093216634e"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/1280x720-sheet-1.png",
+      "sha256": "5ea5f998279099f59b1954b0e18fb5894f76755a35122e291f220e0db2fa237a"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/960x720-sheet-0.png",
+      "sha256": "37ce2f91aa22de6f2a34820bbc4b2fde2dc590eb59b07c8f551152352878ebd9"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/960x720-sheet-1.png",
+      "sha256": "c175deaa89ac04d9ab22935bef52bacff5fb10076d1414ff6aa979583b5a32b1"
+    },
+    {
+      "path": "5a31c062-d7d1-4126-bcf7-de733f399d3c/scene-0.visual/1/1280x720-11.png",
+      "sha256": "cacdab08818c69a4b724fe8d74ea3330328a396cfc2909ef754eecbc70313399"
+    }
+  ],
+  "summary": {
+    "topics": 24,
+    "attempted": 6,
+    "counts": {
+      "pending": 18,
+      "complete": 3,
+      "failed": 3
+    },
+    "firstReviewApprovals": 1,
+    "repairedApprovals": 2,
+    "summedSceneSeconds": 1232.7901360000003,
+    "metrics": {
+      "providerCalls": 30,
+      "inputTokens": 741844,
+      "outputTokens": 54281,
+      "cacheReadTokens": 413696,
+      "failedValidations": 4
+    }
+  }
+}

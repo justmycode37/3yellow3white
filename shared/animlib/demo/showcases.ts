@@ -1,7 +1,7 @@
 import {createPlayer} from '../src/index';
 import type {PlayerState} from '../src/types';
 interface Run{id:string;title:string;category:string;mode:string;status:string;stage?:string;error?:string;prompt:string;evidenceAttempt?:number;review?:{attempt?:number;review?:unknown;approved?:boolean};scenes:{id:string;source:string;audio:{id:string;url:string}}[]}
-interface Manifest{model:string;thinking:string;boundary:string;runs:Run[]}
+interface Manifest{model:string;thinking:string;boundary:string;runs:Run[];executions?:{topics:string[]}[]}
 const el=<T extends HTMLElement>(id:string)=>document.getElementById(id) as T;
 const choice=el<HTMLSelectElement>('run'),seek=el<HTMLInputElement>('seek'),play=el<HTMLButtonElement>('play');
 const query=new URL(location.href),manifestUrl=query.searchParams.get('manifest')??'http://127.0.0.1:5211/manifest.json';
@@ -36,10 +36,13 @@ async function refresh(){
   const response=await fetch(manifestUrl);if(request!==refreshRevision)return;if(!response.ok)throw new Error('Showcase manifest unavailable.');
   const incoming:Manifest=await response.json();if(request!==refreshRevision)return;manifest=incoming;
   if(!manifest.runs.length)throw new Error('No showcase topics in this manifest.');
+  const requestedTopics=new Set(manifest.executions?.flatMap(e=>e.topics)??[]);
+  const visibleRuns=requestedTopics.size?manifest.runs.filter(r=>requestedTopics.has(r.id)):manifest.runs;
+  if(!visibleRuns.length)throw new Error('No requested showcase topics in this manifest.');
   const requested=choice.value||query.searchParams.get('run');
-  const selected=(manifest.runs.find(r=>r.id===requested)??manifest.runs.find(r=>r.scenes.length)??manifest.runs[0]).id;
-  choice.replaceChildren(...manifest.runs.map((r,i)=>new Option(`${String(i+1).padStart(2,'0')} · ${r.title} · ${r.status}`,r.id)));choice.value=selected;
-  const counts=manifest.runs.reduce((a:Record<string,number>,r)=>(a[r.status]=(a[r.status]??0)+1,a),{});el('overall').textContent=Object.entries(counts).map(([k,n])=>`${n} ${k}`).join(' · ');el('boundary').textContent=manifest.boundary;
+  const selected=(visibleRuns.find(r=>r.id===requested)??visibleRuns.find(r=>r.scenes.length)??visibleRuns[0]).id;
+  choice.replaceChildren(...visibleRuns.map(r=>new Option(`${String(manifest.runs.indexOf(r)+1).padStart(2,'0')} · ${r.title} · ${r.status}`,r.id)));choice.value=selected;
+  const counts=visibleRuns.reduce((a:Record<string,number>,r)=>(a[r.status]=(a[r.status]??0)+1,a),{});el('overall').textContent=`${visibleRuns.length} topics · `+Object.entries(counts).map(([k,n])=>`${n} ${k}`).join(' · ');el('boundary').textContent=manifest.boundary;
   const run=manifest.runs.find(r=>r.id===selected)!;if(loadedKey!==`${run.id}:${run.status}:${run.scenes[0]?.source.length??0}`)await load(selected);else describe(run);
 }
 choice.addEventListener('change',()=>void load(choice.value).catch(fail));el('refresh').addEventListener('click',()=>{loadedKey='';void refresh().catch(fail);});

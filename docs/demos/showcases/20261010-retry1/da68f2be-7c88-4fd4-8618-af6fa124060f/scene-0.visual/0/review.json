@@ -1,0 +1,74 @@
+{
+  "sourceSha256": "e0b319b24b977108081db3c8916f967475a3d0fae3400537cb986581eeadba00",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.8499999999999996,
+        5,
+        7.3,
+        10
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        11.399999999999999,
+        12.649999999999999,
+        15,
+        17.1,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.8499999999999996,
+        5,
+        7.3,
+        10
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        11.399999999999999,
+        12.649999999999999,
+        15,
+        17.1,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 0,
+      "objectIds": [
+        "tails-label",
+        "tails-leader",
+        "bilayer"
+      ],
+      "problem": "The lipid tails obscure the ending of “Hydrophobic tails” in both aspect ratios. This overlap persists throughout the supplied frames.",
+      "fix": "Move the label fully left of the membrane silhouette and adjust its leader, preserving readable margins in both aspect ratios."
+    }
+  ]
+}

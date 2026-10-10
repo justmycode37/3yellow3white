@@ -59,7 +59,7 @@ interrupted; an unchanged-source retry played to 20 seconds. Bézier interior
 motion was observed in the browser; independent reviewers used native samples.
 
 The [baseline archive](20261010-batch1/README.md) retains 24 candidate sources and
-478 hashed evidence artifacts. `showcase-audit.ts` verifies every archive digest
+624 hashed evidence artifacts, including exact prompt transcripts. `showcase-audit.ts` verifies every archive digest
 against raw data and all 18 accepted sources against their approved source hash.
 The shared audio has 480,000 zero-valued mono PCM samples: exactly 20 seconds,
 24 kHz, 16 bit. No encoded movie or frame-rate certification is claimed.
@@ -68,11 +68,64 @@ Baseline manifest records runtime revision `c4ee774`. A concurrent, separately c
 subtitle feature changed production code to `bfefe25` while baseline generation
 was running; the existing process retained its loaded modules and the scene
 Markdown did not change. Fresh serial reruns use that later production revision,
-record runtime file hashes, and preserve the exact topic prompt hashes. Therefore
-rerun outcomes are **not a controlled estimate of concurrency's effect**.
+record runtime file hashes, and preserve the exact topic prompt hashes. Concurrent
+work subsequently edited production Markdown during the retry process. Production
+reads these files per scene and per verification stage; process lifetime does not
+freeze them. Therefore rerun outcomes are **not a controlled estimate of
+concurrency's effect**.
+
+The [effective prompt audit](effective-prompt-audit.json) compares each saved
+combined prompt against the original Markdown content from `c4ee774`, normalizing
+CRLF to LF for the containment check. It also records each transcript's byte hash.
+All baseline stages contain their original components. Retry differences:
+
+| Topic | Authoring instructions | Verification instructions |
+| --- | --- | --- |
+| Planetary | Original | Original |
+| Interference | Original | Updated scene-verify |
+| Kepler, membrane | Updated visualization and animation-quality | Also updated scene-verify |
+| Optimization | Updated scene-craft, visualization and animation-quality | No review completed |
+| Terrain | Updated scene-craft, visualization and animation-quality | Also updated scene-verify |
+
+Batch manifest `promptFiles` are startup checks, not evidence that later dynamic
+reads stayed unchanged. Exact retry transcripts are preserved in its archive.
+No concurrent changes were reverted or used to manually edit generated scenes.
 
 ## Serial reruns
 
-One fresh serial rerun is being made for each of the six failed topics in
-`20261010-retry1`. Baseline failures and sources remain intact. Results will be
-recorded here after generation and independent frame review finish.
+One fresh serial rerun finished for each of the six failed topics in
+`20261010-retry1`. Baseline failures and sources remain intact. The other 18
+catalog entries are pending placeholders in this subset manifest, not missing
+rerun work. The gallery displays only the six requested topics.
+
+| Topic | Retry production result | Independent result |
+| --- | --- | --- |
+| Planetary gears | Approved after repair | Ready within idealized mechanism scope |
+| Membrane | Approved after repair | Ready within schematic scope |
+| Interference | Approved on first review | Revise: coarse field and incorrect sign interpolation |
+| Kepler | Rejected after repair | Revise: focus label points ambiguously toward sector endpoint |
+| Optimization | Native rendering failed | Partial frames hide descent; buffer allocation exceeds configured device limit |
+| Terrain | Rejected after repair | River/flow front and rocky elevation layer remain hidden |
+
+Across both batches, **21 of 24 topics have a production-approved candidate**.
+Of those, **18 are independently ready within the stated sampled scope**;
+Fourier, Dijkstra and interference still require revision. Kepler, optimization
+and terrain remain failed. This benchmark does not claim all 24 are solved.
+See [retry frame review](retry-review.md) for evidence and scientific limits.
+
+The serial rerun used 30 provider calls and 1,232.8 summed scene seconds, with
+four unsuccessful author/repair validation calls. Its portable archive has 164
+hashed artifacts and six untouched candidate sources; three approved source
+hashes match their final production review. Both archive identity audits and
+the exact 20-second zero-audio checks passed. Backend and animlib typechecks and
+the gallery production build passed.
+
+Planetary playback reached `ended` at 20 seconds in the frozen browser preview;
+[saved screenshot](gear-browser.png) shows the final mechanism. An earlier cold
+browser compilation interrupted; unchanged-source Refresh succeeded. The
+[failure screenshot](gear-browser-interrupted.png) is retained. A copied build
+on port 5213 avoids development reloads caused by concurrent work. These browser
+checks do not certify frame rate or every interactive orbit angle.
+
+Open the [24-topic baseline](http://127.0.0.1:5213/showcases.html?run=bezier) or
+[six-topic rerun](http://127.0.0.1:5213/showcases.html?manifest=http%3A%2F%2F127.0.0.1%3A5212%2Fmanifest.json&run=planetary).

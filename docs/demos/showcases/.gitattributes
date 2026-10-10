@@ -1,2 +1,4 @@
 # Evidence hashes require byte-identical checkout on every platform.
 ** -text
+# Prompt transcripts preserve the production files' mixed line endings verbatim.
+**/*.prompt.md -whitespace

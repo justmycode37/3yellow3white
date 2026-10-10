@@ -48,10 +48,23 @@ Start animlib's normal Vite demo server on port 5207, then open
 Data/evidence server binds to `127.0.0.1:5211`. Set `SHOWCASE_PORT` consistently
 during generation and serving to use a separate port for another batch.
 
+For playback without development reloads, build with `npm run demo:build --workspace animlib`.
+Then from `shared/animlib` run
+`node ../../node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 5213`.
+Open `/showcases.html` on that port with the same optional `manifest` query.
+This session serves a copied build from `data/showcases/gallery-preview-20261010`
+on 5213, keeping parallel demo edits from reloading the player.
+
+Current session: [24-topic baseline](http://127.0.0.1:5213/showcases.html?run=bezier)
+and [six-topic rerun](http://127.0.0.1:5213/showcases.html?manifest=http%3A%2F%2F127.0.0.1%3A5212%2Fmanifest.json&run=planetary).
+
 Export with `bun src/agents/showcase-export.ts`. The exported batch includes
 untouched sources, hashes, inputs, metrics, both review/repair attempts and native
 contact sheets. `showcase-trial.ts serve-archive` replays the repository archive
 without needing the ignored raw run directory.
+New exports also retain exact per-stage prompt transcripts. Startup file hashes
+do not freeze dynamically read Markdown if another task edits the checkout;
+consult the effective-prompt audit and results for the observed retry drift.
 After exporting, `bun src/agents/showcase-audit.ts` verifies artifact hashes,
 byte-identical scene sources, the production-approved source hashes, and the
 20-second PCM silence against raw generation data. It never edits or compiles scenes.

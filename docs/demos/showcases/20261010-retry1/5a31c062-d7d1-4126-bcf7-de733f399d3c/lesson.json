@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Textured river valley\n\n## Beat 1: Textured river valley\n\nContent needed: 3D: Create exactly one 20-second silent single-scene visualization showcase: Textured river valley. Build a continuous terrain mesh with ridges and a connected river valley, using meaningful elevation colors and restrained rock/grass/water materials. Trace a downhill water path from the same terrain function so it follows the valley rather than tunneling through hills. State that terrain and flow are procedural illustrations. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Textured river valley",
+    "centralQuestion": "Textured river valley",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Textured river valley. Build a continuous terrain mesh with ridges and a connected river valley, using meaningful elevation colors and restrained rock/grass/water materials. Trace a downhill water path from the same terrain function so it follows the valley rather than tunneling through hills. State that terrain and flow are procedural illustrations. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Textured river valley",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Textured river valley",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Build a continuous terrain mesh with ridges and a connected river valley, using meaningful elevation colors and restrained rock/grass/water materials. Trace a downhill water path from the same terrain function so it follows the valley rather than tunneling through hills. State that terrain and flow are procedural illustrations."
+        ],
+        "visualDescription": "3D: Create exactly one 20-second silent single-scene visualization showcase: Textured river valley. Build a continuous terrain mesh with ridges and a connected river valley, using meaningful elevation colors and restrained rock/grass/water materials. Trace a downhill water path from the same terrain function so it follows the valley rather than tunneling through hills. State that terrain and flow are procedural illustrations. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Textured river valley. Build a continuous terrain mesh with ridges and a connected river valley, using meaningful elevation colors and restrained rock/grass/water materials. Trace a downhill water path from the same terrain function so it follows the valley rather than tunneling through hills. State that terrain and flow are procedural illustrations. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

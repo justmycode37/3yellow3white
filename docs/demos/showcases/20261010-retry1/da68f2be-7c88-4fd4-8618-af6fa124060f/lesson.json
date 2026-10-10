@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Membrane and ion channel\n\n## Beat 1: Membrane and ion channel\n\nContent needed: 3D: Create exactly one 20-second silent single-scene visualization showcase: Membrane and ion channel. Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Membrane and ion channel",
+    "centralQuestion": "Membrane and ion channel",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Membrane and ion channel. Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Membrane and ion channel",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Membrane and ion channel",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth."
+        ],
+        "visualDescription": "3D: Create exactly one 20-second silent single-scene visualization showcase: Membrane and ion channel. Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Membrane and ion channel. Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

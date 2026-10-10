@@ -1,0 +1,22 @@
+{
+  "id": "silent-lipid",
+  "scriptHash": "f0999b70316e9e7d70abd842a0983d5360931c45b0ebc0fb265885c5c3e851f9",
+  "totalScenes": 1,
+  "scenes": [
+    {
+      "id": "beat-1",
+      "title": "Membrane and ion channel",
+      "context": "3D: Create exactly one 20-second silent single-scene visualization showcase: Membrane and ion channel. Build a molecular-scale schematic of a lipid bilayer with hydrophilic heads outside and paired hydrophobic tails inward, plus a membrane-spanning pore. Move a few ions through the pore, not through lipid tails. Label geometry as schematic; maintain recognizable membrane thickness and depth. Use 3D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+      "startSec": 0,
+      "durationSec": 20,
+      "audio": {
+        "id": "silent-lipid",
+        "url": "http://127.0.0.1:5212/silence.wav",
+        "sha256": "cefe45b0c941084dfdaebce63b3e6b3ffee756334276589bbd5a33e4ebd85db3",
+        "sampleCount": 480000
+      },
+      "utterances": [],
+      "pauses": []
+    }
+  ]
+}

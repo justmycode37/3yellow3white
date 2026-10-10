@@ -1,0 +1,85 @@
+{
+  "sourceSha256": "4a0ab5b33ddcaf00b4748e42a226e3081cd758c762d344aba535537932c5d696",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3,
+        5.374999999999997,
+        7.8333333333333215,
+        10.250000000000004
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        11.458333333333345,
+        12.666666666666687,
+        15.125000000000037,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3,
+        5.374999999999997,
+        7.8333333333333215,
+        10.250000000000004
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        11.458333333333345,
+        12.666666666666687,
+        15.125000000000037,
+        16.666666666666668,
+        18.333333333333332,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 10.25,
+      "objectIds": [
+        "connected-river",
+        "flow-front",
+        "watershed"
+      ],
+      "problem": "The river is faintly visible during the 0.5-second fade, but disappears against the opaque terrain by 3 seconds in both aspect ratios. Subsequent operation samples show no identifiable advancing front or connected trace; the completed path is also absent from the final hold. The earlier visibility finding remains unresolved.",
+      "fix": "Correct the terrain/water depth or face visibility so the river, advancing front and completed trace remain visible after the terrain becomes opaque. Preserve the terrain-derived downhill coordinates and timing; verify operation interiors and the final hold."
+    },
+    {
+      "timeSec": 20,
+      "objectIds": [
+        "high-elevation-rock",
+        "low-elevation-grass",
+        "continuous-terrain",
+        "rock-label"
+      ],
+      "problem": "Both final frames still show green ridges throughout, with no visible gray rocky-high-ground region corresponding to the legend. The earlier elevation-material finding remains unresolved.",
+      "fix": "Correct the elevation skins' rendering relative to the continuous terrain so their existing thresholds produce visible grass and gray rock regions. Preserve the geometry, palette roles and corrected disclaimer placement."
+    }
+  ]
+}
