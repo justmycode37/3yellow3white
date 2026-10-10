@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 base, revision, mode, job_file = sys.argv[1:]
 
 def request(path, data=None, owner="container-check", key="container-check"):
-    headers = {"x-user-id": owner, "Idempotency-Key": key}
+    headers = {"x-user-id": owner, "x-user-name": "Zo%C3%AB Reviewer", "Idempotency-Key": key}
     if data is not None:
         headers["Content-Type"] = "application/json"
         data = json.dumps(data).encode()
@@ -22,7 +22,12 @@ def get_json(path, **kwargs):
     return json.loads(request(path, **kwargs))
 
 assert get_json("/healthz") == {"ok": True, "revision": revision}
-assert get_json("/api/me")["user"]["id"] == "shared-user"
+assert get_json("/api/me")["user"] == {"id": "container-check", "name": "Zoë Reviewer"}
+assert get_json("/api/me", owner="staff@example.org")["user"]["id"] == "staff@example.org"
+with urlopen(base + "/api/me", timeout=5) as response:
+    assert json.load(response) == {"user": None}
+    assert response.headers.get("Cache-Control") == "private, no-store"
+    assert response.headers.get("Set-Cookie") is None
 for path in ["/", "/plan", "/settings", "/watch/demo"]:
     html = request(path).decode()
     assets = re.findall(r'(?:src|href)="(/static/[^\"]+)"', html)

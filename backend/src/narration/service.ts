@@ -56,7 +56,7 @@ export class NarrationService {
   readonly available: boolean;
   private initialized?: Promise<void>;
   private mutations: Promise<unknown> = Promise.resolve();
-  private work: Promise<void> = Promise.resolve();
+  private work = new Set<Promise<void>>();
   constructor(options: { root?: string; provider?: SpeechProvider } = {}) {
     this.root = resolve(options.root ?? process.env.NARRATION_DATA_DIR ?? ".narration");
     this.provider = options.provider ?? createElevenLabs(settingsFromEnv());
@@ -133,12 +133,13 @@ export class NarrationService {
   }
   private enqueue(job: NarrationJob, story: Storyline) {
     logEvent('narration.queued', { narrationId: job.id, totalChunks: job.totalChunks });
-    this.work = this.work.then(() => this.run(job, story)).catch(() => {
+    const work = this.run(job, story).catch(() => {
       // run normally persists failure; reaching here means that persistence also failed.
       logEvent('narration.persistence_failed', { narrationId: job.id, code: 'PERSISTENCE' }, 'error');
-    });
+    }).finally(() => { this.work.delete(work); });
+    this.work.add(work);
   }
-  async idle() { await this.mutations; await this.work; }
+  async idle() { await this.mutations; await Promise.all(this.work); }
   async package(owner: string, id: string): Promise<NarrationPackageV1> {
     const job = await this.get(owner, id);
     if (job.status !== "complete") throw new NarrationError("NOT_READY", "Narration is not complete.", 409);

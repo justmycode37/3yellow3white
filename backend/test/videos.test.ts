@@ -20,6 +20,70 @@ async function waitFor(check: () => boolean) {
   throw new Error('Timed out waiting for generation')
 }
 
+test('videos start independently, deduplicate active jobs, and cancel only the deleted video', async () => {
+  const started = new Map<string, number>()
+  const signals = new Map<string, AbortSignal>()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  const service = new VideoService(':memory:', async (request, index, context) => {
+    if (index === 0) {
+      started.set(context!.videoId, (started.get(context!.videoId) ?? 0) + 1)
+      signals.set(context!.videoId, context!.signal)
+      await Promise.race([gate, new Promise<void>(resolve => context!.signal.addEventListener('abort', () => resolve(), { once: true }))])
+    }
+    return fixture(request, index)
+  }); services.push(service)
+  try {
+    const first = service.create(SHARED_OWNER, 'first', input)
+    await waitFor(() => started.has(first.id))
+    const others = Array.from({ length: 4 }, (_, i) => service.create(SHARED_OWNER, `other-${i}`, input))
+    expect(service.create(SHARED_OWNER, 'first', input).id).toBe(first.id)
+    await waitFor(() => started.size === 5)
+    expect([...started.values()]).toEqual([1, 1, 1, 1, 1])
+    service.delete(first.id)
+    expect(signals.get(first.id)!.aborted).toBe(true)
+    expect(others.every(video => !signals.get(video.id)!.aborted)).toBe(true)
+    release()
+    await waitFor(() => others.every(video => service.get(video.id, SHARED_OWNER)?.status === 'complete'))
+    for (const video of others) expect(service.get(video.id, SHARED_OWNER)!.scenes.map(scene => scene.index)).toEqual([0, 1])
+    expect(service.get(first.id, SHARED_OWNER)).toBeUndefined()
+  } finally { release() }
+})
+
+test('shutdown drains all active videos and restart resumes them concurrently', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'aha-concurrent-resume-'))
+  const started = new Set<string>(), aborted = new Set<string>()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  const service = new VideoService(join(dir, 'db'), async (request, index, context) => {
+    if (index === 1) {
+      started.add(context!.videoId)
+      await new Promise<void>(resolve => context!.signal.addEventListener('abort', () => { aborted.add(context!.videoId); resolve() }, { once: true }))
+    }
+    return fixture(request, index)
+  }); services.push(service)
+  try {
+    const videos = Array.from({ length: 3 }, (_, i) => service.create(SHARED_OWNER, `video-${i}`, input))
+    await waitFor(() => started.size === 3)
+    await service.close(); services.splice(services.indexOf(service), 1)
+    expect(aborted.size).toBe(3)
+    const resumed = new Map<string, number>()
+    const reopened = new VideoService(join(dir, 'db'), async (request, index, context) => {
+      if (!resumed.has(context!.videoId)) resumed.set(context!.videoId, index)
+      await gate
+      return fixture(request, index)
+    }); services.push(reopened)
+    await waitFor(() => resumed.size === 3)
+    expect([...resumed.values()]).toEqual([1, 1, 1])
+    release()
+    await waitFor(() => videos.every(video => reopened.get(video.id, SHARED_OWNER)?.status === 'complete'))
+  } finally {
+    release()
+    await Promise.all(services.splice(0).map(service => service.close()))
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
 test('JSON and multipart creation forward the viewing preference and distinguish idempotent requests', async () => {
   const received: unknown[] = []
   const service = new VideoService(':memory:', async request => { received.push(request.videoMode); return null }); services.push(service)
@@ -44,6 +108,40 @@ test('JSON and multipart creation forward the viewing preference and distinguish
     }
   }
   expect(received).toEqual(['classic', 'interactive', undefined, 'classic', 'interactive', undefined])
+})
+
+test('video creation retains more than ten uploaded, JSON, or combined documents', async () => {
+  for (const [fileCount, documentCount] of [[12, 0], [0, 12], [6, 6]]) {
+    let received: { name: string; text: string }[] | undefined
+    const service = new VideoService(':memory:', async request => { received = request.documents; return null }); services.push(service)
+    const documents = Array.from({ length: documentCount }, (_, i) => ({ name: `document-${i}.md`, text: `Document ${i} describes a basis.` }))
+    const files = Array.from({ length: fileCount }, (_, i) => new File([`File ${i} describes a vector.`], `file-${i}.md`))
+    const payload = JSON.stringify({ ...input, topic: '', documents })
+    const form = new FormData(); form.set('request', payload)
+    for (const file of files) form.append('files', file)
+    const response = await service.handle(api('', { method: 'POST', headers: { 'Idempotency-Key': 'many-documents' }, body: fileCount ? form : payload }))
+    expect(response.status).toBe(202)
+    const video = await response.json()
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.status === 'complete')
+    expect(received).toEqual([...documents, ...await Promise.all(files.map(async file => ({ name: file.name, text: await file.text() })))])
+  }
+})
+
+test('large JSON and multipart video sources reach the worker intact', async () => {
+  const text = 'Vector coordinates. '.repeat(60_000);
+  for (const multipart of [false, true]) {
+    let received: { name: string; text: string }[] | undefined
+    const service = new VideoService(':memory:', async request => { received = request.documents; return null }); services.push(service)
+    const documents = [{ name: 'notes.md', text }]
+    const payload = JSON.stringify({ ...input, topic: '', documents })
+    const form = new FormData(); form.set('request', payload)
+    form.append('files', new File([text], 'lecture.txt'))
+    const response = await service.handle(api('', { method: 'POST', headers: { 'Idempotency-Key': 'large-source' }, body: multipart ? form : payload }))
+    expect(response.status).toBe(202)
+    const video = await response.json()
+    await waitFor(() => service.get(video.id, SHARED_OWNER)?.status === 'complete')
+    expect(received).toEqual(multipart ? [...documents, { name: 'lecture.txt', text }] : documents)
+  }
 })
 
 test('video failures use user-facing messages in live events and preserve ready scenes', async () => {
@@ -143,7 +241,7 @@ test('thumbnail generation overlaps scenes, persists, and finishes before the te
 test('thumbnail failure preserves playable videos and does not stop the queue', async () => {
   const service = new VideoService(':memory:', fixture, 'pi', async () => { throw new Error('private provider error') }); services.push(service)
   const first = service.create(SHARED_OWNER, 'one', input), second = service.create(SHARED_OWNER, 'two', input)
-  await waitFor(() => service.get(second.id, SHARED_OWNER)?.status === 'complete')
+  await waitFor(() => [first, second].every(video => service.get(video.id, SHARED_OWNER)?.status === 'complete'))
   const video = service.get(first.id, SHARED_OWNER)!
   expect(video).toMatchObject({ status: 'complete', thumbnailStatus: 'failed' })
   expect(video.scenes).toHaveLength(2)

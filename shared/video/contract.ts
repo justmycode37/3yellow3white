@@ -22,6 +22,14 @@ export interface VideoScene {
   words?: { id: string; text: string; start: number; end: number }[]
 }
 
+/** Provider totals plus provisional output estimates, including silent reasoning. */
+export interface VideoTokenUsage {
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  estimatedOutputTokens: number
+}
+
 export interface VideoManifest {
   schemaVersion: 1
   id: string
@@ -31,6 +39,7 @@ export interface VideoManifest {
   provider: 'simulated' | 'pi'
   createdAt: string
   scenes: VideoScene[]
+  tokenUsage?: VideoTokenUsage
   thumbnail?: import('./thumbnail').ThumbnailArtwork
   thumbnailStatus?: 'generating' | 'complete' | 'failed'
   error?: string

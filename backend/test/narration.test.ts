@@ -29,6 +29,26 @@ async function setup(synthesize = async (input: { text: string }) => speech(inpu
   const provider: SpeechProvider = { settings, synthesize: async input => { inputs.push(input); return synthesize(input); } };
   return { root, inputs, provider, service: new NarrationService({ root, provider }) };
 }
+test("independent narration jobs synthesize concurrently and identical submissions are deduplicated", async () => {
+  const started: string[] = [];
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const { service } = await setup(async input => { started.push(input.text); await gate; return speech(input.text); });
+  try {
+    const scripts = ['One.', 'Two.', 'Three.'].map(text => `Narration: ${text}`);
+    const jobs = await Promise.all(scripts.map(markdown => service.submit('owner', markdown)));
+    expect((await service.submit('owner', scripts[0])).id).toBe(jobs[0].id);
+    for (let i = 0; i < 300 && started.length < 3; i++) await Bun.sleep(10);
+    expect(started.sort()).toEqual(['One.', 'Three.', 'Two.']);
+    let idle = false;
+    const draining = service.idle().then(() => { idle = true; });
+    await Bun.sleep(10);
+    expect(idle).toBe(false);
+    release(); await draining;
+    for (const job of jobs) expect((await service.get('owner', job.id)).status).toBe('complete');
+  } finally { release(); await service.idle(); }
+});
+
 test("parses labelled Markdown without speaking context, preserving order and roles", () => {
   const parsed = parseStoryline(script);
   expect(parsed.title).toBe("Counting");
@@ -181,7 +201,7 @@ test("ElevenLabs uses normalized speech, masks provider messages, and only retri
   const output = await provider.synthesize({ text: "64", previousText: "Before", nextText: "After" });
   expect(sent).toHaveLength(2); expect(sleeps).toEqual([1000]);
   expect(sent[0].body).toMatchObject({ text: "64", previous_text: "Before", next_text: "After", model_id: "eleven_multilingual_v2",
-    voice_settings: { stability: 0.45, similarity_boost: 0.75, style: 0.2, use_speaker_boost: true, speed: 1 } });
+    voice_settings: { stability: 0.35, similarity_boost: 0.75, style: 0.35, use_speaker_boost: true, speed: 1.06 } });
   expect(alignWords(output.normalizedAlignment, "u", 0).words.map(w => w.text)).toEqual(["sixty", "four"]);
   const auth = createElevenLabs(settings, "secret", (async () => Response.json({ detail: "secret echo" }, { status: 401 })) as unknown as typeof fetch);
   await expect(auth.synthesize({ text: "Hi", previousText: "", nextText: "" })).rejects.toMatchObject({ code: "PROVIDER_AUTH" });

@@ -7,7 +7,21 @@
       "source": "scenegen/prompts/visualization.md",
       "sha256": "e7378c4958fd4a47d65b0062b5f298161f8cf2c542f140d26635b41b2569dd56",
       "importedSha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3",
-      "revision": "2026-10-10: spatial authoring plus procedural textures, bump and stylized materials reviewed against animlib 076f017; scale/frequency-aware bump refined from initial proof frames; user molecular display preference: space filling for context, bonds for structural explanation"
+      "revision": "2026-10-10: spatial authoring plus procedural textures, bump and stylized materials reviewed against animlib 076f017; scale/frequency-aware bump refined from initial proof frames; user molecular display preference: space filling for context, bonds for structural explanation",
+      "upstreamRevisions": [
+        {
+          "reason": "Update spatial authoring guidance for mesh shading, function and parametric surfaces, basic solids, and swept tubes.",
+          "sha256": "730d0bb5ad7d79d4f0e830387dc65fe39b29ae29f51bc039aeca932b3f652c23"
+        },
+        {
+          "reason": "Document procedural mesh/sphere textures and configurable metallic, roughness, specular, and emissive materials.",
+          "sha256": "98037b20f8cd6a01aca8030e0cf547a22ddbaaff4b0ea25aa1905d233b1646f2"
+        },
+        {
+          "reason": "Document adjustable procedural bump mapping of lighting normals.",
+          "sha256": "804945b416bcb7fd5443b1d0cbd61962daa7873ea215db671d3938dbc96041f9"
+        }
+      ]
     },
     {
       "file": "planning.md",
@@ -35,5 +49,6 @@
     "4aa7113",
     "7fb55ab",
     "076f017"
-  ]
+  ],
+  "mergeNote": "Merged origin/main aaf8249 on 2026-10-10. Retained reviewed branch spatial/material/molecular guidance, verification-first repair and targeted orbit; upstream texture guidance is already covered. Kept both branch and upstream authoring-reference assertions and all demo entry points."
 }

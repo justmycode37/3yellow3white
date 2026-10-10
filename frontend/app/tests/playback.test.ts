@@ -226,3 +226,24 @@ test('reaching the boundary while the next scene is preparing resumes without re
   assert.equal(playback.getState().playing, true)
   playback.dispose()
 })
+
+
+test('frequent usage-only snapshots preserve scenes, time, and playback intent', async () => {
+  const player = new StreamingPlayer(), playback = new LessonPlayback(player, false)
+  const first = manifest(1)
+  await playback.acceptManifest(first)
+  player.emit({ time: 3, status: 'paused' })
+  const priorCalls = [...player.calls]
+  for (let revision = 2; revision < 10; revision++) {
+    await playback.acceptManifest({ ...first, revision, tokenUsage: { inputTokens: 50, outputTokens: 20, totalTokens: 70, estimatedOutputTokens: revision * 10 } })
+  }
+  assert.equal(player.state.scenes.length, 1)
+  assert.equal(playback.getState().time, 3)
+  assert.equal(playback.getState().playing, false)
+  assert.deepEqual(player.calls, priorCalls)
+  await playback.toggle()
+  await playback.acceptManifest({ ...first, revision: 10, tokenUsage: { inputTokens: 50, outputTokens: 100, totalTokens: 150, estimatedOutputTokens: 0 } })
+  assert.equal(playback.getState().playing, true)
+  assert.equal(playback.getState().time, 3)
+  playback.dispose()
+})

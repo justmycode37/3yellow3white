@@ -1,3 +1,4 @@
+import { createAgentUsageObserver } from '../token-usage.js';
 import { createAgentSession, DefaultResourceLoader, defineTool, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { AssistantMessage, ImageContent } from "@earendil-works/pi-ai";
@@ -9,6 +10,9 @@ import { SceneCompileError } from 'animlib/core';
 import { setTimeout as delay } from 'node:timers/promises';
 import { logEvent } from '../logging.js';
 import type { LogFields } from '../logging.js';
+import { fileURLToPath } from 'node:url';
+
+const webAccessExtension = fileURLToPath(import.meta.resolve('pi-web-access/dist/index.js'));
 
 export function validationMessage(error: unknown): string {
   if (error instanceof SceneCompileError) {
@@ -55,7 +59,7 @@ export const AGENT_COMPLETION_INSTRUCTIONS: Record<NonNullable<AgentTask['output
   text: '',
   'validated-reference': '\n\nOutput completion protocol: validate_output stores each valid complete output and returns its candidateId. You may review and revise it further. When finished, return only {"candidateId":"the chosen validated candidate ID"}. Do not repeat the source in your final response. This replaces earlier final-output formatting instructions only.',
   submit: '\n\nOutput completion protocol: validate_output is an optional nonterminal check. When your complete output is ready as your final answer, call submit_output with it, as the only tool call in that turn. A successful submission ends the task; errors are returned for repair. Do not submit a draft or repeat the source afterward. This replaces earlier final-output formatting and mandatory validate_output instructions only; all content and quality requirements still apply.',
-  'submit-only': '\n\nOutput completion protocol: submit_output is the only available tool. It validates your complete final output and finishes the task on success. If validation fails, it returns errors so you can repair and resubmit. When satisfied with correctness and explanatory quality, call submit_output with the complete final output as the only tool call in that turn. Do not submit a draft or repeat the source afterward. This replaces earlier final-output formatting and mandatory validate_output instructions only; all content and quality requirements still apply.',
+  'submit-only': '\n\nOutput completion protocol: submit_output is the only output validation tool. Web research tools are available for gathering evidence before submission. submit_output validates your complete final output and finishes the task on success. If validation fails, it returns errors so you can repair and resubmit. When satisfied with correctness and explanatory quality, call submit_output with the complete final output as the only tool call in that turn. Do not submit a draft or repeat the source afterward. This replaces earlier final-output formatting and mandatory validate_output instructions only; all content and quality requirements still apply.',
 };
 export interface AgentRunner { run(task: AgentTask): Promise<string> }
 
@@ -103,6 +107,7 @@ export class PiAgentRunner implements AgentRunner {
     const controller = new AbortController();
     const signal = task.signal ? AbortSignal.any([task.signal, controller.signal]) : controller.signal;
     let session: Awaited<ReturnType<typeof createAgentSession>>["session"] | undefined;
+    const usage = createAgentUsageObserver();
     const abort = () => { void session?.abort(); };
     signal.addEventListener("abort", abort, { once: true });
     const validate = async (output: string, kind: AgentValidationMetrics['kind']) => {
@@ -123,9 +128,13 @@ export class PiAgentRunner implements AgentRunner {
       const completion = AGENT_COMPLETION_INSTRUCTIONS[mode];
       const settingsManager = SettingsManager.inMemory({ compaction: { enabled: false }, retry: { enabled: false, provider: { maxRetries: 0 } } });
       const resourceLoader = new DefaultResourceLoader({ cwd: this.config.agentDir, agentDir: this.config.agentDir, settingsManager,
+        additionalExtensionPaths: [webAccessExtension],
         noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true,
         systemPrompt: task.systemPrompt + completion, appendSystemPromptOverride: () => [] });
       await resourceLoader.reload();
+      const webExtensions = resourceLoader.getExtensions();
+      if (webExtensions.errors.length) throw new AgentError('CONFIG', 'Could not load pi-web-access. Check the installed package and web-search.json configuration.');
+      const webTools = webExtensions.extensions.flatMap(extension => [...extension.tools.keys()]);
       const candidates = new Map<string, string>();
       const submissions = new Map<string, string>();
       let currentAssistant: AssistantMessage | undefined;
@@ -166,15 +175,19 @@ export class PiAgentRunner implements AgentRunner {
       const customTools = task.validate ? [...(mode === 'submit-only' ? [] : [validationTool]), ...(isSubmission ? [submissionTool] : [])] : [];
       ({ session } = await createAgentSession({ modelRuntime: runtime, model, thinkingLevel: this.config.thinking,
         cwd: this.config.agentDir, agentDir: this.config.agentDir, settingsManager, resourceLoader,
-        sessionManager: SessionManager.inMemory(), tools: customTools.map(tool => tool.name), customTools }));
+        sessionManager: SessionManager.inMemory(), tools: [...customTools.map(tool => tool.name), ...webTools], customTools }));
+      await session.bindExtensions({ mode: 'print' });
       signal.throwIfAborted();
+      session.subscribe(usage);
       let turns = 0, turnStarted = 0, providerMs = 0;
       let providerStarted: number | undefined;
       const stream = session.agent.streamFunction;
-      session.agent.streamFunction = (...args) => {
+      session.agent.streamFunction = async (...args) => {
         metrics.providerCalls++;
         providerStarted = performance.now();
-        return stream(...args);
+        usage.startRequest(args[0].maxTokens, signal);
+        try { return await stream(...args); }
+        catch (error) { usage.stopRequest(); throw error; }
       };
       session.subscribe(event => {
         if (event.type === 'turn_start') {
@@ -235,7 +248,10 @@ export class PiAgentRunner implements AgentRunner {
       if (signal.aborted) throw signal.reason instanceof AgentError ? signal.reason : new AgentError("ABORTED", "Agent generation was cancelled.");
       throw agentFailure(error);
     } finally {
-      signal.removeEventListener("abort", abort); session?.dispose();
+      usage.dispose();
+      signal.removeEventListener("abort", abort);
+      try { await session?.extensionRunner.emit({ type: 'session_shutdown', reason: 'quit' }); }
+      finally { session?.dispose(); }
     }
   }
 }

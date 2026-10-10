@@ -25,7 +25,7 @@ const server = Bun.serve({
   hostname,
   port: Number(process.env.PORT ?? 8080),
   idleTimeout: 30,
-  maxRequestBodySize: 101 * 1024 * 1024,
+  maxRequestBodySize: Infinity,
   fetch(request, server) {
     // Planning is a bounded model request and can exceed the default idle timeout.
     if (new URL(request.url).pathname === '/api/study-plans') server.timeout(request, 210);

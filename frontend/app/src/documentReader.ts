@@ -5,7 +5,6 @@ const cancelled = (signal?: AbortSignal) => {
 }
 
 export async function readPlanDocument(file: File, onProgress: (message: string) => void, signal?: AbortSignal): Promise<PlanDocument> {
-  if (file.size > 50 * 1024 * 1024) throw new Error('Choose a document smaller than 50 MB.')
   const extension = file.name.split('.').pop()?.toLowerCase()
   if (!['pdf', 'docx', 'txt', 'md'].includes(extension || '')) throw new Error('Choose a PDF, Word (.docx), text, or Markdown document.')
   onProgress('Reading your document…')
@@ -20,7 +19,6 @@ export async function readPlanDocument(file: File, onProgress: (message: string)
     signal?.addEventListener('abort', abort, { once: true })
     try {
       const pdf = await task.promise
-      if (pdf.numPages > 500) throw new Error('This document has more than 500 pages. Split it into a few smaller documents first.')
       const outline = await pdf.getOutline()
       const headings = new Map<string, number>()
       type OutlineItem = { title: string, items?: OutlineItem[] }

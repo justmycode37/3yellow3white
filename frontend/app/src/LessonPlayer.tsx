@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { ReactNode } from 'react'
-import { ArrowRight, Maximize, MenuGlyph, Pause, Play, RotateCcw } from './Icons'
+import { ArrowRight, ClosedCaptions, Maximize, MenuGlyph, Pause, Play, RotateCcw } from './Icons'
 import type { Lesson } from './data'
 import { formatTime } from './data'
 import { LessonPlayback } from './lessonPlayback'
@@ -9,6 +9,8 @@ import { lessonScenes } from './lessonScenes'
 import { watchVideo } from './videos'
 import type { Player } from 'animlib'
 import CanvasQuestion, { useCanvasQuestion } from './CanvasQuestion'
+import type { VideoManifest } from '../../../shared/video/contract'
+import GenerationProgress from './GenerationProgress'
 
 const loadingState: LessonPlaybackState = { time: 0, duration: 0, playing: false, ended: false, ready: false, error: '' }
 const getLoadingState = () => loadingState
@@ -26,8 +28,10 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   const [playback, setPlayback] = useState<LessonPlayback>()
   const [startupError, setStartupError] = useState('')
   const [connection, setConnection] = useState('')
+  const [manifest, setManifest] = useState<VideoManifest>()
   const [attempt, setAttempt] = useState(0)
   const [isFullscreen, setFullscreen] = useState(false)
+  const [captionsEnabled, setCaptionsEnabled] = useState(false)
   const [cursorHidden, setCursorHidden] = useState(false)
   const cursorTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const state = useSyncExternalStore(playback?.subscribe ?? subscribeLoading, playback?.getState ?? getLoadingState)
@@ -50,6 +54,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
   const questionOpen = Boolean(draft)
   suspended.current = menuOpen || overlayOpen || questionOpen
   const error = startupError || state.error
+  const generating = manifest?.status === 'queued' || manifest?.status === 'generating'
   const duration = state.duration || lesson.duration
   const progress = duration ? Math.min(1, state.time / duration) : 0
   const enabled = state.ready && !error && !menuOpen && !overlayOpen && !questionOpen
@@ -79,8 +84,11 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     let disconnect: (() => void) | undefined
     setPlayback(undefined)
     setStartupError('')
+    setConnection('')
+    setManifest(undefined)
     // Load the renderer only when opening a lesson, keeping the workspace light.
-    void import('animlib').then(({ createPlayer, Color, THREE_BLUE_ONE_BROWN_PALETTE }) => {
+    let rendererPromise: Promise<LessonPlayback | undefined> | undefined
+    const loadRenderer = () => rendererPromise ??= import('animlib').then(({ createPlayer, THREE_BLUE_ONE_BROWN_PALETTE }) => {
       if (!active || !host || !screen.current) return
       // Own the canvas imperatively: renderer recovery can replace a context-locked surface.
       const canvas = document.createElement('canvas')
@@ -95,21 +103,28 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
       controller = new LessonPlayback(player, !lesson.videoId)
       void controller.setSuspended(suspended.current)
       setPlayback(controller)
-      if (lesson.videoId) {
-        const current = controller
-        disconnect = watchVideo(lesson.videoId, manifest => {
-          void current.acceptManifest(manifest)
-        }, setConnection)
-        return
-      }
-      void controller.load(lessonScenes(lesson, {
-        background: Color.BLACK,
-        ink: Color.WHITE,
-        accent: Color.BLUE,
-      }), lesson.duration * (lesson.progress ?? 0))
-    }).catch(error => {
-      if (active) setStartupError(error instanceof Error ? error.message : String(error))
+      return controller
     })
+    const failed = (error: unknown) => {
+      if (active) setStartupError(error instanceof Error ? error.message : String(error))
+    }
+    if (lesson.videoId) {
+      disconnect = watchVideo(lesson.videoId, next => {
+        if (!active) return
+        setManifest(previous => previous && previous.revision >= next.revision ? previous : next)
+        // Usage should remain visible even before a playable canvas exists.
+        if (next.scenes.length) void loadRenderer().then(current => { if (active) return current?.acceptManifest(next) }).catch(failed)
+      }, message => { if (active) setConnection(message) })
+    } else {
+      void Promise.all([loadRenderer(), import('animlib')]).then(([current, { Color }]) => {
+        if (!active || !current) return
+        return current.load(lessonScenes(lesson, {
+          background: Color.BLACK,
+          ink: Color.WHITE,
+          accent: Color.BLUE,
+        }), lesson.duration * (lesson.progress ?? 0))
+      }).catch(failed)
+    }
     return () => { active = false; disconnect?.(); renderer.current = undefined; controller?.dispose(); host?.replaceChildren() }
   }, [lesson.id, lesson.videoId, attempt])
 
@@ -142,8 +157,9 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
     {(connection || (state.ready && state.generationError)) && <p className="player-notice" role="status">{state.generationError || connection}</p>}
     <div className="player-stage">
       <div ref={canvasHost} className="lesson-canvas-host"/>
-      {!state.ready && !error && <p className="player-status" role="status">{state.generationError || 'Loading your lesson…'}</p>}
-      {state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}
+      {generating && !state.ready && !error && <GenerationProgress usage={manifest.tokenUsage} queued={manifest.status === 'queued'}/>}
+      {!generating && !state.ready && !error && <p className="player-status" role="status">{manifest?.error || state.generationError || 'Loading your lesson…'}</p>}
+      {!generating && state.ready && state.buffering && <p className="player-status" role="status">Preparing the next scene…</p>}
       {error && <div className="player-status player-error" role="alert"><strong>This lesson couldn’t play.</strong><p>{error}</p><button className="secondary-button" onClick={() => setAttempt(old => old + 1)}>Try again</button></div>}
     </div>
     {draft && <CanvasQuestion draft={draft} screen={screen} onChange={changeQuestion} onClose={closeQuestion}/>}
@@ -155,6 +171,7 @@ export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, on
           <div className="progress-meta"><span>{formatTime(state.time)}</span><span>{state.playing ? 'A little more understanding, every second.' : state.ended ? 'That’s an aha! moment.' : 'Take your time. Curiosity can wait.'}</span><span>{formatTime(duration)}</span></div>
         </div>
         <button className="icon-button" aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} onClick={fullscreen}><Maximize size={17}/></button>
+        <button className="icon-button captions-toggle" aria-label="Captions" aria-pressed={captionsEnabled} title={captionsEnabled ? 'Turn captions off' : 'Turn captions on'} onClick={() => setCaptionsEnabled(enabled => !enabled)}><ClosedCaptions size={19}/></button>
       </div>
     </div>
     {state.ended && <div className="lesson-complete"><button onClick={onHome}>Back to your library <ArrowRight size={16}/></button></div>}

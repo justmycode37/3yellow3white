@@ -21,6 +21,7 @@ test('retains every authoring section verbatim while excluding host and developm
     expect(output).not.toContain(heading);
   }
   expect(output.length).toBeLessThan(reference.length);
+  expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
   for (const heading of ['### Shaded meshes', '### Procedural textures and materials', '### Function and parametric surfaces',
     '### Basic solids and swept tubes', '### Curved paths and organic shapes', '### Reactive sliders (prototype)']) {
     expect(output).toContain(heading);
@@ -61,4 +62,10 @@ test('ignores heading-looking lines inside fenced examples but rejects unclosed 
   const input = reference.replace('```js\nexport default scene(', '```js\n# example heading\nexport default scene(');
   expect(buildAuthoringReference(input)).toContain('## 3. Writing a scene');
   expect(() => buildAuthoringReference(reference + '\n```js\n')).toThrow('fence');
+});
+
+test('retains curved-path authoring rules and the Bézier example', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('### Curved paths and organic shapes', '### Choosing how objects relate and move'));
+  expect(output).toContain("d: 'M0 0 C0.5 0.6 1.3 0.7 2 0 C1.3 -0.5 0.5 -0.4 0 0 Z'");
 });
