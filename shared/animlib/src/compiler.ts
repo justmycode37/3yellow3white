@@ -87,6 +87,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
     const [x,y,w,h] = view.rect;
     check(x >= 0 && y >= 0 && w > 0 && h > 0 && x+w <= 1+1e-9 && y+h <= 1+1e-9, "View rectangle must fit within the canvas");
     check(typeof view.orbit === "boolean", "Invalid view orbit flag");
+    check(view.orbitHitTest === undefined || view.orbitHitTest === 'geometry', 'Invalid view orbit hit test');
     camera(view.camera);
   }
   const checkView = (e: ElementState) => check(e.view === undefined || typeof e.view === "string" && viewIds.has(e.view), "Element references unknown view");

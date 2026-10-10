@@ -13,6 +13,8 @@ import { parsePlannedLesson, scenePlanningContext, validateStory } from './plann
 import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
 import { validateScenePlan } from './scene-plan.js';
+import { validateSceneQuality } from './scene-quality.js';
+import { animationQualityPolicy } from './quality-policy.js';
 import { scenegenPrompt } from './scenegen-prompts.js';
 import { validationMessage } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
@@ -84,15 +86,19 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     if (!scene) return null;
     const { instructions, ...input } = buildSceneAgentInput(pkg, scene.id, previousFrame);
     const planning = scenePlanningContext(story, index, plan);
+    // Preserve explicit visual preferences even when a saved plan omitted them.
+    const sceneInput = { ...input, planning, request: { title: request.title, topic: request.topic, videoMode: request.videoMode ?? 'classic' } };
     const assemble = (output: string) => options.timingMode === 'host'
       ? attachTimingPrelude(sceneSource(output), input) : sceneSource(output);
     const diagnostics: string[] = [];
     // Cached sources are already self-contained; only new model output needs assembly.
-    const validateSource = async (output: string) => {
+    const validateSource = async (output: string, checkQuality = true) => {
       try {
         const { compiled, finalFrame } = await validateSceneAgainstNarration(sceneSource(output), pkg, scene.id, previousFrame);
         if (Math.abs(compiled.duration - scene.durationSec) > 1e-6) throw new Error(`The scene must last ${scene.durationSec} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
         if (plan) validateScenePlan(compiled, finalFrame, plan.scenes[index]);
+        if (checkQuality) validateSceneQuality(compiled);
+        return finalFrame;
       } catch (error) {
         diagnostics.push(validationMessage(error));
         logEvent('scene.validation_failed', { videoId, sceneIndex: index, attempt: diagnostics.length }, 'warn');
@@ -100,26 +106,33 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
         throw error;
       }
     };
-    const validate = (output: string) => validateSource(assemble(output));
+    const validate = async (output: string) => { await validateSource(assemble(output)); };
     const path = join(directory, `scene-${index}.js`);
     let source = await saved(path);
     if (!source) {
       const reference = await readFile(new URL("../../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
       const craft = await readFile(new URL('../../prompts/scene-craft.md', import.meta.url), 'utf8');
       const visualization = await scenegenPrompt('visualization');
+      const quality = await animationQualityPolicy();
       const task = {
         outputMode: options.outputMode ?? 'text',
-        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${reference}`,
-        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify({ ...input, planning })}`, validate, signal,
+        systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${quality}\n\n${reference}`,
+        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify(sceneInput)}`, validate, signal,
         logContext: { videoId, sceneIndex: index, stage: 'scene' as const },
       };
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
-      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning }));
+      await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify(sceneInput));
       source = assemble(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
-      await validateSource(source);
+      const finalFrame = await validateSource(source);
       signal.throwIfAborted();
       await atomicWrite(path, source);
-    } else { await validateSource(source); logEvent('scene.reused', { videoId, sceneIndex: index, cached: true }); }
+      await atomicWrite(join(directory, `scene-${index}.final-frame.json`), JSON.stringify(finalFrame));
+    } else {
+      // New quality policy must not make already published legacy scenes unplayable.
+      const finalFrame = await validateSource(source, false);
+      await atomicWrite(join(directory, `scene-${index}.final-frame.json`), JSON.stringify(finalFrame));
+      logEvent('scene.reused', { videoId, sceneIndex: index, cached: true });
+    }
     const audio = new Uint8Array(await readFile(await narration.audio(owner, job.id, scene.audio.id)));
     return { audio, scene: { id: scene.id, index, source, duration: scene.durationSec,
       audio: { id: scene.audio.id },

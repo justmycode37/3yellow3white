@@ -3,7 +3,7 @@ import { WebGLBackend } from './webgl.js';
 import { ViewInteraction } from './interaction.js';
 import { paletteResolver, parseColor } from './palette.js';
 import type { CameraState, ColorPalette, CompiledScene, ElementState, Frame, Geometry, InteractionSnapshot, Vec3 } from './types.js';
-import { add, sub, cameraRay, planePoint } from './spatial.js';
+import { add, sub, cameraRay, planePoint, pick } from './spatial.js';
 import { composeItems } from './composition.js';
 import type { DrawItem } from './composition.js';
 import { GPUCompositor } from './gpu-compositor.js';
@@ -193,7 +193,17 @@ export class CanvasRenderer {
     const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;
     for(const region of [...this.regions].reverse()) {
       const [left,top,width,height]=region.rect;
-      if(x>=left&&x<left+width&&y>=top&&y<top+height)return pan||this.canOrbit(region.id)?region.id:undefined;
+      if(x>=left&&x<left+width&&y>=top&&y<top+height) {
+        if(pan)return region.id;
+        if(!this.canOrbit(region.id))return;
+        if(region.orbitHitTest==='geometry') {
+          const snapshot=this.interactionSnapshot(region.id);if(!snapshot)return;
+          const px=(x-left)/width*snapshot.width,py=(y-top)/height*snapshot.height;
+          const targets=new Set(snapshot.frame.elements.filter(e=>e.view===region.id).map(e=>e.id));
+          if(!pick(snapshot.frame,cameraRay(px,py,snapshot.camera,snapshot.width,snapshot.height),targets,snapshot.camera,snapshot.width,snapshot.height,region.id,[px,py]))return;
+        }
+        return region.id;
+      }
     }
     return pan||this.canOrbit('')?'':undefined;
   }

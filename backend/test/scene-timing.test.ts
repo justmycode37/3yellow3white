@@ -80,3 +80,32 @@ test('enabling host timing preserves existing cached literal scenes byte for byt
   expect(result!.scene.source).toBe(literal);
   expect(await readFile(join(f.directory, 'scene-0.js'), 'utf8')).toBe(literal);
 });
+
+test('scene author receives original visual request and persists library final state', async () => {
+  const f = await fixture();
+  const request = { ...f.request, topic: 'Use a spatial introduction, then flatten the same object.' };
+  const generate = createPiGenerator({ async run(task) {
+    const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
+    expect(input.request.topic).toBe(request.topic);
+    expect(task.systemPrompt).toContain('Current animation quality policy');
+    await task.validate!(literal); return literal;
+  } }, f.narration, f.root);
+  await generate(request, 0, f.context);
+  const frame = JSON.parse(await readFile(join(f.directory, 'scene-0.final-frame.json'), 'utf8'));
+  expect(frame).toEqual(evaluateScene(await compileSource(literal), 1));
+});
+
+test('quality repairs reject new collisions but preserve cached legacy playback', async () => {
+  const f = await fixture();
+  const overlap = literal.replace("const dot=s.circle('dot');", "s.text('a',{text:'HH'});s.text('b',{text:'HH'});const dot=s.circle('dot');");
+  const generate = createPiGenerator({ async run(task) {
+    await expect(task.validate!(overlap)).rejects.toThrow('Text overlap');
+    await task.validate!(literal); return literal;
+  } }, f.narration, f.root);
+  await generate(f.request, 0, f.context);
+  await writeFile(join(f.directory, 'scene-0.js'), overlap);
+  const cached = await generate(f.request, 0, f.context);
+  expect(cached!.scene.source).toBe(overlap);
+  const diagnostics = JSON.parse(await readFile(join(f.directory, 'scene-0.diagnostics.json'), 'utf8'));
+  expect(diagnostics[0]).toContain('Text overlap');
+});

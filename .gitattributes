@@ -1,1 +1,2 @@
 frontend/site/** linguist-generated=true -diff -whitespace
+backend/prompts/scenegen/*.md text eol=lf

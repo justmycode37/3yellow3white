@@ -92,6 +92,8 @@ export interface ViewOptions {
   rect: [number, number, number, number];
   camera?: Partial<CameraState>;
   orbit?: boolean;
+  /** Restrict orbit starts to pickable model surfaces; standalone text is ignored. */
+  orbitHitTest?: "geometry";
 }
 
 export interface ViewState {
@@ -99,6 +101,7 @@ export interface ViewState {
   rect: [number, number, number, number];
   camera: CameraState;
   orbit: boolean;
+  orbitHitTest?: "geometry";
 }
 
 export interface CameraState {

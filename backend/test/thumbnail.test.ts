@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { createThumbnailGenerator, parseThumbnailSVG, thumbnailAgentConfig, thumbnailTask } from '../src/agents/thumbnail.js';
 
 const svg = (body: string, attrs = '') => `<svg viewBox="0 0 420 270" ${attrs}>${body}</svg>`;
@@ -39,7 +40,7 @@ test('rejects oversized, empty, non-finite and excessively nested drawings', () 
 
 test('thumbnail runner uses a separate Sol setting, bounded sources, examples and validation', async () => {
   const config = thumbnailAgentConfig({ AGENT_MODEL: 'gpt-6-astra', AGENT_PROVIDER: 'openai-codex', PI_CODING_AGENT_DIR: '/tmp/pi' });
-  expect(config).toMatchObject({ model: 'gpt-6.1-sol', thinking: 'low', provider: 'openai-codex', agentDir: '/tmp/pi' });
+  expect(config).toMatchObject({ model: 'gpt-6.1-sol', thinking: 'low', provider: 'openai-codex', agentDir: resolve('/tmp/pi') });
   const signal = new AbortController().signal;
   const input = { title: 'Entropy', topic: 't'.repeat(20_000), documents: [{ name: 'notes', text: 's'.repeat(10_000) }] };
   const images = [{ type: 'image' as const, mimeType: 'image/png', data: 'example' }];

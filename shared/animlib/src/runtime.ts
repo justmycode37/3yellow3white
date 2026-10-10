@@ -21,7 +21,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const defaultCamera: CameraState = { yaw: mode === "3d" ? 0.55 : 0, pitch: mode === "3d" ? 0.35 : 0, target: [0, 0, 0], height: 8, distance: 12, perspective: mode === "3d" ? 1 : 0 };
   const camera = clone(input.previous?.camera ?? defaultCamera);
   let cameraNow = clone(camera);
-  const views = new Map<string, ViewState>((input.previous?.views ?? []).map(v => [v.id, { id: v.id, rect: clone(v.rect), camera: clone(v.camera), orbit: v.orbit }]));
+  const views = new Map<string, ViewState>((input.previous?.views ?? []).map(v => [v.id, { id: v.id, rect: clone(v.rect), camera: clone(v.camera), orbit: v.orbit, ...(v.orbitHitTest ? {orbitHitTest:v.orbitHitTest} : {}) }]));
   const viewCameras = new Map([...views].map(([id, view]) => [id, clone(view.camera)]));
   const declaredViews = new Set<string>();
   let currentView: string | undefined;
@@ -151,7 +151,8 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       const inheritedCamera = views.get(id)?.camera;
       const viewCamera: CameraState = { yaw: 0.55, pitch: 0.35, target: [0,0,0], height: 8, distance: 12, perspective: 1, ...clone(inheritedCamera ?? {}), ...clone(spec.camera ?? {}) };
       views.delete(id);
-      views.set(id, { id, rect: clone(spec.rect), orbit: spec.orbit ?? true, camera: viewCamera });
+      if (spec.orbitHitTest !== undefined && spec.orbitHitTest !== 'geometry') throw new Error('orbitHitTest must be "geometry"');
+      views.set(id, { id, rect: clone(spec.rect), orbit: spec.orbit ?? true, camera: viewCamera, ...(spec.orbitHitTest ? {orbitHitTest:spec.orbitHitTest} : {}) });
       viewCameras.set(id, clone(viewCamera));
       currentView = id;
       const { view: _view, ...scoped } = context;

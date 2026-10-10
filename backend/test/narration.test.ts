@@ -49,7 +49,7 @@ test("rejects ambiguity, empty labels, duplicate scenes, stage directions and pa
 });
 test("guidance production example is accepted by the actual parser", async () => {
   const guidance = await readFile(new URL("../prompts/guidance.md", import.meta.url), "utf8");
-  const example = /```md\n([\s\S]*?)```/.exec(guidance)![1];
+  const example = /```md\r?\n([\s\S]*?)```/.exec(guidance)![1];
   const parsed = parseStoryline(example);
   expect(parsed.beats).toHaveLength(2);
   expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(2);

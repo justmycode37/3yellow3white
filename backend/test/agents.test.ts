@@ -311,6 +311,8 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     }
     expect(agentCalls).toBe(4); expect(speechCalls).toBe(2);
     expect(tasks[3].prompt).toContain('"previousFrame"');
+    const endpoint = JSON.parse(await readFile(join(settings.dataDir, video.id, 'scene-0.final-frame.json'), 'utf8'));
+    expect(endpoint.elements.some((element: { id: string }) => element.id === 'dot')).toBe(true);
     const packet = JSON.parse(tasks[2].prompt.slice(tasks[2].prompt.indexOf('\n') + 1));
     expect(packet.planning.lesson.learningGoal).toBe('Count dots');
     expect(packet.planning.outline.map((scene: { id: string }) => scene.id)).toEqual(['beat-1', 'beat-2']);

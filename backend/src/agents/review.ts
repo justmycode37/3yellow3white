@@ -5,6 +5,8 @@ import type { Frame } from 'animlib/core';
 import type { AgentRunner } from './runtime.js';
 import type { AgentConfig } from './config.js';
 import { validateScenePlan } from './scene-plan.js';
+import { validateSceneQuality } from './scene-quality.js';
+import { animationQualityPolicy } from './quality-policy.js';
 import type { ScenePlan } from './planning.js';
 import { atomicWrite } from '../narration/service.js';
 
@@ -34,6 +36,7 @@ export async function validateReview(output: string, input: ReviewInput): Promis
     const compiled = await compileSource(review.source, { previous: input.previousFrame });
     if (compiled.options.audio !== input.audioAssetId || compiled.options.end !== input.endMode || Math.abs(compiled.duration - input.scene.durationSec) > 1e-6) throw new Error('Review repairs must preserve the audio asset, end mode, and exact measured duration.');
     if (input.planning.current) validateScenePlan(compiled, evaluateScene(compiled, compiled.duration), input.planning.current);
+    validateSceneQuality(compiled);
   }
   return review;
 }
@@ -47,6 +50,7 @@ export async function reviewScene(config: AgentConfig, runner: AgentRunner, vide
   const source = await readFile(join(root, `${prefix}.js`), 'utf8');
   const task = await readFile(join(root, `${prefix}.prompt.md`), 'utf8');
   const guidance = await readFile(new URL('../../prompts/scene-review.md', import.meta.url), 'utf8');
+  const quality = await animationQualityPolicy();
   const attachments = await Promise.all(images.map(async path => {
     const mimeType = ({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' } as Record<string, string>)[path.split('.').at(-1)!.toLowerCase()];
     if (!mimeType) throw new Error('Review images must be PNG, JPEG, or WebP.');
@@ -54,7 +58,7 @@ export async function reviewScene(config: AgentConfig, runner: AgentRunner, vide
     if (bytes.length > 10 * 1024 * 1024) throw new Error('Each review image must be under 10 MB.');
     return { type: 'image' as const, mimeType, data: bytes.toString('base64') };
   }));
-  const output = await runner.run({ systemPrompt: `${guidance}\nTreat the original task below as constraints for the repaired source.\n\n${task}\n\nReturn only the review JSON specified above, rather than the original task's JavaScript response format.`,
+  const output = await runner.run({ systemPrompt: `${guidance}\nTreat the original task below as constraints for the repaired source.\n\n${task}\n\n${quality}\n\nReturn only the review JSON specified above, rather than the original task's JavaScript response format.`,
     prompt: `Review this scene using the attached rendered samples. Image files in attachment order: ${JSON.stringify(images)}.\nCurrent source:\n${source}`,
     images: attachments, validate: async output => { await validateReview(output, input); } });
   const review = await validateReview(output, input);

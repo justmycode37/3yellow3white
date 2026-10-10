@@ -983,7 +983,13 @@ export default scene({}, s => {
 ```
 
 Left-button dragging rotates only the view where the drag started, even when the
-pointer leaves it. Scrolling does not zoom. Regions clip their geometry and use
+pointer leaves it. Set `orbitHitTest: "geometry"` alongside `orbit: true` to require
+a hit on a visible sphere, circle, rectangle, or triangle mesh before starting
+orbit. Standalone text, paths, lines and empty space do not start rotation;
+billboard labels stay upright and may sit over pickable model surfaces. Keep
+explanatory text outside the model view. Omit this option for legacy region-wide
+orbit. Pan gestures remain available across the region. The setting is saved in
+evaluated frames and inherited with a view. Scrolling does not zoom. Regions clip their geometry and use
 independent depth buffers; overlapping regions render in declaration order, with
 the last region receiving pointer input. Regions render transparently over the scene and
 have no automatic border. Empty space outside them uses the main scene camera.

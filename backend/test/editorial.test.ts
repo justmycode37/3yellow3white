@@ -68,8 +68,12 @@ test('editorial repairs update speech and plan together, forward sources, and pr
   tasks.forEach(task => expect(task.images).toEqual([image]));
   expect(tasks[1].prompt).toContain('Sixteen, eight, four.');
   expect(tasks[1].prompt).toContain('parsedScenes');
-  expect(tasks[0].systemPrompt.endsWith(await scenegenPrompt('planning'))).toBe(true);
-  expect(tasks[2].systemPrompt.endsWith(await scenegenPrompt('planning'))).toBe(true);
+  const originalPlanning = await scenegenPrompt('planning');
+  for (const task of [tasks[0], tasks[2]]) {
+    expect(task.systemPrompt).toContain(originalPlanning);
+    expect(task.systemPrompt.indexOf('# Current animation quality policy')).toBeGreaterThan(task.systemPrompt.indexOf(originalPlanning));
+  }
+  tasks.forEach(task => expect(task.systemPrompt).toContain('# Current animation quality policy'));
   expect(tasks[1].systemPrompt).toContain('Visual plans and reveal guards belong in nonspoken context');
   const capabilities = await readFile(new URL('../../shared/animlib/docs/capabilities.md', import.meta.url), 'utf8');
   tasks.forEach(task => expect(task.systemPrompt).toContain(capabilities));
