@@ -15,6 +15,22 @@ export function lessonScenes(lesson: Lesson, palette: LessonPalette): SceneSourc
   `
   let body: string
   switch (lesson.artwork) {
+    case 'idea':
+      body = `
+        const bulb = s.circle('idea', { position: [0, 0.35], radius: 0.85, fill: 'none', stroke: ink, strokeWidth: 0.065 });
+        s.line('base', { points: [[-0.4, -0.65], [0.4, -0.65]], stroke: ink, strokeWidth: 0.065 });
+        s.line('base-end', { points: [[-0.25, -0.85], [0.25, -0.85]], stroke: ink, strokeWidth: 0.065 });
+        const rays = [];
+        for (let i = 0; i < 5; i++) {
+          const angle = i * Math.PI / 4;
+          rays.push(s.line('ray-' + i, { points: [[1.2 * Math.cos(angle), 0.35 + 1.2 * Math.sin(angle)], [1.5 * Math.cos(angle), 0.35 + 1.5 * Math.sin(angle)]], stroke: accent, strokeWidth: 0.06, opacity: 0 }));
+        }
+        s.play(rays.map(ray => ray.fadeIn()), { duration: phase });
+        s.play(bulb.scaleTo(1.1), { duration: phase });
+        s.play(bulb.scaleTo(1), { duration: phase });
+        s.play(rays.map(ray => ray.animate({ opacity: 0.4 })), { duration: phase });
+      `
+      break
     case 'vectors':
     case 'matrix':
     case 'eigen': {

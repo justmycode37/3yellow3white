@@ -140,7 +140,7 @@ test('disposal cancels pending initialization and detaches subscriptions', async
 })
 
 test('every sample lesson compiles into a deterministic animlib timeline with matching duration', async () => {
-  for (const lesson of [...lessons, { ...lessons[0], id: 'idea-test', title: 'My idea', duration: 120 }]) {
+  for (const lesson of [...lessons, { ...lessons[0], id: 'idea-test', title: 'Convergent sequences', subject: 'Analysis', artwork: 'idea' as const, demo: true, duration: 120 }]) {
     for (const background of [Color.WHITE, Color.BLACK]) {
       const [source] = lessonScenes(lesson, { background, ink: Color.GREY_E, accent: Color.BLUE_E })
       const scene = await compileSource(source.source)

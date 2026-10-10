@@ -1,5 +1,5 @@
-export type Subject = 'Organic chemistry' | 'Linear algebra' | 'My ideas'
-export type Artwork = 'molecule' | 'orbitals' | 'reaction' | 'vectors' | 'matrix' | 'eigen'
+export type Subject = string
+export type Artwork = 'molecule' | 'orbitals' | 'reaction' | 'vectors' | 'matrix' | 'eigen' | 'idea'
 export interface Lesson {
   id: string
   title: string
@@ -10,6 +10,7 @@ export interface Lesson {
   color: string
   progress?: number
   demo?: boolean
+  source?: { text: string; chapter: string; name: string }
   videoId?: string
 }
 

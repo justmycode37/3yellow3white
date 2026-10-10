@@ -20,7 +20,7 @@ try {
   const response = await fetch(new URL("/healthz", server.url));
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, revision });
-  for (const route of ["/", "/plan", "/settings", "/watch/demo"]) {
+  for (const route of ["/", "/library", "/plan", "/plan/analysis", "/settings", "/watch/demo"]) {
     const page = await fetch(new URL(route, server.url));
     assert.equal(page.status, 200, route);
     const html = await page.text();

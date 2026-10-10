@@ -26,6 +26,7 @@ export const Library = icon('Library', <><path d="M4 5c-.4 4-.4 10 0 14M10 4c.4 
 export const ListTree = icon('ListTree', <><path d="M5 4v12q0 3 3 3h3M5 8h6"/><rect x="12" y="5" width="8" height="6" rx="3"/><rect x="12" y="16" width="8" height="6" rx="3"/></>)
 export const FileText = icon('FileText', <><rect x="5" y="3" width="14" height="18" rx="4"/><path d="M9 8h6m-6 4h6m-6 4h3" strokeWidth="2.5"/></>)
 export const FileImage = icon('FileImage', <><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/><path d="m5 18 4-4q1.5-1.5 3 0l1 1m-1-1 2-3q1-1.5 2 0l4 6" strokeWidth="2.5"/></>)
+export const Camera = icon('Camera', <><path d="M8 6l1-2h6l1 2h2q3 0 3 3v9q0 3-3 3H6q-3 0-3-3V9q0-3 3-3Z"/><circle cx="12" cy="13" r="3.5" strokeWidth="2.5"/></>)
 export const Upload = icon('Upload', <><path d="M12 15V5M7 9l3.5-3.5q1.5-1.5 3 0L17 9M4 15v2q0 4 4 4h8q4 0 4-4v-2"/></>)
 export const SlidersHorizontal = icon('SlidersHorizontal', <><path d="M3 7h3m6 0h9M3 17h9m6 0h3"/><rect x="6" y="4" width="6" height="6" rx="3"/><rect x="12" y="14" width="6" height="6" rx="3"/></>)
 export const Atom = icon('Atom', <><ellipse cx="12" cy="12" rx="10" ry="4.5" transform="rotate(-40 12 12)" strokeWidth="2.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5" transform="rotate(40 12 12)" strokeWidth="2.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></>)

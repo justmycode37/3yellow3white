@@ -1,6 +1,6 @@
 # Aha! — VISCon Hackathon
 
-Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page reads PDF, Word, text, or Markdown files in the browser and suggests colour-coded chapters and video topics. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. AI explanation and speech are not yet connected to this preview flow.
+Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page shows a compact colour-coded curriculum and a separate plan for each subject. It reads PDF, Word, text, or Markdown files in the browser, groups them into chapters and video topics, and sends selected topics to the workspace composer. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. AI explanation and speech are not yet connected to this preview flow.
 
 ## Repository layout
 
@@ -9,6 +9,7 @@ frontend/app/      React source, styles, and plan tests
 frontend/site/     Built Aha! site served by Bun
 backend/src/       Bun HTTP API and frontend routes
 shared/animlib/     Shared scene compiler, evaluator, WebGPU/WebGL2 player, and demo
+shared/video/      Versioned progressive video delivery contract
 ```
 
 The built frontend is checked in so the backend can serve it directly. Use Node.js
@@ -26,13 +27,11 @@ npm run app:build
 
 For a live frontend development server, run `npm run app:dev`. The source app's [README](frontend/app/README.md) describes its screens and current integration points.
 
-Lesson playback uses animlib's GPU canvas and clock. The app's controls drive
-play, pause, seeking, and replay; opening navigation or a dialog pauses the
-animation. The six example lessons remain local demos. New previews receive server scenes
-and audio progressively, with buffering and reconnect support. WebGPU is preferred on HTTPS or localhost. If it is unavailable or unusable,
-playback automatically uses WebGL2, including when Android Advanced Protection
-disables WebGPU. Keep browser security settings enabled. If neither backend works,
-the player shows both failure reasons and a retry action.
+Lesson playback uses animlib's clock and a full-viewport canvas, preferring WebGPU
+with automatic WebGL2 fallback. The app's controls drive play, pause, seeking,
+and replay; opening navigation or a dialog pauses the animation. Existing sample
+lessons play locally. New previews persist on the server and deliver interactive
+scenes and test-tone audio progressively. See [video delivery](docs/video-delivery.md).
 
 ## Run the combined app
 
@@ -41,7 +40,7 @@ npm ci
 npm run backend:dev
 ```
 
-Open <http://localhost:8080>. Direct visits to `/plan`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. The Plan page keeps material in browser memory. Creating a video sends extracted document text to the server; jobs and scenes persist in SQLite. Plans and preferences use local storage.
+Open <http://localhost:8080>. Direct visits to `/library`, `/plan`, `/plan/:subject`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. The Plan page reads material locally and saves chapters and source text in local storage. Creating a video sends extracted document text to the server; jobs and scenes persist in SQLite. Raw files stay in browser memory.
 
 For deployment, run `npm run backend:start` instead of the previous Uvicorn
 command. The default bind address is `0.0.0.0:8080`; override it with `HOST` and
@@ -55,15 +54,11 @@ Browser code imports the player from `animlib`; the Bun backend and other Node
 consumers can import scene compilation and state evaluation from `animlib/core`
 without loading the renderer. See the library's
 [shared evaluation example](shared/animlib/README.md#shared-scene-evaluation).
-See [video delivery](docs/video-delivery.md) for the request API, streaming contract,
-interactive playback, persistence and generator integration. The video generator
-currently produces sample animations with a test tone.
-
-A separate `/api/narrations` endpoint normalizes AI-written storyline Markdown
-(including common label, formatting, pause, and table variations), generates
+The video queue currently uses a simulated generator. The backend separately
+normalizes AI-written storyline Markdown through `/api/narrations` (including
+common label, formatting, pause, and table variations), generates
 ElevenLabs narration with word timings and explicit pauses, and provides a
 validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
-This narration service is not yet connected to the video-generation queue.
 The storyline writer should receive `backend/prompts/guidance.md`; its section 16
 specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent.
 

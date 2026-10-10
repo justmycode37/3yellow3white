@@ -31,7 +31,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   const error = startupError || state.error
   const duration = state.duration || lesson.duration
   const progress = duration ? Math.min(1, state.time / duration) : 0
-  const isMath = lesson.subject === 'Linear algebra'
+  const isMath = /algebra|analysis|mathematik/i.test(lesson.subject)
   const enabled = state.ready && !error && !menuOpen && !overlayOpen
   const playbackRequested = state.playing || state.buffering && state.wantsPlay
 
@@ -102,6 +102,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     <div className={`player-heading ${controls || !state.playing ? 'show-controls' : ''}`}>
       <h1>{lesson.title}</h1>
       {lesson.videoId && <p>Interactive sample · test tone only</p>}
+      {lesson.demo && !lesson.videoId && <p>Sample preview · video generation coming soon</p>}
       {(connection || state.generationError) && <p role="status">{state.generationError || connection}</p>}
       {manifest && state.generating && <p>Preparing more scenes. Your video is saved to your library.</p>}
     </div>
