@@ -149,11 +149,11 @@ test("packages preserve original notes and compile synchronized demo scenes", as
   await expect(validateSceneAgainstNarration(`export default scene({audio:"wrong",end:"advance"},s=>s.wait(1));`, pkg, "beat-1")).rejects.toThrow("assigned");
   await expect(validateSceneAgainstNarration(`export default scene({audio:${JSON.stringify(packet.audioAssetId)},end:"advance"},s=>s.wait(99));`, pkg, "beat-1")).rejects.toThrow("exceeds");
 });
-test("HTTP interfaces protect ownership, validate input and serve only completed assets", async () => {
+test("HTTP interfaces share one user, validate input and serve committed assets", async () => {
   const { service } = await setup(); const route = narrationRoutes(service);
   const req = (path: string, options?: RequestInit) => route(new Request(`http://localhost${path}`, options), path);
   const headers = { "x-user-id": "alice", "Content-Type": "application/json" };
-  expect((await req("/api/narrations", { method: "POST", body: JSON.stringify({ markdown: script }) })).status).toBe(401);
+  expect((await req("/api/narrations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ markdown: script }) })).status).toBe(202);
   expect((await req("/api/narrations", { method: "POST", headers: { ...headers, origin: "https://evil.test" }, body: "{}" })).status).toBe(403);
   expect((await req("/api/narrations", { method: "POST", headers, body: "{" })).status).toBe(400);
   expect((await req("/api/narrations", { method: "POST", headers, body: JSON.stringify({ markdown: "Narration: Unclear [pause a bit]" }) })).status).toBe(422);
@@ -164,7 +164,7 @@ test("HTTP interfaces protect ownership, validate input and serve only completed
   expect(result.package.durationSec).toBe(9);
   const audio = await req(result.package.scenes[0].audio.url, { headers });
   expect(audio.headers.get("content-type")).toBe("audio/wav"); expect((await audio.arrayBuffer()).byteLength).toBeGreaterThan(44);
-  expect((await req(job.statusUrl, { headers: { "x-user-id": "bob" } })).status).toBe(404);
+  expect((await req(job.statusUrl, { headers: { "x-user-id": "bob" } })).status).toBe(200);
   expect((await req(job.statusUrl, { method: "HEAD", headers })).body).toBeNull();
   expect((await req(job.statusUrl + "/alignment", { headers })).status).toBe(200);
   expect((await req(job.statusUrl + "/scenes/beat-1", { headers })).status).toBe(200);
@@ -214,7 +214,7 @@ test("variable Markdown travels through HTTP, the ElevenLabs provider and animli
   expect(buildSceneAgentInput(pkg, "scene-1").scene.context).toContain("Do not speak these notes.");
   const preview = buildNarrationPreview(pkg);
   for (const scene of preview.scenes) await validateSceneAgainstNarration(scene.source, pkg, scene.id);
-  const bytes = new Uint8Array(await readFile(await service.audio("alice", job.id, pkg.scenes[0].audio.id)));
+  const bytes = new Uint8Array(await readFile(await service.audio("shared-user", job.id, pkg.scenes[0].audio.id)));
   expect(bytes.slice(44 + 2 * 24000 * 2, 44 + 2.5 * 24000 * 2).some(Boolean)).toBe(false);
 });
 

@@ -1,17 +1,21 @@
 # Progressive interactive video delivery
 
-The default `VIDEO_GENERATOR=astra` connects workspace input to a reviewed private ZIP containing only scene Markdown. Text, uploaded documents, photos/screenshots, and videos are processed by the backend. Its manifest stops at `script_ready`; it does not publish simulated scenes or claim that rendered playback exists. See [Astra orchestration, uploads, and handoff](story-orchestration.md).
+The default `VIDEO_GENERATOR=astra` runs workspace input through source processing, script generation, a separate review, and a private ZIP of scene Markdown. `script_ready` means the spoken explanation is prepared; this stage does not claim to render a video. No ZIP, source bytes, internal story IDs, or script text are exposed in browser manifests. See [source formats, limits, and next-agent handoff](story-orchestration.md).
 
-The existing `VIDEO_GENERATOR=pi` harness writes storyline Markdown, generates ElevenLabs narration, and writes validated scene code aligned to the audio. `VIDEO_GENERATOR=simulated` explicitly selects the three-scene test-tone fixture. These legacy generators accept topic/document text; multipart files require Astra. See [Pi setup and authentication](agents.md).
+The opt-in `VIDEO_GENERATOR=pi` pipeline and its existing server-side uploads, ElevenLabs narration, progressive scene generation, and timing/visual packets remain available. `VIDEO_GENERATOR=simulated` selects sample scenes and diagnostic test tones. See [Pi setup](agents.md).
 
 ## Contract and ownership
 
 `shared/video/contract.ts` defines the versioned manifest and request types.
 `POST /api/videos` accepts `{title, topic, documents: [{name, text}]}` with an
 `Idempotency-Key` header, returning HTTP 202 and a stable manifest. Reusing the key
-with different input (including file bytes) returns 409. Text-only JSON bodies are limited to 1 MB. Multipart requests contain a `request` JSON field and repeated `files` fields, totaling up to 50 MB of files plus bounded metadata.
+with different input returns 409. JSON source bodies are limited to 1 MB.
+Alternatively send multipart form data: `request` contains that JSON and repeated
+`files` fields contain the original files. Each file is at most 50 MB, all uploads
+at most 100 MB for legacy generators (50 MB total for Astra), and a request contains at most ten source documents/files. Extracted
+source text is limited to 1 MB in total. File hashes are part of idempotency identity.
 
-`GET /api/videos` lists the current viewer's saved jobs. `GET /api/videos/:id`
+`GET /api/videos` lists all saved jobs for the shared user. `GET /api/videos/:id`
 returns a snapshot. `GET /api/videos/:id/events` sends named `manifest` SSE events
 with monotonically increasing revision IDs. Every event is a full snapshot:
 reconnections receive current state regardless of Last-Event-ID, and clients
@@ -20,25 +24,36 @@ terminal manifests close the stream. Disconnecting a viewer does not cancel work
 
 Scene order is contiguous and published scenes are immutable. Audio bytes and
 scene metadata commit in the same SQLite transaction before notification. Audio
-URLs use the same owner check as manifests. An upstream trusted `x-user-id` owns
-authenticated jobs; otherwise a random HttpOnly SameSite session cookie owns them.
-The reverse proxy must strip client-supplied identity headers before setting its
-own. Anonymous libraries belong to that browser cookie, not a cross-device account.
+URLs address the same stored scenes. There are no browser sessions or separate
+accounts: all visitors share one application user, and existing jobs created under
+older session identities remain visible.
+
+`DELETE /api/videos/:id` removes the video, its stored audio, and its original uploads
+atomically. It aborts active scene or Astra generation and removes any private database handoff and sends a terminal `deleted` event to
+subscribers. Deletion during compilation cannot republish the removed video. Internal
+agent/narration caches remain on disk for stage reuse; deletion removes the video
+and its assets from the library and database. The dashboard refreshes job status and
+removes videos deleted by another viewer.
 
 ## Generation and persistence
 
 `VideoService` runs one durable queue in one Bun process. Startup resumes queued
-or generating legacy jobs at their first unpublished scene. Astra jobs reuse their private story checkpoint; interrupted model calls require an explicit owner retry. `POST /api/videos/:id/retry` handles retryable Astra failures, and completed `script_ready` handoffs survive restart. `VIDEO_DB_PATH` defaults to
+or generating legacy jobs at their first unpublished scene. Astra uses durable story checkpoints, reuses completed ZIPs, and exposes `POST /api/videos/:id/retry` for explicit retries of interrupted/failed model calls. `VIDEO_DB_PATH` defaults to
 `data/videos.sqlite`; deployment sets it outside release directories. Run only one
 worker against this database. Multiple workers require leases/claims before use.
 Back up the SQLite database using a SQLite-aware backup procedure.
 
 The `Generator` interface receives the persisted request, next scene index, and
-job context (owner, previous frame, and cancellation signal). It returns source,
-duration, captions, an audio ID and WAV bytes, or null when complete. Pi persists
+job context (shared owner, previous frame, image attachments, and cancellation signal). It returns source,
+duration, narration, visual description, word timings, captions, an audio ID and WAV bytes, or null when complete. Pi persists
 completed scripts and scenes separately and reuses the narration service cache. The service compiles and validates scenes with
-`animlib/core` before publication. Provider failures persist a terminal failure
-while retaining available scenes. Astra has explicit failure retries; legacy failed-job retries, cancellation,
+`animlib/core` before publication. Narration publishes each completed scene's audio and timing packet atomically to
+disk. Scene generation starts from the first ready packet while later speech continues;
+it does not wait for the combined narration WAV. Code agents run one scene at a time.
+Interrupted narration for a resumed video is retried automatically using saved chunks;
+a speech request interrupted before its result was saved may be billed again.
+Provider failures persist a terminal failure
+while retaining available scenes. Retry/resume of failed provider jobs,
 retention policies, quotas, distributed queues and object storage are future work.
 
 ## Playback and interactivity
@@ -70,7 +85,7 @@ Run `npm run backend:dev` on port 8080 and optionally `npm run app:dev` for Vite
 which proxies `/api`. Run `npm test`, `npm run app:test`, `npm run backend:test`,
 `npm run backend:typecheck`, and `npm run app:build` for validation.
 
-Tests cover idempotency, ownership, atomic publication, snapshot reconnection,
+Tests cover idempotency, shared ownership, durable uploads and extraction, deletion, early scene delivery, atomic publication, snapshot reconnection,
 restart recovery, append continuity, control propagation, buffering, pause intent,
 duplicate delivery, and partial generation failure. No startup latency target has
 been set; fixture delays are not estimates of real generation performance.

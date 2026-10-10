@@ -64,6 +64,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
       if (file.size + next.reduce((sum, item) => sum + item.size, 0) > 50 * 1024 * 1024) { errors.add('Files must total 50 MB or less.'); continue }
       if (next.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) continue
       if (next.length >= 10) { errors.add('You can add up to 10 files to one video.'); continue }
+      if (next.reduce((sum, item) => sum + item.size, 0) + file.size > 100 * 1024 * 1024) { errors.add('Files must total 100 MB or less.'); continue }
       next.push(file)
     }
     setModeFiles(current => ({ ...current, [mode]: next }))
@@ -145,7 +146,7 @@ export default function WorkspacePage({ onCreate, initialTopic }: { onCreate: (l
               <button type="button" disabled={creating} aria-label={`Remove ${file.name}`} onClick={() => setModeFiles(current => ({ ...current, [mode]: current[mode].filter((_, i) => i !== index) }))}><X size={14}/></button>
             </li>)}</ul>}
             {error && <p className="composer-error" role="alert">{error}</p>}
-            <input ref={picker} type="file" accept={mode === 'photos' ? 'image/*' : acceptedFiles} multiple onChange={selectFiles} hidden aria-label={mode === 'photos' ? 'Choose photos' : 'Choose source files'}/>
+            <input ref={picker} type="file" accept={mode === 'photos' ? '.png,.jpg,.jpeg,.webp' : acceptedFiles} multiple onChange={selectFiles} hidden aria-label={mode === 'photos' ? 'Choose photos' : 'Choose source files'}/>
             <div className="composer-actions">
               {mode === 'text' && <button type="button" className="attach-source" onClick={() => picker.current?.click()}><Plus size={17}/> Add a file</button>}
               <button className="primary-button create-video-button" type="submit" disabled={!ready || cameraOpen || creating}>{creating ? 'Preparing your video…' : 'Create video'} <ArrowRight size={17}/></button>

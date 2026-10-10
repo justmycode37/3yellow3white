@@ -191,3 +191,6 @@ footer .footer-logo{font-size:16px;opacity:.55}
   .bento{gap:8px}
   .continue-widget,.idea-widget{padding:13px}
 }
+
+.video-card>.delete-video-button{position:absolute;z-index:4;right:46px;top:10px;width:29px;height:29px;display:grid;place-items:center;border-radius:50%;background:#ffffffd9;color:#292c28}.video-card>.delete-video-button:hover{background:#f5cfca}.video-generation-status{display:block;margin-top:8px;font-size:11px;color:var(--muted)}
+:root[data-theme=dark] .video-card>.delete-video-button{background:#ffffff29;color:#f1f0de}

@@ -7,17 +7,11 @@ import { createWorkspacePipeline } from "./story/workspace.js";
 import { storyRoutes } from "./story/routes.js";
 import { StoryService } from "./story/service.js";
 import type { NarrationService } from "./narration/service.js";
+import { SHARED_OWNER } from './identity.js';
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
 
-function user(request: Request) {
-  const rawName = request.headers.get("x-user-name");
-  let name = rawName || null;
-  if (name) {
-    try { name = decodeURIComponent(name); } catch { /* Keep malformed proxy text readable. */ }
-  }
-  return { id: request.headers.get("x-user-id"), name };
-}
+function user(_request: Request) { return { id: SHARED_OWNER, name: 'Demo user' }; }
 
 function notFound() {
   return Response.json({ detail: "Not Found" }, { status: 404 });

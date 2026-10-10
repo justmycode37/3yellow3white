@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { unzipSync } from 'fflate'
-import { VideoService } from '../src/videos.js'
+import { SHARED_OWNER, VideoService } from '../src/videos.js'
 import { StoryService } from '../src/story/service.js'
 import { createWorkspacePipeline, readWorkspaceRequest } from '../src/story/workspace.js'
 import { prepareSources } from '../src/story/sources.js'
@@ -43,7 +43,7 @@ async function setup(generate?: StoryProvider['generate']) {
   return { dir, provider, stories, videos, calls }
 }
 
-test('workspace text -> Astra draft/review -> private ZIP survives restart and respects owner/idempotency', async () => {
+test('workspace text -> Astra draft/review -> private ZIP survives restart with a checked shared-owner handoff', async () => {
   const { dir, provider, stories, videos, calls } = await setup()
   const response = await videos.handle(api('', { method: 'POST', headers, body: JSON.stringify(input) }))
   expect(response.status).toBe(202)
@@ -51,9 +51,9 @@ test('workspace text -> Astra draft/review -> private ZIP survives restart and r
   expect(done.status).toBe('script_ready'); expect(done.provider).toBe('astra'); expect(done.scenes).toEqual([])
   for (const key of ['storyId', 'zipSha256', 'packageUrl', 'manifestUrl', 'files', 'sourceMaterial']) expect(done[key]).toBeUndefined()
   expect(calls.length).toBe(2)
-  const handoff = videos.storyHandoff(done.id, 'user:alice')!
+  const handoff = videos.storyHandoff(done.id, SHARED_OWNER)!
   expect(videos.storyHandoff(done.id, 'user:bob')).toBeUndefined()
-  const zip = await stories.artifact('user:alice', handoff.storyId, 'story.zip')
+  const zip = await stories.artifact(SHARED_OWNER, handoff.storyId, 'story.zip')
   expect(Object.keys(unzipSync(zip))).toEqual(['scene-01.md', 'scene-02.md'])
   const archive = readStoryArchive(zip, handoff.zipSha256)
   expect(archive.scenes[0].contextMarkdown).toContain('Overall goal:')
@@ -61,21 +61,22 @@ test('workspace text -> Astra draft/review -> private ZIP survives restart and r
   const again = await videos.handle(api('', { method: 'POST', headers, body: JSON.stringify(input) }))
   expect((await again.json()).id).toBe(done.id); expect(calls.length).toBe(2)
   expect((await videos.handle(api('', { method: 'POST', headers, body: JSON.stringify({ ...input, topic: 'changed' }) }))).status).toBe(409)
-  expect((await videos.handle(api(`/${done.id}`, { headers: { 'x-user-id': 'bob' } }))).status).toBe(404)
+  expect((await videos.handle(api(`/${done.id}`, { headers: { 'x-user-id': 'bob' } }))).status).toBe(200)
   expect((await videos.handle(api(`/${done.id}/package`, { headers }))).status).toBe(404)
   await videos.close(); cleanup.pop(); await stories.close(); cleanup.pop()
   const reopenedStories = new StoryService({ root: join(dir, 'stories'), provider }); cleanup.push(() => reopenedStories.close())
   const reopened = new VideoService(join(dir, 'videos.sqlite'), undefined, 'astra', createWorkspacePipeline(reopenedStories)); cleanup.push(() => reopened.close())
-  expect(reopened.storyHandoff(done.id, 'user:alice')).toEqual(handoff)
-  expect(await reopenedStories.artifact('user:alice', handoff.storyId, 'story.zip')).toEqual(zip)
+  expect(reopened.storyHandoff(done.id, SHARED_OWNER)).toEqual(handoff)
+  expect(await reopenedStories.artifact(SHARED_OWNER, handoff.storyId, 'story.zip')).toEqual(zip)
   expect(calls.length).toBe(2)
 })
 
-test('multipart document bytes reach Astra through the actual cookie-owned workspace route', async () => {
+test('multipart document bytes reach Astra through the shared workspace route', async () => {
   const { videos, stories, calls } = await setup()
   const form = () => { const data = new FormData(); data.append('request', JSON.stringify({ ...input, topic: '' })); data.append('files', new File(['Class A 9/10. Class B 15/30.'], 'notes.md')); return data }
   const created = await videos.handle(api('', { method: 'POST', headers: { 'Idempotency-Key': 'upload' }, body: form() }))
-  const cookie = created.headers.get('set-cookie')!.split(';')[0], job = await created.json()
+  const cookie = `aha-session=${crypto.randomUUID()}`, job = await created.json()
+  expect(created.headers.get('set-cookie')).toBeNull()
   expect(created.status).toBe(202)
   expect((await terminal(videos, job.id, cookie)).status).toBe('script_ready')
   expect(calls[0][1].content).toContain('Class A 9/10. Class B 15/30.')
@@ -84,7 +85,7 @@ test('multipart document bytes reach Astra through the actual cookie-owned works
   expect((await repeated.json()).id).toBe(job.id)
   const changed = form(); changed.set('files', new File(['Different bytes, same filename.'], 'notes.md'))
   expect((await videos.handle(api('', { method: 'POST', headers: { cookie, 'Idempotency-Key': 'upload' }, body: changed }))).status).toBe(409)
-  const owner = `session:${cookie.split('=')[1]}`, handoff = videos.storyHandoff(job.id, owner)!
+  const owner = SHARED_OWNER, handoff = videos.storyHandoff(job.id, owner)!
   expect((await stories.get(owner, handoff.storyId)).status).toBe('complete')
 })
 
@@ -96,12 +97,12 @@ test('failed Astra jobs stay failed until an owner explicitly retries, including
   })
   const created = await (await videos.handle(api('', { method: 'POST', headers, body: JSON.stringify(input) }))).json()
   expect((await terminal(videos, created.id)).retryable).toBe(true)
-  expect(videos.storyHandoff(created.id, 'user:alice')).toBeUndefined()
+  expect(videos.storyHandoff(created.id, SHARED_OWNER)).toBeUndefined()
   await videos.close(); cleanup.pop(); await stories.close(); cleanup.pop()
   const nextStories = new StoryService({ root: join(dir, 'stories'), provider }); cleanup.push(() => nextStories.close())
   const next = new VideoService(join(dir, 'videos.sqlite'), undefined, 'astra', createWorkspacePipeline(nextStories)); cleanup.push(() => next.close())
-  expect(next.get(created.id, 'user:alice')?.status).toBe('failed'); expect(calls.length).toBe(1)
-  expect((await next.handle(api(`/${created.id}/retry`, { method: 'POST', headers: { 'x-user-id': 'bob' } }))).status).toBe(404)
+  expect(next.get(created.id, SHARED_OWNER)?.status).toBe('failed'); expect(calls.length).toBe(1)
+  expect((await next.handle(api('/missing/retry', { method: 'POST', headers }))).status).toBe(404)
   expect((await next.handle(api(`/${created.id}/retry`, { method: 'POST', headers: { ...headers, origin: 'https://evil.invalid' } }))).status).toBe(403)
   fail = false
   expect((await next.handle(api(`/${created.id}/retry`, { method: 'POST', headers }))).status).toBe(202)
@@ -201,4 +202,24 @@ test('Word uploads use the actual document reader and preserve source text', asy
   const prepared = await prepareSources({ ...input, files: [{ name: 'classes.docx', base64: Buffer.from(docx).toString('base64') }] })
   expect(prepared.sourceMaterial).toContain('Nine of ten students pass.')
   expect(prepared.images).toEqual([])
+})
+
+test('deleting active Astra preparation cancels its model call without republishing or blocking the next job', async () => {
+  let started!: () => void, aborted = false, first = true
+  const began = new Promise<void>(resolve => { started = resolve })
+  const { videos } = await setup(async (_messages, _schema, name, signal) => {
+    if (first) {
+      first = false; started()
+      return new Promise((_resolve, reject) => signal!.addEventListener('abort', () => { aborted = true; reject(new StoryError('CANCELLED', 'Cancelled.', 503, true)) }, { once: true }))
+    }
+    return { value: name === 'story_review' ? passingReview : story(), model: STORY_MODEL, provider: 'test' }
+  })
+  const removed = videos.create(SHARED_OWNER, 'delete-story', input)
+  await began
+  const next = videos.create(SHARED_OWNER, 'next-story', { ...input, topic: input.topic + ' Include a second example.' })
+  expect((await videos.handle(api(`/${removed.id}`, { method: 'DELETE' }))).status).toBe(204)
+  expect((await terminal(videos, next.id)).status).toBe('script_ready')
+  expect(aborted).toBe(true)
+  expect(videos.get(removed.id, SHARED_OWNER)).toBeUndefined()
+  expect(videos.storyHandoff(removed.id, SHARED_OWNER)).toBeUndefined()
 })

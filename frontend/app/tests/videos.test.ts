@@ -25,10 +25,20 @@ test('server refresh preserves curriculum context and updates measured duration'
 test('a list response does not erase a just-created job or older local previews', () => {
   const earlier = manifest('earlier'), created = videoLesson(manifest('just-created'))
   const local = { ...videoLesson(manifest('local')), videoId: undefined }
-  const merged = mergeVideoLessons([earlier], [created, local, videoLesson(earlier)])
+  const merged = mergeVideoLessons([earlier], [created, local, videoLesson(earlier)], [created.id])
   assert.deepEqual(merged.map(lesson => lesson.id), ['earlier', 'just-created', 'local'])
   assert.equal(new Set(merged.map(lesson => lesson.id)).size, merged.length)
   assert.equal(mergeVideoLessons([earlier], [])[0].subject, 'My ideas')
+})
+
+test('authoritative refresh removes deleted server videos and reflects generation status', () => {
+  const removed = videoLesson(manifest('deleted'))
+  const running = { ...manifest('running'), status: 'generating' as const, provider: 'pi' as const }
+  const merged = mergeVideoLessons([running], [removed])
+  assert.deepEqual(merged.map(lesson => lesson.id), ['running'])
+  assert.equal(merged[0].generationStatus, 'generating')
+  assert.equal(merged[0].demo, false)
+  assert.equal(merged[0].subtitle, 'Visual explanation')
 })
 
 test('Astra preparation is not presented as simulated or playable video', () => {

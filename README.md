@@ -1,6 +1,6 @@
 # Aha! — VISCon Hackathon
 
-Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page shows a compact colour-coded curriculum and a separate plan for each subject. It reads PDF, Word, text, or Markdown files in the browser, groups them into chapters and video topics, and sends selected topics to the workspace composer. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. An optional Pi agent pipeline generates scripts and scene code with ElevenLabs narration.
+Aha! is a React and Vite prototype for turning course material into short visual lesson previews. The Plan page shows a compact colour-coded curriculum and a separate plan for each subject. It reads PDF, Word, text, or Markdown files in the browser, groups them into chapters and video topics, and sends selected topics to the workspace composer. The library, player, light and dark themes, and creation flow are interactive demos. New previews use a persistent server job and progressively delivered interactive scenes. The Pi agent pipeline generates scripts and scene code with word-aligned ElevenLabs narration.
 
 ## Repository layout
 
@@ -41,7 +41,7 @@ npm ci
 npm run backend:dev
 ```
 
-Open <http://localhost:8080>. Direct visits to `/library`, `/plan`, `/plan/:subject`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. The Plan page reads material locally and saves chapters and source text in local storage. Creating an explanation sends text and selected documents, photos, or videos to the backend. Original uploads and jobs persist privately in SQLite; the backend prepares source text and images for Astra. See [source formats, limits, and configuration](docs/story-orchestration.md#workspace-uploads-and-durable-handoff).
+Open <http://localhost:8080>. Direct visits to `/library`, `/plan`, `/plan/:subject`, `/settings`, and `/watch/:id` also load the app. Existing `/api/hello`, `/api/me`, and `/healthz` endpoints remain available. The Plan page reads material locally and saves chapters and source text in local storage. Creating an explanation sends text and selected documents, photos, or videos to the backend. The shared library exposes job status to all visitors; original uploads and internal handoffs persist privately in SQLite; the backend prepares source text and images for Astra. See [source formats, limits, and configuration](docs/story-orchestration.md#workspace-uploads-and-durable-handoff).
 
 For deployment, run `npm run backend:start` instead of the previous Uvicorn
 command. The default bind address is `0.0.0.0:8080`; override it with `HOST` and
@@ -55,7 +55,7 @@ Browser code imports the player from `animlib`; the Bun backend and other Node
 consumers can import scene compilation and state evaluation from `animlib/core`
 without loading the renderer. See the library's
 [shared evaluation example](shared/animlib/README.md#shared-scene-evaluation).
-Set `VIDEO_GENERATOR=pi` to connect the video queue to Pi script/scene agents and
+Set `VIDEO_GENERATOR=pi` to use the separate Pi script/scene agents with
 ElevenLabs; see [local/VM authentication and remote logout](docs/agents.md).
 The backend also normalizes AI-written storyline Markdown through `/api/narrations` (including
 common label, formatting, pause, and table variations), generates

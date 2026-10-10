@@ -107,6 +107,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     <div className={`player-heading ${controls || !state.playing ? 'show-controls' : ''}`}>
       <h1>{lesson.title}</h1>
       {manifest?.provider === 'simulated' && <p>Interactive sample · test tone only</p>}
+      {manifest?.provider === 'pi' && <p>Narrated visual explanation</p>}
       {lesson.demo && !lesson.videoId && <p>Sample preview · video generation coming soon</p>}
       {(connection || (!isStory && state.generationError)) && <p role="status">{connection || state.generationError}</p>}
       {manifest && !isStory && state.generating && <p>Preparing more scenes. Your video is saved to your library.</p>}

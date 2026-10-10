@@ -1,6 +1,7 @@
 export type Subject = string
 export type Artwork = 'molecule' | 'orbitals' | 'reaction' | 'vectors' | 'matrix' | 'eigen' | 'idea'
 export interface Lesson {
+  generationStatus?: 'queued' | 'generating' | 'script_ready' | 'complete' | 'failed'
   id: string
   title: string
   subtitle: string

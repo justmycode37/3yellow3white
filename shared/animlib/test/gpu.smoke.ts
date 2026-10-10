@@ -14,6 +14,7 @@ import {Color,paletteResolver} from '../src/palette.js';
 import type {PaletteColor} from '../src/types.js';
 import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
+import {compositionCases} from './composition-cases.js';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
 // This is a development test adapter, never a browser renderer fallback.
@@ -74,6 +75,17 @@ describe('native Vulkan WebGPU rendering',()=> {
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
   function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  it.each(compositionCases)('$name',async ({source,time,samples})=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'composition',source}]})).ok).toBe(true);
+    for (const t of [time,0,time]) {
+      renderer.render(sequence.frame(0,t),sequence.compiled[0].options);
+      const image=await pixels();
+      if(t===time)for(const [x,y,rgb] of samples)for(let c=0;c<3;c++)expect(Math.abs(image[(y*width+x)*4+c]-rgb[c])).toBeLessThanOrEqual(2);
+    }
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
   it('compiles the production WGSL and renders all three demonstrations',async()=> {
     const observations:number[]=[];
     for(let i=0;i<sequence.compiled.length;i++) {

@@ -215,9 +215,9 @@ it('routes captured pointer drags to one region and blocks a locked region witho
   send('pointerdown',200,200);expect(captured.size).toBe(0);
   send('pointerdown',600,200);send('pointermove',620,200);send('pointerup',620,200);
   expect(renderer.getOrbit('right').yaw).toBeCloseTo(-Math.PI/20);expect(renderer.orbit.yaw).toBe(0);
-  send('pointerdown',600,200,1,2);expect(captured.size).toBe(0);
+  send('pointerdown',600,200,1,2);expect(captured.size).toBe(1);send('pointerup',600,200,1,2);
   send('pointerdown',600,200);send('lostpointercapture',600,200);expect(captured.size).toBe(0);
-  renderer.dispose();expect(canvas.removeEventListener).toHaveBeenCalledTimes(5);
+  renderer.dispose();expect(canvas.removeEventListener).toHaveBeenCalledTimes(6);
 });
 
 function orbitHarness(width=800,height=400) {

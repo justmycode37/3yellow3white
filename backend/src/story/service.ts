@@ -32,6 +32,7 @@ export class StoryService {
   private tasks = new Map<string, Promise<void>>();
   private tail: Promise<void> = Promise.resolve();
   private controller = new AbortController();
+  private jobControllers = new Map<string, AbortController>();
   private closing = false;
   private provider?: StoryProvider;
   private submission: Promise<unknown> = Promise.resolve();
@@ -103,12 +104,15 @@ export class StoryService {
     });
   }
   private enqueue(job: StoryJob) {
+    this.jobControllers.set(job.id, new AbortController());
     const task = this.tail.then(() => this.run(job));
     this.tasks.set(job.id, task);
     this.tail = task.catch(() => {}).then(() => { this.tasks.delete(job.id); });
   }
   private async run(job: StoryJob) {
+    const signal = AbortSignal.any([this.controller.signal, this.jobControllers.get(job.id)!.signal]);
     try {
+      signal.throwIfAborted();
       if (this.closing) throw new StoryError("INTERRUPTED", "Generation stopped during server shutdown. Retry the job.", 503, true);
       const { request, guidance, images }: SavedInput = JSON.parse(await readFile(join(this.root, job.id, "input.json"), "utf8"));
       const provider = this.getProvider();
@@ -117,7 +121,7 @@ export class StoryService {
       let repair: { draft: unknown; issues: string[] } | undefined;
       for (let attempt = 1; attempt <= attempts; attempt++) {
         job.attempt = attempt; job.status = attempt === 1 ? "generating" : "repairing"; await this.save(job);
-        const generated = await provider.generate(withImages(generationMessages(request, guidance, repair), images), storySchema, "video_story", this.controller.signal);
+        const generated = await provider.generate(withImages(generationMessages(request, guidance, repair), images), storySchema, "video_story", signal);
         if (!/^gpt-6-astra(?:-|$)/.test(generated.model)) throw new StoryError("MODEL_MISMATCH", "The generation provider did not return Astra.", 502);
         provenance.calls.push({ stage: `draft-${attempt}`, model: generated.model, responseId: generated.responseId, usage: generated.usage });
         await atomic(join(this.root, job.id, `draft-${attempt}.json`), json(generated.value));
@@ -133,12 +137,13 @@ export class StoryService {
           repair = { draft: story, issues: errors }; continue;
         }
         job.status = "reviewing"; await this.save(job);
-        const reviewed = await provider.generate(withImages(reviewMessages(request, story, guidance), images), reviewSchema, "story_review", this.controller.signal);
+        const reviewed = await provider.generate(withImages(reviewMessages(request, story, guidance), images), reviewSchema, "story_review", signal);
         if (!/^gpt-6-astra(?:-|$)/.test(reviewed.model)) throw new StoryError("MODEL_MISMATCH", "The review provider did not return Astra.", 502);
         provenance.calls.push({ stage: `review-${attempt}`, model: reviewed.model, responseId: reviewed.responseId, usage: reviewed.usage });
         const review: StoryReview = readReview(reviewed.value);
         await atomic(join(this.root, job.id, `review-${attempt}.json`), json(review));
         if (review.verdict !== "pass") { repair = { draft: story, issues: [review.summary, ...review.issues.map(i => `${i.sceneId ?? "story"}: ${i.detail}`)] }; continue; }
+        signal.throwIfAborted();
         job.status = "packaging"; await this.save(job);
         const pkg = buildStoryPackage(story, request, guidance, review, provenance);
         // Archive is fully built and verified before its atomic publication and the complete status.
@@ -154,7 +159,11 @@ export class StoryService {
       job.status = this.closing ? "interrupted" : "failed";
       job.error = { code: failure.code, message: failure.message, retryable: failure.retryable };
       await this.save(job);
-    }
+    } finally { this.jobControllers.delete(job.id); }
+  }
+  async cancel(owner: string, id: string) {
+    await this.get(owner, id);
+    this.jobControllers.get(id)?.abort();
   }
   async get(owner: string, id: string): Promise<StoryJob> {
     await this.initialize();

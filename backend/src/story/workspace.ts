@@ -9,10 +9,12 @@ export interface WorkspaceRequest extends VideoRequest { files?: SourceFile[] }
 export interface StoryHandoff { storyId: string; zipSha256: string }
 export interface WorkspacePipeline {
   run(request: WorkspaceRequest, context: { owner: string; signal: AbortSignal; storyId?: string; checkpoint: (storyId: string) => void }): Promise<StoryHandoff>
+  cancel(owner: string, storyId: string): Promise<void>
   retry(owner: string, storyId: string): Promise<unknown>
 }
 export function createWorkspacePipeline(stories: StoryService, prepare = prepareSources): WorkspacePipeline {
   return {
+    cancel: (owner, id) => stories.cancel(owner, id),
     retry: (owner, id) => stories.retry(owner, id),
     async run(request, { owner, signal, storyId, checkpoint }) {
       if (!storyId) {
@@ -23,6 +25,8 @@ export function createWorkspacePipeline(stories: StoryService, prepare = prepare
           sourceMaterial,
         }, images)
         storyId = job.id
+        if (signal.aborted) await stories.cancel(owner, storyId)
+        signal.throwIfAborted()
         checkpoint(storyId)
       }
       while (true) {

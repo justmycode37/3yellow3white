@@ -15,6 +15,7 @@ const narration = narrationId ? await loadNarration(narrationId).catch(error => 
 const updateTranscript = narration ? narrationTranscript(narration.package) : undefined;
 const player = createPlayer({
   canvas,
+  controlsRoot: canvas.parentElement!,
   assets: narration?.assets ?? { "scene-tone": { kind: "audio", url: new URL("./assets/scene-tone.wav", import.meta.url).href } },
 });
 let state = player.getState();

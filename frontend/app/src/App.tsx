@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, ArrowUpRight, Atom, Bookmark, Check, ChevronDown, FileText, MenuGlyph, Search, SlidersHorizontal, X } from './Icons'
 import Artwork from './Artwork'
 import LessonPlayer from './LessonPlayer'
@@ -12,7 +12,7 @@ import type { TopicVideoRequest } from './subjectPlans'
 import type { StudyPlan } from './plan'
 import { lessons, formatTime, artworkForTitle } from './data'
 import type { Lesson } from './data'
-import { listVideos, mergeVideoLessons } from './videos'
+import { deleteVideo, listVideos, mergeVideoLessons } from './videos'
 
 function readLocal<T,>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback } catch { return fallback }
@@ -30,10 +30,12 @@ function VideoThumbnail({ lesson, onOpen }: { lesson: Lesson, onOpen: () => void
     </button>
 }
 
-function VideoCard({ lesson, saved, onOpen, onToggleSaved, index = 0 }: { lesson: Lesson, saved: boolean, onOpen: () => void, onToggleSaved: () => void, index?: number }) {
+function VideoCard({ lesson, saved, onOpen, onToggleSaved, onDelete, deleting, index = 0 }: { lesson: Lesson, saved: boolean, onOpen: () => void, onToggleSaved: () => void, onDelete?: () => void, deleting?: boolean, index?: number }) {
   return <article className="video-card" style={{ animationDelay: `${index * 45}ms` }}>
     <VideoThumbnail lesson={lesson} onOpen={onOpen}/>
     <button className={`bookmark-button ${saved ? 'saved' : ''}`} onClick={onToggleSaved} aria-label={`${saved ? 'Unsave' : 'Save'} ${lesson.title}`} aria-pressed={saved}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'}/></button>
+    {onDelete && <button className="delete-video-button" disabled={deleting} onClick={onDelete} aria-label={`Delete ${lesson.title}`}><X size={14}/></button>}
+    {lesson.generationStatus && <span className="video-generation-status">{lesson.generationStatus === 'script_ready' ? 'Explanation prepared' : lesson.generationStatus === 'complete' ? 'Ready' : lesson.generationStatus === 'failed' ? 'Generation failed' : lesson.generationStatus === 'queued' ? 'Queued' : 'Generating…'}</span>}
   </article>
 }
 
@@ -48,17 +50,33 @@ export default function App() {
   const [bookmarks, setBookmarks] = useState<string[]>(() => readLocal('aha-bookmarks', []))
   const [customLessons, setCustomLessons] = useState<Lesson[]>(() => readLocal('aha-lessons', []))
   const [toast, setToast] = useState('')
+  const [deleting, setDeleting] = useState<string[]>([])
+  const deletedIds = useRef(new Set<string>())
+  const currentLessons = useRef(customLessons)
+  currentLessons.current = customLessons
   const [topicRequest, setTopicRequest] = useState<TopicVideoRequest | null>(null)
   const [subjectPlans, setSubjectPlans] = useState(() => loadSubjectPlans(localStorage, exampleCurriculum))
   const [planStorageNote, setPlanStorageNote] = useState('')
   const allLessons = useMemo(() => [...customLessons.map(lesson => ({ ...lesson, artwork: artworkForTitle(lesson.title, lesson.artwork) })), ...lessons], [customLessons])
   useEffect(() => {
     let active = true
-    void listVideos().then(videos => {
-      if (active) setCustomLessons(old => mergeVideoLessons(videos, old))
-    }).catch(() => { if (active) setToast('Could not refresh your saved videos.') })
-    return () => { active = false }
-  }, [])
+    let refreshing = false
+    const refresh = async () => {
+      if (refreshing) return
+      refreshing = true
+      const knownIds = new Set(currentLessons.current.map(lesson => lesson.id))
+      try {
+        const videos = await listVideos()
+        if (active) setCustomLessons(old => mergeVideoLessons(videos.filter(video => !deletedIds.current.has(video.id)), old,
+          old.filter(lesson => !knownIds.has(lesson.id)).map(lesson => lesson.id)))
+      } catch { if (active) setToast('Could not refresh your saved videos.') }
+      finally { refreshing = false }
+    }
+    void refresh()
+    const interval = path === '/library' ? setInterval(() => { void refresh() }, 3000) : undefined
+    window.addEventListener('focus', refresh)
+    return () => { active = false; clearInterval(interval); window.removeEventListener('focus', refresh) }
+  }, [path])
   const selected = path.startsWith('/watch/') ? allLessons.find(l => l.id === decodeURIComponent(path.split('/')[2] || '')) : undefined
   const invalidLesson = path.startsWith('/watch/') && !selected
   const settings = path === '/settings'
@@ -79,6 +97,18 @@ export default function App() {
   const navigate = (url: string, scroll = true) => { window.history.pushState({}, '', url); setPath(url); setMenu(false); if (scroll) window.scrollTo({ top: 0, behavior: 'instant' }) }
   const openLesson = (lesson: Lesson) => navigate(`/watch/${encodeURIComponent(lesson.id)}`)
   const toggleSaved = (id: string) => setBookmarks(old => old.includes(id) ? old.filter(value => value !== id) : [...old, id])
+  const removeLesson = async (lesson: Lesson) => {
+    if (deleting.includes(lesson.id)) return
+    setDeleting(old => [...old, lesson.id])
+    try {
+      if (lesson.videoId) await deleteVideo(lesson.videoId)
+      deletedIds.current.add(lesson.id)
+      setCustomLessons(old => old.filter(item => item.id !== lesson.id))
+      setBookmarks(old => old.filter(id => id !== lesson.id))
+      setToast('Video deleted.')
+    } catch (error) { setToast(error instanceof Error ? error.message : 'Could not delete the video.') }
+    finally { setDeleting(old => old.filter(id => id !== lesson.id)) }
+  }
   const goLibrary = () => navigate('/library')
 
   const addPlanMaterial = (subjectId: string, plans: StudyPlan[]) => {
@@ -135,7 +165,7 @@ export default function App() {
           </div>
           {subjects.map(subject => <div className="subject-group" key={subject}>
             <div className="subject-heading"><span className="subject-symbol">{subject === 'Organic chemistry' ? <Atom size={20}/> : subject === 'Linear algebra' ? <ArrowUpRight size={19}/> : <FileText size={18}/>}</span><h3>{subject}</h3></div>
-            <div className="video-grid">{visible.filter(l => l.subject === subject).map((lesson, index) => <VideoCard key={lesson.id} lesson={lesson} saved={bookmarks.includes(lesson.id)} onOpen={() => openLesson(lesson)} onToggleSaved={() => toggleSaved(lesson.id)} index={index}/>)}</div>
+            <div className="video-grid">{visible.filter(l => l.subject === subject).map((lesson, index) => <VideoCard key={lesson.id} lesson={lesson} saved={bookmarks.includes(lesson.id)} onOpen={() => openLesson(lesson)} onToggleSaved={() => toggleSaved(lesson.id)} onDelete={customLessons.some(item => item.id === lesson.id) ? () => { void removeLesson(lesson) } : undefined} deleting={deleting.includes(lesson.id)} index={index}/>)}</div>
           </div>)}
           {!visible.length && <div className="empty-library"><h3>{savedOnly ? 'No saved videos' : 'No videos found'}</h3><button className="secondary-button" onClick={() => { setQuery(''); setFilter('All subjects'); setSavedOnly(false) }}>Clear filters</button></div>}
         </section>

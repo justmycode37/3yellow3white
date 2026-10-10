@@ -25,7 +25,7 @@ const server = Bun.serve({
   hostname,
   port: Number(process.env.PORT ?? 8080),
   idleTimeout: 60,
-  maxRequestBodySize: 54 * 1024 * 1024,
+  maxRequestBodySize: 101 * 1024 * 1024,
   fetch: createHandler(undefined, videos, narration, stories),
   error(error) {
     console.error(error);
