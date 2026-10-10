@@ -173,9 +173,23 @@ Agent tasks have no wall-clock timeout, so thinking, validation repairs, and
 final output can finish. The former `AGENT_TIMEOUT_MS` setting is ignored.
 Deleting a video or shutting down the server still cancels its active agent.
 The model must exist in the pinned catalog and be available to your account;
-`agents:check` verifies inference. Runs allow twelve agent turns and three
-final-output validation attempts. Provider retries and automatic compaction
-are disabled.
+`agents:check` verifies inference. Each conversation allows twelve agent turns
+and three final-output validation attempts. The host retries recognizable network
+failures, interrupted streams, temporary throttling, and transient provider errors
+up to twice, with exponential backoff and jitter (about one and two seconds).
+Each retry uses a fresh conversation with the same request and image attachments;
+partial failed output is discarded. Cancellation interrupts requests and backoff.
+Authentication, configuration, exhausted quota, output limits, invalid output,
+and unclassified failures are not retried. Pi's own provider retries and automatic
+compaction remain disabled so retry budgets do not multiply.
+
+Structured `agent.retrying`, `agent.recovered`, and `agent.failed` logs correlate
+each invocation with an `agentRunId`, video/stage/scene identifiers when available,
+the provider attempt, and safe failure category/HTTP status. Raw provider errors,
+headers, tokens, prompts, and lesson contents are excluded. Operator instructions
+remain in CLI errors; video manifests and events use fixed user-facing messages
+with a reminder that already published scenes remain watchable. Stored failures
+from older versions are sanitized on read too.
 
 ## Demo server
 

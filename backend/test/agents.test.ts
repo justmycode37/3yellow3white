@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, expect, spyOn, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -102,8 +102,98 @@ async function fakeRuntime(outputs: AssistantMessage[]) {
     });
     return stream;
   };
-  return { settings, runtime, contexts, runner: new PiAgentRunner(settings, async () => runtime) };
+  const waits: number[] = [];
+  return { settings, runtime, contexts, waits, runner: new PiAgentRunner(settings, async () => runtime, async ms => { waits.push(ms); }) };
 }
+
+function providerFailure(detail: string) {
+  return { ...message('private-partial-output', 'error'), errorMessage: detail };
+}
+
+test('transient failures recover with fresh conversations and safe, correlated diagnostics', async () => {
+  const { runner, contexts, waits } = await fakeRuntime([
+    providerFailure('OpenAI API error (503): Authorization: Bearer private-token'),
+    providerFailure('OpenAI Responses stream ended without a stop reason'), message('valid'),
+  ]);
+  const lines: string[] = [];
+  const warn = spyOn(console, 'warn').mockImplementation(line => { lines.push(String(line)); });
+  const info = spyOn(console, 'info').mockImplementation(line => { lines.push(String(line)); });
+  try {
+    const checked: string[] = [];
+    const image = { type: 'image' as const, mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGOQi7rzHwAEQgJUZSSrPwAAAABJRU5ErkJggg==' };
+    expect(await runner.run({ systemPrompt: 'Write', prompt: 'Generate', images: [image],
+      logContext: { videoId: 'test-video', stage: 'scene', sceneIndex: 0 },
+      validate: async output => { checked.push(output); } })).toBe('valid');
+    expect(checked).toEqual(['valid']);
+    expect(contexts).toHaveLength(3);
+    for (const context of contexts) {
+      expect(JSON.stringify(context)).not.toContain('private-partial-output');
+      expect(context.messages.filter(message => message.role === 'user')).toHaveLength(1);
+      expect(context.messages.find(message => message.role === 'user')?.content).toContainEqual(image);
+    }
+    expect(waits).toHaveLength(2);
+    expect(waits[0]).toBeGreaterThanOrEqual(1000); expect(waits[0]).toBeLessThan(1250);
+    expect(waits[1]).toBeGreaterThanOrEqual(2000); expect(waits[1]).toBeLessThan(2250);
+    const records = lines.map(line => JSON.parse(line));
+    expect(records[0]).toMatchObject({ event: 'agent.retrying', reason: 'server', httpStatus: 503, providerAttempt: 1, videoId: 'test-video', stage: 'scene', sceneIndex: 0 });
+    expect(records[1]).toMatchObject({ event: 'agent.retrying', reason: 'incomplete', providerAttempt: 2 });
+    expect(records[2]).toMatchObject({ event: 'agent.recovered', providerAttempt: 3 });
+    expect(new Set(records.map(record => record.agentRunId)).size).toBe(1);
+    expect(lines.join('\n')).not.toMatch(/private-token|Authorization|private-image|private-partial-output/);
+    expect(lines.join('\n')).not.toContain(image.data);
+  } finally { warn.mockRestore(); info.mockRestore(); }
+});
+
+test('transient provider failures stop after three requests', async () => {
+  const { runner, contexts, waits } = await fakeRuntime(Array.from({ length: 4 }, () => providerFailure('fetch failed')));
+  await expect(runner.run({ systemPrompt: 'Write', prompt: 'Generate' })).rejects.toMatchObject({ code: 'PROVIDER', diagnostics: { reason: 'network' } });
+  expect(contexts).toHaveLength(3); expect(waits).toHaveLength(2);
+});
+
+test('temporary throttling retries while permanent failures and quota exhaustion do not', async () => {
+  const transient = await fakeRuntime([providerFailure('429 rate_limit_exceeded'), message('OK')]);
+  expect(await transient.runner.run({ systemPrompt: 'Write', prompt: 'Generate' })).toBe('OK');
+  expect(transient.waits).toHaveLength(1);
+  for (const [detail, code] of [
+    ['401 Unauthorized', 'AUTH'], ['403 Forbidden', 'AUTH'],
+    ['400 model is not supported', 'MODEL'], ['429 insufficient_quota', 'LIMIT'],
+    ['429 subscription_sharing_usage_limit_exceeded', 'LIMIT'],
+    ['usage_not_included', 'LIMIT'], ['400 invalid request: network option', 'PROVIDER'],
+    ['unknown sensitive-provider-detail', 'PROVIDER'],
+  ]) {
+    const { runner, contexts, waits } = await fakeRuntime([providerFailure(detail), message('Unexpected retry')]);
+    await expect(runner.run({ systemPrompt: 'Write', prompt: 'Generate' })).rejects.toMatchObject({ code });
+    expect(contexts).toHaveLength(1); expect(waits).toHaveLength(0);
+  }
+  expect(agentFailure({ status: 503, message: 'private-body' }).diagnostics).toMatchObject({ httpStatus: 503, reason: 'server', retryable: true });
+  expect(agentFailure(new Error('subscription_sharing_usage_unavailable')).diagnostics).toMatchObject({ reason: 'server', retryable: true });
+});
+
+test('cancellation interrupts retry backoff without issuing another model request', async () => {
+  const { settings, runtime, contexts } = await fakeRuntime([providerFailure('fetch failed'), message('Unexpected retry')]);
+  const runner = new PiAgentRunner(settings, async () => runtime);
+  let scheduled!: () => void;
+  const ready = new Promise<void>(resolve => { scheduled = resolve; });
+  const warn = spyOn(console, 'warn').mockImplementation(() => { scheduled(); });
+  const controller = new AbortController();
+  try {
+    const result = runner.run({ systemPrompt: 'Write', prompt: 'Generate', signal: controller.signal });
+    await ready; controller.abort();
+    await expect(result).rejects.toMatchObject({ code: 'ABORTED' });
+    expect(contexts).toHaveLength(1);
+  } finally { controller.abort(); warn.mockRestore(); }
+});
+
+test('output validation, truncation and aborts do not consume provider retries', async () => {
+  const invalid = await fakeRuntime([message('bad'), message('bad'), message('bad'), message('valid')]);
+  await expect(invalid.runner.run({ systemPrompt: 'Write', prompt: 'Generate', validate: async () => { throw new Error('Invalid'); } })).rejects.toMatchObject({ code: 'VALIDATION' });
+  expect(invalid.contexts).toHaveLength(3); expect(invalid.waits).toHaveLength(0);
+  for (const [reason, code] of [['length', 'OUTPUT'], ['aborted', 'ABORTED']] as const) {
+    const { runner, contexts, waits } = await fakeRuntime([message('partial', reason), message('Unexpected retry')]);
+    await expect(runner.run({ systemPrompt: 'Write', prompt: 'Generate' })).rejects.toMatchObject({ code });
+    expect(contexts).toHaveLength(1); expect(waits).toHaveLength(0);
+  }
+});
 
 test("real Pi sessions expose only validation and correct invalid final output", async () => {
   const { runner, contexts, settings } = await fakeRuntime([message("bad"), message("valid"), message("separate")]);

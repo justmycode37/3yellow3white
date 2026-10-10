@@ -28,4 +28,5 @@ export interface VideoManifest {
   createdAt: string
   scenes: VideoScene[]
   error?: string
+  errorCode?: string
 }
