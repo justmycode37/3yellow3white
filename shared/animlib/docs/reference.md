@@ -989,6 +989,12 @@ the last region receiving pointer input. Regions render transparently over the s
 have no automatic border. Empty space outside them uses the main scene camera.
 Screen-space geometry inside a view uses CSS pixels centered on that region;
 main-scene screen labels render above all regions. Groups cannot span views.
+The callback's `v` builder and its detached methods retain their view ownership
+when called later in the synchronous scene builder, including from another view's
+callback. Objects made with the outer `s` after a view callback remain in the main
+scene. Keep related model parts and attached labels in the same view; use `v.attach`
+for labels that must follow an object. Global screen headings may remain outside
+views.
 Kept objects retain their region and its outgoing authored camera in later scenes;
 redeclaring the same view ID can change its rectangle, camera, and orbit setting.
 `player.getState().views` reports each region's rectangle and whether orbit is enabled.
