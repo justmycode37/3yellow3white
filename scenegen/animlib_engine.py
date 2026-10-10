@@ -164,13 +164,14 @@ Hard rules:
 - Formulas use `s.latex` with named parts so later scenes can morph them; keep them
   in the right-hand text area (no box around it), clear of the geometry.
 - Interactive elements use animlib controls with exactly the ids listed above:
-  `const k = s.slider("id", {{ label, default, min, max, step, position: [x, y], width }})`,
+  `const k = s.slider("id", {{ label, default, min, max, step }})`,
   `s.toggle("id", {{ label, default }})`, `s.select("id", {{ label, default, options }})`.
   They return plain values; compute geometry, numbers and formulas from them with
   ordinary JavaScript so the picture is correct for ANY value at ANY time (the
-  builder is re-run when the viewer moves a control). Place controls over the
-  bottom-left of the geometry area (e.g. `position: [0.05, 0.80]`), clear of the
-  formula area and of the objects. Add no controls other than the listed ones.
+  builder is re-run when the viewer moves a control). Never pass `position`:
+  the player then stacks controls in the top right corner, the same in every scene.
+  Keep the top third of the right-hand text area free for them and put formulas
+  below. Add no controls other than the listed ones.
   (animlib has no draggable points; sliders, toggles and selects are the tools.)
 - Kept objects must be created from the control values too, so the next scene
   inherits whatever the viewer chose.

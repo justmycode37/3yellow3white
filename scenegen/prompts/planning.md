@@ -24,3 +24,6 @@ When writing the plan:
   interactions in at least half of their scenes. Leave a scene without one only when
   interaction would distract. Each control must drive the real geometry and have
   something to discover. Rotating a 3D view needs no control.
+  Controls are always shown stacked in the top right corner of the animation, in
+  every scene; formulas go below them on the right. Do not plan a control anywhere
+  else, and do not describe on-screen content in that corner.

@@ -74,6 +74,23 @@ test("a 3D part created outside its model's view is rejected", async () => {
   expect(results[1]).toBe("ok");
 });
 
+test("a control with its own position is rejected, so controls stay top right", async () => {
+  const craft = await readFile(new URL("../../backend/prompts/scene-craft.md", import.meta.url), "utf8");
+  const scene = (options: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    const k = s.slider("factor", { label: "Factor", default: 1, min: 0, max: 2, step: 0.1${options} });
+    s.circle("dot", { radius: 0.2 * k + 0.1, position: [0, 0] });
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new VisualizationPromptRunner({ run: async task => {
+    for (const output of [scene(", position: [0.05, 0.8]"), scene("")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: craft, prompt: `Generate this scene:\n${JSON.stringify({ planning: { current: { visualDescription: "2D (because it is a plane): a dot" } } })}`, validate: async () => {} });
+  expect(results[0]).toContain("top right");
+  expect(results[1]).toBe("ok");
+});
+
 test("a lesson plan must mark every scene as 3D or 2D with a reason", async () => {
   const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
   const plan = (description: string) => JSON.stringify({ plan: { scenes: [{ id: "beat-1", visualDescription: description }] } });

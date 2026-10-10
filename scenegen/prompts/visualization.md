@@ -112,6 +112,13 @@ Interactivity:
 - Keep interactive elements wherever they help: a planned slider, toggle or select
   must be built and must drive the real geometry; 3D views are rotatable.
   Do not drop a planned interaction to simplify the scene.
+- Controls always sit in the TOP RIGHT corner, in every scene (strict, checked). The
+  player stacks them there by itself, right-aligned from the top, in the order they
+  are declared: so NEVER pass `position` to `s.slider`, `s.toggle` or `s.select`.
+  `width` is optional and at most 220. Declare a control that also exists in the
+  previous scene first, so it keeps its place.
+- The top right corner belongs to the controls: no formula, label or geometry in the
+  top third of the right-hand text area, whether or not this scene has a control.
 
 How to build 3D with animlib:
 - Follow the plan: if the scene's visualDescription starts with "3D:", the scene must
@@ -150,6 +157,9 @@ Layout (keep it identical in every scene):
   area for formulas and matrices. It is just empty space: NO box, border, frame,
   backing rectangle or panel shape around text anywhere. Geometry never enters the
   text area; text never sits on the grid except short object labels.
+- The right third from top to bottom: controls in the top third (kept empty when
+  there are none), formulas and matrices in the middle and lower part, starting
+  below the controls. The same in every scene, so nothing jumps between scenes.
 - Labels sit beside what they name with a visible gap and move with it; nothing
   touches or overlaps, including during motion.
 - Minimum text height about 0.35 scene units; keep 0.4+ margin from the frame edge.

@@ -69,5 +69,12 @@ export function renderProblems(compiled: CompiledScene): string[] {
   const frames = Array.from({ length: 13 }, (_, i) => evaluateScene(compiled, compiled.duration * i / 12));
   const stray = strayModelParts(frames as never);
   if (stray.length) problems.push(`Outside the 3D view: ${stray.slice(0, 12).join(", ")}${stray.length > 12 ? ", ..." : ""}.\n${STRAY_HINT}`);
+  const placed = compiled.controls.filter(control => control.position).map(control => control.id);
+  if (placed.length) problems.push(`Controls with a position: ${placed.join(", ")}.\n${CONTROLS_HINT}`);
   return problems;
 }
+
+// Without a position the player stacks controls in the top right corner, right-aligned,
+// in declaration order: the same place in every scene.
+export const CONTROLS_HINT = "Controls must sit in the top right corner in every scene. Remove `position` from s.slider / s.toggle / " +
+  "s.select: the player then stacks them top right by itself. Keep formulas below them on the right.";
