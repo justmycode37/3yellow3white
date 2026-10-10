@@ -141,7 +141,6 @@ export default function App() {
     onLibrary={goLibrary}
     onPlan={() => navigate('/plan')}
     onCreate={() => { goWorkspace(); requestAnimationFrame(() => document.getElementById('video-topic')?.focus()) }}
-    onSettings={() => navigate('/settings')}
   />
 
   const visible = allLessons.filter(l => (filter === 'All subjects' || l.subject === filter) && (!savedOnly || bookmarks.includes(l.id)) && `${l.title} ${l.subject}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => sort === 'az' ? a.title.localeCompare(b.title) : sort === 'duration' ? a.duration - b.duration : 0)
@@ -154,7 +153,7 @@ export default function App() {
     {selected ? <LessonPlayer key={selected.id} lesson={selected} overlayOpen={false} menuOpen={menu} onMenu={() => setMenu(!menu)} menuContent={menuContent} onHome={goLibrary}/>
     : <div className={`app-shell ${settings ? 'settings-shell' : !planning && !libraryPage ? 'workspace-shell' : ''}`}>
       <header className="header">
-        <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation and settings" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={goWorkspace}>Aha!</button></div>
+        <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={goWorkspace}>Aha!</button></div>
         {!settings && !planning && !libraryPage && <button className="workspace-library-link" onClick={goLibrary}>Your library <ArrowUpRight size={15}/></button>}
       </header>
       {settings ? <SettingsPage theme={theme} onTheme={setTheme}/> : planning ? <PlanPage curriculum={exampleCurriculum} selectedId={path.split('/')[2]} onSelect={id => navigate(`/plan/${id}`, false)} plans={subjectPlans} onAddMaterial={addPlanMaterial} onMakeVideo={makeTopicVideo} storageNote={planStorageNote}/> : libraryPage ? <main className="library-page">
