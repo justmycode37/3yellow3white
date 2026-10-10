@@ -1,7 +1,11 @@
-import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, Geometry, ReactiveProperties, ReactiveUpdate, SceneContext, SceneOptions, SliderHandle, SliderOptions, Vec2, Vec3, ViewState } from "./types.js";
+import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, ElementStyle, Geometry, ReactiveProperties, ReactiveUpdate, SceneContext, SceneOptions, SliderHandle, SliderOptions, Vec2, Vec3, ViewState } from "./types.js";
+import type { createSurfaceBuilders } from "./surfaces.js";
+import type { createSolidBuilders } from "./solids.js";
+
+type MeshBuilders = ReturnType<typeof createSurfaceBuilders> & ReturnType<typeof createSolidBuilders>;
 
 /** Self-contained on purpose: the function is installed inside QuickJS, never eval'd by the host. */
-export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}, installReactive?: (update: (values: Record<string, ControlValue>, changed: string[]) => ReactiveUpdate[]) => void): CompiledScene {
+export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}, installReactive?: (update: (values: Record<string, ControlValue>, changed: string[]) => ReactiveUpdate[]) => void, meshBuilders?: MeshBuilders): CompiledScene {
   const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
   const vector = (value: number[] = [0, 0, 0]): Vec3 => [value[0] ?? 0, value[1] ?? 0, value[2] ?? 0];
   const rotation = (value: number | number[] = 0): Vec3 => typeof value === "number" ? [0, 0, value] : vector(value);
@@ -123,6 +127,17 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     return handle(id);
   };
 
+  // Constructor callbacks and sampling options stay inside the builder. Only
+  // ordinary mesh data and supported style properties cross the VM boundary.
+  const generatedMesh = (id: string, geometry: Geometry, props: ElementStyle): ElementHandle => {
+    const style: ElementStyle = {};
+    for (const key of ["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth", "strokeProfile", "space", "billboard", "billboardOffset", "viewportOffset"] as const) {
+      if (props[key] !== undefined) Object.assign(style, { [key]: props[key] });
+    }
+    const { kind: _kind, ...mesh } = geometry;
+    return add("mesh", id, { ...mesh, ...style });
+  };
+
   const control = (id: string, definition: Omit<ControlDefinition, "id" | "label" | "value"> & { label?: string }): ControlValue => {
     idCheck(id);
     if (controls.some(c => c.id === id)) throw new Error(`Duplicate control ID: ${id}`);
@@ -192,6 +207,13 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     text: (id, props) => add("text", id, { fontSize: props.space === "screen" ? 16 : 0.4, ...props }),
     latex: (id, props) => add("latex", id, { fontSize: props.space === "screen" ? 24 : 0.6, ...props }),
     mesh: (id, props) => add("mesh", id, props),
+    surface: (id, props) => generatedMesh(id, meshBuilders!.surface(props), props),
+    parametricSurface: (id, props) => generatedMesh(id, meshBuilders!.parametricSurface(props), props),
+    box: (id, props = {}) => generatedMesh(id, meshBuilders!.box(props), props),
+    cylinder: (id, props = {}) => generatedMesh(id, meshBuilders!.cylinder(props), props),
+    cone: (id, props = {}) => generatedMesh(id, meshBuilders!.cone(props), props),
+    torus: (id, props = {}) => generatedMesh(id, meshBuilders!.torus(props), props),
+    tube: (id, props) => generatedMesh(id, meshBuilders!.tube(props), props),
     behavior: (target, behavior) => {
       descendants(target.id);
       behaviors.push({ target: target.id, behavior: clone(behavior) });

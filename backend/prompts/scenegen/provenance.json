@@ -5,7 +5,13 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md",
-      "sha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3"
+      "sha256": "361648abdfcce7c7285a2e92e48f0de9831be27dbb3180a3859769e6ffcddcd3",
+      "revisions": [
+        {
+          "reason": "Update spatial authoring guidance for mesh shading, function and parametric surfaces, basic solids, and swept tubes.",
+          "sha256": "730d0bb5ad7d79d4f0e830387dc65fe39b29ae29f51bc039aeca932b3f652c23"
+        }
+      ]
     },
     {
       "file": "planning.md",

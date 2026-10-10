@@ -1,6 +1,8 @@
 import { parse } from "acorn";
 import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
+import { createSurfaceBuilders } from "./surfaces.js";
+import { createSolidBuilders } from "./solids.js";
 import { validatePath } from "./path.js";
 import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
 import type { CameraState, CompileInput, CompiledScene, ControlValue, Diagnostic, ElementState, Geometry, ReactiveUpdate } from "./types.js";
@@ -42,6 +44,11 @@ function geometry(g: Geometry) {
   if (g.kind === "line" || g.kind === "arrow") check((g.points?.length ?? 0) >= 2, "Line/arrow requires at least two points");
   if (g.kind === "group") check(Array.isArray(g.children) && g.children.length <= 2000 && g.children.every(id => typeof id === "string"), "Invalid group children");
   if (g.isolated !== undefined) check(g.kind === "group" && typeof g.isolated === "boolean", "Only groups support isolation");
+  if (g.shading !== undefined) check(g.kind === "mesh" && ["unlit", "flat", "smooth"].includes(g.shading), "Invalid mesh shading");
+  if (g.normals !== undefined) {
+    check(g.kind === "mesh" && Array.isArray(g.normals) && g.normals.length === g.vertices?.length, "Mesh normals must match vertices");
+    for (const normal of g.normals) { vec(normal, "mesh normal"); check(Math.hypot(...normal) > 0, "Mesh normals must be nonzero"); }
+  }
   if (g.kind === "mesh") {
     check(Array.isArray(g.vertices) && Array.isArray(g.triangles) && g.triangles.length <= 20000, "Mesh requires vertices and triangles");
     for (const triangle of g.triangles) check(triangle.length === 3 && triangle.every(i => Number.isInteger(i) && i >= 0 && i < g.vertices!.length), "Invalid mesh triangle index");
@@ -283,7 +290,8 @@ export async function createSceneProgram(source: string, input: CompileInput = {
       const Color = __tokens(${JSON.stringify(Color)});
       const palette = Object.freeze({ ...__input.palette, colors: __tokens(Object.fromEntries(Object.keys(__input.palette.colors).map(name => [name, name]))) });
       const __buildScene = ${buildScene.toString()};
-      const scene = (options, builder) => __buildScene(options, builder, __input, update => { globalThis.__animlibUpdate = update; });
+      const __meshBuilders = Object.freeze({ ...(${createSurfaceBuilders.toString()})(), ...(${createSolidBuilders.toString()})() });
+      const scene = (options, builder) => __buildScene(options, builder, __input, update => { globalThis.__animlibUpdate = update; }, __meshBuilders);
       let __seed = ${JSON.stringify(input.seed ?? 1)} >>> 0;
       Math.random = () => { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };
       const math = Object.freeze(Math);
