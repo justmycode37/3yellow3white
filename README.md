@@ -59,9 +59,10 @@ See [video delivery](docs/video-delivery.md) for the request API, streaming cont
 interactive playback, persistence and generator integration. The video generator
 currently produces sample animations with a test tone.
 
-A separate `/api/narrations` endpoint accepts labelled storyline Markdown,
-generates ElevenLabs narration with word timings and explicit pauses, and provides
-a validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
+A separate `/api/narrations` endpoint normalizes AI-written storyline Markdown
+(including common label, formatting, pause, and table variations), generates
+ElevenLabs narration with word timings and explicit pauses, and provides a
+validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
 This narration service is not yet connected to the video-generation queue.
 The storyline writer should receive `backend/prompts/guidance.md`; its section 16
 specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent.

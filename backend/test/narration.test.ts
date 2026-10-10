@@ -43,7 +43,7 @@ test("supports bold labels, labelled headings, soft breaks, Unicode and pause al
   expect(result.beats[0].blocks[0]).toMatchObject({ text: "L'été est là." });
 });
 test("rejects ambiguity, empty labels, duplicate scenes, stage directions and pause ranges", () => {
-  for (const markdown of ["Read me?", "Narration:\n\nPause: 3s", "Narration: Hello [pause 3s]", "Narration: x = 2", "Narration: Hi\n\nPause: 3–5s", "Narration: Hi\n\nPause: -2s", "## Beat 1\n\nNarration: Hi\n\n## Beat 1\n\nNarration: Again"]) {
+  for (const markdown of ["Read me?\n\nNotes: Mixed unlabelled speech and notes.", "Narration:\n\nPause: 3s", "Narration: Hello [show a circle]", "Narration: x = 2", "Narration: Hi\n\nPause: 3–5s", "Narration: Hi\n\nPause: -2s", "## Beat 1\n\nNarration: Hi\n\n## Beat 1\n\nNarration: Again"]) {
     expect(() => parseStoryline(markdown)).toThrow(NarrationError);
   }
 });
@@ -154,7 +154,7 @@ test("HTTP interfaces protect ownership, validate input and serve only completed
   expect((await req("/api/narrations", { method: "POST", body: JSON.stringify({ markdown: script }) })).status).toBe(401);
   expect((await req("/api/narrations", { method: "POST", headers: { ...headers, origin: "https://evil.test" }, body: "{}" })).status).toBe(403);
   expect((await req("/api/narrations", { method: "POST", headers, body: "{" })).status).toBe(400);
-  expect((await req("/api/narrations", { method: "POST", headers, body: JSON.stringify({ markdown: "unlabelled" }) })).status).toBe(422);
+  expect((await req("/api/narrations", { method: "POST", headers, body: JSON.stringify({ markdown: "Narration: Unclear [pause a bit]" }) })).status).toBe(422);
   const response = await req("/api/narrations", { method: "POST", headers, body: JSON.stringify({ markdown: script }) });
   expect(response.status).toBe(202); const job = await response.json(); expect(job.owner).toBeUndefined();
   await service.idle();
@@ -185,4 +185,45 @@ test("ElevenLabs uses normalized speech, masks provider messages, and only retri
   const disconnected = createElevenLabs(settings, "secret", (async () => { calls++; throw new Error("secret"); }) as unknown as typeof fetch);
   await expect(disconnected.synthesize({ text: "Hi", previousText: "", nextText: "" })).rejects.toMatchObject({ code: "PROVIDER_OUTCOME_UNKNOWN" });
   expect(calls).toBe(1);
+});
+
+test("variable Markdown travels through HTTP, the ElevenLabs provider and animlib with notes excluded", async () => {
+  const root = await mkdtemp(join(tmpdir(), "aha-normalization-")); roots.push(root);
+  const sent: string[] = [];
+  const provider = createElevenLabs(settings, "test-key", (async (_url, options) => {
+    const input = JSON.parse(options!.body as string); sent.push(input.text);
+    return Response.json({ audio_base64: Buffer.from(speech(input.text).pcm).toString("base64"), normalized_alignment: alignment(input.text) });
+  }) as typeof fetch);
+  const service = new NarrationService({ root, provider }), route = narrationRoutes(service);
+  const markdown = "Here's the script:\n\n```md\n# Counting\n\n| Scene | Voice-over | Visuals | Reveal |\n| --- | --- | --- | --- |\n| 1 — Count | One. [pause 500ms] Two. | Do not speak these notes. | Two dots. |\n| 2 — Check | Count again. | Keep the dots. | |\n```";
+  const created = await route(new Request("http://localhost/api/narrations", { method: "POST", headers: { "x-user-id": "alice", "Content-Type": "application/json" }, body: JSON.stringify({ markdown }) }), "/api/narrations");
+  expect(created.status).toBe(202);
+  const job = await created.json(); await service.idle();
+  expect(sent).toEqual(["One.", "Two.", "Two dots.", "Count again."]);
+  const status = await route(new Request(`http://localhost${job.statusUrl}`, { headers: { "x-user-id": "alice" } }), job.statusUrl);
+  const result = await status.json(); expect(result.status).toBe("complete");
+  const pkg = result.package;
+  expect(pkg.schemaVersion).toBe(1);
+  expect(pkg.scenes.map((s: { id: string }) => s.id)).toEqual(["scene-1", "scene-2"]);
+  expect(pkg.scenes[0].pauses[0]).toMatchObject({ startSec: 2, endSec: 2.5 });
+  expect(pkg.scenes[0].utterances[1].words[0].startSec).toBe(2.5);
+  expect(pkg.scenes[1].startSec).toBe(6.5);
+  expect(pkg.durationSec).toBe(8.5);
+  expect(buildSceneAgentInput(pkg, "scene-1").scene.context).toContain("Do not speak these notes.");
+  const preview = buildNarrationPreview(pkg);
+  for (const scene of preview.scenes) await validateSceneAgainstNarration(scene.source, pkg, scene.id);
+  const bytes = new Uint8Array(await readFile(await service.audio("alice", job.id, pkg.scenes[0].audio.id)));
+  expect(bytes.slice(44 + 2 * 24000 * 2, 44 + 2.5 * 24000 * 2).some(Boolean)).toBe(false);
+});
+
+test("ambiguous scripts fail before provider calls, and failed retry parsing cannot strand a job as queued", async () => {
+  const { service, root, inputs } = await setup(async () => { throw new NarrationError("PROVIDER_REJECTED", "Test failure", 502, true); });
+  await expect(service.submit("alice", "Narration: One [pause a bit] two.")).rejects.toMatchObject({ code: "SCRIPT_FORMAT" });
+  expect(inputs).toHaveLength(0);
+  const job = await service.submit("alice", "Voiceover: One."); await service.idle();
+  expect((await service.get("alice", job.id)).status).toBe("failed");
+  await atomicWrite(join(root, job.id, "script.md"), "Narration: One [pause a bit] two.");
+  await expect(service.retry("alice", job.id)).rejects.toMatchObject({ code: "SCRIPT_FORMAT" });
+  expect((await service.get("alice", job.id)).status).toBe("failed");
+  expect(inputs).toHaveLength(1);
 });
