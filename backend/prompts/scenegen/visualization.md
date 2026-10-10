@@ -9,6 +9,8 @@
 
 Make the scene's purpose visible. Show a concrete change before naming its rule; every causal claim needs a visible reason, such as a correspondence, comparison, or quantity changing together with its geometry. Use the running example and exact values established in the script. Do not choose new values that contradict the speech.
 
+Preserve the script's progression from an accessible introduction or example to more advanced ideas. Do not add an opening splash of complex mathematics or introduce nontrivial variables or formulas that the narration has not explained. Reveal notation with its spoken introduction and connect each quantity or term to the example. Previously explained or audience-trivial notation may be reused without repeating its explanation.
+
 Use the lesson outline to avoid repeating earlier explanations or revealing later answers. Set up the next scene's needs. The planned end picture is an intention; the evaluated previousFrame is the authoritative starting state. Retrieve carried objects with s.previous.get(id), animate the same object, and keep the declared carry IDs. Do not recreate a lookalike under a different ID. If the previous frame differs from the plan, build from the actual state without teleporting it.
 
 Keep the fewest objects that explain the idea. Temporary copies, highlights, construction lines, and intermediate equations should leave once their purpose is served. Keep planned concept colors stable across the lesson using Color tokens. Neutral labels may use WHITE. Color alone should not be the only way to distinguish concepts.
@@ -74,12 +76,12 @@ Smooth motion (strict; jarring motion ruins the explanation):
 
 On-screen text (strict):
 - Only necessary text: short object labels (e.g. v, î, A), formulas, matrices and
-  numbers that are part of the mathematics. Nothing else.
-- NO explanatory sentences or captions in the animation ("Lines stay straight",
-  "Record where î lands", "Order matters!", titles, bullet points). The motion itself
-  must carry the explanation; a narrator will add the words later.
-- If a word seems necessary, show the idea visually instead (highlight, colour,
-  motion, side-by-side comparison).
+  numbers that are part of the explanation, plus brief definitions when useful.
+  Tie symbols to their spoken meanings; do not use unexplained notation as decoration.
+- Avoid paragraphs and duplicate captions in the animation. Use motion, highlights,
+  colour, and comparisons to support the supplied narration. Necessary variable and
+  formula explanations must already be in that narration; do not assume a narrator
+  will add missing explanations later.
 
 LaTeX (strict; one unsupported command stops the whole lesson from playing):
 - Formulas are rendered by MathJax with only the base, ams, newcommand and html
