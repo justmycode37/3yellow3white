@@ -1,0 +1,98 @@
+{
+  "method": "Agent-authored standalone proofs using animlib; visual repairs follow first frame inspection. This is not an untouched production scene-generation benchmark.",
+  "proofs": [
+    {
+      "id": "dna",
+      "title": "DNA, atom by atom.",
+      "source": "dna.js",
+      "sha256": "0169b2556970f794bc2d11a2e86e0ba0eb462a59594a80064e6baf86597874b1",
+      "sourceBytes": 35267,
+      "sampleTimes": [
+        0,
+        2,
+        4.5,
+        6,
+        8.5,
+        10.5,
+        13.9
+      ]
+    },
+    {
+      "id": "engine",
+      "title": "Motion inside the machine",
+      "source": "engine.js",
+      "sha256": "9aeeed0b4ae77b78efe7caba4ba746de9b87933543302613b432a7cf88d50a05",
+      "sourceBytes": 6797,
+      "sampleTimes": [
+        0,
+        2.75,
+        3.5,
+        5,
+        7.25,
+        9.5,
+        12.5,
+        16
+      ]
+    },
+    {
+      "id": "gradient",
+      "title": "A neural loss landscape",
+      "source": "gradient.js",
+      "sha256": "26437975da38ee5857216a43313573eb9251079b16dc2355d0225cf339c1bb7b",
+      "sourceBytes": 229910,
+      "sampleTimes": [
+        0.5,
+        2.5,
+        5,
+        8,
+        11.5,
+        15
+      ]
+    },
+    {
+      "id": "minecraft",
+      "title": "One block at a time.",
+      "source": "minecraft.js",
+      "sha256": "fa2b22305d661bece29473fbef3bd8846896d860a3dff3ec146d4605a60c3f8a",
+      "sourceBytes": 10114,
+      "sampleTimes": [
+        0,
+        2.15,
+        3,
+        4.65,
+        6.15,
+        8.65,
+        9.05,
+        10.05,
+        12,
+        15.8
+      ]
+    }
+  ],
+  "molecularInputs": [
+    {
+      "file": "1BNA.pdb",
+      "sha256": "df42f1506792f191b957227b061360652adcf6f813eb69d9ec553067ea584670"
+    },
+    {
+      "file": "DA.cif",
+      "sha256": "57f7122cec3b98b35d1ab6428b6e0ed84898d37857d048079e1455804f4fa225"
+    },
+    {
+      "file": "DC.cif",
+      "sha256": "898169cacb03d9375cabe76813110e69e3892609ef3afb9f8e48576541179ea4"
+    },
+    {
+      "file": "DG.cif",
+      "sha256": "87b9c4eddf89edcbc7aba4f77ed2159bb572e9c8092409d893998be426d872f2"
+    },
+    {
+      "file": "DT.cif",
+      "sha256": "6fda70602012a9fbed3529298e850cd34fef2c3074856ee7fb5d6007fe02a4f6"
+    },
+    {
+      "file": "dna.json",
+      "sha256": "3381c3fba3e146daedd5bd0690d371229813c297c763258f00fa77d5fce49daa"
+    }
+  ]
+}

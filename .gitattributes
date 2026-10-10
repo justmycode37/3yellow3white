@@ -4,3 +4,8 @@ backend/prompts/scenegen/*.md text eol=lf
 docs/demos/rna-auto/scene-*.js -text
 docs/demos/rna-verify-first/scene-*.js -text
 docs/demos/rna-spatial-prompts/scene-*.js -text
+docs/demos/spatial-proofs/*.js -text
+# Preserve public scientific inputs byte-for-byte, including fixed-width padding.
+shared/animlib/demo/proofs/data/*.pdb -text -whitespace
+shared/animlib/demo/proofs/data/*.cif -text -whitespace
+shared/animlib/demo/proofs/data/*.json -text

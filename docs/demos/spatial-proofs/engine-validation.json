@@ -1,0 +1,12 @@
+{
+  "duration": 16.000000000000135,
+  "objects": 82,
+  "tracks": 2408,
+  "vertices": 11274,
+  "triangles": 16156,
+  "samples": 1921,
+  "maxRodError": 8.881784197001252e-16,
+  "maxPinError": 0,
+  "maxGuideDeviation": 0.0003082775134908705,
+  "maxPistonTilt": 4.218847493575595e-15
+}
