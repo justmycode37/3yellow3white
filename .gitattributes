@@ -2,3 +2,4 @@ frontend/site/** linguist-generated=true -diff -whitespace
 backend/prompts/scenegen/*.md text eol=lf
 # Preserve byte-for-byte model output used by visual review provenance hashes.
 docs/demos/rna-auto/scene-*.js -text
+docs/demos/rna-verify-first/scene-*.js -text

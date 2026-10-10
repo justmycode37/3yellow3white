@@ -1,6 +1,7 @@
 import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import type { Frame } from 'animlib/core';
 import type { Generator, GenerationContext } from "../videos.js";
 import { parseStoryline } from "../narration/markdown.js";
 import { buildSceneAgentInput, validateSceneAgainstNarration } from "../narration/handoff.js";
@@ -92,13 +93,22 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     const assemble = (output: string) => options.timingMode === 'host'
       ? attachTimingPrelude(sceneSource(output), input) : sceneSource(output);
     const diagnostics: string[] = [];
+    // Scoped to this immutable narration/previous-frame context; failures are never cached.
+    const verifiedSources = new Map<string, Frame>();
     // Cached sources are already self-contained; only new model output needs assembly.
     const validateSource = async (output: string, checkQuality = true) => {
+      signal.throwIfAborted();
+      const normalizedSource = sceneSource(output);
+      const key = `${checkQuality}\0${normalizedSource}`;
+      const cached = verifiedSources.get(key);
+      if (cached) return structuredClone(cached);
       try {
-        const { compiled, finalFrame } = await validateSceneAgainstNarration(sceneSource(output), pkg, scene.id, previousFrame);
+        const { compiled, finalFrame } = await validateSceneAgainstNarration(normalizedSource, pkg, scene.id, previousFrame);
         if (Math.abs(compiled.duration - scene.durationSec) > 1e-6) throw new Error(`The scene must last ${scene.durationSec} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
         if (plan) validateScenePlan(compiled, finalFrame, plan.scenes[index]);
         if (checkQuality) validateSceneQuality(compiled);
+        if (verifiedSources.size >= 4) verifiedSources.delete(verifiedSources.keys().next().value!);
+        verifiedSources.set(key, structuredClone(finalFrame));
         return finalFrame;
       } catch (error) {
         diagnostics.push(validationMessage(error));

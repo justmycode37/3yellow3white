@@ -1,5 +1,8 @@
 # Automatic visual review — fresh RNA generation
 
+Historical M7 result. The current verification-first gate and M8 measurements
+are documented in [visual-gate-speed-results.md](visual-gate-speed-results.md).
+
 Branch: `amilibsam`. Run: `m7-auto`, video
 `0ff93eb1-5be1-4930-8511-242d517c7704`.
 

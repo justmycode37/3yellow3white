@@ -1,12 +1,12 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { createHash } from 'node:crypto';
 import { compileSource } from 'animlib/core';
 import type { CompiledScene } from 'animlib/core';
-import type { AgentRunner, AgentTask } from './runtime.js';
+import type { AgentRunner, AgentTask, AgentRunMetrics } from './runtime.js';
 import { renderSceneFrames } from './frame-renderer.js';
 import type { FrameRenderer } from './frame-renderer.js';
-import { validateReview } from './review.js';
+import { applyVisualEdits, parseVisualVerification, sourceHash } from './visual-edits.js';
+import type { VisualVerification } from './visual-edits.js';
 import type { ReviewInput } from './review.js';
 import { animationQualityPolicy } from './quality-policy.js';
 import { atomicWrite } from '../narration/service.js';
@@ -41,15 +41,34 @@ export interface VisualGateInput {
 export async function reviewGeneratedScene(options: VisualGateInput): Promise<string> {
   const {runner,input,directory,index,videoId,signal}=options;
   signal.throwIfAborted();
-  const guidance=await readFile(new URL('../../prompts/scene-review.md',import.meta.url),'utf8');
-  const quality=await animationQualityPolicy();
-  const style=await readFile(new URL('../../prompts/visual-style-reference.jpg',import.meta.url));
+  const [guidance, repairGuidance, quality, style] = await Promise.all([
+    readFile(new URL('../../prompts/scene-verify.md',import.meta.url),'utf8'),
+    readFile(new URL('../../prompts/scene-repair.md',import.meta.url),'utf8'),
+    animationQualityPolicy(),
+    readFile(new URL('../../prompts/visual-style-reference.jpg',import.meta.url)),
+  ]);
+  // The author already receives this policy. Avoid pasting it twice without dropping context.
+  const authorContract = options.task.systemPrompt.includes(quality)
+    ? options.task.systemPrompt : `${options.task.systemPrompt}\n\n${quality}`;
   let source=options.source;
-  const parse=async(output:string)=>{const result=await validateReview(output,input);if(result.source)await options.validate(result.source);return result;};
-  for(let attempt=0;attempt<3;attempt++) {
+  let previousReview: VisualVerification | undefined;
+  const run = async (task: AgentTask, attemptDirectory: string, phase: 'review' | 'repair', attempt: number) => {
+    let metrics: AgentRunMetrics | undefined;
+    const started = performance.now();
+    await atomicWrite(join(attemptDirectory,`${phase}.prompt.md`),`${task.systemPrompt}\n\n${task.prompt}`);
+    try {
+      return await logStage({videoId,sceneIndex:index,stage:phase,attempt},()=>runner.run({
+        ...task, onMetrics: value => { metrics = value; },
+      }));
+    } finally {
+      await atomicWrite(join(attemptDirectory,`${phase}.metrics.json`),JSON.stringify(metrics ?? { elapsedMs: performance.now()-started },null,2));
+    }
+  };
+  // One findings-only verification, at most one targeted repair, then final verification.
+  for(let attempt=0;attempt<2;attempt++) {
     signal.throwIfAborted();
     await options.validate(source);
-    const sourceSha256=createHash('sha256').update(source).digest('hex');
+    const sourceSha256=sourceHash(source);
     const attemptDirectory=join(directory,`scene-${index}.visual`,String(attempt));
     await mkdir(attemptDirectory,{recursive:true});
     await atomicWrite(join(attemptDirectory,'candidate.js'),source);
@@ -60,20 +79,40 @@ export async function reviewGeneratedScene(options: VisualGateInput): Promise<st
     images.push({type:'image',mimeType:'image/jpeg',data:style.toString('base64')});
     const sampleMap=evidence.sheets.map((sheet,i)=>({image:i+1,width:sheet.width,height:sheet.height,columns:sheet.columns,times:sheet.times}));
     const task:AgentTask={
-      systemPrompt:`${options.task.systemPrompt}\n\n${guidance}\n\n${quality}\n\nAUTOMATIC VISUAL PUBLICATION GATE\nYou are reviewing newly generated source before it can be published. Review each image, then source. The JSON review format above replaces the author's JavaScript output format. Every repair will be rendered and reviewed again. The last image is an approved style reference only: preserve its black background, serif/vector math, sparse explanatory geometry and stable color roles; do not copy its RNA topic or layout into unrelated lessons. Inspect both aspects for clipping, text/shape occlusion and control clearance. The host reserves the top 12% and bottom 12% for controls; no controls are painted into these native renders. Check transition interiors and purposeful motion. New orbitable model views must use orbitHitTest:"geometry", and explanatory text must remain upright. Approve only if the supplied evidence shows no substantive problem; do not invent missing frames or demand decorative changes.`,
-      prompt:`Review these actual native WebGPU frames. Contact sheets read left-to-right, then top-to-bottom; each cell is one whole viewport. Sampling map: ${JSON.stringify(sampleMap)}. Last image is style reference.\nAuthoritative request and narration:\n${options.task.prompt}\nCurrent candidate source (SHA-256 ${sourceSha256}):\n${source}`,
-      images,signal,outputMode:'validated-reference',logContext:{videoId,sceneIndex:index,stage:'review'},
-      validate:async output=>{await parse(output);},
+      systemPrompt:`${authorContract}\n\n${guidance}`,
+      prompt:`Verify these actual native WebGPU frames. Contact sheets read left-to-right, then top-to-bottom; each cell is one whole viewport. Sampling map: ${JSON.stringify(sampleMap)}. Last image is style reference.\nEarlier verification (if any): ${JSON.stringify(previousReview ?? null)}\nAuthoritative request and narration:\n${options.task.prompt}\nCurrent candidate source (SHA-256 ${sourceSha256}):\n${source}`,
+      images,signal,outputMode:'submit-only',logContext:{videoId,sceneIndex:index,stage:'review'},
+      validate:async output=>{parseVisualVerification(output,input.scene.durationSec);},
     };
-    await atomicWrite(join(attemptDirectory,'review.prompt.md'),`${task.systemPrompt}\n\n${task.prompt}`);
-    const output=await logStage({videoId,sceneIndex:index,stage:'review',attempt},()=>runner.run(task));
-    const review=await parse(output);signal.throwIfAborted();
+    const output=await run(task,attemptDirectory,'review',attempt);
+    const review=parseVisualVerification(output,input.scene.durationSec);signal.throwIfAborted();
     await atomicWrite(join(attemptDirectory,'review.json'),JSON.stringify({sourceSha256,sampleMap,...review},null,2));
     if(review.approved){
       await atomicWrite(join(directory,`scene-${index}.visual-review.json`),JSON.stringify({approved:true,sourceSha256,attempt,evidence,review},null,2));
       return source;
     }
-    source=review.source!;
+    if(attempt===1)break;
+    previousReview=review;
+    const originalSource=source;
+    // Successful patch validation is deterministic in this immutable candidate/context.
+    const validatedPatches=new Map<string,string>();
+    const validatePatch=async(output:string)=>{
+      signal.throwIfAborted();
+      const cached=validatedPatches.get(output);if(cached!==undefined)return cached;
+      const repaired=applyVisualEdits(output,originalSource,review.findings.length);
+      await options.validate(repaired);
+      signal.throwIfAborted();
+      if(validatedPatches.size>=4)validatedPatches.delete(validatedPatches.keys().next().value!);
+      validatedPatches.set(output,repaired);return repaired;
+    };
+    const patch=await run({
+      systemPrompt:`${authorContract}\n\n${repairGuidance}`,
+      prompt:`Repair only these verified findings (zero-based indexes): ${JSON.stringify(review.findings)}.\nRendered evidence uses this sampling map: ${JSON.stringify(sampleMap)}. Last image is style reference.\nAuthoritative request and narration:\n${options.task.prompt}\nOriginal candidate sourceSha256: ${sourceSha256}\n${originalSource}`,
+      images,signal,outputMode:'submit-only',logContext:{videoId,sceneIndex:index,stage:'repair'},
+      validate:async output=>{await validatePatch(output);},
+    },attemptDirectory,'repair',attempt);
+    source=await validatePatch(patch);
+    await atomicWrite(join(attemptDirectory,'repair.json'),patch);
   }
-  throw new Error('Automatic visual review rejected the scene after three rendered candidates; no scene was published. See saved frame evidence and findings.');
+  throw new Error('Automatic visual review rejected the scene after one targeted repair; no scene was published. See saved frame evidence and findings.');
 }

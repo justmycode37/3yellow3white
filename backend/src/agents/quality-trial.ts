@@ -59,7 +59,7 @@ if (variant === 'serve') {
   const runner = { async run(task: import('./runtime.js').AgentTask) {
     const number = taskNumber++;
     let metrics: unknown;
-    try { return await pi.run({ ...task, onMetrics: value => { metrics = value; } }); }
+    try { return await pi.run({ ...task, onMetrics: value => { metrics = value; task.onMetrics?.(value); } }); }
     finally { if (metrics) await atomicWrite(join(directory, `scene-${task.logContext?.sceneIndex}.${task.logContext?.stage}-${number}.metrics.json`), JSON.stringify(metrics, null, 2)); }
   } };
   const generate = createPiGenerator(runner, narration, root, { outputMode: 'validated-reference', timingMode: 'host' });

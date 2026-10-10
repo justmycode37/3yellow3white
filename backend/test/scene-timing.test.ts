@@ -6,6 +6,7 @@ import { compileSource, evaluateScene } from 'animlib/core';
 import { agentConfig } from '../src/agents/config.js';
 import { createPiGenerator as createProductionGenerator } from '../src/agents/generator.js';
 import { reviewGeneratedScene } from '../src/agents/visual-gate.js';
+import { sourceHash } from '../src/agents/visual-edits.js';
 import type { AgentTask } from '../src/agents/runtime.js';
 import type { NarrationService } from '../src/narration/service.js';
 import type { NarrationScenePackage } from '../src/narration/types.js';
@@ -124,8 +125,12 @@ test('production generator publishes only the re-rendered approved repair and it
     if (task.logContext?.stage === 'scene') return literal;
     // Neither the initial source nor a proposed repair may escape before approval.
     await expect(readFile(join(f.directory, 'scene-0.js'))).rejects.toThrow();
+    if (task.logContext?.stage === 'repair') {
+      const patch = JSON.stringify({ sourceSha256: sourceHash(literal), edits: [{ finding: 0, before: 'moveTo([1,0])', after: 'moveTo([2,0])' }] });
+      await task.validate!(patch); return patch;
+    }
     const result = reviews++ === 0
-      ? { approved: false, findings: [{ timeSec: 1, objectIds: ['dot'], problem: 'Dot placement', fix: 'Move dot' }], source: repair }
+      ? { approved: false, findings: [{ timeSec: 1, objectIds: ['dot'], problem: 'Dot placement', fix: 'Move dot' }] }
       : { approved: true, findings: [] };
     await task.validate!(JSON.stringify(result)); return JSON.stringify(result);
   } }, f.narration, f.root, { visualGate: options => reviewGeneratedScene({ ...options, renderFrames: async input => {
@@ -140,4 +145,21 @@ test('production generator publishes only the re-rendered approved repair and it
   expect(JSON.parse(await readFile(join(f.directory, 'scene-0.final-frame.json'), 'utf8')))
     .toEqual(evaluateScene(await compileSource(repair), 1));
   await generate(f.request, 0, f.context); expect(reviews).toBe(2);
+});
+
+test('cached validation returns isolated frames and rejects changed invalid source', async () => {
+  const f = await fixture();
+  const expected = evaluateScene(await compileSource(literal), 1);
+  const generate = createProductionGenerator({ async run() { return literal; } }, f.narration, f.root, {
+    visualGate: async ({ source, validate }) => {
+      const first = await validate(source) as typeof expected;
+      Object.assign(first, { elements: [] });
+      expect(await validate(source)).toEqual(expected);
+      await expect(validate(source.replace('s.wait(0.375)', 's.wait(1)'))).rejects.toThrow();
+      expect(await validate(source)).toEqual(expected);
+      return source;
+    },
+  });
+  await generate(f.request, 0, f.context);
+  expect(JSON.parse(await readFile(join(f.directory, 'scene-0.final-frame.json'), 'utf8'))).toEqual(expected);
 });
