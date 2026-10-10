@@ -54,7 +54,9 @@ When writing the plan:
   many samples we have", "k picks the frequency we are testing"). List those symbols
   in the visualDescription with the object each one stands for, so the scene can
   point at the symbol and at that object together and show a short definition line
-  under the formula. Do not use a symbol the narration never explains.
+  under the formula. Do not use a symbol the narration never explains. Keep each
+  definition to one short clause: the added math must fit the requested length, so
+  make room by cutting repetition elsewhere, not by running long.
 - **Equations only while they are explained.** Plan a formula in a scene only if
   that scene's narration explains it, and say at which sentence it appears. It
   leaves when the narration moves on to another idea. Never plan a formula as a
@@ -65,9 +67,10 @@ When writing the plan:
   an entity with an id, listed under cleanup in the scene where it leaves. No boxed
   results and no panels around text.
 - **Time to take an equation in.** Right after a formula has been fully explained,
-  give the student a quiet moment with it: one short spoken invitation ("Take a
-  moment to read it." / "Look at how each term matches the picture.") followed by a
-  `Pause:` line in the script. Scale the pause to the formula: about 3 seconds for a
+  give the student a quiet moment with it: one short spoken sentence that explicitly
+  invites them to take time ("Take a few seconds to read it." / "Pause here and
+  trace each term back to the picture."; a bare "Look at this" is not an invitation)
+  followed by a `Pause:` line in the script. Scale the pause to the formula: about 3 seconds for a
   short one (`F = ma`), 5 to 6 for one with several terms, a sum, an integral or a
   matrix product, up to 8 for the central formula of the lesson. Do this for every
   formula that matters; a formula not worth a pause is not worth showing. The next

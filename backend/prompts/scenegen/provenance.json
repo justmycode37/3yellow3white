@@ -29,7 +29,7 @@
       "source": "scenegen/prompts/planning.md (maintained here since PR 59)",
       "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
       "pullRequest": 59,
-      "sha256": "30f4ac4de003d42b5f85b871987386103ee4580d512f595c93c6821c61451ad9"
+      "sha256": "b142ce5b5b435c9308ff396a782a552307b36d87495b8044e0dda5b66182eaaf"
     },
     {
       "file": "topics-system.md",

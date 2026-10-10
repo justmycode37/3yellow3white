@@ -8,7 +8,7 @@ import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 // These pin the exact reviewed text, including whitespace.
 const hashes = {
   visualization: 'd95446b6887ae14f8969920bbb28695f6f4168acdf1f9114c02379efa4149df6',
-  planning: '30f4ac4de003d42b5f85b871987386103ee4580d512f595c93c6821c61451ad9',
+  planning: 'b142ce5b5b435c9308ff396a782a552307b36d87495b8044e0dda5b66182eaaf',
   'topics-system': 'ad3bcf9c7c1351f28c6f80b6fd2c8cfbb15655ebdb587d2d623af2d94eb37131',
   'topics-format': '260ba64060e06134c8208ba90533bdfeccbe28cff6d92bdb07d9d8e79a03afb7',
 } as const;
