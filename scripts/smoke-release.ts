@@ -14,7 +14,14 @@ assert((await Bun.file(new URL("../shared/animlib/docs/reference.md", import.met
 const revision = (await Bun.file(new URL("../REVISION", import.meta.url)).text()).trim();
 assert.equal(process.env.APP_REVISION, revision);
 const guidance = (await buildStorylineMessages("Release verification"))[0].content;
-assert(guidance.includes("PRODUCTION HANDOFF"), "Storyline guidance is missing from the release");
+const example = /```md\s*\n([\s\S]*?)```/.exec(guidance)?.[1];
+assert(example, 'Storyline guidance must ship a parseable script example');
+const exampleStory = parseStoryline(example);
+assert(exampleStory.beats.length > 0 && exampleStory.beats.every(beat => beat.context.trim() && beat.blocks.some(block => block.kind === 'speech')),
+  'Shipped guidance example must contain scene context and spoken narration');
+for (const prompt of ['scene-craft.md', 'scene-review.md']) {
+  assert((await Bun.file(new URL(`../backend/prompts/${prompt}`, import.meta.url)).text()).trim().length > 100, `${prompt} is missing from the release`);
+}
 assert.equal(parseStoryline("Narration: A working release.").beats.length, 1);
 assert.equal(parseStoryline("| Voiceover | Pause (s) |\n| --- | --- |\n| A working release. | 1 |").beats[0].blocks.length, 2);
 const scene = await compileSource(`export default scene({}, s => {

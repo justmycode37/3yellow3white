@@ -5,6 +5,15 @@ import { Type } from "typebox";
 import { createModelRuntime } from "./auth.js";
 import { agentConfig, AgentError, agentFailure } from "./config.js";
 import type { AgentConfig } from "./config.js";
+import { SceneCompileError } from 'animlib/core';
+
+export function validationMessage(error: unknown): string {
+  if (error instanceof SceneCompileError) {
+    const d = error.diagnostic;
+    return `${d.code}${d.line !== undefined ? ` at line ${d.line}${d.column !== undefined ? `:${d.column}` : ''}` : ''}: ${d.message}${d.hint ? `\nHint: ${d.hint}` : ''}`;
+  }
+  return error instanceof Error ? error.message : 'Invalid output.';
+}
 
 export interface AgentTask {
   systemPrompt: string;
@@ -44,7 +53,7 @@ export class PiAgentRunner implements AgentRunner {
         parameters: Type.Object({ output: Type.String({ maxLength: 256000 }) }),
         async execute(_id, { output }) {
           try { await task.validate!(output); return { content: [{ type: "text", text: "Valid." }], details: {} }; }
-          catch (error) { return { content: [{ type: "text", text: error instanceof Error ? error.message : "Invalid output." }], details: {} }; }
+          catch (error) { return { content: [{ type: "text", text: validationMessage(error) }], details: {} }; }
         },
       });
       ({ session } = await createAgentSession({ modelRuntime: runtime, model, thinkingLevel: this.config.thinking,
@@ -65,7 +74,7 @@ export class PiAgentRunner implements AgentRunner {
         try { await task.validate?.(output); return output; }
         catch (error) {
           if (attempt === 2) throw new AgentError("VALIDATION", "The agent could not produce valid output after three attempts.");
-          prompt = `Correct the previous output. Validation failed: ${error instanceof Error ? error.message : "Invalid output"}. Return only the corrected output.`;
+          prompt = `Correct only the reported problems in the previous output. Validation failed: ${validationMessage(error)}. Preserve the task's facts, IDs, inherited state, and timing. Return the complete corrected output.`;
         }
       }
       throw new AgentError("OUTPUT", "The agent did not complete.");

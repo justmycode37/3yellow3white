@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 import type { AssistantMessage, Context } from "@earendil-works/pi-ai";
-import { compileSource } from "animlib/core";
+import { compileSource, SceneCompileError } from "animlib/core";
 import { agentConfig, AgentError, agentFailure } from "../src/agents/config.js";
 import { authPath, createModelRuntime, deviceId, revokeSubscription } from "../src/agents/auth.js";
 import { PiAgentRunner } from "../src/agents/runtime.js";
@@ -13,6 +13,18 @@ import { createPiGenerator } from "../src/agents/generator.js";
 import { NarrationService } from "../src/narration/service.js";
 import { settingsFromEnv } from "../src/narration/elevenlabs.js";
 import { VideoService } from "../src/videos.js";
+import { parseStoryline } from '../src/narration/markdown.js';
+import type { LessonPlan } from '../src/agents/planning.js';
+
+function planned(script: string, overrides: Partial<LessonPlan> = {}) {
+  return JSON.stringify({ schemaVersion: 1, markdown: script, plan: {
+    audience: 'Newcomer', prerequisites: [], learningGoal: 'Count dots', centralQuestion: 'How many dots?',
+    keyInsight: 'Adding one increases the count by one', runningExample: 'One blue dot, then another', misconceptions: [], entities: [],
+    scenes: parseStoryline(script).beats.map(beat => ({ id: beat.id, purpose: beat.title, whyNow: 'Build on counting',
+      keyPoints: ['Count the dots'], visualDescription: beat.context, endsWith: 'The dots remain', carry: [], cleanup: [], sourceRefs: [], interactions: [] })),
+    ...overrides,
+  } });
+}
 
 const roots: string[] = [];
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))); });
@@ -180,7 +192,7 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
   const tasks: AgentTask[] = [];
   const runner = { async run(task: AgentTask) {
     agentCalls++; tasks.push(task);
-    if (task.prompt.startsWith("Write")) { await task.validate!(script); return script; }
+    if (task.prompt.startsWith("Write")) { const output = planned(script); await task.validate!(output); return output; }
     const packet = JSON.parse(task.prompt.slice(task.prompt.indexOf("\n") + 1));
     const source = `export default scene({audio:${JSON.stringify(packet.audioAssetId)},end:${JSON.stringify(packet.endMode)}},s=>{s.circle('dot');s.wait(${packet.scene.durationSec});});`;
     await task.validate!(source); return source;
@@ -203,6 +215,12 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     }
     expect(agentCalls).toBe(3); expect(speechCalls).toBe(2);
     expect(tasks[2].prompt).toContain('"previousFrame"');
+    const packet = JSON.parse(tasks[1].prompt.slice(tasks[1].prompt.indexOf('\n') + 1));
+    expect(packet.planning.lesson.learningGoal).toBe('Count dots');
+    expect(packet.planning.outline.map((scene: { id: string }) => scene.id)).toEqual(['beat-1', 'beat-2']);
+    expect(packet.planning.next.id).toBe('beat-2');
+    expect(JSON.parse(await readFile(join(settings.dataDir, video.id, 'lesson.json'), 'utf8')).plan.learningGoal).toBe('Count dots');
+    expect(await readFile(join(settings.dataDir, video.id, 'scene-0.prompt.md'), 'utf8')).toContain('Count dots');
     // Recreate the generator and request a previously completed stage, as after a crash before publication.
     const reopened = createPiGenerator(runner, narration, settings.dataDir);
     const result = await reopened(request, 0, { videoId: video.id, owner: "user:demo", signal: new AbortController().signal });
@@ -236,10 +254,17 @@ test('scene one streams before later TTS finishes and scene two receives its eva
     },
   } });
   const runner = { async run(task: AgentTask) {
-    if (task.prompt.startsWith('Write')) return script;
+    if (task.prompt.startsWith('Write')) {
+      const base = JSON.parse(planned(script)) as { plan: LessonPlan };
+      base.plan.entities = [{ id: 'dot', meaning: 'The original dot', color: 'BLUE' }];
+      base.plan.scenes.forEach(scene => { scene.carry = ['dot']; });
+      return planned(script, base.plan);
+    }
     const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
     expect(task.systemPrompt).toContain('s.previous');
     expect(input.scene.utterances[0].words[0].startSec).toBe(0);
+    expect(input.planning.lesson.entities[0].id).toBe('dot');
+    expect(input.planning.outline).toHaveLength(2); // Full plan is available even while later speech is blocked.
     let commands: string;
     if (input.scene.id === 'beat-1') {
       expect(input.endMode).toBe('advance');
@@ -273,6 +298,45 @@ test('scene one streams before later TTS finishes and scene two receives its eva
     await until(() => service.get(video.id, 'shared-user')!.status === 'complete');
     expect(service.get(video.id, 'shared-user')!.scenes).toHaveLength(2);
   } finally { release(); await service.close(); await narration.idle(); }
+});
+
+test('compiler repair messages retain locations and hints in the actual Pi conversation', async () => {
+  const { runner, contexts } = await fakeRuntime([message('bad'), message('valid')]);
+  await runner.run({ systemPrompt: 'Keep facts and timing', prompt: 'Generate', validate: async output => {
+    if (output === 'bad') throw new SceneCompileError({ severity: 'error', code: 'SCENE_CODE', message: 'Unknown method', line: 7, column: 3, hint: 'Use moveTo.' });
+  } });
+  expect(JSON.stringify(contexts[1])).toContain('SCENE_CODE at line 7:3: Unknown method');
+  expect(JSON.stringify(contexts[1])).toContain('Hint: Use moveTo.');
+  expect(JSON.stringify(contexts[1])).toContain('Preserve the task');
+});
+
+test('existing saved Markdown videos resume without a new planning call', async () => {
+  const settings = await config();
+  const videoId = crypto.randomUUID(), owner = 'shared-user';
+  const request = { title: 'Old lesson', topic: 'Dots', documents: [] };
+  const directory = join(settings.dataDir, videoId);
+  const { mkdir } = await import('node:fs/promises');
+  await mkdir(directory, { recursive: true });
+  await writeFile(join(directory, 'script.md'), '# Old lesson\n\n## Beat 1\n\nContent needed: One dot.\n\nNarration: One dot.');
+  const narration = new NarrationService({ root: join(settings.agentDir, 'old-narration'), provider: {
+    settings: settingsFromEnv({ ELEVENLABS_VOICE_ID: 'test' }),
+    async synthesize({ text }) {
+      const characters = Array.from(text);
+      return { pcm: new Uint8Array(48_000), normalizedAlignment: { characters,
+        character_start_times_seconds: characters.map((_, i) => i * 0.01), character_end_times_seconds: characters.map((_, i) => (i + 1) * 0.01) } };
+    },
+  } });
+  let calls = 0;
+  const generator = createPiGenerator({ async run(task) {
+    calls++;
+    expect(task.prompt).toStartWith('Generate');
+    const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
+    expect(input.planning.outline[0].context).toContain('One dot');
+    return `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:"hold"},s=>{s.circle('dot');s.wait(${input.scene.durationSec});});`;
+  } }, narration, settings.dataDir);
+  const result = await generator(request, 0, { videoId, owner, signal: new AbortController().signal });
+  expect(result?.scene.narration).toBe('One dot.'); expect(calls).toBe(1);
+  await narration.idle();
 });
 
 test('existing Pi subscription credentials use their selected provider without falling back to OpenAI keys', async () => {

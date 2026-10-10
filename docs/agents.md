@@ -1,17 +1,80 @@
 # Pi agents
 
-The backend uses pinned Pi 1.1.0 to write storyline Markdown and animlib scene
-JavaScript. The host sends the script to ElevenLabs, then gives each scene agent
-its narration timing and the animlib API reference. Each task gets a separate
+The backend uses pinned Pi 1.1.0 to write a lesson plan and storyline Markdown in
+one JSON response, then animlib scene JavaScript. The host sends only the script
+to ElevenLabs, then gives each scene agent its narration timing, the lesson plan,
+and the animlib API reference. Each task gets a separate
 conversation and only a `validate_output` tool. Shell, file access, discovered
 extensions, skills, and local instructions are disabled. Scene validation uses
 the existing QuickJS compiler with memory and execution limits.
 
 One model runtime owns credentials. Pi persists subscription refreshes with file
 locking. The host saves scripts, narration IDs, and validated scene sources per
-video under `AGENT_DATA_DIR`; completed stages are reused on restart. Each completed narration scene becomes available immediately; scene code generation
+video under `AGENT_DATA_DIR`; completed stages are reused on restart. `lesson.json`
+is the authoritative versioned plan/script envelope; `script.md` is a readable
+export. Videos with an older saved `script.md` resume without a new planning call.
+Each completed narration scene becomes available immediately; scene code generation
 overlaps later speech. Code agents run sequentially with the previous scene’s evaluated
 end-state. Scenes are published progressively with audio, word timings, and captions.
+
+## Planning and scene quality
+
+`backend/prompts/guidance.md` contains compact explanation guidance adapted from
+PR #19. Requested audience, scene count, duration, and pause preferences take
+priority over defaults. Explicit thinking pauses need natural spoken invitations;
+visual holds do not require scripted silence.
+
+Planning and scene craft adapt the useful parts of PR #21 into the existing calls.
+The plan records the audience/prerequisites, central question, learning goal,
+key insight, running example, misconceptions, and shared entity/color meanings.
+Each scene records its purpose, why it comes here, ordered key points, qualitative
+visuals, intended end picture, carry/cleanup IDs, source references, and up to two
+useful interactions. A complete outline and adjacent scene plans go to every
+scene agent, including while later narration is still being synthesized.
+
+The host validates scene/beat correspondence, source filenames, palette tokens,
+and consistent entity/control declarations before submitting paid speech. PDF
+extraction retains `[Page N]` markers; references are planner assertions to review,
+not independently verified citations. Document content remains untrusted lesson
+material. Planning never supplies acoustic timestamps or fixed scene durations.
+
+An evaluated previous frame at default controls is authoritative for generation;
+planned end descriptions do not replace it. Compiled output must keep declared
+carry entities, clean up declared temporary entities, and declare exactly the
+planned control IDs/types. This checks declared structure, not mathematical or
+perceptual correctness. Scene craft guidance asks the author to inspect clutter,
+legibility, motion, causal teaching, and reveal order. Screen layout and pacing remain topic-dependent and bounded by real
+audio timing.
+
+For debugging, private job folders save `storyline.prompt.md`, each
+`scene-N.prompt.md`, the captured canonical `scene-N.input.json`, and up to twenty failed validation messages per scene in
+`scene-N.diagnostics.json`. Compiler codes, line/column locations and hints reach
+the agent's validation tool and repair turns. Repairs must preserve established
+facts, IDs, inherited state and measured audio timing. These files contain lesson
+material and source; keep the existing private job-directory permissions.
+
+### Optional rendered review
+
+After capturing 1-5 screenshots or timestamped contact sheets of a scene, run:
+
+```sh
+npm run agents:review -- VIDEO_UUID SCENE_INDEX /absolute/path/frame.png
+```
+
+Use the same `AGENT_DATA_DIR` as the generation server. Indices start at zero.
+This makes an explicit model call with the samples, saved authoring task, current
+source, and captured canonical input. It applies the visual-review checklist
+adapted from PR #21: collisions, framing, legibility, teaching, continuity, and
+motion. Unknown sample times remain null; still samples cannot certify continuous
+motion or acoustic sync. Supply timestamps for precise findings.
+
+The result is `scene-N.review.json` and, when a repair is proposed, a validated
+`scene-N.review.js` draft. Validation uses the captured inherited start and preserves the audio ID,
+end mode, measured duration, planned controls, and carry/cleanup declarations.
+Reviewing does not replace published scenes or run automatically during generation.
+Render the draft again to assess its visual changes. An upstream replacement also
+requires downstream revalidation. The command needs artifacts saved by the new
+generator; older videos remain playable without review inputs.
 
 ## Local setup
 

@@ -11,6 +11,7 @@
     "agents:status": "bun src/agents/cli.ts status",
     "agents:check": "bun src/agents/cli.ts check",
     "agents:logout": "bun src/agents/cli.ts logout",
+    "agents:review": "bun src/agents/review.ts",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "test": "bun test",
