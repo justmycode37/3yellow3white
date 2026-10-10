@@ -1948,3 +1948,160 @@ domain helpers in the app, accessible descriptions of visual objects, measured
 performance improvements, richer text support, and only then additional interaction
 or rendering features. The core contract remains plain scene code, local clocks,
 explicit persistence, and reproducible frames.
+
+## Sections, feature edges, scalar fields, and label depth
+
+These opt-in tools share the same CPU triangle processing on WebGPU and WebGL2.
+Existing geometry and labels keep their default appearance. They operate on the
+current evaluated mesh (including corresponding-vertex morphs), before world
+transforms and before per-view rendering. Keep resolutions modest: clipping and
+edge extraction add CPU work, and thick contours add triangles.
+
+### Clipping planes and actual cross-sections
+
+Meshes, sampled surfaces, solids, and spheres accept `clipPlanes`, an array of at
+most four `{ normal: [nx, ny, nz], offset, section? }` objects. The retained side
+is **dot(normal, localPosition) <= offset**. Normals must be finite and nonzero;
+normalizing is optional. For example, `[2, 0, 0]` with offset `1` keeps `x <= 0.5`.
+Planes are object-local and follow the object's scale, rotation, position, and
+parent groups. They are not view scissor rectangles or world-space planes.
+
+```js
+s.box('cutaway', {
+  width: 3, height: 2, depth: 2, fill: 'BLUE',
+  clipPlanes: [{
+    normal: [1, 0, 0], offset: 0.4,
+    section: { color: 'YELLOW', width: 0.03, cap: 'GOLD' },
+  }],
+});
+```
+
+Clipping alone removes triangles outside the half-space. `section` draws the
+actual mesh/plane intersection as round, unlit contour strokes. `width` is the
+full local stroke diameter, default `0.025`, and must be positive. Omit `section`
+for clipping only; omit `cap` for an open cut with visible contour. A scalar
+surface's contour is the intersection of its sampled triangles with the plane,
+not an analytically exact level set. Strokes straddle the intersection by their
+radius, so their thickness can extend slightly beyond the mathematical cut.
+
+`cap` is a palette color (with optional alpha). Caps fill closed, nonbranching
+section loops, including nested holes and disconnected islands, on consistently
+constructed closed meshes. They use flat two-sided lighting and the explicit cap
+color, without the object's scalar ramp or procedural texture. Caps are omitted
+for open/branching intersection components. Self-intersecting, coincident, or
+nonmanifold meshes are outside the cap guarantee. Coplanar triangles create no
+new section; a tangent cut creates no artificial disk. Geometrically coincident
+endpoints are welded with a tolerance of `1e-8 * max(1, maxAbsLocalCoordinate)`;
+the same tolerance classifies plane distances for fills, caps, and contours.
+Coplanar vertices are retained, so repeating a plane (including a positive
+rescaling of its normal and offset) preserves earlier caps and contours.
+Avoid details smaller than that tolerance. A cut that removes the entire shape
+produces no cap. Cap/contour display does not change the source mesh topology.
+
+Planes run in array order. Requested caps participate in later cuts; enable caps
+on earlier planes when later caps need a closed solid. Earlier section strokes
+are clipped against later planes. To move a cut while paused, rebuild it with an
+ordinary slider. In a mesh/sphere `morphTo`, equal-length plane lists with exactly
+matching normals interpolate offsets; other plane configurations switch to the
+target configuration after progress zero. Specify the plane fields at both
+endpoints. Object/group animation carries the local plane with the object.
+
+### Silhouette and crease outlines
+
+```js
+s.box('edges', {
+  fill: 'TEAL',
+  outline: { color: 'WHITE', width: 0.025, creaseAngle: Math.PI / 6,
+             silhouette: true },
+});
+```
+
+`outline` is available on meshes and spheres (including sampled surfaces and
+solids). It draws boundary edges, creases where adjacent face normals differ by
+more than `creaseAngle`, and camera-facing/back-facing transitions when
+`silhouette` is true. The defaults are `width: 0.025`, `creaseAngle: Math.PI/6`,
+and `silhouette: true`. Angles are radians in `[0, PI]`; `PI` disables creases.
+Set `silhouette: false` for boundaries and creases only. Positional welding joins
+hard-normal seams, suppressing face triangulation diagonals. Consistent triangle
+winding is required for meaningful silhouettes. A sphere's outline follows its
+finite tessellation, not an analytic curve. These are depth-tested round strokes,
+not screen-space postprocessing; width scales with object/group scale.
+
+Outlines use the clipped, morphed geometry, including requested caps, and are
+recomputed for each camera/view/orbit change. They retain group isolation and
+object opacity. Translucent fills and strokes use the normal triangle sorting;
+intersecting transparent surfaces retain the renderer's existing ordering limits.
+Ordinary `stroke` still means the full mesh wireframe and can be used separately.
+
+### Per-vertex scalar palette colors
+
+Raw meshes accept `scalarColors: { values, domain, colors }`. `values` must have
+exactly one finite number per vertex (magnitude at most `1e6`); `domain` is two
+finite increasing numbers. `colors` contains 2–16 named opaque palette tokens,
+not CSS colors, `none`, or alpha objects. All stops are resolved through the
+host's palette, including its availability checks.
+
+```js
+s.surface('temperature', {
+  fn: (x, y) => Math.sin(x) * Math.cos(y),
+  scalar: {
+    fn: (x, y, z) => z,
+    domain: [-1, 1],
+    colors: ['BLUE', 'WHITE', 'RED'],
+  },
+});
+// Raw mesh equivalent:
+s.mesh('triangle', {
+  vertices: [[-1, -1, 0], [1, -1, 0], [0, 1, 0]],
+  triangles: [[0, 1, 2]],
+  scalarColors: { values: [0, 1, 0.5], domain: [0, 1], colors: ['BLUE', 'RED'] },
+});
+```
+
+`surface` and `parametricSurface` accept `scalar: { fn(x,y,z), domain, colors }`.
+The callback receives each valid sampled **local position**, not UV parameters,
+and is sampled with geometry during compilation/control rebuilds. Invalid
+geometry samples leave holes and have no scalar entry. Invalid scalar samples
+fail compilation instead of silently misaligning the values. Changing geometry
+with a surface callback resamples the scalar field too; array-based raw mesh
+edits must supply corresponding scalar values explicitly.
+
+Values clamp to the domain, then map linearly between uniformly spaced palette
+stops in sRGB channel space. The GPU interpolates the resulting vertex colors
+perspectively across each triangle; clipping interpolates those same attributes.
+A triangle spanning several ramp stops therefore does not insert interior stop
+bands: increase sampling where the field varies rapidly. Scalar colors replace
+fill RGB while retaining fill alpha, object/group opacity, lighting, materials,
+and optional procedural texture blending. `fill: 'none'` still hides the fill.
+Matching scalar ramps/domains and equal-length values interpolate during mesh
+morphs; unmatched configurations use the target ramp after progress zero. No
+automatic scalar legend is generated; author one with palette-colored shapes.
+
+### Configurable label occlusion
+
+Text and LaTeX accept `labelOcclusion`:
+
+- `'depth'` (default/omitted): preserve existing per-glyph triangle depth testing.
+- `'overlay'`: show the whole label over world geometry in its view.
+- `'hide'`: hide the whole label when its anchor is behind an opaque filled triangle.
+- `'fade'`: show an occluded label at 20% of its ordinary opacity; otherwise show it fully.
+
+```js
+s.text('inside-label', { text: 'Core', position: [0, 0, -1],
+  billboard: true, labelOcclusion: 'fade', fill: 'YELLOW' });
+```
+
+The anchor is the transformed local origin, including billboard and viewport
+offsets. Billboard labels face the current camera as before. Anchor modes use
+whole-label visibility, so a partially occluded label can remain fully visible
+if its anchor is visible. Only opaque fill triangles in the **same view** occlude
+anchors; translucent surfaces, partially transparent isolated groups, strokes,
+and other text do not. Caps count as fill geometry. Screen-space labels retain
+their existing semantics and ignore this option. Anchors outside camera near/far
+visibility are hidden. Overlay/hide/fade retain the label's perspective size and
+position and its isolated group membership; scene-wide screen labels still render
+above them. Visibility updates during playback, seeking, and camera orbit. There
+is no label collision avoidance or automatic placement.
+
+The [explanatory studies](../demo/explanatory.html) demonstrate annular caps,
+independent cutaway/top views, a scalar height field, and orbit-sensitive labels.

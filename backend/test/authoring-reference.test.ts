@@ -84,3 +84,11 @@ test('retains deformation topology, sandbox, and snapshot authoring rules verbat
   expect(output).toContain('Callbacks remain synchronous and sandboxed');
   expect(output).toContain('await sequence.evaluate(index, time)');
 });
+test('retains explanatory geometry APIs, topology limits, palette ramps and label semantics', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('## Sections, feature edges, scalar fields, and label depth'));
+  for (const text of ['dot(normal, localPosition) <= offset', 'nested holes', 'creaseAngle',
+    'scalarColors', 'uniformly spaced palette', "'hide'", "'fade'", 'same view']) {
+    expect(output).toContain(text);
+  }
+});

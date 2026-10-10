@@ -99,7 +99,7 @@ function inspectFrame(frame: Frame, options: OverlapOptions, excluded: ReadonlyS
       if (opacity <= 0 || opacity < minOpacity) continue;
       for (let i = 0; i < data.length; i += 3 * VERTEX_FLOATS) {
         const triangle: Vec3[] = [0, VERTEX_FLOATS, 2 * VERTEX_FLOATS].map(j => [data[i + j], data[i + j + 1], data[i + j + 2]]);
-        let points = projectedTriangle(triangle, item.screen, region.camera, width, height, [data[i + 13], data[i + 14]])
+        let points = projectedTriangle(triangle, data[i + 7] > 0.5, region.camera, width, height, [data[i + 13], data[i + 14]])
           .map(([x, y]): Vec2 => [x + left * options.width, y + top * options.height]);
         points = clip(clip(clip(clip(points, p => p[0]), p => options.width - p[0]), p => p[1]), p => options.height - p[1]);
         if (!points.every(p => p.every(Number.isFinite)) || Math.abs(signedArea(points)) <= AREA_EPSILON) continue;
