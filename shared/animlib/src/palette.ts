@@ -174,6 +174,7 @@ export function enforceScenePalette(scene: CompiledScene, resolver: PaletteResol
   validate(scene.options.background, "Scene background");
   if (typeof scene.options.background !== "string" || (scene.options.background as string) === "none") throw new Error("Scene background requires an opaque Color token");
   scene.initial.forEach(element);
+  for (const binding of scene.reactiveBindings ?? []) if (binding.properties.fill !== undefined) validate(binding.properties.fill, `${binding.target} reactive fill`);
   for (const event of scene.lifecycle) event.elements?.forEach(element);
   for (const track of scene.tracks) {
     Object.values(track.from).forEach(element);

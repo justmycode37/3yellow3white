@@ -15,6 +15,7 @@ import type {PaletteColor} from '../src/types.js';
 import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
+import {reactiveCases} from './reactive-cases.js';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
 // This is a development test adapter, never a browser renderer fallback.
@@ -48,7 +49,7 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(result).toEqual({ok:true,revision:1,diagnostics:[]});
   });
   afterAll(()=> {
-    texture?.destroy();renderer?.dispose();device?.destroy();gpu=undefined;vi.unstubAllGlobals();
+    sequence?.dispose();texture?.destroy();renderer?.dispose();device?.destroy();gpu=undefined;vi.unstubAllGlobals();
   });
   async function pixels():Promise<Uint8Array> {
     const width=texture!.width,height=texture!.height;
@@ -84,6 +85,24 @@ describe('native Vulkan WebGPU rendering',()=> {
       if(t===time)for(const [x,y,rgb] of samples)for(let c=0;c<3;c++)expect(Math.abs(image[(y*width+x)*4+c]-rgb[c])).toBeLessThanOrEqual(2);
     }
     expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it.each(reactiveCases)('reactive/rebuilt pixels: $name',async fixture=>{
+    const legacy=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+    renderer.resetInteraction();
+    try {
+      expect((await legacy.submit({type:'load',scenes:[{id:'a',source:fixture.legacy}]})).ok).toBe(true);
+      expect((await sequence.submit({type:'load',scenes:[{id:'a',source:fixture.reactive}]})).ok).toBe(true);
+      for(const value of [0.1,2.5,1]) {
+        for(const id of ['x','y']) {await legacy.setControl('a',id,value);await sequence.setControl('a',id,value);}
+        for(const time of [0,1.5,3]) {
+          renderer.render(legacy.frame(0,time),legacy.compiled[0].options);const expected=Buffer.from(await pixels());
+          renderer.render(sequence.frame(0,time),sequence.compiled[0].options);
+          expect(Buffer.from(await pixels()).equals(expected),`${fixture.name} ${value} @ ${time}`).toBe(true);
+        }
+      }
+      expect(errors).toEqual([]);
+    }finally{legacy.dispose();}
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it('compiles the production WGSL and renders all three demonstrations',async()=> {

@@ -900,7 +900,36 @@ unsubscribe();
 
 Do not recreate the host's controls on every frame if that would lose focus.
 The built-in overlay maintains keyed native widgets and reconciles pending input
-updates after their compilation finishes.
+updates after they finish.
+
+### Reactive sliders (prototype)
+
+Opt into retained JavaScript bindings for property changes:
+
+```js
+const size = s.slider('size', { reactive: true, default: 1, min: 0.5, max: 2 });
+const ball = s.sphere('ball', { radius: 0.45 });
+s.bind(ball, [size], value => ({ radius: 0.45 * value }));
+```
+
+The slider returns a handle, and the callback receives its numeric value.
+Callbacks must be pure and synchronous, returning a fixed set of supported
+properties: radius, position, rotation, scale, opacity, or fill. A binding and
+timeline cannot own the same property. The changed builder and earlier scenes
+are reused; downstream scenes still rebuild transactionally. Callbacks remain
+inside a retained QuickJS sandbox, with a fresh execution deadline per update;
+compiled snapshots contain only their validated results. See the
+[prototype contract, limitations, and measurements](reactive-controls.md).
+
+Use this opt-in path only when every value driven by the slider can be expressed
+with supported properties. Keep an ordinary numeric slider when a control changes
+text, LaTeX numbers, path/mesh geometry, object counts, camera settings, animation
+targets, or timing. For example, a vector-length slider that also updates a formula
+should continue using the ordinary builder path so both remain consistent. Both
+styles may coexist in one scene; this prototype does not replace or restrict the
+existing authoring API. Do not simplify a planned explanation to fit the fast path.
+Reactive callbacks must use their supplied values and immutable captured data;
+mutation of closure state or consuming random values breaks reproducibility.
 
 ### Control appearance
 

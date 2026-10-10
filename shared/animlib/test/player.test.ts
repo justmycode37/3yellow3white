@@ -21,6 +21,8 @@ import { Canvas } from "./canvas-stub.js";
 import { createPlayer } from "../src/player.js";
 import { ControlOverlay } from "../src/controls.js";
 import { SceneSequence } from "../src/sequence.js";
+import { SourceCompiler } from '../src/compiler-client.js';
+import { AudioClock } from '../src/audio.js';
 import { THREE_BLUE_ONE_BROWN_PALETTE } from "../src/palette.js";
 
 let now: number;
@@ -134,6 +136,114 @@ const second = `export default scene({ end: "hold" }, s => {
   const dot = s.previous.get("dot");
   s.play(dot.moveTo([7,0]), {duration:2});
 });`;
+const reactive = `export default scene({},s=>{
+  const size=s.slider('size',{reactive:true,default:1,min:0.5,max:3});
+  const ball=s.sphere('ball',{radius:0.45});
+  s.bind(ball,[size],value=>({radius:0.45*value}));
+  s.play(ball.moveTo([4,0]),{duration:4,ease:'linear'});
+});`;
+
+describe('reactive player controls', () => {
+  it('keeps input ordering when an ordinary control changes reactive slider bounds',async()=>{
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      const source=`export default scene({},s=>{
+        const wide=s.toggle('wide',{default:false});
+        const x=s.slider('x',{reactive:true,default:1,min:0,max:wide?10:3});
+        const a=s.circle('a');s.bind(a,[x],x=>({radius:x}));s.wait(2);
+      });`;
+      expect((await player.submit({type:'load',scenes:[{id:'a',source}]})).ok).toBe(true);
+      const first=player.setControl({scene:'a',id:'x',value:2});
+      const bounds=player.setControl({scene:'a',id:'wide',value:true});
+      const last=player.setControl({scene:'a',id:'x',value:8});
+      await Promise.all([first,bounds,last]);
+      expect(player.getState().controls.find(c=>c.id==='x')?.value).toBe(8);
+      expect(rendering.frame?.elements[0].geometry.radius).toBe(8);
+    }finally{player.dispose();}
+  });
+  it('keeps seek barriers and independent controls ordered through a 500-input burst',async()=>{
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      const source=`export default scene({},s=>{
+        const x=s.slider('x',{reactive:true,default:1,min:0,max:500});
+        const y=s.slider('y',{reactive:true,default:1,min:0,max:500});
+        const a=s.circle('a');s.bind(a,[x,y],(x,y)=>({position:[x,y]}));s.wait(2);
+      });`;
+      expect((await player.submit({type:'load',scenes:[{id:'a',source}]})).ok).toBe(true);
+      const requests:Promise<unknown>[]=[];
+      const update=vi.spyOn(SourceCompiler.prototype,'update');
+      for(let i=0;i<500;i++) {
+        if(i===250)requests.push(player.seek({scene:'a',time:1}));
+        requests.push(player.setControl({scene:'a',id:i%2?'y':'x',value:i}));
+      }
+      await Promise.all(requests);
+      expect(update).toHaveBeenCalledTimes(4);
+      expect(rendering.frame?.elements[0].position).toEqual([498,499,0]);
+      expect(player.getState()).toMatchObject({status:'paused',time:1});
+    }finally{player.dispose();}
+  });
+  it('keeps playing without resetting the audio clock or live behaviors', async () => {
+    const factory=vi.fn(()=>({update:()=>false,dispose:vi.fn()}));
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement,behaviors:{tracker:factory}});
+    try {
+      expect((await player.submit({type:'load',scenes:[{id:'a',source:reactive.replace("s.bind(ball", "s.behavior(ball,{type:'custom',name:'tracker'});s.bind(ball")}]})).ok).toBe(true);
+      await player.seek({scene:'a',time:1});
+      await player.play();
+      const instances=factory.mock.calls.length;
+      const stop=vi.spyOn(AudioClock.prototype,'stop');
+      const compile=vi.spyOn(SourceCompiler.prototype,'compile');
+      now+=500;
+      await player.setControl({scene:'a',id:'size',value:2});
+      expect(player.getState()).toMatchObject({time:1.5,status:'playing',duration:4});
+      expect(rendering.frame?.elements[0]).toMatchObject({position:[1.5,0,0],geometry:{radius:0.9}});
+      expect(stop).not.toHaveBeenCalled();
+      expect(compile).not.toHaveBeenCalled();
+      expect(factory.mock.calls).toHaveLength(instances);
+      expect(frames.size).toBe(1);
+      await player.seek({scene:'a',time:0.5});
+      expect(rendering.frame?.elements[0]).toMatchObject({position:[0.5,0,0],geometry:{radius:0.9}});
+    } finally { player.dispose(); }
+  });
+
+  it('coalesces queued input to the latest value while one callback request is in flight', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:reactive}]});
+      const original=SourceCompiler.prototype.update;
+      let release!:()=>void;
+      const gate=new Promise<void>(resolve=>{release=resolve;});
+      const update=vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this: SourceCompiler,...args){await gate;return original.apply(this,args);});
+      const first=player.setControl({scene:'a',id:'size',value:1.5});
+      await vi.waitFor(()=>expect(update).toHaveBeenCalledTimes(1));
+      const second=player.setControl({scene:'a',id:'size',value:2});
+      const last=player.setControl({scene:'a',id:'size',value:3});
+      expect(second).toBe(last);
+      release();await Promise.all([first,second,last]);
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(update.mock.calls.map(call=>call[1].size)).toEqual([1.5,3]);
+      expect(player.getState().controls[0].value).toBe(3);
+      expect(rendering.frame?.elements[0].geometry.radius).toBeCloseTo(1.35);
+    } finally { player.dispose(); }
+  });
+
+  it('preserves ordering across source edits and reports a coalesced failure to every caller', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:reactive}]});
+      const update=vi.spyOn(SourceCompiler.prototype,'update');
+      const first=player.setControl({scene:'a',id:'size',value:1.5});
+      const edit=player.submit({type:'replace',scene:'a',source:reactive.replace('0.45*value','value===3?-1:0.5*value')});
+      const last=player.setControl({scene:'a',id:'size',value:2});
+      await Promise.all([first,edit,last]);
+      expect(update.mock.calls.map(call=>call[1].size)).toEqual([1.5,2]);
+      expect(rendering.frame?.elements[0].geometry.radius).toBe(1);
+      const a=player.setControl({scene:'a',id:'size',value:1});
+      const b=player.setControl({scene:'a',id:'size',value:3});
+      await Promise.all([expect(a).rejects.toThrow('radius'),expect(b).rejects.toThrow('radius')]);
+      expect(player.getState().controls[0].value).toBe(2);
+    } finally { player.dispose(); }
+  });
+});
 const wait = (seconds: number, end = "hold") => `export default scene({end:"${end}"},s=>s.wait(${seconds}));`;
 
 describe("player navigation and live source updates", () => {

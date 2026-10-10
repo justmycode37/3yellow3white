@@ -3,6 +3,7 @@ import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
+import { reactiveCases } from './reactive-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
 import { initialSources } from '../demo/scenes.js';
 import { interactionSource } from '../demo/interaction.js';
@@ -75,6 +76,61 @@ export async function runWebGLTests() {
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');
       assert(at(draw(), canvas, 320, 240).join() === '255,0,0', 'Center must be pure red');
       assert(foreground(draw()) > 15000, 'Expected a filled rectangle');
+    });
+    for (const fixture of reactiveCases) await test(`reactive/rebuilt pixels: ${fixture.name}`, async () => {
+      const legacy = new SceneSequence({ prepare: scenes => renderer.prepare(scenes) });
+      try {
+        const result = await legacy.submit({type:'load',scenes:[{id:'test',source:fixture.legacy}]});
+        assert(result.ok, JSON.stringify(result));
+        await load(fixture.reactive);
+        const original = sequence.compiled[0];
+        for (const value of [0.1, 2.5, 1]) {
+          for (const id of ['x','y']) { await legacy.setControl('test',id,value); await sequence.setControl('test',id,value); }
+          assert(sequence.compiled[0] === original, 'Reactive update rebuilt the scene');
+          for (const time of [0,1.5,3]) {
+            renderer.render(legacy.frame(0,time),legacy.compiled[0].options);
+            const expected=pixels(canvas),actual=draw(time);
+            assert(!different(expected,actual), `Pixels differ for ${fixture.name}, value=${value}, time=${time}`);
+          }
+        }
+      } finally { legacy.dispose(); }
+    });
+    await test('real worker callback errors roll back and worker loss recovers', async () => {
+      await load(`export default scene({},s=>{
+        const x=s.slider('x',{reactive:true,default:1,min:0.1,max:3});const a=s.circle('a');
+        s.bind(a,[x],x=>{if(x===2)throw Error('callback failed');return {radius:x};});s.wait(3);
+      });`);
+      await sequence.setControl('test','x',1.5);
+      const before=draw();let rejected=false;
+      try {await sequence.setControl('test','x',2);}catch {rejected=true;}
+      assert(rejected && sequence.compiled[0].controls[0].value===1.5,'Failed callback committed');
+      assert(!different(before,draw()),'Failed callback changed pixels');
+      const worker=(sequence as unknown as {compiler:{worker:Worker}}).compiler.worker;
+      worker.dispatchEvent(new ErrorEvent('error',{message:'Test worker loss',cancelable:true}));
+      await sequence.setControl('test','x',2.5);
+      assert(Number(sequence.compiled[0].controls[0].value)===2.5 && different(before,draw()),'Worker recovery lost values');
+      const recovered=sequence.compiled[0];
+      await sequence.setControl('test','x',1);
+      assert(sequence.compiled[0]===recovered,'Recovered worker did not retain its new callback');
+    });
+    await test('mixed control burst uses new slider bounds in the real worker', async () => {
+      const surface=document.createElement('canvas');stage.append(surface);
+      const player=createPlayer({canvas:surface});
+      try {
+        const result=await player.submit({type:'load',scenes:[{id:'mixed',source:`export default scene({},s=>{
+          const wide=s.toggle('wide',{default:false});
+          const x=s.slider('x',{reactive:true,default:1,min:0,max:wide?10:3});
+          const a=s.circle('a');s.bind(a,[x],x=>({radius:x}));s.wait(2);
+        });`}]});
+        assert(result.ok,JSON.stringify(result));
+        await Promise.all([
+          player.setControl({scene:'mixed',id:'x',value:2}),
+          player.setControl({scene:'mixed',id:'wide',value:true}),
+          player.setControl({scene:'mixed',id:'x',value:8}),
+        ]);
+        assert(player.getState().controls.find(c=>c.id==='x')?.value===8,'Later value was clamped against obsolete bounds');
+        assert(foreground(pixels(surface))>1000,'Mixed control scene failed to render');
+      }finally{player.dispose();surface.remove();}
     });
     for (const {name,source,time,samples} of compositionCases) await test(name, async () => {
       await load(source);
@@ -248,7 +304,7 @@ export async function runWebGLTests() {
       try {
         // Unlock from the browser test's click-authorized origin; audio itself is native.
         await player.unlockAudio();
-        const result=await player.submit({type:'load',scenes:[{id:'audio',source:`export default scene({audio:'tone'},s=>{s.circle('dot',{fill:'BLUE'});s.wait(20)});`}]});
+        const result=await player.submit({type:'load',scenes:[{id:'audio',source:`export default scene({audio:'tone'},s=>{const x=s.slider('x',{reactive:true,default:1,min:0.1,max:3});const dot=s.circle('dot',{fill:'BLUE'});s.bind(dot,[x],x=>({radius:x}));s.wait(20)});`}]});
         assert(result.ok,JSON.stringify(result));
         await player.play();
         const context=contexts[0],start=starts[0];
@@ -256,6 +312,10 @@ export async function runWebGLTests() {
         assert(Math.abs(player.getState().time-(context.currentTime-start.clock))<0.05,'Player is not synchronized to audio');
         assert((await player.submit({type:'insert',after:'audio',scenes:[{id:'suffix',source:`export default scene({},s=>s.wait(1));`}]})).ok,'Audio append failed');
         assert(Number(starts.length)===1 && Number(stops.length)===0 && player.getState().status==='playing','Append restarted audio');
+        const timeBeforeInput=player.getState().time;
+        await player.setControl({scene:'audio',id:'x',value:2});
+        assert(Number(starts.length)===1 && Number(stops.length)===0 && player.getState().status==='playing','Reactive input restarted native audio');
+        assert(player.getState().time>=timeBeforeInput && Math.abs(player.getState().time-(context.currentTime-start.clock))<0.05,'Reactive input lost audio synchronization');
         player.pause();assert(Number(stops.length)===1,'Pause did not stop audio');
         await player.seek({scene:'audio',time:1});await player.play();await delay(100);
         assert(starts.at(-1)!.offset===1,'Seek restarted audio at the wrong offset');

@@ -60,6 +60,21 @@ test('cleanup recognizes hidden ancestor groups and controls must match planned 
   expect(() => validateScenePlan(compiled, evaluateScene(compiled, compiled.duration), plan)).toThrow('explore:slider');
 });
 
+test('planned sliders accept both reactive geometry and ordinary formula-driven scenes', async () => {
+  const plan={...lesson().plan.scenes[0],cleanup:[],interactions:[{id:'size',type:'slider' as const,label:'Size',drives:'Radius',discover:'Compare sizes'}]};
+  for(const reactive of [false,true]) {
+    const source=`export default scene({},s=>{
+      const size=s.slider('size',{${reactive?'reactive:true,':''}default:1,min:0.5,max:3});
+      const dot=s.circle('dot',{radius:${reactive?'1':'size'}});
+      ${reactive?"s.bind(dot,[size],size=>({radius:size}));":"s.latex('formula',{tex:'r = '+size});"}
+      s.keep(dot);s.wait(2);
+    });`;
+    const compiled=await compileSource(source);
+    expect(()=>validateScenePlan(compiled,evaluateScene(compiled,compiled.duration),plan)).not.toThrow();
+    expect(compiled.duration).toBe(2);
+  }
+});
+
 
 test('planning round-trips explicit view choices and rejects malformed choices', () => {
   for (const mode of ['2d', '3d'] as const) {
