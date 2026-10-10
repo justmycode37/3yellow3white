@@ -1,11 +1,11 @@
-import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, ElementStyle, Geometry, ReactiveProperties, ReactiveUpdate, SceneContext, SceneOptions, SliderHandle, SliderOptions, Vec2, Vec3, ViewState } from "./types.js";
+import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, ElementStyle, Geometry, ReactiveDependency, ReactiveProperties, ReactiveUpdate, SceneContext, SceneOptions, SliderHandle, SliderOptions, Vec2, Vec3, ViewState } from "./types.js";
 import type { createSurfaceBuilders } from "./surfaces.js";
 import type { createSolidBuilders } from "./solids.js";
 
 type MeshBuilders = ReturnType<typeof createSurfaceBuilders> & ReturnType<typeof createSolidBuilders>;
 
 /** Self-contained on purpose: the function is installed inside QuickJS, never eval'd by the host. */
-export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}, installReactive?: (update: (values: Record<string, ControlValue>, changed: string[]) => ReactiveUpdate[]) => void, meshBuilders?: MeshBuilders): CompiledScene {
+export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}, installReactive?: (update: (values: Record<string, ControlValue>, changed: string[], time?: number) => ReactiveUpdate[]) => void, meshBuilders?: MeshBuilders): CompiledScene {
   const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
   const vector = (value: number[] = [0, 0, 0]): Vec3 => [value[0] ?? 0, value[1] ?? 0, value[2] ?? 0];
   const rotation = (value: number | number[] = 0): Vec3 => typeof value === "number" ? [0, 0, value] : vector(value);
@@ -76,8 +76,9 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const lifecycle: CompiledScene["lifecycle"] = [];
   const behaviors: NonNullable<CompiledScene["behaviors"]> = [];
   const bindings: NonNullable<CompiledScene["bindings"]> = [];
-  const callbacks: { target: string; controls: string[]; callback: (...values: number[]) => ReactiveProperties; keys?: string[] }[] = [];
+  const callbacks: { target: string; slot?: number; controls: string[]; dependencies: ReactiveDependency[]; time?: true; callback: (...values: number[]) => ReactiveProperties; keys?: string[] }[] = [];
   const reactiveHandles = new Set<SliderHandle>();
+  const timeHandle = Object.freeze({ time: true as const, [Symbol.toPrimitive]() { throw new Error("Read s.time through a binding"); } });
   let building = true;
   let cursor = 0;
   let exiting: ElementHandle | undefined;
@@ -308,12 +309,25 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       reactiveHandles.add(handle);
       return handle;
     }) as SceneContext['slider'],
+    time: timeHandle,
     bind: (target, dependencies, callback) => {
       descendants(target.id);
-      if (!Array.isArray(dependencies) || !dependencies.length || dependencies.length > 100 || dependencies.some(c => !reactiveHandles.has(c))) throw new Error('s.bind requires reactive slider handles from this scene');
+      if (!Array.isArray(dependencies) || !dependencies.length || dependencies.length > 100 || dependencies.some(c => c !== timeHandle && !reactiveHandles.has(c as SliderHandle))) throw new Error('s.bind requires reactive slider handles or s.time from this scene');
       if (typeof callback !== 'function' || callbacks.length >= 2000) throw new Error('Invalid or oversized reactive bindings');
-      if (callbacks.some(c => c.target === target.id)) throw new Error('An element can have only one reactive binding');
-      callbacks.push({ target: target.id, controls: dependencies.map(c => c.id), callback });
+      const siblings = callbacks.filter(c => c.target === target.id);
+      for (const sibling of siblings) sibling.slot ??= callbacks.indexOf(sibling);
+      callbacks.push({ target: target.id, ...(siblings.length ? { slot: callbacks.length } : {}), controls: dependencies.filter((c): c is SliderHandle => c !== timeHandle).map(c => c.id), dependencies: [...dependencies], ...(dependencies.includes(timeHandle) ? { time: true as const } : {}), callback });
+    },
+    deform: (target, dependencies, callback) => {
+      descendants(target.id);
+      const geometry = states.get(target.id)!.geometry;
+      if (geometry.kind !== 'mesh' || typeof callback !== 'function') throw new Error('s.deform requires a mesh and a callback');
+      const rest = geometry.vertices!.map(point => vector(point));
+      context.bind(target, dependencies, (...values) => ({ vertices: rest.map((point, index) => {
+        const result = callback([...point], index, ...values);
+        if (!Array.isArray(result) || result.length !== 3) throw new Error('s.deform callback must return a Vec3');
+        return [...result] as Vec3;
+      }) }));
     },
     toggle: (id, spec) => control(id, { ...spec, kind: "toggle" }) as boolean,
     select: (id, spec) => control(id, { ...spec, kind: "select" }) as string,
@@ -363,21 +377,25 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const returned: unknown = builder(context);
   if (returned && typeof (returned as { then?: unknown }).then === "function") throw new Error("Scene builders must be synchronous");
   building = false;
-  const update = (values: Record<string, ControlValue>, changed: string[]): ReactiveUpdate[] => callbacks.filter(binding => binding.controls.some(id => changed.includes(id))).map(binding => {
-    const output = binding.callback(...binding.controls.map(id => values[id] as number));
+  const update = (values: Record<string, ControlValue>, changed: string[], time?: number): ReactiveUpdate[] => callbacks.filter(binding => time !== undefined && binding.time || binding.controls.some(id => changed.includes(id))).map(binding => {
+    const output = binding.callback(...binding.dependencies.map(dep => dep === timeHandle ? time ?? 0 : values[(dep as SliderHandle).id] as number));
     if (!output || typeof output !== 'object' || Array.isArray(output)) throw new Error('Reactive bindings must return property objects');
     const keys = Object.keys(output).sort();
-    if (!keys.length || keys.some(key => !['radius','position','rotation','scale','opacity','fill'].includes(key))) throw new Error('Unsupported reactive property');
+    if (!keys.length || keys.some(key => !['radius','position','rotation','scale','opacity','fill','vertices','normals','material','texture','scalarColors'].includes(key))) throw new Error('Unsupported reactive property');
     if (binding.keys && JSON.stringify(keys) !== JSON.stringify(binding.keys)) throw new Error('Reactive bindings must return the same property keys on every update');
     binding.keys ??= keys;
     const properties = { ...output };
+    for (const key of ['normals', 'material', 'texture', 'scalarColors'] as const) {
+      const value = properties[key];
+      if (Object.hasOwn(properties, key) && value !== null && (!value || typeof value !== 'object' || (key === 'normals' ? !Array.isArray(value) : Array.isArray(value)))) throw new Error(`Invalid reactive ${key}`);
+    }
     if (properties.position !== undefined) properties.position = vector(properties.position);
     if (properties.rotation !== undefined) properties.rotation = rotation(properties.rotation);
-    return { target: binding.target, properties: clone(properties) };
+    return { target: binding.target, ...(binding.slot !== undefined ? { slot: binding.slot } : {}), properties: clone(properties) };
   });
-  const initialUpdates = update(Object.fromEntries(controls.map(c => [c.id, c.value])), controls.map(c => c.id));
-  const reactiveBindings = callbacks.map((binding, i) => ({ target: binding.target, controls: binding.controls, properties: initialUpdates[i].properties }));
+  const initialUpdates = update(Object.fromEntries(controls.map(c => [c.id, c.value])), controls.map(c => c.id), 0);
+  const reactiveBindings = callbacks.map((binding, i) => ({ target: binding.target, ...(binding.slot !== undefined ? { slot: binding.slot } : {}), controls: binding.controls, ...(binding.time ? { time: true as const } : {}), properties: initialUpdates[i].properties }));
   if (callbacks.length) installReactive?.(update);
   const lighting = options.lighting === undefined ? input.previous?.lighting : options.lighting;
-  return { options: { ...(lighting !== undefined ? { lighting: clone(lighting) } : {}), mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks, behaviors, bindings, ...(reactiveBindings.length ? { reactiveBindings } : {}) };
+  return { options: { ...(lighting !== undefined ? { lighting: clone(lighting) } : {}), mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks, behaviors, bindings, ...(reactiveBindings.length ? { reactiveBindings } : {}), ...(callbacks.some(b => b.time) ? { reactiveTime: 0 } : {}) };
 }

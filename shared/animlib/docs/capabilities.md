@@ -28,7 +28,8 @@ Keep these instructions in nonspoken planning; they are not narration.
   object transforms. Adjustable procedural bump perturbs lighting normals for
   raised or recessed detail without changing silhouettes. Metalness, roughness, specular highlights, and emissive
   color/intensity create stylized metal, matte, plastic, and luminous surfaces.
-  These settings can be explored with ordinary controls. Emission does not cast
+  These settings can be explored with ordinary controls or retained bindings
+  without rebuilding geometry. Emission does not cast
   light or create bloom, and metallic reflections do not show other scene objects.
 - **Lighting and contact:** scene ambient and directional lights, with an explicit
   world-fixed or camera-relative direction. Optional deterministic soft shadows from
@@ -62,8 +63,10 @@ one-to-one correspondence between named parts; unmatched parts fade in or out.
 Mesh morphs need corresponding vertices and compatible topology. Other
 incompatible representations crossfade.
 Sampled surfaces, solids, and tubes are ordinary meshes with the same rules;
-changing sample counts, holes, or caps can break correspondence. Shape callbacks
-are sampled during compilation, not evaluated as a per-frame animation.
+changing sample counts, holes, or caps can break correspondence. Shape construction callbacks
+are sampled during compilation. Retained deformations can update the existing
+vertices from absolute scene time and controls while preserving triangle connectivity;
+lighting normals follow the changed shape.
 
 A geometric morph does not establish a mathematical or physical transformation.
 If intermediate states matter, ask for geometry calculated from the underlying
@@ -130,8 +133,9 @@ what the viewer should discover. The current lesson-plan contract permits
 preserve the measured scene duration.
 
 An ordinary slider can resample a surface or rebuild a solid/tube together with
-its dependent labels, or vary texture/material parameters. Retained property
-bindings do not rebuild mesh geometry or change textures/materials.
+its dependent labels, or vary texture/material parameters. Retained bindings can deform fixed-topology meshes and independently update
+material/texture settings. They can respond to scene time and paused controls.
+Changing sample counts, holes, or connectivity still requires reconstruction.
 Keep sampling modest so planned controls remain responsive.
 
 Animlib also supports requested orbit rotation in 3D, independent rotation of

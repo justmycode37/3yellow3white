@@ -20,6 +20,9 @@ export class Player {
   private readonly behaviors: BehaviorRuntime;
   private readonly input: CanvasInput;
   private presentationAt = 0;
+  private refreshGeneration = 0;
+  private sampling?: Promise<CompiledScene>;
+  private sampled?: { source: CompiledScene; bindings: CompiledScene['reactiveBindings']; time: number; snapshot: CompiledScene };
   private listeners = new Set<(state: PlayerState) => void>();
   private sceneId: string | null = null;
   private time = 0;
@@ -30,6 +33,8 @@ export class Player {
   private startedAt = 0;
   private offset = 0;
   private playbackGeneration = 0;
+  private queuedSeeks = 0;
+  private playAfterSeek = false;
   private disposed = false;
   private operations: Promise<unknown> = Promise.resolve();
   private pendingControls = new Map<string, { change: { scene: string; id: string; value: ControlValue }; promise: Promise<void> }>();
@@ -145,14 +150,42 @@ export class Player {
     this.refresh();
   }
 
-  private refresh(): void {
+  private async refresh(): Promise<void> {
     if (this.disposed) return;
+    const generation = ++this.refreshGeneration, time = this.time;
     const index = this.currentIndex();
     const scene = index < 0 ? undefined : this.sequence.compiled[index];
     if (scene) {
+      let snapshot = scene;
+      if (scene.reactiveBindings?.some(binding => binding.time)) {
+        try {
+          // Keep at most one worker sample in flight; passive invalidations coalesce.
+          if (this.sampling) await this.sampling.catch(() => undefined);
+          if (this.disposed || generation !== this.refreshGeneration) return;
+          const cached = this.sampled;
+          if (cached?.source === scene && cached.bindings === scene.reactiveBindings && cached.time === time) snapshot = cached.snapshot;
+          else {
+            const bindings = scene.reactiveBindings;
+            const pending = this.sequence.sample(index, time);
+            this.sampling = pending;
+            try { snapshot = await pending; }
+            finally { if (this.sampling === pending) this.sampling = undefined; }
+            this.sampled = { source: scene, bindings, time, snapshot };
+          }
+        }
+        catch (error) {
+          if (this.disposed || generation !== this.refreshGeneration) return;
+          this.stopClock(); this.status = 'blocked';
+          this.error = error instanceof Error ? error.message : String(error);
+          this.notify(); return;
+        }
+        // A newer seek, input refresh, source replacement, or disposal wins.
+        if (this.disposed || generation !== this.refreshGeneration) return;
+        if (scene !== this.currentScene()) return this.refresh();
+      }
       const now = performance.now(), dt = this.presentationAt ? Math.max(0, (now-this.presentationAt)/1000) : 0;
       this.presentationAt = now;
-      const frame = this.behaviors.evaluate(scene, evaluateScene(scene, this.time, { bindings: false }), this.time, dt);
+      const frame = this.behaviors.evaluate(scene, evaluateScene(snapshot, time, { bindings: false }), this.time, dt);
       this.input.sync();
       this.renderer.syncInteraction(this.sceneId!, this.time, scene, frame);
       this.renderer.setOrbitEnabled(scene.options.orbit && frame.camera.perspective > 0 && !frame.cameraAnimated);
@@ -199,6 +232,7 @@ export class Player {
       const wasPlaying = this.status === "playing";
       // Read the old clock before changing active ID, even if the active scene moved.
       this.stopClock(this.clockTime(oldCompiled[oldIndex]));
+      const resumeGeneration = this.playbackGeneration;
       // Reconstruction can replace the active instance even when only a later source changed.
       if (affected || oldCompiled[oldIndex] !== this.currentScene()) { this.input.cancel(); this.behaviors.reset(); }
       this.error = undefined;
@@ -211,14 +245,26 @@ export class Player {
         this.time = affected ? 0 : Math.min(this.time, this.currentScene()?.duration ?? 0);
       }
       this.status = this.sceneId ? "paused" : "empty";
-      this.refresh();
+      await this.refresh();
+      // Sampling can await a worker. A newer Play/Pause or queued seek owns
+      // transport now; only resume the playback this operation interrupted.
       // Compilation success is separate from browser playback permission.
-      if (wasPlaying && change.type !== "load" && this.sceneId) await this.play().catch(() => {});
+      if (wasPlaying && resumeGeneration === this.playbackGeneration && !this.queuedSeeks && !this.disposed
+        && change.type !== "load" && this.sceneId) await this.startPlayback().catch(() => {});
       return result;
     });
   }
 
   async play(): Promise<void> {
+    this.assertAlive();
+    if (this.rendererError) throw this.rendererError;
+    // Accept the later intent without waiting on a control/seek barrier. The
+    // final queued seek starts playback at its resolved destination.
+    if (this.queuedSeeks) { this.playAfterSeek = true; return; }
+    await this.startPlayback();
+  }
+
+  private async startPlayback(): Promise<void> {
     this.assertAlive();
     if (this.rendererError) throw this.rendererError;
     if (!this.sceneId || this.status === "playing") return;
@@ -232,8 +278,7 @@ export class Player {
       this.offset = this.time;
       this.startedAt = performance.now();
       this.status = "playing";
-      this.refresh();
-      this.scheduleFrame();
+      await this.refresh();
     } catch (error) {
       if (generation !== this.playbackGeneration || this.disposed) return;
       this.audio.stop();
@@ -267,7 +312,7 @@ export class Player {
           this.time = 0;
           this.status = "paused";
           this.refresh();
-          void this.play().catch(() => {});
+          void this.startPlayback().catch(() => {});
         } else {
           this.time = scene.duration;
           this.status = "ended";
@@ -275,13 +320,13 @@ export class Player {
         }
         return;
       }
-      this.refresh();
-      this.scheduleFrame();
+      void this.refresh();
     });
   }
 
   pause(): void {
     this.assertAlive();
+    this.playAfterSeek = false;
     this.stopClock();
     this.status = this.sceneId ? "paused" : "empty";
     this.refresh();
@@ -291,14 +336,29 @@ export class Player {
     this.assertAlive();
     this.pendingControls.clear();
     if (!Number.isFinite(position.time)) throw new Error("Seek time must be finite");
-    const index = this.sequence.index(position.scene);
-    this.stopClock();
-    this.input.cancel(); this.behaviors.reset();
-    this.sceneId = position.scene;
-    this.time = Math.max(0, Math.min(position.time, this.sequence.compiled[index].duration));
-    this.status = "paused";
-    this.error = undefined;
-    this.refresh();
+    // Validate before touching the running clock, and recheck at the queue
+    // boundary because a preceding source submission may remove the target.
+    this.sequence.index(position.scene);
+    this.queuedSeeks++;
+    this.playAfterSeek = false;
+    try {
+      await this.enqueue(async () => {
+        const index = this.sequence.index(position.scene);
+        this.stopClock();
+        this.input.cancel(); this.behaviors.reset();
+        this.sceneId = position.scene;
+        this.time = Math.max(0, Math.min(position.time, this.sequence.compiled[index].duration));
+        this.status = "paused";
+        this.error = undefined;
+        await this.refresh();
+      });
+    } finally {
+      this.queuedSeeks--;
+      if (!this.queuedSeeks && this.playAfterSeek && !this.disposed) {
+        this.playAfterSeek = false;
+        await this.startPlayback();
+      }
+    }
   }
 
   async next(): Promise<void> {
@@ -332,17 +392,21 @@ export class Player {
       if (this.disposed) return;
       if (this.currentScene() === oldScenes.get(this.sceneId ?? '')) {
         // Reactive patches retain timeline and live behavior state; audio keeps running.
-        this.time = this.clockTime(); this.error = undefined; this.refresh();
+        this.time = this.clockTime(); this.error = undefined; await this.refresh();
         return;
       }
       const wasPlaying = this.status === "playing";
       this.stopClock(this.clockTime(oldScenes.get(this.sceneId ?? "")));
+      const resumeGeneration = this.playbackGeneration;
       this.input.cancel(); this.behaviors.reset();
       this.time = Math.min(this.time, this.currentScene()?.duration ?? 0);
       this.status = this.sceneId ? "paused" : "empty";
       this.error = undefined;
-      this.refresh();
-      if (wasPlaying && this.time < (this.currentScene()?.duration ?? 0)) await this.play().catch(() => {});
+      await this.refresh();
+      // Do not resume or mark ended over a newer transport request made while
+      // the reconstructed scene's worker sample was in flight.
+      if (resumeGeneration !== this.playbackGeneration || this.queuedSeeks || this.disposed) return;
+      if (wasPlaying && this.time < (this.currentScene()?.duration ?? 0)) await this.startPlayback().catch(() => {});
       else if (wasPlaying) { this.status = "ended"; this.refresh(); }
     });
     if (reactive) this.pendingControls.set(key, batch);
