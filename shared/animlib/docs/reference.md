@@ -320,6 +320,7 @@ interface Player {
   getPan(view?: string): Vec3;
   setPan(value: Vec3, view?: string): void;
   getInteractionSnapshot(view?: string): InteractionSnapshot | undefined;
+  /** Coalesced redraw on the next animation frame, also while paused. */
   invalidateFrame(): void;
   getState(): PlayerState;
   subscribe(listener: (state: PlayerState) => void): () => void;
@@ -430,8 +431,9 @@ s.mesh('facet', {
 
 Flat and smooth meshes use the same simple directional lighting as spheres and
 round 3D strokes on both WebGPU and WebGL2. They support element/group transforms,
-independent views, depth testing, opacity, and palette colors. This is not a
-light-source API. Optional textures and materials are described below.
+independent views, depth testing, opacity, and palette colors. The fixed studio
+light remains the default; scene lighting below can override it. Optional textures
+and materials are described below.
 Prefer opaque bodies when surfaces intersect;
 triangle transparency sorting does not solve every intersection. Ordinary 2D
 fills and raw meshes without a shading option retain their existing appearance.
@@ -447,7 +449,99 @@ compatible topology. Morphs without authored normals recompute lighting from the
 intermediate geometry. If either endpoint supplies normals, normalized endpoint
 normals interpolate instead; the missing endpoint is derived from its geometry.
 Exactly opposite normals use a finite fallback at their ambiguous midpoint.
-Nonuniform changes of shape require new mesh geometry.
+Nonuniform changes of shape can use fixed-topology `s.deform` or vertex bindings below.
+
+### Scene lighting and planar shadows
+
+```js
+export default scene({
+  mode: '3d',
+  lighting: {
+    ambient: 1,
+    directional: {
+      direction: [-0.7, 1, 0.5], space: 'world', intensity: 1,
+      shadow: { softness: 0.08, quality: 'medium', bias: 0.002, opacity: 0.75 },
+    },
+    receiver: { position: [0, -1, 0], size: [9, 7], fill: 'GREY_C' },
+  },
+}, s => {
+  s.play(s.camera.to3D({yaw: 0.5, pitch: -0.55}), {duration: 0});
+  s.sphere('ball', {radius: 1, fill: 'GOLD', material: {metalness: 0.6}});
+  s.box('noncaster', {position: [2, 0, 0], castShadow: false, fill: 'BLUE'});
+  s.wait(1);
+});
+```
+
+Omitting lighting in an initial scene preserves the original studio appearance,
+including material reflections and unlit surfaces. `lighting: {}` uses the same
+defaults. Across a handoff, omitted lighting inherits the previous frame's settings;
+`lighting: 'studio'` explicitly resets lights and removes the receiver. A supplied
+object replaces the complete lighting configuration. Options are ordinary bounded,
+serializable data; no functions, device resources or accumulated sampling state.
+They are constant within a compiled scene. Ordinary controls can rebuild them
+(see [the lighting study](../demo/lighting.ts)); light properties are not timeline
+animation or reactive binding targets.
+
+- `ambient` and `directional.intensity`: white-light multipliers from `0` to `4`,
+  each defaulting to `1`. Simple shading is `0.32 * ambient + 0.68 * intensity *
+  max(dot(normal, light), 0)`. Materials scale diffuse/specular and studio reflection
+  contributions coherently; emission remains independent. Unlit geometry is unchanged.
+- `directional.direction`: nonzero XYZ vector **toward the light**, normalized by
+  the renderer; default `[-0.4, 0.65, 1]`. `space: 'camera'` (default) uses screen-right,
+  screen-up, and toward-viewer axes. `space: 'world'` fixes XYZ in world coordinates.
+  Effective authored cameras and interactive orbit are applied separately per view.
+- `receiver`: finite, opaque, lit, horizontal XZ plane. `position` is its center in
+  world units (default `[0,-1,0]`), `size` is `[widthX, depthZ]`, each in `(0,10000]`.
+  `fill` is an opaque palette token (default `GREY_D`) resolved through the host palette.
+  The plane appears in the main view and each clipped regional view. It is decorative,
+  not a pickable element; it cannot be transformed or kept independently of lighting.
+- `directional.shadow`: opt-in and requires a receiver. `softness` is an angular
+  disk radius in radians, `0`–`0.25`, default `0.04`. Penumbra grows with caster height.
+  `quality` is `'low'`, `'medium'` (default), or `'high'`: 1, 7, or 13 fixed directions.
+  Zero softness always uses 1 direction. This is a bounded stylized soft shadow;
+  discrete bands can be visible at wide softness, especially at low quality.
+- `bias`: `0`–`0.05` world units, default `0.002`; lifts the projected mask above
+  the receiver to avoid coplanar depth fighting. Keep it small relative to objects;
+  excessive bias detaches contacts. Casters are clipped against the original plane,
+  and projected silhouettes are clipped to its finite bounds.
+- `opacity`: `0`–`1`, default `0.35`, controls occlusion of the receiver's directional
+  contribution. Ambient remains, including under bright lighting: the receiver's
+  coverage is accumulated independently of albedo, then lit before final output
+  saturation. The receiver and its masks resolve as one opaque layer before unrelated translucent surfaces or isolated
+  groups, so those surfaces never receive the floor's shadows. Every sample forms
+  an opaque silhouette union before
+  opacity is applied, so overlapping triangles/casters do not multiply darkness.
+  Sample coverage is averaged with normalized full-coverage opacity at every quality,
+  including on dark receiver colors.
+
+Only opaque world-space **mesh and sphere fills** cast, including generated solids
+and surfaces, final morphed/deformed triangles, and group transforms. Unlit meshes
+can still cast. Strokes, labels, billboards, screen objects, viewport-offset geometry,
+translucent fills/textures and members of translucent isolated groups do not cast.
+`castShadow: false` on an element or `s.group(id, children, {castShadow: false})`
+disables casting for its descendants; it is a static
+style flag. Fading geometry stops casting as soon as effective alpha is below 1.
+The system does not approximate colored transmission or partial transparent shadows.
+
+These are **planar projected shadows**, not a shadow-map system: no self-shadowing,
+object-to-object shadows, arbitrary mesh receivers, point/spot lights, or environment
+maps. Geometry below the receiver does not cast onto its top. Directions at/below
+its horizon (`worldLight.y <= 0.001`) produce no shadow; soft samples below that
+threshold contribute no occlusion. Shadow calculation consumes the actual final
+packed geometry separately for each view, without changing scene state. Play/pause,
+seek and handoff repeat the same projection. WebGPU and WebGL2 share geometry and
+sample settings; edge antialiasing can differ slightly.
+
+The optional shadow pass costs up to 13 projections of eligible triangles and
+isolated compositing passes per view, plus one opaque receiver composite. Shadow
+projection is bypassed without a shadow setting; no receiver work runs without a
+receiver. WebGPU vertex-buffer growth is capped at the actual device limit. A frame
+whose packed upload exceeds that limit reports a recoverable scene error before
+allocation/submission, retaining the last good image; reduce mesh density, shadow
+quality, or view count and retry. A successful smaller frame clears this scene error
+so the public player can play again; backend failures still require backend recovery.
+No shadow samples are silently dropped to fit.
+Use medium quality and modest caster counts for interactive scenes.
 
 ### Procedural textures and materials
 
@@ -543,16 +637,18 @@ the entire mesh uses the existing transparent-triangle sorting path; intersectin
 transparent triangles retain its limitations. Picking uses geometry rather than pattern transparency. Overlap inspection
 remains limited to text/LaTeX relationships.
 
-Use ordinary sliders/selects to rebuild texture or material parameters at the
-current time, including while paused. They are not `animate` or reactive `s.bind`
-properties. Settings persist with kept geometry and JSON frames. Compatible
+Use `s.bind(meshOrSphere, [control], value => ({ material: { roughness: value } }))`
+to replace material parameters without rebuilding geometry. `texture` works the
+same way; return `null` to remove either setting. These are whole-object
+replacements, not nested merges, and are not `animate` properties. Ordinary
+controls can still rebuild them together with dependent labels. Settings persist with kept geometry and JSON frames. Compatible
 mesh/sphere morphs use the source settings at progress zero and target settings
 for the interior and endpoint; settings do not interpolate. Keep identical
 settings for a continuous finish, or crossfade separate objects deliberately.
 
 The material model uses the renderer's camera-relative directional light and a
 procedural studio reflection approximation. It does not reflect other scene
-objects. No configurable lights, environment maps, shadows, image/video textures,
+objects. Scene lighting can override its ambient and directional contributions. No environment maps, image/video textures,
 image normal/bump maps, displacement, physically based material guarantees, or bloom
 are provided. Try the **Textures** study in `/spatial.html` for pattern, palette,
 frequency, seed, bump strength, metalness, roughness, highlight, and emission controls.
@@ -579,9 +675,10 @@ Use this inside a `scene({ mode: '3d', orbit: true }, s => { ... })` builder,
 or create the surface in an `s.view` callback. This ordinary numeric slider
 recompiles the sampled geometry at the current playback time, including while
 paused. Derive dependent labels from the same value and keep duration stable.
-Do not use `reactive: true` or `s.bind` to change a surface callback, vertices,
-segment count, solid dimensions, or tube points: retained bindings do not rebuild
-mesh geometry. An ordinary control is also needed if a size change updates text.
+Use `s.deform` below for retained changes to existing vertices. Segment counts,
+connectivity, holes, surface sampling callbacks, solid construction parameters, and
+tube centerline sampling still require reconstruction. An ordinary control is
+also needed if a size change updates text.
 
 `s.parametricSurface(id, { fn: (u, v) => [x, y, z], uRange?, vRange?,
 uSegments?, vSegments?, closedU?, closedV?, shading?, ...style })` supports shapes
@@ -932,11 +1029,38 @@ rectangle, or undefined before rendering. `project(point, view?)` and
 `ray(x, y, view?)` use that same effective camera, including pan and viewer rotation.
 Ray coordinates are logical pixels from the selected view's top-left corner;
 omit the view ID for the main canvas. The internal controller also accounts for
-CSS canvas bounds and pixel density. Canvas replacement rebinds input automatically.
+CSS canvas bounds and pixel density. Input deltas update navigation immediately;
+`invalidateFrame()` coalesces pointer/orbit/pan requests into one redraw on the next
+animation frame, sharing the playback callback while playing. Explicit seek,
+pause, and committed control updates still draw their committed state immediately
+and consume any queued redraw. Canvas replacement rebinds input automatically.
 The player sets `touch-action: none`, makes an otherwise unfocusable canvas focusable,
 and restores those attributes/styles when it releases that canvas.
 
 ### Element animation and coordinates
+
+Opaque geometry is retained in indexed GPU buffers on both backends. Camera and
+object transforms update uniforms; matching spheres, round two-point bonds, and
+arrows can share geometry and instance consecutive compatible draws. Untextured
+spheres also share across radii. Round bonds/arrows share across translations and
+orientations when length, width, and style match. No author cache or invalidation
+API is required: effective geometry, normals, materials, textures, style and
+palette contents invalidate automatically, including fresh evaluated frames and
+in-place edits. Continuously changing geometry/style uses the CPU path until a
+stable sample can be retained again. Billboard orientation remains live. Transparent triangles, morphs,
+adaptive curves and stroked meshes use the CPU path to preserve ordering and
+projected stroke/tessellation behavior. Precision-sensitive local coordinates and
+transforms also use CPU world-space packing before float32 conversion, preserving
+small details when large authored coordinates cancel through object/group transforms.
+Geometry near uncertain depth clipping boundaries or with a float32-overflowing
+instance transform also uses that path. Subnormal local coordinates/transforms,
+values that would underflow to zero when packed, and unsafe intermediate underflow
+also opt out of retention. Large normal divisors whose reciprocals approach the
+subnormal range use the CPU path as well, preserving shading across backends.
+Ordinary normal-valued geometry remains eligible.
+GPU handles are rebuilt after recovery;
+geometry unused by the current frame is released. See [performance](performance.md)
+for measurements and remaining limits.
 
 Common animatable properties include position, rotation, scale, opacity, fill,
 stroke, stroke width, and geometry. Elements expose actions such as `moveTo`,
@@ -1276,7 +1400,7 @@ Do not recreate the host's controls on every frame if that would lose focus.
 The built-in overlay maintains keyed native widgets and reconciles pending input
 updates after they finish.
 
-### Reactive sliders (prototype)
+### Retained reactive bindings
 
 Opt into retained JavaScript bindings for property changes:
 
@@ -1288,22 +1412,87 @@ s.bind(ball, [size], value => ({ radius: 0.45 * value }));
 
 The slider returns a handle, and the callback receives its numeric value.
 Callbacks must be pure and synchronous, returning a fixed set of supported
-properties: radius, position, rotation, scale, opacity, or fill. A binding and
+properties: radius, position, rotation, scale, opacity, fill, vertices, normals,
+material, texture, or scalarColors. Multiple bindings may target one element if
+they own disjoint properties. A binding and
 timeline cannot own the same property. The changed builder and earlier scenes
 are reused; downstream scenes still rebuild transactionally. Callbacks remain
 inside a retained QuickJS sandbox, with a fresh execution deadline per update;
 compiled snapshots contain only their validated results. See the
-[prototype contract, limitations, and measurements](reactive-controls.md).
+[reactive contract, limitations, and measurements](reactive-controls.md).
 
 Use this opt-in path only when every value driven by the slider can be expressed
 with supported properties. Keep an ordinary numeric slider when a control changes
-text, LaTeX numbers, path/mesh geometry, object counts, camera settings, animation
+text, LaTeX numbers, path geometry, mesh topology, object counts, camera settings, animation
 targets, or timing. For example, a vector-length slider that also updates a formula
 should continue using the ordinary builder path so both remain consistent. Both
 styles may coexist in one scene; this prototype does not replace or restrict the
 existing authoring API. Do not simplify a planned explanation to fit the fast path.
 Reactive callbacks must use their supplied values and immutable captured data;
 mutation of closure state or consuming random values breaks reproducibility.
+
+### Fixed-topology deformation and scene time
+
+```js
+const amplitude = s.slider('amplitude', { reactive: true, default: 0.6, min: 0, max: 1.2 });
+const roughness = s.slider('roughness', { reactive: true, default: 0.45, min: 0.05, max: 1 });
+const wave = s.surface('wave', { fn: () => 0, xSegments: 24, ySegments: 24, fill: Color.TEAL });
+s.deform(wave, [s.time, amplitude], ([x, y], index, t, a) =>
+  [x, y, a * Math.sin(2 * x - t) * Math.cos(2 * y - t / 2)]);
+s.bind(wave, [roughness], r => ({ material: { roughness: r } }));
+s.wait(10);
+```
+
+`s.deform(mesh, dependencies, callback)` captures the mesh's local rest vertices
+at declaration. Each invocation receives a fresh rest `Vec3`, its vertex index,
+and dependency values in declared order. It must return a finite `Vec3` within
+±1,000,000. It works on sampled surfaces, solids, tubes, and explicit meshes.
+`s.time` is a handle for absolute scene-local seconds clamped to `[0, duration]`;
+it is available inside views too. It can also drive ordinary `s.bind` properties,
+including materials and textures. A time-only binding may use `[s.time]`.
+
+For full array control, `s.bind` may return `vertices: Position[]` and optional
+`normals: Vec3[] | null`. Vertex count must equal the original mesh's count;
+triangle indices, order, and winding never change. New holes, sampling counts,
+and connectivity require ordinary controls/source reconstruction. Nonfinite
+updates are rejected, rather than turning into new holes. Existing holes and
+omitted pole triangles stay as compiled, even if deformation uncovers them.
+Collapsed triangles remain connected and use finite fallback normals.
+
+Vertex updates discard old normals unless the same patch supplies new ones;
+smooth/flat shading then derives normals from the deformed positions. Explicit
+normals must be nonzero and match the vertex count. Vertices implicitly own
+normals, so a separate binding cannot also own them. Geometry bindings cannot
+coexist with a morph on the target. Independent transform animation, grouping,
+isolated group opacity, and clipped views continue to work. Removed objects are
+not resurrected. Other geometry fields, including clipping/outline settings,
+are preserved; downstream geometry processing receives the deformed mesh.
+`scalarColors` can replace the explanatory renderer's full `{values, domain,
+colors}` ramp (or `null` to remove it), with one finite scalar per retained vertex,
+an increasing domain, and 2–16 palette tokens; its rendering belongs to the
+explanatory geometry feature.
+
+Callbacks remain synchronous and sandboxed, with the existing per-invocation
+execution/memory limits. They must be pure functions of arguments and immutable
+captured data; purity is an authoring contract, not mechanically enforced. Same
+time and controls therefore produce the same shape without integrating deltas.
+The player awaits sampling on seeks and paused input changes, discards stale
+worker results, and keeps at most one playback sample in flight. Slow callbacks
+reduce displayed frame rate; they do not reset the audio clock. A failed time
+sample keeps the last rendered frame, stops playback, and reports a blocked
+player; a valid seek or input can recover. End-frame handoffs sample the outgoing
+scene at its duration before compiling the next scene.
+
+Headless callers use `await sequence.evaluate(index, time)` for an exact frame or
+`await sequence.sample(index, time)` for a serializable `CompiledScene` snapshot.
+The latter records `reactiveTime`. `evaluateScene(snapshot, time)` and synchronous
+`sequence.frame` never execute callbacks: they evaluate tracks using the binding
+outputs already in the snapshot (canonical scenes and `compileSource` hold
+time-zero outputs by default). For a one-shot export use
+`compileSource(source, input, { sampleTime: seconds })` or `{ sampleTime: 'end' }`;
+it samples inside the sandbox and disposes the runtime. Snapshots cannot resample
+callbacks after JSON export. Use these APIs before exporting a desired time. Open `?surfaces` for the
+wave demo with independent material controls and two cameras.
 
 ### Control appearance
 
@@ -1566,11 +1755,13 @@ export default scene({ mode: "2d", end: "hold", audio: "narration" }, s => {
 });
 ```
 
-Audio is prepared and decoded before a candidate is committed. A scene's duration
-is the greater of its visual timeline and audio duration. Shorter audio ends while
-visual playback continues; longer audio holds the final visual frame until the
-track ends. The track starts at local scene time zero. There is no cross-scene
-audio carry, mixing, or separate audio timeline.
+Audio is prepared and decoded before sampling a candidate's outgoing frame or
+compiling its successor. A scene's duration is the greater of its visual timeline
+and audio duration. Shorter audio ends while visual playback continues; longer
+audio holds completed timeline animations while `s.time` bindings continue sampling
+until the track ends. Retained workers use this prepared duration, including for
+seeks and handoffs. The track starts at local scene time zero. There is no
+cross-scene audio carry, mixing, or separate audio timeline.
 
 Playback with audio uses the Web Audio clock as its local time source. Pause stops
 the source; resume creates a source at the stored offset. Seeking pauses both
@@ -1585,6 +1776,90 @@ Web Audio provides the clock and offset scheduling mechanisms; see the
 Browsers may require a user gesture to start audio. `play()` can reject and player
 state becomes `blocked`; pressing Play can retry. The host should handle that
 state alongside its transport. See the [browser autoplay guide](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay).
+
+## Object bounds
+
+These synchronous host APIs are exported from both `animlib` and `animlib/core`.
+They inspect an evaluated `Frame` without a browser or GPU. Pass an element ID or
+a group ID; groups include all descendant paint, with nested transforms applied.
+
+```js
+import { evaluateScene, getLocalBounds, getWorldBounds, getCameraBounds, getScreenBounds } from 'animlib/core';
+
+const frame = evaluateScene(compiled, 1.25);
+const local = getLocalBounds(frame, 'object');
+const world = getWorldBounds(frame, 'object');
+const camera = getCameraBounds(frame, 'object');
+const pixels = getScreenBounds(frame, 'object', { width: 1280, height: 720 });
+```
+
+- `getLocalBounds(frame, id, options?)` returns `Bounds3D` with `min` and `max`
+  XYZ tuples in the object's own axes. Its position, rotation, scale, and ancestor
+  transforms are excluded; descendants retain their relative transforms. For
+  screen objects the units are CSS pixels. Local bounds exclude billboard
+  orientation and billboard offsets, as well as viewport offsets.
+- `getWorldBounds(frame, id, options?)` returns `Bounds3D` after all object and
+  ancestor transforms. Billboards use the selected camera. Viewport offsets
+  are excluded because they apply after projection.
+- `getCameraBounds(frame, id, options?)` returns `Bounds3D` in camera coordinates:
+  X increases rightwards, Y upwards, and Z is positive depth from the camera eye.
+  World and camera bounds are not clipped by the camera or viewport.
+- `getScreenBounds(frame, id, { width, height, ...options })` returns `Bounds2D`
+  (`left`, `top`, `right`, `bottom`) in full-canvas CSS pixels, with origin at the
+  top left. An object's view is selected automatically. View rectangles,
+  billboard offsets, and summed ancestor viewport offsets are included.
+
+Screen bounds clip triangles to camera near/far planes **before** perspective
+division, then to the object's view rectangle and the canvas. `clip: false`
+preserves offscreen extents while still applying camera near/far clipping.
+`width` and `height` must be positive finite canvas CSS dimensions. Other queries
+accept optional dimensions for curve tessellation (defaults: 800 × 450).
+
+All four functions accept these `BoundsOptions`:
+
+- `camera`: override the object's authored view camera, including billboard
+  orientation. It must be finite, with positive `height` and `distance`.
+- `palette`: the host color palette, otherwise the default palette.
+- `includeStroke`: defaults to `true`; `false` excludes strokes and arrowheads.
+  Text/LaTeX glyphs remain included even when their ink uses the stroke color.
+- `includeInvisible`: defaults to `false`; `true` ignores object/group opacity
+  and paint alpha for layout. It does not add paint declared as `Color.NONE`,
+  resurrect removed elements, or include an absent morph endpoint.
+
+Bounds enclose the renderer's tessellated paint, including current compatible
+morph geometry, both painted sides of crossfades, glyph holes, LaTeX anchors and
+numeric slots, round strokes, and mesh triangles. Unreferenced mesh vertices are
+excluded. Curves and spheres are sampled, and packed geometry uses float32, so
+these are rendering bounds rather than exact analytic extrema. Raster
+antialiasing can extend slightly beyond them. Queries do not test depth
+occlusion or subtract paint hidden by compositing; a box also includes empty
+space between glyphs or group children.
+
+Missing IDs, empty/no-paint elements, and invisible or collapsed paint return
+`undefined`. Fully clipped or edge-on objects have no screen bounds. An object's
+own zero scale does not remove its local bounds. Screen objects have no world or
+camera bounds and return `undefined` for those queries. Groups mixing world and
+screen paint support screen bounds; other queries throw because the units differ.
+Results are detached values and queries do not modify the frame.
+
+The browser player provides `player.getBounds(id, options?)`, with
+`space: 'screen' | 'local' | 'world' | 'camera'` (default: `'screen'`). It uses the
+displayed frame, live behavior/binding state, active display palette, actual view
+dimensions, and effective camera including viewer orbit and pan. The object's
+view is selected automatically. Screen results use **view-local CSS pixels**,
+matching `player.project(point, view?)` and `player.ray(x, y, view?)`, rather than
+full-canvas coordinates. It accepts `includeInvisible`, `includeStroke`, and
+`clip`, and returns `undefined` before rendering. Queries after disposal throw.
+
+```js
+const pixels = player.getBounds('object');
+const world = player.getBounds('object', { space: 'world' });
+const local = player.getBounds('object', { space: 'local', includeInvisible: true });
+```
+
+These APIs operate on frames or the player; they are not methods on sandboxed
+scene-builder handles. Authors supply geometry and transforms through those
+handles, and hosts can measure any evaluated scene time using the core APIs.
 
 ## Overlap inspection
 
@@ -1775,8 +2050,7 @@ comprehensive physically based material system. Shape matching cannot infer sema
 part correspondence or arbitrary mesh topology.
 
 Not yet included: custom fonts and general text shaping, images/video textures,
-environment maps, image bump/normal maps, displacement, bloom, configurable lights,
-shadows, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
+environment maps, image bump/normal maps, displacement, bloom, arbitrary mesh receivers or self-shadowing, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
 infinite scenes, branching navigation, playback-rate controls,
 video export, or mobile-browser support guarantees. The initial control surface
 is sliders, toggles, selects, and requested orbit rotation.
@@ -1786,3 +2060,160 @@ domain helpers in the app, accessible descriptions of visual objects, measured
 performance improvements, richer text support, and only then additional interaction
 or rendering features. The core contract remains plain scene code, local clocks,
 explicit persistence, and reproducible frames.
+
+## Sections, feature edges, scalar fields, and label depth
+
+These opt-in tools share the same CPU triangle processing on WebGPU and WebGL2.
+Existing geometry and labels keep their default appearance. They operate on the
+current evaluated mesh (including corresponding-vertex morphs), before world
+transforms and before per-view rendering. Keep resolutions modest: clipping and
+edge extraction add CPU work, and thick contours add triangles.
+
+### Clipping planes and actual cross-sections
+
+Meshes, sampled surfaces, solids, and spheres accept `clipPlanes`, an array of at
+most four `{ normal: [nx, ny, nz], offset, section? }` objects. The retained side
+is **dot(normal, localPosition) <= offset**. Normals must be finite and nonzero;
+normalizing is optional. For example, `[2, 0, 0]` with offset `1` keeps `x <= 0.5`.
+Planes are object-local and follow the object's scale, rotation, position, and
+parent groups. They are not view scissor rectangles or world-space planes.
+
+```js
+s.box('cutaway', {
+  width: 3, height: 2, depth: 2, fill: 'BLUE',
+  clipPlanes: [{
+    normal: [1, 0, 0], offset: 0.4,
+    section: { color: 'YELLOW', width: 0.03, cap: 'GOLD' },
+  }],
+});
+```
+
+Clipping alone removes triangles outside the half-space. `section` draws the
+actual mesh/plane intersection as round, unlit contour strokes. `width` is the
+full local stroke diameter, default `0.025`, and must be positive. Omit `section`
+for clipping only; omit `cap` for an open cut with visible contour. A scalar
+surface's contour is the intersection of its sampled triangles with the plane,
+not an analytically exact level set. Strokes straddle the intersection by their
+radius, so their thickness can extend slightly beyond the mathematical cut.
+
+`cap` is a palette color (with optional alpha). Caps fill closed, nonbranching
+section loops, including nested holes and disconnected islands, on consistently
+constructed closed meshes. They use flat two-sided lighting and the explicit cap
+color, without the object's scalar ramp or procedural texture. Caps are omitted
+for open/branching intersection components. Self-intersecting, coincident, or
+nonmanifold meshes are outside the cap guarantee. Coplanar triangles create no
+new section; a tangent cut creates no artificial disk. Geometrically coincident
+endpoints are welded with a tolerance of `1e-8 * max(1, maxAbsLocalCoordinate)`;
+the same tolerance classifies plane distances for fills, caps, and contours.
+Coplanar vertices are retained, so repeating a plane (including a positive
+rescaling of its normal and offset) preserves earlier caps and contours.
+Avoid details smaller than that tolerance. A cut that removes the entire shape
+produces no cap. Cap/contour display does not change the source mesh topology.
+
+Planes run in array order. Requested caps participate in later cuts; enable caps
+on earlier planes when later caps need a closed solid. Earlier section strokes
+are clipped against later planes. To move a cut while paused, rebuild it with an
+ordinary slider. In a mesh/sphere `morphTo`, equal-length plane lists with exactly
+matching normals interpolate offsets; other plane configurations switch to the
+target configuration after progress zero. Specify the plane fields at both
+endpoints. Object/group animation carries the local plane with the object.
+
+### Silhouette and crease outlines
+
+```js
+s.box('edges', {
+  fill: 'TEAL',
+  outline: { color: 'WHITE', width: 0.025, creaseAngle: Math.PI / 6,
+             silhouette: true },
+});
+```
+
+`outline` is available on meshes and spheres (including sampled surfaces and
+solids). It draws boundary edges, creases where adjacent face normals differ by
+more than `creaseAngle`, and camera-facing/back-facing transitions when
+`silhouette` is true. The defaults are `width: 0.025`, `creaseAngle: Math.PI/6`,
+and `silhouette: true`. Angles are radians in `[0, PI]`; `PI` disables creases.
+Set `silhouette: false` for boundaries and creases only. Positional welding joins
+hard-normal seams, suppressing face triangulation diagonals. Consistent triangle
+winding is required for meaningful silhouettes. A sphere's outline follows its
+finite tessellation, not an analytic curve. These are depth-tested round strokes,
+not screen-space postprocessing; width scales with object/group scale.
+
+Outlines use the clipped, morphed geometry, including requested caps, and are
+recomputed for each camera/view/orbit change. They retain group isolation and
+object opacity. Translucent fills and strokes use the normal triangle sorting;
+intersecting transparent surfaces retain the renderer's existing ordering limits.
+Ordinary `stroke` still means the full mesh wireframe and can be used separately.
+
+### Per-vertex scalar palette colors
+
+Raw meshes accept `scalarColors: { values, domain, colors }`. `values` must have
+exactly one finite number per vertex (magnitude at most `1e6`); `domain` is two
+finite increasing numbers. `colors` contains 2–16 named opaque palette tokens,
+not CSS colors, `none`, or alpha objects. All stops are resolved through the
+host's palette, including its availability checks.
+
+```js
+s.surface('temperature', {
+  fn: (x, y) => Math.sin(x) * Math.cos(y),
+  scalar: {
+    fn: (x, y, z) => z,
+    domain: [-1, 1],
+    colors: ['BLUE', 'WHITE', 'RED'],
+  },
+});
+// Raw mesh equivalent:
+s.mesh('triangle', {
+  vertices: [[-1, -1, 0], [1, -1, 0], [0, 1, 0]],
+  triangles: [[0, 1, 2]],
+  scalarColors: { values: [0, 1, 0.5], domain: [0, 1], colors: ['BLUE', 'RED'] },
+});
+```
+
+`surface` and `parametricSurface` accept `scalar: { fn(x,y,z), domain, colors }`.
+The callback receives each valid sampled **local position**, not UV parameters,
+and is sampled with geometry during compilation/control rebuilds. Invalid
+geometry samples leave holes and have no scalar entry. Invalid scalar samples
+fail compilation instead of silently misaligning the values. Changing geometry
+with a surface callback resamples the scalar field too; array-based raw mesh
+edits must supply corresponding scalar values explicitly.
+
+Values clamp to the domain, then map linearly between uniformly spaced palette
+stops in sRGB channel space. The GPU interpolates the resulting vertex colors
+perspectively across each triangle; clipping interpolates those same attributes.
+A triangle spanning several ramp stops therefore does not insert interior stop
+bands: increase sampling where the field varies rapidly. Scalar colors replace
+fill RGB while retaining fill alpha, object/group opacity, lighting, materials,
+and optional procedural texture blending. `fill: 'none'` still hides the fill.
+Matching scalar ramps/domains and equal-length values interpolate during mesh
+morphs; unmatched configurations use the target ramp after progress zero. No
+automatic scalar legend is generated; author one with palette-colored shapes.
+
+### Configurable label occlusion
+
+Text and LaTeX accept `labelOcclusion`:
+
+- `'depth'` (default/omitted): preserve existing per-glyph triangle depth testing.
+- `'overlay'`: show the whole label over world geometry in its view.
+- `'hide'`: hide the whole label when its anchor is behind an opaque filled triangle.
+- `'fade'`: show an occluded label at 20% of its ordinary opacity; otherwise show it fully.
+
+```js
+s.text('inside-label', { text: 'Core', position: [0, 0, -1],
+  billboard: true, labelOcclusion: 'fade', fill: 'YELLOW' });
+```
+
+The anchor is the transformed local origin, including billboard and viewport
+offsets. Billboard labels face the current camera as before. Anchor modes use
+whole-label visibility, so a partially occluded label can remain fully visible
+if its anchor is visible. Only opaque fill triangles in the **same view** occlude
+anchors; translucent surfaces, partially transparent isolated groups, strokes,
+and other text do not. Caps count as fill geometry. Screen-space labels retain
+their existing semantics and ignore this option. Anchors outside camera near/far
+visibility are hidden. Overlay/hide/fade retain the label's perspective size and
+position and its isolated group membership; scene-wide screen labels still render
+above them. Visibility updates during playback, seeking, and camera orbit. There
+is no label collision avoidance or automatic placement.
+
+The [explanatory studies](../demo/explanatory.html) demonstrate annular caps,
+independent cutaway/top views, a scalar height field, and orbit-sensitive labels.

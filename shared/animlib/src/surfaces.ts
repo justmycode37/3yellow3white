@@ -37,6 +37,8 @@ export function createSurfaceBuilders() {
     if (shading !== "unlit" && shading !== "flat" && shading !== "smooth") throw new Error("Invalid surface shading");
 
     const vertices: Vec3[] = [];
+    const values: number[] = [];
+    if (props.scalar && typeof props.scalar.fn !== "function") throw new Error("scalar requires fn(x, y, z)");
     const indices = new Int32Array(columns * rows);
     indices.fill(-1);
     for (let j = 0; j < rows; j++) {
@@ -53,6 +55,11 @@ export function createSurfaceBuilders() {
         indices[j * columns + i] = vertices.length;
         // Callbacks may reuse their result array; retain each sampled position.
         vertices.push([point[0], point[1], point[2]]);
+        if (props.scalar) {
+          const value = props.scalar.fn(point[0], point[1], point[2]);
+          if (!Number.isFinite(value) || Math.abs(value) > coordinateLimit) throw new Error("Invalid scalar sample");
+          values.push(value);
+        }
       }
     }
 
@@ -74,7 +81,7 @@ export function createSurfaceBuilders() {
       triangle(a, b, c);
       triangle(a, c, d);
     }
-    return { kind: "mesh", vertices, triangles, shading };
+    return { kind: "mesh", vertices, triangles, shading, ...(props.scalar ? { scalarColors: { values, domain: props.scalar.domain, colors: props.scalar.colors } } : {}) };
   }
 
   function surface(props: SurfaceProps): Geometry {
@@ -87,6 +94,7 @@ export function createSurfaceBuilders() {
         if (typeof z !== "number") throw new Error("surface fn(x, y) must return a number");
         return [x, y, z];
       },
+      scalar: props.scalar,
       uRange: xRange, vRange: yRange, uSegments: xSegments, vSegments: ySegments, shading: props.shading,
     });
   }

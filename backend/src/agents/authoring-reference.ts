@@ -13,6 +13,7 @@ const headings = [
   '### Local timing',
   '### Elements and coordinates',
   '### Shaded meshes',
+  '### Scene lighting and planar shadows',
   '### Procedural textures and materials',
   '### Function and parametric surfaces',
   '### Basic solids and swept tubes',
@@ -32,7 +33,8 @@ const headings = [
   '### Anchors and counting numbers',
   '## 6. Interaction and 2D/3D scenes',
   '### Controls are input values',
-  '### Reactive sliders (prototype)',
+  '### Retained reactive bindings',
+  '### Fixed-topology deformation and scene time',
   '### Control appearance',
   '### Overlay placement',
   '### Round lines and arrows in 3D',
@@ -42,9 +44,15 @@ const headings = [
   '### Playback after successful changes',
   '### Execution environment',
   '## 8. One audio track per scene',
+  '## Object bounds',
   '## Overlap inspection',
   '## 9. Engine structure and verification',
   '## 10. Current boundaries and next steps',
+  '## Sections, feature edges, scalar fields, and label depth',
+  '### Clipping planes and actual cross-sections',
+  '### Silhouette and crease outlines',
+  '### Per-vertex scalar palette colors',
+  '### Configurable label occlusion',
 ];
 
 /** Authoring-only benchmark candidate; preserves retained sections verbatim (LF). */

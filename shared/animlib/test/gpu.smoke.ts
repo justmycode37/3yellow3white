@@ -1,6 +1,10 @@
+import {integrationCases} from './integration-cases.js';
+import { capClippingCases, capClippingIssues, explanatoryCases, explanatoryMorphSource, labelProjectionCases, labelProjectionIssues } from './explanatory-cases.js';
 /// <reference types="@webgpu/types" />
 import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {create,globals} from 'webgpu';
+import {VertexBufferLimitError} from '../src/vertex-buffer.js';
+import {createPlayer} from '../src/player.js';
 import {CanvasRenderer} from '../src/renderer.js';
 import {SceneSequence} from '../src/sequence.js';
 import {initialSources} from '../demo/scenes.js';
@@ -15,9 +19,13 @@ import type {PaletteColor} from '../src/types.js';
 import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
+import {waveSource} from './dynamic-surface-cases.js';
 import {reactiveCases} from './reactive-cases.js';
+import {lightingCases} from './lighting-cases.js';
 import {materialCases,materialSource,bumpSource} from './material-cases.js';
 import {textureCases,texturePixelIssues} from './texture-cases.js';
+import {retainedPrecisionCases,retainedCases,occlusionGateSource,occlusionGateFrames} from './retained-cases.js';
+import {RetainedGeometry} from '../src/retained-geometry.js';
 import {transparencyCases} from './transparency-cases.js';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
@@ -47,7 +55,8 @@ describe('native Vulkan WebGPU rendering',()=> {
     // The renderer still calls its production requestAdapter/requestDevice path.
     vi.stubGlobal('navigator',{gpu:{requestAdapter:async()=>({requestDevice:async()=>device}),getPreferredCanvasFormat:()=>format}});
     renderer=new CanvasRenderer(canvas);renderer.onError=error=>errors.push(error.message);
-    sequence=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+    // Large allocation fixtures test GPU limits, not the default sandbox time budget.
+    sequence=new SceneSequence({executionLimitMs:1000,prepare:scenes=>renderer.prepare(scenes)});
     const result=await sequence.submit({type:'load',scenes:initialSources});
     expect(result).toEqual({ok:true,revision:1,diagnostics:[]});
   });
@@ -79,6 +88,146 @@ describe('native Vulkan WebGPU rendering',()=> {
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
   function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  it.each(integrationCases)('cross-feature: $name',async entry=>{
+    renderer.resetInteraction();
+    await entry.run({sequence,draw:async(frame,options,reference=false)=>{
+      const bypass=reference?vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined):undefined;
+      const uploads=vi.spyOn(device!.queue,'writeBuffer');
+      const encoder=device!.createCommandEncoder.bind(device!);let indexed=0;
+      const encoding=vi.spyOn(device!,'createCommandEncoder').mockImplementation((...args)=>{
+        const e=encoder(...args),begin=e.beginRenderPass.bind(e);
+        e.beginRenderPass=(...args)=>{const p=begin(...args),draw=p.drawIndexed.bind(p);p.drawIndexed=(...args)=>{indexed++;return draw(...args);};return p;};return e;
+      });
+      try {
+        renderer.render(frame,options);
+        return {pixels:await pixels(),indexed,resources:(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes.size,
+          uploads:uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX)).length};
+      } finally {bypass?.mockRestore();uploads.mockRestore();encoding.mockRestore();}
+    }});
+    expect(errors).toEqual([]);
+  });
+  it.each(lightingCases)('lighting: $name',async test=>{
+    let imageIndex=0;
+    await test.run(async(source,yaw=0,time=0)=>{
+      renderer.resetInteraction();
+      (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
+      const result=await sequence.submit({type:'load',scenes:[{id:'lighting',source}]});
+      expect(result.ok,JSON.stringify(result)).toBe(true);
+      renderer.setOrbit({yaw,pitch:0});
+      renderer.render(sequence.frame(0,time),sequence.compiled[0].options);
+      const image=await pixels();await artifact('lighting-'+test.name.replace(/[^a-z]+/gi,'-')+'-'+imageIndex++,image);return image;
+    });
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('caps shadow-expanded allocations and rejects oversized uploads without losing the last frame',async()=>{
+    const source=(count:number)=>`export default scene({mode:'3d',lighting:{directional:{direction:[0,1,0],space:'world',shadow:{quality:'high'}},receiver:{size:[8,8]}}},s=>{
+      for(let i=0;i<${count};i++)s.parametricSurface('surface'+i,{uSegments:100,vSegments:100,fn:(u,v)=>[u,1+i*.1,v]});s.wait(1);
+    });`;
+    // Default production requestDevice() guarantees at least this limit; the
+    // regression target requests no increased maxBufferSize on the test device.
+    const limit=device!.limits.maxBufferSize;
+    expect(limit).toBe(268435456);
+    const create=vi.spyOn(device!,'createBuffer'),submit=vi.spyOn(device!.queue,'submit'),write=vi.spyOn(device!.queue,'writeBuffer');
+    const controlled:Error[]=[],previousError=renderer.onError;
+    renderer.onError=error=>controlled.push(error);
+    try {
+      const loaded=await sequence.submit({type:'load',scenes:[{id:'large-shadow',source:source(2)}]});
+      expect(loaded.ok,JSON.stringify(loaded)).toBe(true);
+      renderer.resetInteraction();renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+      await device!.queue.onSubmittedWorkDone();
+      expect(controlled).toEqual([]);expect(errors).toEqual([]);
+      const buffers=create.mock.calls.map(([descriptor])=>descriptor).filter(d=>(d.usage&GPUBufferUsage.VERTEX)!==0);
+      expect(buffers.map(d=>d.size)).toEqual([limit]); // payload fits; doubled growth does not.
+      expect(write.mock.calls.some(([, ,data])=>(data as ArrayBufferView).byteLength===208320744)).toBe(true);
+      const before=await pixels();expect(changedPixels(before)).toBeGreaterThan(1000);
+      const oversized=await sequence.submit({type:'load',scenes:[{id:'large-shadow',source:source(3)}]});
+      expect(oversized.ok,JSON.stringify(oversized)).toBe(true);
+      const allocationCount=create.mock.calls.length,submitCount=submit.mock.calls.length,writeCount=write.mock.calls.length;
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+      expect(controlled).toHaveLength(1);expect(controlled[0]).toBeInstanceOf(VertexBufferLimitError);
+      expect(controlled[0].message).toContain('312480744');
+      expect(create).toHaveBeenCalledTimes(allocationCount);expect(submit).toHaveBeenCalledTimes(submitCount);expect(write).toHaveBeenCalledTimes(writeCount);
+      expect(renderer.backend).toBe('webgpu');expect(Buffer.from(await pixels())).toEqual(Buffer.from(before));
+      expect(errors).toEqual([]);
+      // A scene budget error is recoverable: a smaller frame renders on the same device.
+      expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);await device!.queue.onSubmittedWorkDone();
+      expect(renderer.backend).toBe('webgpu');expect(controlled).toHaveLength(1);expect(errors).toEqual([]);
+    } finally {renderer.onError=previousError;create.mockRestore();submit.mockRestore();write.mockRestore();}
+  });
+  it.each(retainedCases)('retained/reference pixels: $name',async ({source})=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'retained',source}]})).ok).toBe(true);
+    for(const [yaw,pitch,time] of [[0,0,0],[0.7,0.35,0.5],[-0.8,-0.4,1]]) {
+      const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw,pitch};
+      renderer.render(frame,sequence.compiled[0].options);const optimized=await pixels();
+      const bypass=vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined);
+      try {renderer.render(frame,sequence.compiled[0].options);} finally {bypass.mockRestore();}
+      const reference=await pixels();
+      expect(changedPixels(optimized)).toBeGreaterThan(200);
+      expect(optimized.filter((v,i)=>Math.abs(v-reference[i])>3).length).toBeLessThan(optimized.length*0.002);
+    }
+    expect(errors).toEqual([]);
+  });
+  it.each(retainedPrecisionCases)('retained precision/reference pixels: $name',async ({source,retained,orbit})=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'precision',source}]})).ok).toBe(true);
+    (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
+    let warm=false;
+    for(const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
+      const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw:orbit===false?0:yaw,pitch:orbit===false?0:pitch};
+      const uploads=vi.spyOn(device!.queue,'writeBuffer');
+      let geometryUploads=0;
+      try {
+        renderer.render(frame,sequence.compiled[0].options);
+        geometryUploads=uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX)).length;
+      } finally {uploads.mockRestore();}
+      const optimized=await pixels();
+      const resources=(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes;
+      const usedRetained=resources.size>0;
+      const bypass=vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined);
+      try {renderer.render(frame,sequence.compiled[0].options);} finally {bypass.mockRestore();}
+      const reference=await pixels();
+      expect(changedPixels(reference)).toBeGreaterThan(200);
+      expect(optimized.filter((v,i)=>Math.abs(v-reference[i])>3)).toHaveLength(0);
+      expect(usedRetained).toBe(retained);
+      if(warm&&retained)expect(geometryUploads).toBe(0);
+      // Leave retained resources warm for the next sample (reference rendering
+      // deliberately releases them), exercising both cold and reused meshes.
+      renderer.render(frame,sequence.compiled[0].options);await pixels();warm=true;
+    }
+    expect(errors).toEqual([]);
+  });
+  it('camera-only frames retain GPU vertex/index buffers and instance repeated spheres',async()=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'retained',source:`export default scene({mode:'3d'},s=>{
+      for(let i=0;i<8;i++)s.sphere('s'+i,{radius:0.2,position:[i/2-2,0,0],fill:'BLUE'});s.wait(2);
+    });`}]})).ok).toBe(true);
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);await pixels();
+    const uploads=vi.spyOn(device!.queue,'writeBuffer');
+    try {
+      const frame=sequence.frame(0,1);frame.camera.yaw=0.4;
+      renderer.render(frame,sequence.compiled[0].options);expect(changedPixels(await pixels())).toBeGreaterThan(100);
+      expect(uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX))).toHaveLength(0);
+      expect(uploads.mock.calls.some(([buffer])=>buffer.usage&GPUBufferUsage.UNIFORM)).toBe(true);
+    } finally {uploads.mockRestore();}
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('label occlusion integration gate submits final world-space occluders, including morph endpoints',async()=>{
+    expect((await sequence.submit({type:'load',scenes:[{id:'occlusion-gate',source:occlusionGateSource}]})).ok).toBe(true);
+    const frame=sequence.frame(0,0),options=sequence.compiled[0].options;
+    const resourceCount=()=> (renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes.size;
+    renderer.render(frame,options);expect(changedPixels(await pixels())).toBeGreaterThan(200);expect(resourceCount()).toBeGreaterThan(0);
+    for(const dependent of occlusionGateFrames(frame)) {
+      renderer.render(dependent,options);expect(changedPixels(await pixels())).toBeGreaterThan(200);
+      expect(resourceCount()).toBe(0);
+    }
+    renderer.render(frame,options);await pixels();expect(resourceCount()).toBeGreaterThan(0);
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
   it.each([false,true])('bump changes normals with constant albedo, metal=%s',async metal=>{
     const images:Uint8Array[]=[];
     for(const strength of [undefined,0,0.15,-0.15]) {
@@ -91,6 +240,51 @@ describe('native Vulkan WebGPU rendering',()=> {
     expect(images[2].filter((v,i)=>Math.abs(v-images[3][i])>5).length).toBeGreaterThan(1000);
     for(let i=0;i<images[0].length;i+=4)expect(images[2][i]>0).toBe(images[0][i]>0);
     expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('explanatory morph pixels are deterministic after backwards seeking',async()=>{
+    expect((await sequence.submit({type:'load',scenes:[{id:'explanatory',source:explanatoryMorphSource}]})).ok).toBe(true);
+    const captures:Uint8Array[]=[];
+    for(const time of [0,1,2,1]){renderer.render(sequence.frame(0,time),sequence.compiled[0].options);captures.push(await pixels());}
+    expect(captures[0]).not.toEqual(captures[1]);expect(captures[1]).not.toEqual(captures[2]);expect(captures[3]).toEqual(captures[1]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for (const fixture of labelProjectionCases) it(`explanatory projection: ${fixture.name}`,async()=>{
+    const images:Uint8Array[]=[];
+    for(const source of fixture.sources) {
+      expect((await sequence.submit({type:'load',scenes:[{id:'projection',source}]})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);images.push(await pixels());
+    }
+    expect(labelProjectionIssues(images.map(image=>(x,y)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3))))).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for(const dpr of [1,2])for(const fixture of capClippingCases)it(`explanatory DPR ${dpr}: ${fixture.name}`,async()=>{
+    vi.stubGlobal('devicePixelRatio',dpr);
+    (renderer as unknown as {resize():void}).resize();
+    try {
+      const images:Uint8Array[]=[];
+      for(const [i,source] of fixture.sources.entries()) {
+        expect((await sequence.submit({type:'load',scenes:[{id:'cap',source}]})).ok).toBe(true);
+        renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+        expect([texture!.width,texture!.height]).toEqual([width*dpr,height*dpr]);
+        const image=await pixels();images.push(image);
+        await artifact(`cap-DPR${dpr}-${fixture.name.replaceAll(' ','-')}-${i}`,image);
+      }
+      expect(capClippingIssues(images.map(image=>(x,y)=>{
+        const i=(y*dpr*width*dpr+x*dpr)*4;return Array.from(image.subarray(i,i+3));
+      }),fixture.laterCut)).toEqual([]);
+    } finally {
+      vi.stubGlobal('devicePixelRatio',1);(renderer as unknown as {resize():void}).resize();
+    }
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  for (const fixture of explanatoryCases) it(`explanatory: ${fixture.name}`,async()=>{
+    expect((await sequence.submit({type:'load',scenes:[{id:'explanatory',source:fixture.source}]})).ok).toBe(true);
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+    const image=await pixels();
+    const at=(x:number,y:number)=>Array.from(image.subarray((y*width+x)*4,(y*width+x)*4+3));
+    expect(fixture.check(at)).toEqual([]);
+    await artifact('explanatory-'+fixture.name.replaceAll(' ','-'),image);
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it('bump leaves unlit pixels unchanged',async()=>{
@@ -146,6 +340,25 @@ describe('native Vulkan WebGPU rendering',()=> {
       if(t===time)for(const [x,y,rgb] of samples)for(let c=0;c<3;c++)expect(Math.abs(image[(y*width+x)*4+c]-rgb[c])).toBeLessThanOrEqual(2);
     }
     expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('retained wave seeks and paused input match rebuilt pixels in clipped isolated views',async()=>{
+    const reference=new SceneSequence({prepare:scenes=>renderer.prepare(scenes)});
+    renderer.resetInteraction();
+    try {
+      expect((await sequence.submit({type:'load',scenes:[{id:'wave',source:waveSource()}]})).ok).toBe(true);
+      const original=sequence.compiled[0];let first:Buffer|undefined;
+      for(const [time,amplitude,roughness] of [[0.5,0.6,0.45],[2,1,0.15],[0.5,0.6,0.45]]) {
+        await sequence.setControl('wave','amplitude',amplitude);await sequence.setControl('wave','roughness',roughness);
+        expect((await reference.submit({type:'load',scenes:[{id:'reference',source:waveSource(time,amplitude,roughness)}]})).ok).toBe(true);
+        renderer.render(reference.frame(0,time),reference.compiled[0].options);const expected=Buffer.from(await pixels());
+        renderer.render(await sequence.evaluate(0,time),original.options);const actual=Buffer.from(await pixels());
+        expect(actual.equals(expected)).toBe(true);expect(changedPixels(actual)).toBeGreaterThan(1000);
+        if(first && time===0.5)expect(actual.equals(first)).toBe(true);first??=actual;
+        expect(sequence.compiled[0]).toBe(original);
+      }
+      expect(errors).toEqual([]);
+    }finally{reference.dispose();}
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it.each(reactiveCases)('reactive/rebuilt pixels: $name',async fixture=>{
@@ -514,6 +727,36 @@ describe('native Vulkan WebGPU rendering',()=> {
     const expected={...frame,elements:frame.elements.map(e=>({...e,morph:undefined,geometry:{kind:'text' as const,text:'A',fontSize:2}}))};
     renderer.render(expected,scene.options);
     expect(Buffer.from(await pixels()).equals(actual)).toBe(true);expect(errors).toEqual([]);
+  });
+
+  // Last: this public player owns/disposes the native device supplied by the harness.
+  it('public Player recovers from an oversized frame and can play a smaller scene',async()=>{
+    Object.assign(canvas,{getAttribute:()=>null,setAttribute:()=>{},removeAttribute:()=>{}});
+    const callbacks=new Map<number,FrameRequestCallback>();let id=0;
+    vi.stubGlobal('requestAnimationFrame',(callback:FrameRequestCallback)=>{callbacks.set(++id,callback);return id;});
+    vi.stubGlobal('cancelAnimationFrame',(id:number)=>callbacks.delete(id));
+    const player=createPlayer({canvas,executionLimitMs:1000});
+    const source=`export default scene({mode:'3d',lighting:{directional:{direction:[0,1,0],space:'world',shadow:{quality:'high'}},receiver:{size:[8,8]}}},s=>{
+      for(let i=0;i<3;i++)s.parametricSurface('surface'+i,{uSegments:100,vSegments:100,fn:(u,v)=>[u,1+i*.1,v]});s.wait(1);
+    });`;
+    try{
+      expect((await player.submit({type:'load',scenes:[{id:'large',source}]})).ok).toBe(true);
+      expect(player.getState()).toMatchObject({status:'blocked',error:expect.stringContaining('exceeding WebGPU maxBufferSize')});
+      await expect(player.play()).rejects.toBeInstanceOf(VertexBufferLimitError);
+      expect((await player.submit({type:'load',scenes:[{id:'small',source:"export default scene({},s=>{s.rectangle('r',{width:3,height:2,fill:'PURE_RED'});s.wait(1)});"}]})).ok).toBe(true);
+      expect(player.getState()).toMatchObject({scene:'small',status:'paused'});
+      expect(player.getState().error).toBeUndefined();
+      const image=await pixels();expect(Array.from(image.slice((240*640+320)*4,(240*640+320)*4+4))).toEqual([255,0,0,255]);
+      await player.play();expect(player.getState().status).toBe('playing');expect(callbacks.size).toBe(1);
+      const time=performance.now(),clock=vi.spyOn(performance,'now').mockReturnValue(time+250);
+      try{
+        const [key,callback]=callbacks.entries().next().value!;callbacks.delete(key);callback(time+250);
+        expect(player.getState().time).toBeGreaterThanOrEqual(0.25);
+        expect(player.getState().status).toBe('playing');expect(callbacks.size).toBe(1);
+      }finally{clock.mockRestore();}
+      player.pause();expect(player.getState().status).toBe('paused');
+      expect(errors).toEqual([]);
+    }finally{player.dispose();}
   });
 
 });

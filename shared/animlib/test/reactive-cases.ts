@@ -12,6 +12,8 @@ function pair(name: string, setup: string, expression: string, after = 's.wait(3
   return { name, legacy: source(false), reactive: source(true) };
 }
 export const reactiveCases: ReactiveCase[] = [
+  pair('fixed-topology vertices and explicit normals', "const target=s.mesh('target',{vertices:[[0,0,0],[1,0,0],[0,1,0]],triangles:[[0,1,2]],shading:'smooth',...PROPS});", '{vertices:[[0,0,0],[x,0,0],[0,y,1]],normals:[[0,-1,1],[0,-1,1],[0,-1,1]]}', undefined, "{mode:'3d'}"),
+  pair('independent material and texture parameters', "const target=s.sphere('target',{radius:1.4,fill:'TEAL',...PROPS});", "{material:{metalness:x/3,roughness:y/4+0.05},texture:{pattern:'checker',color:'BLUE',scale:x,offset:[y,0,0],bumpStrength:x/4}}", undefined, "{mode:'3d'}"),
   pair('sphere radius with animated position', "const target=s.sphere('target',{...PROPS});", '{radius:0.3*x+y/10}', "s.play(target.moveTo([2,1]),{duration:3,ease:'linear'});s.keep(target);", "{mode:'3d'}"),
   pair('circle radius with fade', "const target=s.circle('target',{...PROPS});", '{radius:x/2}', "s.play(target.fadeIn(),{duration:1});s.wait(2);"),
   pair('position and attached billboard', "const target=s.sphere('target',{...PROPS});const label=s.text('label',{text:'Atom',billboard:true});s.attach(label,target,{offset:[0,0.8,0]});", '{position:[x-1,y-1,0.2*x]}', undefined, "{mode:'3d'}"),

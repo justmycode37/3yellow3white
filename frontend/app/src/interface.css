@@ -217,9 +217,15 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
   .navigation-layer, .navigation-drawer, .drawer-scrim { transition: none; }
 }
 
-/* The scene owns the entire viewport; host UI floats above it. */
-.player-stage { position: absolute; inset: 0; isolation: isolate; }
-.lesson-canvas-host { position: absolute; inset: 0; }
+/* Fit the authored 16:9 scene within both stage dimensions; UI floats above it. */
+.player-stage { position: absolute; inset: 0; isolation: isolate; container-type: size; }
+.lesson-canvas-host {
+  position: absolute;
+  inset: 0;
+  width: min(100cqw, calc(100cqh * 16 / 9));
+  height: min(100cqh, calc(100cqw * 9 / 16));
+  margin: auto;
+}
 .lesson-canvas-host > .lesson-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
 .player-notice { position: absolute; z-index: 10; bottom: 104px; left: 24px; right: 24px; margin: 0; text-align: center; font-size: 12px; color: var(--player-ink); }
 .player-page .paused-indicator { z-index: 3; }

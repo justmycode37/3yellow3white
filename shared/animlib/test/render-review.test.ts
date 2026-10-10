@@ -1,3 +1,4 @@
+import { captureDraws } from './gpu-capture.js';
 import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {CanvasRenderer} from '../src/renderer.js';
@@ -16,15 +17,16 @@ async function captureRenderer(palette?:ColorPalette) {
   vi.stubGlobal('GPUTextureUsage',{RENDER_ATTACHMENT:1});
   const writes:Float32Array[]=[];
   const draws:number[]=[];
+  const capture=captureDraws(writes,draws);
   let stride=0;
   let clear:Record<string,number>={};
   const device={limits:{maxTextureDimension2D:8192},lost:new Promise(()=>{}),addEventListener:()=>{},destroy:()=>{},
     createShaderModule:()=>({getCompilationInfo:async()=>({messages:[]})}),
     createRenderPipelineAsync:async(descriptor:{vertex:{buffers:{arrayStride:number}[]}})=>{stride=descriptor.vertex.buffers[0].arrayStride/4;return {getBindGroupLayout:()=>({})};},
-    createBuffer:()=>({destroy:()=>{}}),createBindGroup:()=>({}),
+    createBuffer:capture.createBuffer,createBindGroup:capture.createBindGroup,
     createTexture:({size}:{size:number[]})=>({width:size[0],height:size[1],createView:()=>({}),destroy:()=>{}}),
-    queue:{writeBuffer:(_buffer:unknown,_offset:number,data:Float32Array)=>writes.push(data.slice()),submit:()=>{}},
-    createCommandEncoder:()=>({beginRenderPass:(descriptor:{colorAttachments:{clearValue:Record<string,number>}[]})=>{clear=descriptor.colorAttachments[0].clearValue;return {setPipeline:()=>{},setBindGroup:()=>{},setVertexBuffer:()=>{},setViewport:()=>{},setScissorRect:()=>{},draw:(count:number)=>draws.push(count),end:()=>{}};},finish:()=>({})}),
+    queue:capture.queue,
+    createCommandEncoder:()=>({beginRenderPass:(descriptor:{colorAttachments:{clearValue:Record<string,number>}[]})=>{clear=descriptor.colorAttachments[0].clearValue;return capture.pass;},finish:()=>({})}),
   };
   vi.stubGlobal('navigator',{gpu:{requestAdapter:async()=>({requestDevice:async()=>device}),getPreferredCanvasFormat:()=> 'bgra8unorm'}});
   const canvas={width:800,height:450,style:{},getBoundingClientRect:()=>({width:800,height:450}),getContext:()=>({configure:()=>{},unconfigure:()=>{},getCurrentTexture:()=>({createView:()=>({})})}),addEventListener:()=>{},removeEventListener:()=>{}} as unknown as HTMLCanvasElement;

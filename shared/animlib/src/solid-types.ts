@@ -1,6 +1,7 @@
+import type { ExplanatoryGeometry } from "./explanatory-types.js";
 import type { ElementStyle, Material, ProceduralTexture, Vec3 } from './types.js';
 
-interface SolidStyle extends ElementStyle {
+interface SolidStyle extends ElementStyle, ExplanatoryGeometry {
   texture?: ProceduralTexture;
   material?: Material;
   /** Smooth lighting by default; boxes default to flat lighting. */
