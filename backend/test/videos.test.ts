@@ -20,6 +20,32 @@ async function waitFor(check: () => boolean) {
   throw new Error('Timed out waiting for generation')
 }
 
+test('JSON and multipart creation forward the viewing preference and distinguish idempotent requests', async () => {
+  const received: unknown[] = []
+  const service = new VideoService(':memory:', async request => { received.push(request.videoMode); return null }); services.push(service)
+  for (const multipart of [false, true]) {
+    for (const videoMode of ['classic', 'interactive', undefined]) {
+      const key = `${multipart}-${videoMode}`
+      const post = (mode: unknown) => {
+        const payload = JSON.stringify({ ...input, videoMode: mode })
+        const form = new FormData(); form.set('request', payload)
+        return api('', { method: 'POST', headers: { 'Idempotency-Key': key }, body: multipart ? form : payload })
+      }
+      const response = await service.handle(post(videoMode))
+      expect(response.status).toBe(202)
+      const video = await response.json()
+      await waitFor(() => service.get(video.id, SHARED_OWNER)?.status === 'complete')
+      expect(received.at(-1)).toBe(videoMode)
+      expect((await (await service.handle(post(videoMode))).json()).id).toBe(video.id)
+      expect((await service.handle(post(videoMode === 'interactive' ? 'classic' : 'interactive'))).status).toBe(409)
+      for (const invalid of ['unknown', '', null, true, 1, {}]) {
+        expect((await service.handle(post(invalid))).status).toBe(400)
+      }
+    }
+  }
+  expect(received).toEqual(['classic', 'interactive', undefined, 'classic', 'interactive', undefined])
+})
+
 test('video failures use user-facing messages in live events and preserve ready scenes', async () => {
   let release!: () => void
   const gate = new Promise<void>(resolve => { release = resolve })
@@ -189,17 +215,23 @@ test('unfinished jobs resume after restart and subscriptions do not own generati
   let release!: () => void
   const gate = new Promise<void>(resolve => { release = resolve })
   const service = new VideoService(join(dir, 'db'), async (request, index) => { if (index === 1) await gate; return fixture(request, index) }); services.push(service)
-  const video = service.create('user:a', 'one', input)
-  await waitFor(() => service.get(video.id, 'user:a')?.scenes.length === 1)
+  const responseCreated = await service.handle(api('', { method: 'POST', headers: { 'Idempotency-Key': 'one' },
+    body: JSON.stringify({ ...input, videoMode: 'interactive' }) }))
+  expect(responseCreated.status).toBe(202)
+  const video = await responseCreated.json()
+  await waitFor(() => service.get(video.id, SHARED_OWNER)?.scenes.length === 1)
   const abort = new AbortController()
   const response = await service.handle(api(`/${video.id}/events`, { headers: { 'x-user-id': 'a' }, signal: abort.signal }))
   const reader = response.body!.getReader()
   expect(new TextDecoder().decode((await reader.read()).value)).toContain('scene-0')
   abort.abort()
   const closing = service.close(); release(); await closing; services.splice(services.indexOf(service), 1)
-  const reopened = new VideoService(join(dir, 'db'), fixture); services.push(reopened)
-  await waitFor(() => reopened.get(video.id, 'user:a')?.status === 'complete')
-  expect(reopened.get(video.id, 'user:a')?.scenes).toHaveLength(2)
+  const reopened = new VideoService(join(dir, 'db'), async (request, index) => {
+    expect(request.videoMode).toBe('interactive')
+    return fixture(request, index)
+  }); services.push(reopened)
+  await waitFor(() => reopened.get(video.id, SHARED_OWNER)?.status === 'complete')
+  expect(reopened.get(video.id, SHARED_OWNER)?.scenes).toHaveLength(2)
   await reopened.close(); services.splice(services.indexOf(reopened), 1)
   await rm(dir, { recursive: true, force: true })
 })

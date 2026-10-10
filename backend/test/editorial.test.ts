@@ -28,6 +28,22 @@ function review(verdict: 'pass' | 'revise' = 'pass'): EditorialReview {
 }
 const image = { type: 'image' as const, mimeType: 'image/png', data: 'fixture-image' };
 
+test.each(['classic', 'interactive', undefined] as const)('viewing preference %s reaches authoring, review and repair', async videoMode => {
+  const root = await directory(), tasks: AgentTask[] = [];
+  const outputs = [lesson('five'), review('revise'), lesson(), review()];
+  await authorReviewedLesson({ async run(task) {
+    tasks.push(task); return JSON.stringify(outputs.shift());
+  } }, { ...request, videoMode }, root, new AbortController().signal);
+  expect(tasks).toHaveLength(4);
+  tasks.forEach((task, index) => {
+    const payload = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
+    expect((index === 0 ? payload : payload.request).videoMode).toBe(videoMode);
+    expect(task.systemPrompt).toContain('Use `classic` when the field is absent');
+    expect(task.systemPrompt).toContain('classic scenes use empty `interactions` arrays');
+    expect(task.systemPrompt).toContain('interactive scenes may plan meaningful supported controls');
+  });
+});
+
 test('review verdicts agree with material findings and identify actual scenes', () => {
   const warnings = review(); warnings.issues = [{ severity: 'warning', sceneId: null, detail: 'Optional wording preference.' }];
   expect(parseEditorialReview(JSON.stringify(warnings), lesson())).toEqual(warnings);
