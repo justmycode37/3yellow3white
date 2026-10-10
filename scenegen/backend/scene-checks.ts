@@ -79,6 +79,8 @@ export function renderProblems(compiled: CompiledScene): string[] {
   const buried = buriedMarkers(frames as never);
   if (buried.length) problems.push(`Markers hidden behind lines: ${buried.slice(0, 8).join(", ")}.\n${LAYER_HINT}`);
   problems.push(...viewProblems(frames as never));
+  const tracks = (compiled as { tracks?: unknown[] }).tracks?.length ?? 0;
+  if (tracks > MAX_TRACKS) problems.push(`Too heavy for the player: ${tracks} separate animations (at most ${MAX_TRACKS}). ${WEIGHT_HINT}`);
   const placed = compiled.controls.filter(control => control.position).map(control => control.id);
   if (placed.length) problems.push(`Controls with a position: ${placed.join(", ")}.\n${CONTROLS_HINT}`);
   return problems;
@@ -277,3 +279,9 @@ export function viewProblems(frames: ViewFrame[]): string[] {
   if (text.size) problems.push(`Text inside a 3D view must be billboard: true and have no rotation, so it faces the viewer upright: ${[...text].slice(0, 8).join(", ")}.`);
   return problems;
 }
+
+// The browser builds each scene inside a short time budget; a scene with many hundreds of separate
+// animations validates here but never appears in the player (the lesson stops at the previous scene).
+const MAX_TRACKS = 300;
+export const WEIGHT_HINT = "Animate a group instead of every member: put the atoms, dots or segments that move together in one " +
+  "s.group / v.group and move, fade or scale the group once. Use fewer objects (a lattice of 4 x 4 x 2 atoms reads as well as a large one).";

@@ -231,6 +231,11 @@ How to build 3D with animlib:
   field line is one `tube` along its centre line; containers, rods, wedges and
   rings are `box`, `cylinder`, `cone`, `torus`; atoms and particles stay `sphere`.
   Join the parts of one body in a group so they move and pulse together.
+- Keep every scene light (strict, checked): the player builds a scene in a fraction
+  of a second, and a scene that is too heavy never appears. Use at most about 60
+  objects and 300 separate animations. When many things move together (the atoms of
+  a lattice, the dots of a sample), put them in ONE group and move, fade or scale
+  the group, instead of animating each member.
 - Keep 3D cheap and calm: at most three or four surface or tube meshes in a scene,
   32 segments per axis or fewer unless the shape visibly needs more, opaque bodies
   where they intersect, and no triangle strokes. A surface that a slider reshapes
