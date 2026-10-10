@@ -75,3 +75,13 @@ test('text-only workspace requests include the selected video mode', async () =>
     assert.deepEqual(received, ['classic', 'interactive'])
   } finally { globalThis.fetch = original }
 })
+
+test('generated thumbnails arrive through refresh and replace stale browser-local artwork', () => {
+  const video = manifest()
+  const previous = videoLesson(video)
+  video.thumbnail = { styleVersion: 1, paths: [{ d: 'M100 200L280 80', fill: 'none', stroke: 'currentColor', strokeWidth: 13 }] }
+  const [updated] = mergeVideoLessons([video], [previous])
+  assert.deepEqual(updated.thumbnail, video.thumbnail)
+  assert.equal(updated.artwork, previous.artwork)
+  assert.equal(mergeVideoLessons([manifest()], [updated])[0].thumbnail, undefined)
+})

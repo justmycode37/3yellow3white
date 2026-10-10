@@ -23,7 +23,7 @@ export async function deleteVideo(id: string) {
 }
 
 export function videoLesson(video: VideoManifest): Lesson {
-  return { id: video.id, videoId: video.id, title: video.title, subtitle: video.provider === 'pi' ? 'Visual explanation' : 'Sample animation', subject: 'My ideas', duration: video.scenes.reduce((sum, scene) => sum + scene.duration, 0), artwork: 'vectors', color: 'sage', demo: video.provider === 'simulated', generationStatus: video.status }
+  return { id: video.id, videoId: video.id, title: video.title, subtitle: video.provider === 'pi' ? 'Visual explanation' : 'Sample animation', subject: 'My ideas', duration: video.scenes.reduce((sum, scene) => sum + scene.duration, 0), artwork: 'vectors', thumbnail: video.thumbnail, color: 'sage', demo: video.provider === 'simulated', generationStatus: video.status }
 }
 
 /** Keep browser-local curriculum context while refreshing server-owned job state. */

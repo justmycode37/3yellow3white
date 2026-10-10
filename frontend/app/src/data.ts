@@ -11,6 +11,7 @@ export interface Lesson {
   subject: Subject
   duration: number
   artwork: Artwork
+  thumbnail?: import('../../../shared/video/thumbnail').ThumbnailArtwork
   color: string
   progress?: number
   demo?: boolean

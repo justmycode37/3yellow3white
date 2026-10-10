@@ -6,22 +6,17 @@ import { formatTime } from './data'
 import { LessonPlayback } from './lessonPlayback'
 import type { LessonPlaybackState } from './lessonPlayback'
 import { lessonScenes } from './lessonScenes'
-import { lessonTheme } from './lessonTheme'
-import type { Player, ColorPalette } from 'animlib'
 import { watchVideo } from './videos'
 
 const loadingState: LessonPlaybackState = { time: 0, duration: 0, playing: false, ended: false, ready: false, error: '' }
 const getLoadingState = () => loadingState
 const subscribeLoading = () => () => {}
-export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuContent, onHome, overlayOpen }: {
-  lesson: Lesson; theme: 'light' | 'dark'; menuOpen: boolean; onMenu: () => void
+export default function LessonPlayer({ lesson, menuOpen, onMenu, menuContent, onHome, overlayOpen }: {
+  lesson: Lesson; menuOpen: boolean; onMenu: () => void
   menuContent: ReactNode; onHome: () => void; overlayOpen: boolean
 }) {
   const canvasHost = useRef<HTMLDivElement>(null)
   const screen = useRef<HTMLDivElement>(null)
-  const appearance = useRef(theme)
-  appearance.current = theme
-  const display = useRef<{ player: Player; palette: ColorPalette } | undefined>(undefined)
   const latestLesson = useRef(lesson)
   latestLesson.current = lesson
   const suspended = useRef(menuOpen || overlayOpen)
@@ -59,8 +54,8 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
       canvas.setAttribute('role', 'img')
       host.append(canvas)
       const player = createPlayer({ canvas, controlsRoot: host.parentElement! })
-      player.setDisplayPalette(lessonTheme(appearance.current, THREE_BLUE_ONE_BROWN_PALETTE))
-      display.current = { player, palette: THREE_BLUE_ONE_BROWN_PALETTE }
+      // Keep the lesson canvas black regardless of the surrounding app theme.
+      player.setDisplayPalette(THREE_BLUE_ONE_BROWN_PALETTE)
       controller = new LessonPlayback(player, !lesson.videoId)
       void controller.setSuspended(suspended.current)
       setPlayback(controller)
@@ -79,13 +74,8 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     }).catch(error => {
       if (active) setStartupError(error instanceof Error ? error.message : String(error))
     })
-    return () => { active = false; disconnect?.(); display.current = undefined; controller?.dispose(); host?.replaceChildren() }
+    return () => { active = false; disconnect?.(); controller?.dispose(); host?.replaceChildren() }
   }, [lesson.id, lesson.videoId, attempt])
-
-  useEffect(() => {
-    const current = display.current
-    current?.player.setDisplayPalette(lessonTheme(theme, current.palette))
-  }, [theme])
 
   useEffect(() => { void playback?.setSuspended(menuOpen || overlayOpen) }, [playback, menuOpen, overlayOpen])
   useEffect(() => {

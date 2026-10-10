@@ -31,5 +31,7 @@ export interface VideoManifest {
   provider: 'simulated' | 'pi'
   createdAt: string
   scenes: VideoScene[]
+  thumbnail?: import('./thumbnail').ThumbnailArtwork
+  thumbnailStatus?: 'generating' | 'complete' | 'failed'
   error?: string
 }

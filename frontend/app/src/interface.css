@@ -32,8 +32,7 @@
 }
 
 html, body, #root { min-height: 100%; background: var(--bg); transition: background-color .35s ease, color .35s ease; }
-:root .player-page { --player-bg: #fff; --player-ink: #000; --art-bg: var(--player-bg); background: var(--player-bg); color: var(--player-ink); }
-:root[data-theme=dark] .player-page { --player-bg: #000; --player-ink: #fff; }
+:root .player-page { --player-bg: #000; --player-ink: #fff; --art-bg: var(--player-bg); background: var(--player-bg); color: var(--player-ink); }
 
 .app-shell { max-width: 1220px; padding: 0 40px; }
 .settings-shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
