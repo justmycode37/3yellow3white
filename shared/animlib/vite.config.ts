@@ -8,5 +8,6 @@ export default defineConfig({
   build: { outDir: "../dist/demo", emptyOutDir: false, rollupOptions: { input: {
     main: fileURLToPath(new URL('./demo/index.html', import.meta.url)),
     behaviors: fileURLToPath(new URL('./demo/behaviors.html', import.meta.url)),
+    plant: fileURLToPath(new URL('./demo/plant.html', import.meta.url)),
   } } },
 });

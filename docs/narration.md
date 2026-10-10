@@ -77,7 +77,7 @@ node_modules/.bin/bun --env-file=backend/.env.local backend/src/index.ts
 npm run dev
 ```
 
-Open `http://localhost:5173/?narration=JOB_ID`. Press Play to grant browser audio permission. The transcript highlights the current word and the marker moves at selected word starts; seeking and pauses use animlib's single Web Audio clock. A WebGPU-capable browser is required. For alternative ports, set `PORT` on the backend and `NARRATION_API_TARGET=http://127.0.0.1:PORT` for the demo server.
+Open `http://localhost:5173/?narration=JOB_ID`. Press Play to grant browser audio permission. The transcript highlights the current word and the marker moves at selected word starts; seeking and pauses use animlib's single Web Audio clock. Rendering prefers WebGPU and automatically falls back to WebGL2 when WebGPU is unavailable. For alternative ports, set `PORT` on the backend and `NARRATION_API_TARGET=http://127.0.0.1:PORT` for the demo server.
 
 Run only one writer process per data directory. Do not run the direct CLI while a backend using that directory is active; use the HTTP API instead. Stop the backend before using the CLI to resume an interrupted job.
 
