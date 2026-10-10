@@ -20,7 +20,10 @@ local databases are excluded from the Docker build context.
 
 Newly generated scenes pass a mandatory image review before publication. The
 runtime also ships Node, native `webgpu`, and Mesa Vulkan drivers for headless
-rendering. The image build runs `node shared/animlib/tools/smoke-frames.mjs` as the
+rendering. Vulkan drivers come from Debian's signed `bookworm-backports` repository
+([package](https://packages.debian.org/bookworm-backports/mesa-vulkan-drivers));
+Bookworm's original Mesa 22 driver lacks dynamic indexing required by native WebGPU.
+The image build runs `node shared/animlib/tools/smoke-frames.mjs` as the
 application user: both 16:9 and 4:3 must contain real rendered pixels. A missing
 adapter or incompatible native dependency fails the build rather than deploying
 a server that cannot review scenes. Local development needs Node and a compatible

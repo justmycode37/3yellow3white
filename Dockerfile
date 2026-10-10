@@ -20,7 +20,11 @@ RUN echo "$APP_REVISION" | grep -Eq '^[0-9a-f]{40}$' \
     && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
 
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libstdc++6 libvulkan1 mesa-vulkan-drivers chromium \
+# Bookworm's Mesa 22 lacks Vulkan dynamic indexing required by native WebGPU.
+RUN printf '%s\n' 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/backports.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libstdc++6 libvulkan1 chromium \
+    && apt-get install -y --no-install-recommends -t bookworm-backports mesa-vulkan-drivers \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 1001 --create-home app \
     && mkdir -p /data/videos /data/narration /data/agents && chown -R app:app /data
