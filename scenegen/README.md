@@ -7,7 +7,7 @@ nothing under `backend/`, `frontend/` or `shared/` is changed.
 ```
 cd backend
 bun ../scenegen/backend/dev.ts                 # the app, with the rules and checks below
-bun test ../scenegen/backend/dev.test.ts       # 14 tests
+bun test ../scenegen/backend/dev.test.ts       # 15 tests
 ```
 
 ## Prompts
@@ -39,7 +39,7 @@ from animlib's `getWorldBounds`.
 | Text overlap | animlib's `detectSceneOverlaps` reports overlapping settled text |
 | Cut off at the edge | A formula, label, arrow or marker leaves the 16:9 frame |
 | Lines through labels | A line or arrow runs through a label or formula |
-| Focus frame fit | A yellow focus frame is not centred on its text with a little padding; the message gives the measured position and size |
+| Focus frame fit | A yellow focus frame is off-centre, cuts through a glyph, frames only a slice of a formula, or is drawn thick; the message gives the measured position and size |
 | Too much text | More than twelve formulas, definition lines and labels are visible at once |
 | Too heavy | More than 300 separate animations, which the browser player cannot build in time |
 

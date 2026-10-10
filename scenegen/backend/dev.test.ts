@@ -174,8 +174,33 @@ test("a focus frame that does not hug its formula is rejected with the measured 
     return "";
   } });
   await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({})}`, validate: async () => {} });
-  expect(results[0]).toContain("focus around formula: use position [3.0");
+  expect(results[0]).toContain("to frame formula, use position [3.0");
   expect(results[1]).toBe("ok");
+});
+
+test("a focus frame must hold a whole element or a whole named part, drawn thin", async () => {
+  const visualization = await loadPrompt("scene-craft");
+  const scene = (tex: string, frame: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    s.latex("formula", { tex: ${JSON.stringify(tex)}, fontSize: 0.5, position: [3, 1, 0.1] });
+    s.rectangle("focus", { ${frame}, fill: Color.NONE, stroke: Color.YELLOW });
+    s.wait(1);
+  });`;
+  const plain = "A=mn", parts = "\\animpart{lhs}{A}\\animpart{eq}{=}\\animpart{rhs}{mn}";
+  const results: string[] = [];
+  const runner = new CheckedRunner({ run: async task => {
+    for (const output of [
+      scene(plain, "width: 1.1, height: 0.7, position: [3.45, 1, 0.15], strokeWidth: 0.02"),   // frames "mn" and cuts "="
+      scene(plain, "width: 2.05, height: 0.66, position: [3, 1.02, 0.15], strokeWidth: 0.06"),  // right place, too thick
+      scene(plain, "width: 2.05, height: 0.66, position: [3, 1.02, 0.15], strokeWidth: 0.02"),  // whole formula
+    ]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    return "";
+  } });
+  await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({})}`, validate: async () => {} });
+  expect(results[0]).toMatch(/cuts through formula|slice of formula/);
+  expect(results[0]).toContain("to frame formula, use position [3");
+  expect(results[1]).toContain("too thick");
+  expect(results[2]).toBe("ok");
+  expect(parts).toContain("animpart");
 });
 
 test("a lesson plan may not use yellow or gold as an entity colour", async () => {
