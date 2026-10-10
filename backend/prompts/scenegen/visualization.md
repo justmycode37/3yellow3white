@@ -9,7 +9,7 @@
 
 Make the scene's purpose visible. Show a concrete change before naming its rule; every causal claim needs a visible reason, such as a correspondence, comparison, or quantity changing together with its geometry. Use the running example and exact values established in the script. Do not choose new values that contradict the speech.
 
-Preserve the script's progression from an accessible introduction or example to more advanced ideas. Do not add an opening splash of complex mathematics or introduce nontrivial variables or formulas that the narration has not explained. Reveal notation with its spoken introduction and connect each quantity or term to the example. Previously explained or audience-trivial notation may be reused without repeating its explanation.
+Implement the storyboard's visual argument alongside the supplied narration. Preserve its progression from an accessible question or example to more advanced ideas, including any motivated result preview. Establish the planned evidence before the conclusion relies on it. At first consequential use, connect each nontrivial symbol to its spoken quantity meaning and visible object or value; show how a formula's terms correspond to the established construction. Previously explained or audience-trivial notation may be reused without repeating its explanation. Do not add unexplained machinery or substitute decorative motion for a planned inferential step. The narration is already fixed; implement its visual evidence without assuming additional speech will be added later.
 
 Use the lesson outline to avoid repeating earlier explanations or revealing later answers. Set up the next scene's needs. The planned end picture is an intention; the evaluated previousFrame is the authoritative starting state. Retrieve carried objects with s.previous.get(id), animate the same object, and keep the declared carry IDs. Do not recreate a lookalike under a different ID. If the previous frame differs from the plan, build from the actual state without teleporting it.
 
@@ -79,9 +79,9 @@ On-screen text (strict):
   numbers that are part of the explanation, plus brief definitions when useful.
   Tie symbols to their spoken meanings; do not use unexplained notation as decoration.
 - Avoid paragraphs and duplicate captions in the animation. Use motion, highlights,
-  colour, and comparisons to support the supplied narration. Necessary variable and
-  formula explanations must already be in that narration; do not assume a narrator
-  will add missing explanations later.
+  colour, and comparisons to develop the planned argument alongside the supplied
+  narration. Show the evidence and symbol correspondences specified by the storyboard;
+  do not assume a narrator will add missing explanations later.
 
 LaTeX (strict; one unsupported command stops the whole lesson from playing):
 - Formulas are rendered by MathJax with only the base, ams, newcommand and html
