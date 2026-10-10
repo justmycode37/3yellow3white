@@ -12,3 +12,12 @@ test("scene tasks get the scenegen visualization prompt; other tasks pass throug
   expect(seen[0]).toBe(`handoff\n\n${visualization}\n\nreference`);
   expect(seen[1]).toBe("write the lesson plan");
 });
+
+test("lesson planning tasks get the scenegen planning additions appended", async () => {
+  const { PLANNING_CONTRACT } = await import("../../backend/src/agents/planning.js");
+  const planning = await readFile(new URL("../prompts/planning.md", import.meta.url), "utf8");
+  const seen: string[] = [];
+  const runner = new VisualizationPromptRunner({ run: async task => { seen.push(task.systemPrompt); return "ok"; } });
+  await runner.run({ systemPrompt: `guidance\n\n${PLANNING_CONTRACT}`, prompt: "lesson" });
+  expect(seen[0]).toBe(`guidance\n\n${PLANNING_CONTRACT}\n\n${planning}`);
+});

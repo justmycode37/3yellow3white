@@ -71,10 +71,12 @@ cd backend
 bun --watch ../scenegen/backend/dev.ts
 ```
 
-It starts the same server, unchanged, except that scene agents receive
-`scenegen/prompts/visualization.md` in place of `backend/prompts/scene-craft.md`. The
-file is re-read for every scene, and each prompt actually sent is saved in
-`out/visualization-prompts/`. No backend file is modified.
+It starts the same server, unchanged, with two prompt hooks. Scene agents receive
+`scenegen/prompts/visualization.md` in place of `backend/prompts/scene-craft.md`, and the
+lesson-planning step gets `scenegen/prompts/planning.md` appended (that step decides
+which controls and 2D/3D views each scene has). Both files are re-read on use, and each
+scene prompt actually sent is saved in `out/visualization-prompts/`. No backend file is
+modified.
 
 To retry one scene of an existing video with an edited prompt, keeping its narration,
 audio and captions:

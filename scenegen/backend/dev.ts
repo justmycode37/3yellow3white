@@ -1,5 +1,6 @@
-// The team's backend, unchanged, with one difference: scene agents get
-// scenegen/prompts/visualization.md instead of backend/prompts/scene-craft.md.
+// The team's backend, unchanged, with two prompt hooks: scene agents get
+// scenegen/prompts/visualization.md instead of backend/prompts/scene-craft.md, and the
+// lesson-planning step gets scenegen/prompts/planning.md appended.
 // Planning, script review, ElevenLabs narration, word timings, captions, validation
 // and delivery all run through the backend's own modules.
 //
@@ -13,9 +14,11 @@ import { agentConfig } from "../../backend/src/agents/config.js";
 import { PiAgentRunner } from "../../backend/src/agents/runtime.js";
 import type { AgentRunner, AgentTask } from "../../backend/src/agents/runtime.js";
 import { createPiGenerator } from "../../backend/src/agents/generator.js";
+import { PLANNING_CONTRACT } from "../../backend/src/agents/planning.js";
 
 const CRAFT = new URL("../../backend/prompts/scene-craft.md", import.meta.url);
 const VISUALIZATION = new URL("../prompts/visualization.md", import.meta.url);
+const PLANNING = new URL("../prompts/planning.md", import.meta.url);
 const LOG = new URL("../../out/visualization-prompts/", import.meta.url);
 
 /** Swaps the scene-craft section of scene tasks for the scenegen visualization prompt. */
@@ -24,7 +27,12 @@ export class VisualizationPromptRunner implements AgentRunner {
   constructor(private inner: AgentRunner) {}
   async run(task: AgentTask): Promise<string> {
     const craft = await readFile(CRAFT, "utf8");
-    if (!task.systemPrompt.includes(craft)) return this.inner.run(task); // planning, script, review
+    if (task.systemPrompt.includes(PLANNING_CONTRACT)) { // lesson authoring: plan + script
+      const planning = await readFile(PLANNING, "utf8");
+      console.log("[scenegen] lesson planning: appending scenegen/prompts/planning.md");
+      return this.inner.run({ ...task, systemPrompt: `${task.systemPrompt}\n\n${planning}` });
+    }
+    if (!task.systemPrompt.includes(craft)) return this.inner.run(task); // review
     const visualization = await readFile(VISUALIZATION, "utf8"); // re-read: edits apply to the next scene
     const systemPrompt = task.systemPrompt.replace(craft, visualization);
     await mkdir(LOG, { recursive: true });
