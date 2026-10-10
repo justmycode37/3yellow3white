@@ -1,20 +1,19 @@
 import { useEffect, useRef } from 'react'
-import { ArrowUpRight, FolderOpen, Library, ListTree, Moon, Plus, Settings, Sun, X } from './Icons'
+import { ArrowUpRight, FolderOpen, Library, ListTree, Moon, Plus, Sun, X } from './Icons'
 
 type NavigationDrawerProps = {
   open: boolean
-  current: 'workspace' | 'library' | 'plan' | 'settings' | 'lesson'
+  current: 'workspace' | 'library' | 'courses' | 'settings' | 'lesson'
   onClose: () => void
   onWorkspace: () => void
   onLibrary: () => void
-  onPlan: () => void
+  onCourses: () => void
   onCreate: () => void
-  onSettings: () => void
   theme: 'light' | 'dark'
   onTheme: (theme: 'light' | 'dark') => void
 }
 
-export default function NavigationDrawer({ open, current, onClose, onWorkspace, onLibrary, onPlan, onCreate, onSettings, theme, onTheme }: NavigationDrawerProps) {
+export default function NavigationDrawer({ open, current, onClose, onWorkspace, onLibrary, onCourses, onCreate, theme, onTheme }: NavigationDrawerProps) {
   const drawer = useRef<HTMLElement>(null)
   const close = useRef(onClose)
   close.current = onClose
@@ -63,14 +62,13 @@ export default function NavigationDrawer({ open, current, onClose, onWorkspace, 
       <nav className="drawer-links" aria-label="Your space">
         <button className={current === 'workspace' ? 'active' : ''} aria-current={current === 'workspace' ? 'page' : undefined} onClick={onWorkspace}><span className="drawer-icon butter"><FolderOpen size={22}/></span><span>Your workspace</span><ArrowUpRight size={18}/></button>
         <button className={current === 'library' ? 'active' : ''} aria-current={current === 'library' ? 'page' : undefined} onClick={onLibrary}><span className="drawer-icon lavender"><Library size={22}/></span><span>Your library</span><ArrowUpRight size={18}/></button>
-        <button className={current === 'plan' ? 'active' : ''} aria-current={current === 'plan' ? 'page' : undefined} onClick={onPlan}><span className="drawer-icon blue"><ListTree size={22}/></span><span>Plan</span><ArrowUpRight size={18}/></button>
+        <button className={current === 'courses' ? 'active' : ''} aria-current={current === 'courses' ? 'page' : undefined} onClick={onCourses}><span className="drawer-icon blue"><ListTree size={22}/></span><span>Courses</span><ArrowUpRight size={18}/></button>
         <button onClick={onCreate}><span className="drawer-icon sage"><Plus size={22}/></span><span>New video</span><ArrowUpRight size={18}/></button>
       </nav>
       <div className="drawer-bottom">
         <button className="drawer-theme-toggle" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onClick={() => onTheme(theme === 'light' ? 'dark' : 'light')}>
           {theme === 'light' ? <Sun size={22}/> : <Moon size={22}/>}
         </button>
-        <button className={`drawer-settings ${current === 'settings' ? 'active' : ''}`} aria-current={current === 'settings' ? 'page' : undefined} onClick={onSettings}><Settings size={22}/><span>Settings</span><ArrowUpRight size={18}/></button>
       </div>
     </aside>
   </div>

@@ -14,6 +14,7 @@ async function captureRenderer(palette?:ColorPalette) {
   vi.stubGlobal('GPUBufferUsage',{UNIFORM:1,COPY_DST:2,VERTEX:4});
   vi.stubGlobal('GPUTextureUsage',{RENDER_ATTACHMENT:1});
   const writes:Float32Array[]=[];
+  const draws:number[]=[];
   let stride=0;
   let clear:Record<string,number>={};
   const device={limits:{maxTextureDimension2D:8192},lost:new Promise(()=>{}),addEventListener:()=>{},destroy:()=>{},
@@ -22,23 +23,43 @@ async function captureRenderer(palette?:ColorPalette) {
     createBuffer:()=>({destroy:()=>{}}),createBindGroup:()=>({}),
     createTexture:({size}:{size:number[]})=>({width:size[0],height:size[1],createView:()=>({}),destroy:()=>{}}),
     queue:{writeBuffer:(_buffer:unknown,_offset:number,data:Float32Array)=>writes.push(data.slice()),submit:()=>{}},
-    createCommandEncoder:()=>({beginRenderPass:(descriptor:{colorAttachments:{clearValue:Record<string,number>}[]})=>{clear=descriptor.colorAttachments[0].clearValue;return {setPipeline:()=>{},setBindGroup:()=>{},setVertexBuffer:()=>{},setViewport:()=>{},setScissorRect:()=>{},draw:()=>{},end:()=>{}};},finish:()=>({})}),
+    createCommandEncoder:()=>({beginRenderPass:(descriptor:{colorAttachments:{clearValue:Record<string,number>}[]})=>{clear=descriptor.colorAttachments[0].clearValue;return {setPipeline:()=>{},setBindGroup:()=>{},setVertexBuffer:()=>{},setViewport:()=>{},setScissorRect:()=>{},draw:(count:number)=>draws.push(count),end:()=>{}};},finish:()=>({})}),
   };
   vi.stubGlobal('navigator',{gpu:{requestAdapter:async()=>({requestDevice:async()=>device}),getPreferredCanvasFormat:()=> 'bgra8unorm'}});
   const canvas={width:800,height:450,style:{},getBoundingClientRect:()=>({width:800,height:450}),getContext:()=>({configure:()=>{},unconfigure:()=>{},getCurrentTexture:()=>({createView:()=>({})})}),addEventListener:()=>{},removeEventListener:()=>{}} as unknown as HTMLCanvasElement;
   const renderer=new CanvasRenderer(canvas,palette);
   await renderer.prepare([]);
-  return {renderer,vertices:()=>writes[0],
+  return {renderer,vertices:()=>writes[0],draws:()=>draws,
     renderColors(frame:Frame,display:CompiledScene['options']=options){
-      writes.length=0;renderer.render(frame,display);
+      writes.length=0;draws.length=0;renderer.render(frame,display);
       const data=writes[0];
       return {clear,colors:Array.from({length:data.length/stride},(_,i)=>Array.from(data.subarray(i*stride+3,i*stride+7)))};
     },
-    draw(state:ElementState,view=camera){writes.length=0;renderer.render({elements:[state],camera:view,cameraAnimated:false},options);const data=writes[0];return Array.from({length:data.length/stride},(_,i)=>Array.from(data.subarray(i*stride,i*stride+3)) as Vec3);}};
+    draw(state:ElementState,view=camera){writes.length=0;draws.length=0;renderer.render({elements:[state],camera:view,cameraAnimated:false},options);const data=writes[0];return Array.from({length:data.length/stride},(_,i)=>Array.from(data.subarray(i*stride,i*stride+3)) as Vec3);}};
 }
 
 describe('render review regressions',()=> {
   afterEach(()=>vi.unstubAllGlobals());
+
+  it('sorts translucent faces after transforms and orbit while retaining a single batched draw',async()=>{
+    const {renderer,draw,vertices,draws}=await captureRenderer();
+    try {
+      const sphere=element({kind:'sphere',radius:1},{fill:{color:'BLUE',opacity:0.5},stroke:'none',position:[1,-0.5,2],rotation:[0.3,0.8,-0.2]});
+      for(const [yaw,pitch] of [[0,0],[0.7,0.4],[-0.8,-0.5]]) {
+        const view={...camera,yaw,pitch,target:[2,-1,0.7] as Vec3,perspective:1};
+        draw(sphere,view);
+        const data=vertices();
+        let previous=Infinity;
+        for(let i=0;i<data.length;i+=45) {
+          const center=[0,1,2].map(axis=>(data[i+axis]+data[i+15+axis]+data[i+30+axis])/3) as Vec3;
+          const depth=project(center,view,800,450).depth;
+          expect(depth).toBeLessThanOrEqual(previous+1e-10);previous=depth;
+          for(let j=i;j<i+45;j+=15){expect(data[j+6]).toBe(0.5);expect(data[j+11]).toBe(1);expect(Math.hypot(data[j+8],data[j+9],data[j+10])).toBeCloseTo(1,6);}
+        }
+        expect(draws()).toEqual([data.length/15]);
+      }
+    }finally{renderer.dispose();}
+  });
 
   it('enforces palette colors in direct GPU submissions for shapes, strokes, text, and regional views',async()=>{
     const {renderer,renderColors}=await captureRenderer();

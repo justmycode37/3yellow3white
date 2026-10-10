@@ -111,3 +111,14 @@ test('3d plans inspect compiled cameras, including subviews, transitions, and in
   expect(() => validateScenePlan(flat, evaluateScene(flat, 1), { ...plan, view: undefined })).not.toThrow();
   expect(() => validateScenePlan(spatial, evaluateScene(spatial, 1), { ...plan, view: { mode: '2d', rationale: 'Return to a flat diagram.' } })).not.toThrow();
 });
+
+test('original scenegen description markers drive view validation without the rewritten view schema', async () => {
+  for (const [description, mode] of [['3D: a rotatable molecule', '3d'], ['2D (because it is a graph): energy', '2d']] as const) {
+    const draft = lesson(); draft.plan.scenes[0].visualDescription = description;
+    const plan = parsePlannedLesson(JSON.stringify(draft), request).plan.scenes[0];
+    expect(plan.view).toEqual({ mode, rationale: description });
+    const flat = await compileSource(`export default scene({},s=>{const dot=s.circle('dot');s.keep(dot);s.wait(1);});`);
+    if (mode === '3d') expect(() => validateScenePlan(flat, evaluateScene(flat, flat.duration), plan)).toThrow('requires a camera');
+    else expect(() => validateScenePlan(flat, evaluateScene(flat, flat.duration), plan)).not.toThrow();
+  }
+});

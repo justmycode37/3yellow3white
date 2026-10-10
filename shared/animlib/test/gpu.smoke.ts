@@ -16,6 +16,7 @@ import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
 import {reactiveCases} from './reactive-cases.js';
+import {transparencyCases} from './transparency-cases.js';
 
 // Uses a real native WebGPU device and render target. Only the window/canvas surface is stubbed.
 // This is a development test adapter, never a browser renderer fallback.
@@ -103,6 +104,16 @@ describe('native Vulkan WebGPU rendering',()=> {
       }
       expect(errors).toEqual([]);
     }finally{legacy.dispose();}
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it.each(transparencyCases)('$name',async ({source,x,y,red})=>{
+    renderer.resetInteraction();
+    expect((await sequence.submit({type:'load',scenes:[{id:'transparency',source}]})).ok).toBe(true);
+    renderer.render(sequence.frame(0,0),sequence.compiled[0].options);
+    const image=await pixels();
+    expect(Math.abs(image[(y*width+x)*4]-red)).toBeLessThanOrEqual(2);
+    expect(image[(y*width+x)*4+2]).toBeGreaterThan(20);
+    expect(errors).toEqual([]);
     expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
   });
   it('compiles the production WGSL and renders all three demonstrations',async()=> {

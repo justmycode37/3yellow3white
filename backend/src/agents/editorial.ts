@@ -10,6 +10,7 @@ import { PLANNING_CONTRACT, parsePlannedLesson } from './planning.js';
 import type { PlannedLesson } from './planning.js';
 import type { AgentRunner, AgentTask } from './runtime.js';
 import { logEvent, logStage } from '../logging.js';
+import { scenegenPrompt } from './scenegen-prompts.js';
 
 export interface EditorialReview {
   schemaVersion: 1; verdict: 'pass' | 'revise'; summary: string;
@@ -45,11 +46,12 @@ export async function authorReviewedLesson(runner: AgentRunner, request: VideoRe
   await mkdir(runDirectory, { recursive: true, mode: 0o700 });
   const messages = await buildStorylineMessages(JSON.stringify(request));
   const guidance = await readFile(new URL('../../prompts/story-review.md', import.meta.url), 'utf8');
+  const planning = await scenegenPrompt('planning');
   let repair: { lesson: PlannedLesson; issues: EditorialReview['issues'] } | undefined;
   for (let attempt = 0; attempt < 3; attempt++) {
     signal.throwIfAborted();
     const task: AgentTask = {
-      systemPrompt: `${messages[0].content}\n\n${PLANNING_CONTRACT}`,
+      systemPrompt: `${messages[0].content}\n\n${PLANNING_CONTRACT}\n\n${planning}`,
       prompt: repair
         ? `Revise the complete lesson and plan to correct the material editorial errors below. Preserve sound content, requested scope, stable entity IDs/meanings, and scene IDs where possible. Update narration and nonspoken planning together. Return the full planning envelope.\n${JSON.stringify({ request, draft: repair.lesson, issues: repair.issues })}`
         : `Write a concise visual lesson and its plan from this request:\n${messages[1].content}`,

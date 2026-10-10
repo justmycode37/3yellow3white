@@ -47,7 +47,15 @@ export function parseColor(source: string): [number, number, number, number] {
 
 function parseCssColor(source: string): [number, number, number, number] {
   if (source === "none") return [0, 0, 0, 0];
-  const rgb = colorString.get.rgb(source);
+  let rgb = colorString.get.rgb(source);
+  if (!rgb) {
+    // color-string rejects signed exponents in RGB alpha, which JS emits for tiny fades.
+    const exponent = /^(rgba?\([^,]+,[^,]+,[^,]+,)\s*([+-]?(?:\d+\.?\d*|\.\d+)[eE][+-]?\d+)\s*\)$/i.exec(source);
+    if (exponent) {
+      rgb = colorString.get.rgb(`${exponent[1]}1)`);
+      if (rgb) rgb[3] = Math.max(0, Math.min(1, Number(exponent[2])));
+    }
+  }
   if (rgb) return [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, rgb[3]];
   const hsl = colorString.get.hsl(source), hwb = colorString.get.hwb(source);
   if (!hsl && !hwb) throw new Error(`Unsupported CSS color: ${source}`);

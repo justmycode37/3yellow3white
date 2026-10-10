@@ -261,7 +261,9 @@ export class VideoService {
         } else body = JSON.parse(await blob.text())
       } catch { return json({ detail: 'Invalid request body' }, 400) }
       if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.length + uploads.length > 10 || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
+      if (body.videoMode !== undefined && body.videoMode !== 'classic' && body.videoMode !== 'interactive') return json({ detail: 'Choose classic or interactive video mode' }, 400)
       const normalized: VideoRequest = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })),
+        ...(body.videoMode !== undefined ? { videoMode: body.videoMode } : {}),
         ...(uploads.length ? { uploads: uploads.map(uploadMetadata) } : {}) }
       try { return json(this.create(owner, key, normalized, uploads), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }
     }
