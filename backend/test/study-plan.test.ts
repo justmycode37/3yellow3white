@@ -90,3 +90,68 @@ test('AI classifications group focused video lessons into distinct course topics
   value.topics[2].group = 'Vectors';
   expect(() => parseTopicPlan(JSON.stringify(value), document)).toThrow('teaching order');
 });
+
+test('async planning returns before inference finishes and survives upload disconnects', async () => {
+  let finish!: () => void;
+  const pending = new Promise<void>(resolve => { finish = resolve; });
+  const controller = new AbortController();
+  let taskSignal: AbortSignal | undefined;
+  let began!: () => void;
+  const started = new Promise<void>(resolve => { began = resolve; });
+  const route = studyPlanRoutes(() => ({ run: async task => { taskSignal = task.signal; began(); await pending; return JSON.stringify(output()); } }));
+  const accepted = await route(new Request('http://localhost/api/study-plans', { method: 'POST', headers: { Prefer: 'respond-async', 'x-user-id': 'alice' }, body: JSON.stringify(document), signal: controller.signal }));
+  expect(accepted.status).toBe(202);
+  const { id } = await accepted.json();
+  const url = `http://localhost/api/study-plans/${id}`;
+  controller.abort();
+  await started;
+  expect(taskSignal?.aborted).toBe(false);
+  expect((await route(new Request(url, { headers: { 'x-user-id': 'alice' } }))).status).toBe(202);
+  expect((await route(new Request(url, { headers: { 'x-user-id': 'bob' } }))).status).toBe(404);
+  expect((await route(new Request(url, { method: 'DELETE', headers: { 'x-user-id': 'bob' } }))).status).toBe(404);
+  finish(); await Bun.sleep(0);
+  const result = await route(new Request(url, { headers: { 'x-user-id': 'alice' } }));
+  expect(result.status).toBe(200);
+  expect((await result.json()).chapters[0].segments).toHaveLength(2);
+});
+
+test('async cancellation reaches the model and releases capacity; results expire', async () => {
+  const route = studyPlanRoutes(() => ({ run: async task => new Promise((_resolve, reject) => {
+    task.signal!.addEventListener('abort', () => reject(task.signal!.reason), { once: true });
+  }) }));
+  const req = () => new Request('http://localhost/api/study-plans', { method: 'POST', headers: { Prefer: 'respond-async' }, body: JSON.stringify(document) });
+  const a = await (await route(req())).json(), b = await (await route(req())).json();
+  expect((await route(req())).status).toBe(429);
+  for (const job of [a, b]) expect((await route(new Request(`http://localhost/api/study-plans/${job.id}`, { method: 'DELETE' }))).status).toBe(204);
+  await Bun.sleep(0);
+  const c = await route(req()); expect(c.status).toBe(202);
+  await route(new Request(`http://localhost/api/study-plans/${(await c.json()).id}`, { method: 'DELETE' }));
+  let now = 0;
+  const expiring = studyPlanRoutes(() => ({ run: async () => JSON.stringify(output()) }), { now: () => now, resultTtlMs: 10 });
+  const accepted = await (await expiring(req())).json();
+  let completed: Response;
+  for (let i = 0; ; i++) {
+    completed = await expiring(new Request(`http://localhost/api/study-plans/${accepted.id}`));
+    if (completed.status !== 202 || i >= 100) break;
+    await Bun.sleep(1);
+  }
+  expect(completed.status).toBe(200);
+  now = 11;
+  expect((await expiring(new Request(`http://localhost/api/study-plans/${accepted.id}`))).status).toBe(404);
+});
+
+test('background jobs time out without leaving the planner busy forever', async () => {
+  const route = studyPlanRoutes(() => ({ run: async task => new Promise((_resolve, reject) => {
+    task.signal!.addEventListener('abort', () => reject(task.signal!.reason), { once: true });
+  }) }), { jobTimeoutMs: 20 });
+  const accepted = await route(new Request('http://localhost/api/study-plans', { method: 'POST', headers: { Prefer: 'respond-async' }, body: JSON.stringify(document) }));
+  const { id } = await accepted.json();
+  await Bun.sleep(30);
+  const result = await route(new Request(`http://localhost/api/study-plans/${id}`));
+  expect(result.status).toBe(408);
+});
+
+test('short formulas are valid material, while empty source is rejected', () => {
+  expect(parsePlanDocument({ name: 'Screenshot', lines: [{ text: 'AᵀA x = Aᵀb' }] }).lines).toHaveLength(1);
+  expect(() => parsePlanDocument({ name: 'Empty', lines: [{ text: '  ' }] })).toThrow();
+});
