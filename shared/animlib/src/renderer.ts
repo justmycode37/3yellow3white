@@ -65,7 +65,10 @@ ${modelWGSL}
   if(model.flags.w>0.5){return imported;}
   let footprint=fwidth(input.texPosition);
   var height=0.;
-  if(input.texKind>0.5){height=textureMix(input.texPosition,input.texKind,input.texSeed,footprint);color=mix(color,input.texColor,height);}
+  if(input.texKind>0.5){
+    let surface=proceduralSample(input.texPosition,input.texKind,input.texSeed,footprint);
+    color=mix(color,input.texColor,surface.x);height=surface.y;
+  }
   // Derivatives must be evaluated before divergent lighting/discard branches.
   let dx=dpdx(input.viewPosition);let dy=dpdy(input.viewPosition);
   let dh=vec2f(dpdx(height),dpdy(height));

@@ -113,7 +113,10 @@ void main() {
   if(modelFlags.w>0.5){outputColor=imported;return;}
   vec3 footprint=fwidth(vTexPosition);
   float height=0.;
-  if(vTexKind>0.5){height=textureMix(vTexPosition,vTexKind,vTexSeed,footprint);color=mix(color,vTexColor,height);}
+  if(vTexKind>0.5){
+    vec2 surface=proceduralSample(vTexPosition,vTexKind,vTexSeed,footprint);
+    color=mix(color,vTexColor,surface.x);height=surface.y;
+  }
   vec3 dx=dFdx(vViewPosition),dy=dFdy(vViewPosition);
   vec2 dh=vec2(dFdx(height),dFdy(height));
   if(color.a<=0.){discard;}
