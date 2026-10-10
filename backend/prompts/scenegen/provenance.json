@@ -5,7 +5,7 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
-      "sha256": "d95446b6887ae14f8969920bbb28695f6f4168acdf1f9114c02379efa4149df6",
+      "sha256": "2746fb8beba9922c7a35cdf7e6bf260957ac2e887acfef9535b586e26f66794b",
       "revisions": [
         {
           "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",

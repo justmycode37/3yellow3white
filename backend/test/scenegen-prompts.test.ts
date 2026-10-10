@@ -7,7 +7,7 @@ import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 // meshes, surfaces, solids, tubes, textures and materials); update these hashes with the files.
 // These pin the exact reviewed text, including whitespace.
 const hashes = {
-  visualization: 'd95446b6887ae14f8969920bbb28695f6f4168acdf1f9114c02379efa4149df6',
+  visualization: '2746fb8beba9922c7a35cdf7e6bf260957ac2e887acfef9535b586e26f66794b',
   planning: 'b142ce5b5b435c9308ff396a782a552307b36d87495b8044e0dda5b66182eaaf',
   'topics-system': 'ad3bcf9c7c1351f28c6f80b6fd2c8cfbb15655ebdb587d2d623af2d94eb37131',
   'topics-format': '260ba64060e06134c8208ba90533bdfeccbe28cff6d92bdb07d9d8e79a03afb7',

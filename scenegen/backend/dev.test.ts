@@ -150,13 +150,32 @@ test("an arrow through a label, or a label cut off at the edge, is rejected", as
   });`;
   const results: string[] = [];
   const runner = new CheckedRunner({ run: async task => {
-    for (const output of [scene("[0, 0]"), scene("[4.6, 1]"), scene("[0, 0.6]")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    for (const output of [scene("[0, 0]"), scene("[7, 1]"), scene("[0, 0.6]")]) results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
     return "";
   } });
   await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({})}`, validate: async () => {} });
   expect(results[0]).toContain("flow through value");
-  expect(results[1]).toContain("Cut off at the frame edge");
+  expect(results[1]).toContain("Cut off at the edge");
   expect(results[2]).toBe("ok");
+});
+
+test("a focus frame that does not hug its formula is rejected with the measured size", async () => {
+  const visualization = await scenegenPrompt("visualization");
+  const scene = (frame: string) => `export default scene({ mode: "2d", end: "hold" }, s => {
+    s.latex("formula", { tex: "a^2+2ab", fontSize: 0.5, position: [3, 1, 0.1] });
+    s.rectangle("focus", { ${frame}, fill: Color.NONE, stroke: Color.YELLOW, strokeWidth: 0.03 });
+    s.wait(1);
+  });`;
+  const results: string[] = [];
+  const runner = new CheckedRunner({ run: async task => {
+    for (const output of [scene("width: 2.1, height: 0.8, position: [3, 0.6, 0.15]"), scene("width: 2.1, height: 0.8, position: [3, 1, 0.15]")]) {
+      results.push(await task.validate!(output).then(() => "ok", error => (error as Error).message));
+    }
+    return "";
+  } });
+  await runner.run({ systemPrompt: visualization, prompt: `Generate this scene:\n${JSON.stringify({})}`, validate: async () => {} });
+  expect(results[0]).toContain("focus around formula: use position [3.0");
+  expect(results[1]).toBe("ok");
 });
 
 test("a lesson plan may not use yellow or gold as an entity colour", async () => {

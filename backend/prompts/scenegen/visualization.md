@@ -88,6 +88,12 @@ Focus (strict; the viewer must always know where to look):
   `ab` is 0.46 x 0.35, `a^2+2ab` is 1.8 x 0.5, `(a+b)^2` is 1.6 x 0.57.
   To frame one term of a longer formula, make that term its own `s.latex` element,
   so its position and size are known.
+- Frames are checked against the text's real rendered bounds (animlib's bounds
+  query, which a scene cannot call itself). The numbers above are your first
+  estimate; when validation answers with "use position [...], width ..., height
+  ..." for a frame, those are measured values: copy them exactly instead of
+  adjusting by eye. The same measured bounds decide whether anything overlaps, is
+  cut off at the edge, or has a line running through it.
 - FOCUS PULSE, for 3D objects and for lines and arrows: the object smoothly grows to
   1.15 times its size and returns, about 1.2 s in total (`obj.scaleTo(1.15)` for
   0.6 s, then `obj.scaleTo(1)` for 0.6 s). For a line or arrow, thicken it instead:
@@ -348,14 +354,14 @@ Layout (keep it identical in every scene):
   size: a 2x2 matrix at fontSize 0.46 is about 1.1 units tall and 2.6 wide, a single
   line about 0.5 tall. Stack with a clear gap of at least half a line: matrices at
   least 1.5 units apart centre to centre, single lines at least 0.8.
-- Everything stays inside the frame (strict, checked). The window can be as narrow
-  as 1.2 times its height, so with the usual camera height 8 the SAFE AREA is x from
-  -4.5 to 4.5 and y from -3.6 to 3.6: every label, formula, arrow, marker and
-  diagram part stays inside it at every moment. The diagram goes in x from -4.5 to
-  1.3; the formula column is x from 1.7 to 4.5, centred on x = 3.1 and at most 2.8
-  wide, so pick the fontSize from the formula's width (a formula 6 f wide needs
-  f <= 0.46) or break a long formula into two lines. Size a diagram to fit: scale
-  the whole thing down before letting any part reach the edge.
+- Everything stays inside the frame (strict, checked against the rendered bounds).
+  The scene is always shown as a 16:9 picture, so with the usual camera height 8
+  the SAFE AREA is x from -6.7 to 6.7 and y from -3.6 to 3.6: every label, formula,
+  arrow, marker and diagram part stays inside it at every moment. The diagram goes
+  in x from -6.7 to 2.2; the formula column is x from 2.6 to 6.7, centred on
+  x = 4.6 and at most 4 wide, so pick the fontSize from the formula's width (a
+  formula 8 f wide needs f <= 0.5) or break a long formula into two lines. Size a
+  diagram to fit: scale the whole thing down before letting any part reach the edge.
 - Lines and arrows never run through text (strict, checked). An arrow starts and
   ends about 0.15 clear of the label or number it points from or to, and no line,
   arrow or stem passes through any label, number or formula. Put a label BESIDE its
