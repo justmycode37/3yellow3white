@@ -1,9 +1,11 @@
 import type { VideoMode } from '../../../shared/video/contract'
+import type { CourseLessonRef } from './subjectPlans'
 export type { VideoMode } from '../../../shared/video/contract'
 
 export type Subject = string
 export type Artwork = 'molecule' | 'orbitals' | 'reaction' | 'vectors' | 'matrix' | 'eigen' | 'idea'
 export interface Lesson {
+  courseLesson?: CourseLessonRef
   generationStatus?: 'queued' | 'generating' | 'complete' | 'failed'
   id: string
   title: string

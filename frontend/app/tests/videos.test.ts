@@ -12,7 +12,8 @@ const manifest = (id = 'video-1'): VideoManifest => ({
 test('server refresh preserves curriculum context and updates measured duration', () => {
   const video = manifest()
   const previous = { ...videoLesson(video), videoMode: 'interactive' as const, subject: 'Analysis', subtitle: 'Sequences', color: 'blue', duration: 0,
-    artwork: 'idea' as const, source: { name: 'Lecture.pdf', chapter: 'Sequences', text: 'The original course material.' } }
+    artwork: 'idea' as const, source: { name: 'Lecture.pdf', chapter: 'Sequences', text: 'The original course material.' },
+    courseLesson: { subjectId: 'analysis', materialId: 'material-1', chapterId: 'chapter-1', lessonId: 'lesson-1' } }
   const [updated] = mergeVideoLessons([video], [previous])
   assert.equal(updated.videoId, video.id)
   assert.equal(updated.duration, 6)
@@ -21,6 +22,7 @@ test('server refresh preserves curriculum context and updates measured duration'
   assert.equal(updated.artwork, 'idea')
   assert.equal(updated.videoMode, 'interactive')
   assert.deepEqual(updated.source, previous.source)
+  assert.deepEqual(updated.courseLesson, previous.courseLesson)
 })
 
 test('a list response does not erase a just-created job or older local previews', () => {

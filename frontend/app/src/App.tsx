@@ -8,8 +8,8 @@ import CoursesPage from './CoursesPage'
 import WorkspacePage from './WorkspacePage'
 import type { SubjectColor } from './curriculum'
 import { addCourse, coursesKey, courseForSubject, loadCourses, loadRecentPlayback, deleteCourse, overviewLessons, recentPlaybackKey, recordPlayback } from './courses'
-import { appendSubjectMaterials, loadSubjectPlans, subjectPlansKey } from './subjectPlans'
-import type { TopicVideoRequest } from './subjectPlans'
+import { addSubjectTopic, appendSubjectMaterials, deleteSubjectLesson, deleteSubjectTopic, loadSubjectPlans, removeGeneratedCourseLessons, subjectPlansKey } from './subjectPlans'
+import type { CourseLessonRef, SubjectPlans, TopicParent, TopicVideoRequest } from './subjectPlans'
 import type { StudyPlan } from './plan'
 import { lessons, formatTime, artworkForTitle } from './data'
 import type { Lesson } from './data'
@@ -64,6 +64,8 @@ export default function App() {
   const [subjectPlans, setSubjectPlans] = useState(() => loadSubjectPlans(localStorage, courses))
   const [planStorageNote, setPlanStorageNote] = useState('')
   const allLessons = useMemo(() => [...customLessons.map(lesson => ({ ...lesson, artwork: artworkForTitle(lesson.title, lesson.artwork) })), ...lessons], [customLessons])
+  const pendingCourseLessons = customLessons.flatMap(lesson => lesson.courseLesson && (lesson.generationStatus === 'queued' || lesson.generationStatus === 'generating') ? [lesson.courseLesson] : [])
+  const hasPendingCourseVideos = pendingCourseLessons.length > 0
   useEffect(() => {
     let active = true
     let refreshing = false
@@ -79,10 +81,10 @@ export default function App() {
       finally { refreshing = false }
     }
     void refresh()
-    const interval = path === '/library' ? setInterval(() => { void refresh() }, 3000) : undefined
+    const interval = path === '/library' || hasPendingCourseVideos ? setInterval(() => { void refresh() }, 3000) : undefined
     window.addEventListener('focus', refresh)
     return () => { active = false; clearInterval(interval); window.removeEventListener('focus', refresh) }
-  }, [path])
+  }, [path, hasPendingCourseVideos])
   const selected = path.startsWith('/watch/') ? allLessons.find(l => l.id === decodeURIComponent(path.split('/')[2] || '')) : undefined
   const invalidLesson = path.startsWith('/watch/') && !selected
   const settings = path === '/settings'
@@ -147,12 +149,20 @@ export default function App() {
   }
   const goLibrary = () => navigate('/library')
 
-  const addPlanMaterial = (subjectId: string, plans: StudyPlan[]) => {
-    const next = appendSubjectMaterials(subjectPlans, subjectId, plans)
+  const saveSubjectPlans = useCallback((next: SubjectPlans) => {
     setSubjectPlans(next)
     try { localStorage.setItem(subjectPlansKey, JSON.stringify(next)); setPlanStorageNote('') }
     catch { setPlanStorageNote('Your course material is available for this session, but the browser could not save it. Keep this page open to retain your material.') }
-  }
+  }, [])
+  const addPlanMaterial = (subjectId: string, plans: StudyPlan[]) => saveSubjectPlans(appendSubjectMaterials(subjectPlans, subjectId, plans))
+  const createTopic = (subjectId: string, name: string, parent?: TopicParent) => saveSubjectPlans(addSubjectTopic(subjectPlans, subjectId, name, parent))
+  const removeTopic = (subjectId: string, materialId: string, chapterId: string) => saveSubjectPlans(deleteSubjectTopic(subjectPlans, subjectId, materialId, chapterId))
+  const createPlanLesson = (subjectId: string, parent: TopicParent, title: string) => saveSubjectPlans(addSubjectTopic(subjectPlans, subjectId, title, parent))
+  const removePlanLesson = (reference: CourseLessonRef) => saveSubjectPlans(deleteSubjectLesson(subjectPlans, reference))
+  useEffect(() => {
+    const next = removeGeneratedCourseLessons(subjectPlans, customLessons)
+    if (next !== subjectPlans) saveSubjectPlans(next)
+  }, [customLessons, subjectPlans, saveSubjectPlans])
   const makeTopicVideo = (request: TopicVideoRequest) => { setTopicRequest(request); navigate('/') }
   const goWorkspace = () => { setTopicRequest(null); navigate('/') }
   const createLesson = (lesson: Lesson) => {
@@ -190,7 +200,7 @@ export default function App() {
         <div className="header-start"><div className="menu-anchor"><button className={`icon-button menu-toggle ${menu ? 'is-open' : ''}`} aria-label="Open navigation" aria-expanded={menu} aria-controls="navigation-drawer" onClick={() => setMenu(!menu)}><MenuGlyph/></button>{menuContent}</div><button className="wordmark" onClick={goWorkspace}>Aha!</button></div>
         {!settings && !planning && !libraryPage && <button className="workspace-library-link" onClick={goLibrary}>Your library <ArrowUpRight size={15}/></button>}
       </header>
-      {settings ? <SettingsPage theme={theme} onTheme={setTheme}/> : planning ? <CoursesPage curriculum={courses} selectedId={path.split('/')[2]} onSelect={id => navigate(id ? `/courses/${id}` : '/courses', false)} plans={subjectPlans} onAddMaterial={addPlanMaterial} onMakeVideo={makeTopicVideo} onAddCourse={createCourse} onDeleteCourse={removeCourse} onNewVideo={goWorkspace} recent={overviewLessons(playHistory, allLessons, courses)} renderVideo={lesson => <VideoThumbnail lesson={lesson} color={lesson.color} onOpen={() => openLesson(lesson)}/>} storageNote={planStorageNote}/> : libraryPage ? <main className="library-page">
+      {settings ? <SettingsPage theme={theme} onTheme={setTheme}/> : planning ? <CoursesPage curriculum={courses} selectedId={path.split('/')[2]} onSelect={id => navigate(id ? `/courses/${id}` : '/courses', false)} plans={subjectPlans} onAddMaterial={addPlanMaterial} onAddTopic={createTopic} onDeleteTopic={removeTopic} onAddLesson={createPlanLesson} onDeleteLesson={removePlanLesson} pendingLessons={pendingCourseLessons} onMakeVideo={makeTopicVideo} onAddCourse={createCourse} onDeleteCourse={removeCourse} onNewVideo={goWorkspace} recent={overviewLessons(playHistory, allLessons, courses)} renderVideo={lesson => <VideoThumbnail lesson={lesson} color={lesson.color} onOpen={() => openLesson(lesson)}/>} storageNote={planStorageNote}/> : libraryPage ? <main className="library-page">
         <section className="library-section" id="library">
           <div className="section-heading">
             <h1>Library</h1>
