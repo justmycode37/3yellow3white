@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent, ReactNode } from 'react'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Atom, BookOpen, Bookmark, Check, ChevronDown, FileImage, FileText, FolderOpen, ListTree, MenuGlyph, Plus, Search, SlidersHorizontal, Upload, X } from './Icons'
+import { ArrowRight, ArrowUpRight, Atom, BookOpen, Bookmark, Check, ChevronDown, FileImage, FileText, FolderOpen, ListTree, MenuGlyph, Plus, Search, SlidersHorizontal, Upload, X } from './Icons'
 import Artwork, { Spark } from './Artwork'
 import NavigationDrawer from './NavigationDrawer'
 import SettingsPage from './SettingsPage'
@@ -8,6 +8,7 @@ import PlanPage from './PlanPage'
 import LessonPlayer from './LessonPlayer'
 import { lessons, formatTime, artworkForTitle } from './data'
 import type { Lesson, Subject } from './data'
+import { listVideos, requestVideo, videoLesson } from './videos'
 
 function readLocal<T,>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback } catch { return fallback }
@@ -73,6 +74,13 @@ export default function App() {
   const [customLessons, setCustomLessons] = useState<Lesson[]>(() => readLocal('aha-lessons', []))
   const [toast, setToast] = useState('')
   const allLessons = useMemo(() => [...customLessons.map(lesson => ({ ...lesson, artwork: artworkForTitle(lesson.title, lesson.artwork) })), ...lessons], [customLessons])
+  useEffect(() => {
+    let active = true
+    void listVideos().then(videos => {
+      if (active) setCustomLessons(old => [...videos.map(videoLesson), ...old.filter(lesson => !lesson.videoId)])
+    }).catch(() => { if (active) setToast('Could not refresh your saved videos.') })
+    return () => { active = false }
+  }, [])
   const continuingLesson = lessons[1]
   const selected = path.startsWith('/watch/') ? allLessons.find(l => l.id === decodeURIComponent(path.split('/')[2] || '')) : undefined
   const invalidLesson = path.startsWith('/watch/') && !selected
@@ -153,7 +161,7 @@ export default function App() {
       </main>}
       <footer><span className="footer-logo">Aha!</span></footer>
     </div>}
-    {studio && <Studio initialTab={studio} initialFiles={droppedFiles} onClose={() => { setStudio(null); setDroppedFiles([]) }} onCreate={lesson => { setCustomLessons(old => [lesson, ...old]); setStudio(null); setDroppedFiles([]); setFilter('All subjects'); setSavedOnly(false); setQuery(''); navigate('/'); setTab('library'); setToast('Your video is ready.'); setTimeout(() => document.getElementById('library')?.scrollIntoView({ behavior: 'smooth' }), 120) }}/>}
+    {studio && <Studio initialTab={studio} initialFiles={droppedFiles} onClose={() => { setStudio(null); setDroppedFiles([]) }} onCreate={lesson => { setCustomLessons(old => [lesson, ...old]); setStudio(null); setDroppedFiles([]); setFilter('All subjects'); setSavedOnly(false); setQuery(''); navigate(`/watch/${lesson.id}`); setTab('library'); setToast('Your video is being prepared.'); setTimeout(() => document.getElementById('library')?.scrollIntoView({ behavior: 'smooth' }), 120) }}/>}
     {toast && <div className="toast" role="status"><span><Check size={16}/></span>{toast}</div>}
   </>
 }
@@ -163,7 +171,6 @@ function Studio({ initialTab, initialFiles, onClose, onCreate }: { initialTab: '
   const [files, setFiles] = useState<File[]>([])
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
-  const subject: Subject = 'My ideas'
   const [dragging, setDragging] = useState(false)
   const [stage, setStage] = useState(-1)
   const [error, setError] = useState('')
@@ -185,18 +192,28 @@ function Studio({ initialTab, initialFiles, onClose, onCreate }: { initialTab: '
     const url = URL.createObjectURL(first); setPreview(url); return () => URL.revokeObjectURL(url)
   }, [files])
   useEffect(() => { if (initialFiles.length) addFiles(initialFiles) }, [])
-  useEffect(() => {
-    if (stage < 0) return
-    const timer = setTimeout(() => {
-      if (stage < 2) setStage(stage + 1)
-      else onCreate({ id: `idea-${Date.now()}`, title: title.trim() || text.trim().split('\n')[0].slice(0, 70) || 'My next aha! moment', subtitle: '', subject, duration: 120, artwork: 'molecule', color: 'sage', demo: true })
-    }, 1100)
-    return () => clearTimeout(timer)
-  }, [stage])
+  const requestKey = useRef(crypto.randomUUID())
+  const requestBody = useRef('')
+  const create = async () => {
+    setStage(0); setError('')
+    try {
+      const documents = []
+      const { readPlanDocument } = await import('./documentReader')
+      for (const file of files) {
+        const document = await readPlanDocument(file, () => {})
+        documents.push({ name: document.name, text: document.lines.map(line => line.text).join('\n') })
+      }
+      const body = { title: title.trim() || text.trim().split('\n')[0].slice(0, 70) || 'My next aha! moment', topic: text, documents }
+      const serialized = JSON.stringify(body)
+      if (serialized !== requestBody.current) { requestBody.current = serialized; requestKey.current = crypto.randomUUID() }
+      setStage(1)
+      onCreate(videoLesson(await requestVideo(body, requestKey.current)))
+    } catch (error) { setError(error instanceof Error ? error.message : String(error)); setStage(-1) }
+  }
   const dropped = (e: DragEvent) => { e.preventDefault(); setDragging(false); addFiles(Array.from(e.dataTransfer.files)) }
   const fileChanged = (e: ChangeEvent<HTMLInputElement>) => { addFiles(Array.from(e.target.files || [])); e.target.value = '' }
   return <Modal onClose={stableClose} label="Create a new explanation" className="studio-modal"><div className="studio-header"><div className="studio-symbol butter"><Spark/></div><IconButton label="Close studio" onClick={stableClose}><X size={21}/></IconButton></div>
-    {stage >= 0 ? <div className="creation-state"><div className="creation-orbit"><Artwork kind="orbitals" animated/></div><div className="eyebrow">A LITTLE PREVIEW OF WHAT’S TO COME</div><h2>Making room<br/>for understanding.</h2><div className="creation-steps">{['Gathering your ideas', 'Finding the bigger picture', 'Setting the scene'].map((label, i) => <div className={i <= stage ? 'done' : ''} key={label}><span>{i < stage ? <Check size={13}/> : i + 1}</span>{label}</div>)}</div><p className="demo-disclaimer">This demo uses a sample lesson.<br/>Your files stay on this device.</p><button className="text-link" onClick={() => setStage(-1)}>Back to your idea <ArrowLeft size={15}/></button></div>
+    {stage >= 0 ? <div className="creation-state"><div className="creation-orbit"><Artwork kind="orbitals" animated/></div><div className="eyebrow">A LITTLE PREVIEW OF WHAT’S TO COME</div><h2>Making room<br/>for understanding.</h2><div className="creation-steps">{['Gathering your ideas', 'Finding the bigger picture', 'Setting the scene'].map((label, i) => <div className={i <= stage ? 'done' : ''} key={label}><span>{i < stage ? <Check size={13}/> : i + 1}</span>{label}</div>)}</div><p className="demo-disclaimer">Preparing an interactive sample.<br/>Generation continues after you leave.</p></div>
     : <><div className="studio-intro"><h2>New video</h2></div><div className="studio-tabs"><button className={tab === 'files' ? 'active' : ''} onClick={() => setTab('files')}><Upload size={16}/> Files</button><button className={tab === 'text' ? 'active' : ''} onClick={() => setTab('text')}><FileText size={16}/> Text</button></div>
       <input ref={picker} type="file" multiple onChange={fileChanged} hidden aria-label="Choose source files"/>
       {tab === 'files' ? <><div className={`dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={dropped}><button className="dropzone-target" onClick={() => picker.current?.click()}>{preview ? <img className="upload-preview" src={preview} alt="Your uploaded source"/> : <span className="upload-icon"><Upload size={25}/></span>}<strong>{files.length ? 'Add another file' : 'Drop files here'}</strong><span className="choose-file">{files.length ? 'Choose files' : 'Browse files'} <Plus size={14}/></span></button></div>{files.length > 0 && <div className="file-list">{files.map((file, i) => <div key={`${file.name}-${i}`}><span className="file-icon">{file.type.startsWith('image/') ? <FileImage size={19}/> : <FileText size={19}/>}</span><div><strong>{file.name}</strong><small>{file.size < 1024 * 1024 ? `${Math.max(1, Math.round(file.size / 1024))} KB` : `${(file.size / 1024 / 1024).toFixed(1)} MB`}</small></div><button aria-label={`Remove ${file.name}`} onClick={() => setFiles(old => old.filter((_, index) => index !== i))}><X size={15}/></button></div>)}</div>}</>
@@ -204,7 +221,7 @@ function Studio({ initialTab, initialFiles, onClose, onCreate }: { initialTab: '
       {error && <p className="file-error" role="alert">{error}</p>}
       {tab === 'files' && text.trim() && <button className="attached-thought" onClick={() => setTab('text')}><FileText size={15}/> Your written thought is included <Check size={14}/></button>}
       {tab === 'text' && files.length > 0 && <button className="attached-thought" onClick={() => setTab('files')}><FileText size={15}/> {files.length} source {files.length === 1 ? 'file' : 'files'} included <Check size={14}/></button>}
-      <div className="studio-footer"><div><span className="privacy-dot"/> Frontend demo · files stay on your device</div><button className="primary-button" disabled={!ready} onClick={() => setStage(0)}>Create a preview <ArrowRight size={17}/></button></div>
+      <div className="studio-footer"><div><span className="privacy-dot"/> Source text is sent to the server · sample generation</div><button className="primary-button" disabled={!ready} onClick={() => { void create() }}>Create a preview <ArrowRight size={17}/></button></div>
     </>}
   </Modal>
 }

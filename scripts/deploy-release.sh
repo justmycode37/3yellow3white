@@ -10,7 +10,7 @@ mode=${3:-deploy}
 [[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || { echo 'This release requires Linux x86_64' >&2; exit 1; }
 base=/srv/apps/3yellow3white-actions
 unit=/etc/systemd/system/3yellow3white.service
-mkdir -p "$base/releases"
+mkdir -p "$base/releases" "$base/data"
 exec 9>"$base/deploy.lock"
 flock -w 120 9
 release=$(mktemp -d "$base/releases/$revision.XXXXXX")
@@ -54,6 +54,7 @@ Environment=NODE_ENV=production
 Environment=HOST=0.0.0.0
 Environment=PORT=8080
 Environment=APP_REVISION=$revision
+Environment=VIDEO_DB_PATH=$base/data/videos.sqlite
 EnvironmentFile=-/srv/apps/3yellow3white/.env
 EnvironmentFile=-/etc/3yellow3white/environment
 ExecStart=$release/bin/bun backend/src/index.ts

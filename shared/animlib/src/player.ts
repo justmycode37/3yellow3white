@@ -3,7 +3,7 @@ import { ControlOverlay } from "./controls.js";
 import { CanvasRenderer } from "./renderer.js";
 import { SceneSequence } from "./sequence.js";
 import { paletteResolver } from "./palette.js";
-import type { ColorPalette, CompiledScene, ControlValue, PlayerOptions, PlayerState, Submission, SubmitResult } from "./types.js";
+import type { Asset, ColorPalette, CompiledScene, ControlValue, PlayerOptions, PlayerState, Submission, SubmitResult } from "./types.js";
 
 export class Player {
   private readonly renderer: CanvasRenderer;
@@ -120,6 +120,11 @@ export class Player {
       const oldCompiled = this.sequence.compiled.slice();
       const result = await this.sequence.submit(change);
       if (!result.ok || this.disposed) return result;
+      // Appending preloaded scenes must not interrupt the active audio clock.
+      if (change.type === 'insert' && oldSources.length > 0 && change.after === oldSources.at(-1)?.id) {
+        this.notify();
+        return result;
+      }
       const activeId = this.sceneId;
       const oldIndex = oldSources.findIndex(scene => scene.id === activeId);
       const affected = change.type === "load"
@@ -252,6 +257,9 @@ export class Player {
   }
 
   setMuted(muted: boolean): void { this.assertAlive(); this.audio.setMuted(muted); }
+
+  registerAssets(assets: Record<string, Asset>): void { this.assertAlive(); this.audio.register(assets); }
+  unlockAudio(): Promise<void> { this.assertAlive(); return this.audio.unlock(); }
 
   getState(): PlayerState {
     const scene = this.currentScene();

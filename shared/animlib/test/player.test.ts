@@ -223,6 +223,40 @@ describe("player navigation and live source updates", () => {
     player.dispose();
   });
 
+  it('appends without pausing the active clock and preserves interactive predecessor state', async () => {
+    const player = createPlayer({ canvas: {} as HTMLCanvasElement });
+    await player.submit({ type: 'load', scenes: [{ id: 'a', source: first }] });
+    await player.setControl({ scene: 'a', id: 'scale', value: 2 });
+    await player.play();
+    advance(1);
+    const pause = vi.spyOn(player, 'pause');
+    const play = vi.spyOn(player, 'play');
+    await player.submit({ type: 'insert', after: 'a', scenes: [{ id: 'b', source: second }] });
+    expect(player.getState()).toMatchObject({ scene: 'a', time: 1, status: 'playing' });
+    expect(player.getState().controls[0].value).toBe(2);
+    expect(pause).not.toHaveBeenCalled(); expect(play).not.toHaveBeenCalled();
+    advance(0.5);
+    expect(player.getState().time).toBe(1.5);
+    player.dispose();
+  });
+
+  it('prepares only appended scenes, then reconstructs dependent scenes after a control change', async () => {
+    const prepare = vi.fn(async (_scenes: CompiledScene[]) => {});
+    const sequence = new SceneSequence({ prepare });
+    await sequence.submit({ type: 'load', scenes: [{ id: 'a', source: first }] });
+    const original = sequence.compiled[0];
+    await sequence.setControl('a', 'scale', 2);
+    const interactive = sequence.compiled[0];
+    await sequence.submit({ type: 'insert', after: 'a', scenes: [{ id: 'b', source: second }] });
+    expect(sequence.compiled[0]).toBe(interactive);
+    expect(prepare.mock.calls.at(-1)![0]).toHaveLength(1);
+    await sequence.setControl('a', 'scale', 3);
+    expect(prepare.mock.calls.at(-1)![0]).toHaveLength(2);
+    expect(sequence.compiled[0]).not.toBe(original);
+    expect(sequence.frame(1, 0).elements.find(element => element.id === 'dot')?.geometry.radius).toBe(3);
+    sequence.dispose();
+  });
+
   it("clears rendered output on empty load, and cancels frames/resources on disposal", async () => {
     const disposeSequence = vi.spyOn(SceneSequence.prototype, "dispose");
     const player = createPlayer({ canvas: {} as HTMLCanvasElement });

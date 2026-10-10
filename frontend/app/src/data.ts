@@ -10,6 +10,7 @@ export interface Lesson {
   color: string
   progress?: number
   demo?: boolean
+  videoId?: string
 }
 
 export const lessons: Lesson[] = [
