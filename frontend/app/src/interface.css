@@ -32,7 +32,8 @@
 }
 
 html, body, #root { min-height: 100%; background: var(--bg); transition: background-color .35s ease, color .35s ease; }
-:root[data-theme=dark] .player-page { background: #000; --art-bg: #000; }
+:root .player-page { --player-bg: #fff; --player-ink: #000; --art-bg: var(--player-bg); background: var(--player-bg); color: var(--player-ink); }
+:root[data-theme=dark] .player-page { --player-bg: #000; --player-ink: #fff; }
 
 .app-shell { max-width: 1220px; padding: 0 40px; }
 .settings-shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
@@ -82,6 +83,9 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .drawer-icon { display: grid; place-items: center; width: 43px; height: 43px; flex-shrink: 0; border-radius: 15px; }
 .drawer-links > button > svg:last-child, .drawer-settings > svg:last-child { margin-left: auto; color: var(--muted); }
 .drawer-bottom { margin-top: auto; padding-top: 24px; flex-shrink: 0; }
+.drawer-theme { display: flex; gap: 6px; margin-bottom: 14px; padding: 5px; border: 1px solid var(--line); border-radius: 18px; }
+.drawer-theme > button { display: flex; flex: 1; align-items: center; justify-content: center; gap: 9px; min-height: 44px; border-radius: 13px; font-size: 14px; color: var(--muted); }
+.drawer-theme > button:hover, .drawer-theme > button[aria-pressed=true] { background: var(--soft); color: var(--ink); }
 .drawer-settings { display: flex; align-items: center; gap: 15px; min-height: 63px; width: 100%; padding: 18px 20px; border: 1px solid var(--line); border-radius: 22px; font-size: 15px; text-align: left; background: var(--soft); }
 .drawer-settings:hover, .drawer-settings.active { background: var(--lavender); color: var(--card-ink); }
 .drawer-settings.active > svg:last-child { color: inherit; }
@@ -118,7 +122,7 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .thought-input textarea { border-radius: 24px; }
 
 /* The lesson canvas keeps only the subject, title, illustration, and playback. */
-.player-menu-anchor { top: 28px; left: 28px; }
+.player-menu-anchor { top: 28px; left: 28px; z-index: 20; }
 .player-menu-toggle { background: transparent; color: var(--ink); }
 .lesson-stage { padding: 100px 0 130px; }
 .lesson-text h1 { font-family: DynaPuff, sans-serif; font-size: clamp(42px, 5vw, 72px); font-weight: 600; letter-spacing: -2px; line-height: 1.15; }
@@ -134,6 +138,13 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .player-timeline .progress-wrap { height: 36px; }
 .player-timeline .progress-track { top: 50%; height: 8px; transform: translateY(-50%); }
 .player-timeline .progress-meta { margin-top: 4px; }
+.player-page .player-menu-toggle, .player-page .player-controls, .player-page .paused-indicator { background: transparent; color: var(--player-ink); border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; }
+.player-page .player-controls { padding: 0; }
+.player-page .paused-indicator svg { color: inherit; width: 32px; height: 32px; }
+.player-page .progress-track { height: 8px; background: color-mix(in srgb, currentColor 22%, var(--player-bg)); overflow: hidden; }
+.player-page .progress-fill { background: currentColor; }
+.player-page .progress-thumb { display: none; }
+.player-page .progress-wrap:focus-within { outline-color: var(--player-ink); }
 
 @media (max-width: 1000px) {
   .app-shell { padding: 0 28px; }
@@ -205,17 +216,11 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .player-stage { position: absolute; inset: 0; isolation: isolate; }
 .lesson-canvas-host { position: absolute; inset: 0; }
 .lesson-canvas-host > .lesson-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
-.player-heading { position: absolute; z-index: 10; top: max(28px, env(safe-area-inset-top)); left: 90px; max-width: min(45vw, 560px); padding: 10px 16px; border-radius: 16px; background: var(--bg); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .25s; }
-.player-heading.show-controls, .player-page:focus-within .player-heading { opacity: .95; }
-.player-heading h1 { font-size: clamp(14px, 2vw, 20px); line-height: 1.35; margin: 0; font-weight: 500; }
-.player-heading p { font-size: 12px; line-height: 1.5; margin: 5px 0 0; }
-.player-page .player-menu-toggle { background: var(--bg); color: var(--ink); }
-.player-page .player-controls { padding: 12px 16px; border-radius: 20px; background: var(--bg); color: var(--ink); }
+.player-notice { position: absolute; z-index: 10; bottom: 104px; left: 24px; right: 24px; margin: 0; text-align: center; font-size: 12px; color: var(--player-ink); }
 .player-page .paused-indicator { z-index: 3; }
 .player-stage .player-status { border-radius: 0; z-index: 2; }
 @media (max-width: 650px) {
-  .player-heading { top: max(20px, env(safe-area-inset-top)); left: 76px; max-width: calc(100vw - 100px); padding: 8px 12px; }
-  .player-stage .animlib-controls { padding-top: 140px !important; }
+  .player-stage .animlib-controls { padding-top: 80px !important; }
 }
 .player-status { position: absolute; inset: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; background: var(--art-bg); border-radius: 24px; font-size: 14px; }
 .player-error p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }

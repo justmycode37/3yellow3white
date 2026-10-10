@@ -130,6 +130,8 @@ export default function App() {
   }
   const menuContent = <NavigationDrawer
     open={menu}
+    theme={theme}
+    onTheme={setTheme}
     current={settings ? 'settings' : planning ? 'plan' : selected ? 'lesson' : libraryPage ? 'library' : 'workspace'}
     onClose={() => setMenu(false)}
     onWorkspace={goWorkspace}

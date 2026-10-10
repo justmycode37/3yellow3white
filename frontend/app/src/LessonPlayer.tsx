@@ -6,8 +6,9 @@ import { formatTime } from './data'
 import { LessonPlayback } from './lessonPlayback'
 import type { LessonPlaybackState } from './lessonPlayback'
 import { lessonScenes } from './lessonScenes'
+import { lessonTheme } from './lessonTheme'
+import type { Player, ColorPalette } from 'animlib'
 import { watchVideo } from './videos'
-import type { VideoManifest } from '../../../shared/video/contract'
 
 const loadingState: LessonPlaybackState = { time: 0, duration: 0, playing: false, ended: false, ready: false, error: '' }
 const getLoadingState = () => loadingState
@@ -18,6 +19,9 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
 }) {
   const canvasHost = useRef<HTMLDivElement>(null)
   const screen = useRef<HTMLDivElement>(null)
+  const appearance = useRef(theme)
+  appearance.current = theme
+  const display = useRef<{ player: Player; palette: ColorPalette } | undefined>(undefined)
   const latestLesson = useRef(lesson)
   latestLesson.current = lesson
   const suspended = useRef(menuOpen || overlayOpen)
@@ -25,7 +29,6 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   const [playback, setPlayback] = useState<LessonPlayback>()
   const [startupError, setStartupError] = useState('')
   const [connection, setConnection] = useState('')
-  const [manifest, setManifest] = useState<VideoManifest>()
   const [attempt, setAttempt] = useState(0)
   const [controls, setControls] = useState(false)
   const [isFullscreen, setFullscreen] = useState(false)
@@ -33,7 +36,6 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
   const error = startupError || state.error
   const duration = state.duration || lesson.duration
   const progress = duration ? Math.min(1, state.time / duration) : 0
-  const isMath = /algebra|analysis|mathematik/i.test(lesson.subject)
   const enabled = state.ready && !error && !menuOpen && !overlayOpen
   const playbackRequested = state.playing || state.buffering && state.wantsPlay
 
@@ -48,7 +50,7 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     setPlayback(undefined)
     setStartupError('')
     // Load the renderer only when opening a lesson, keeping the workspace light.
-    void import('animlib').then(({ createPlayer, Color }) => {
+    void import('animlib').then(({ createPlayer, Color, THREE_BLUE_ONE_BROWN_PALETTE }) => {
       if (!active || !host || !screen.current) return
       // Own the canvas imperatively: renderer recovery can replace a context-locked surface.
       const canvas = document.createElement('canvas')
@@ -56,27 +58,34 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
       canvas.setAttribute('aria-label', `Animated preview: ${lesson.title}`)
       canvas.setAttribute('role', 'img')
       host.append(canvas)
-      controller = new LessonPlayback(createPlayer({ canvas, controlsRoot: host.parentElement! }), !lesson.videoId)
+      const player = createPlayer({ canvas, controlsRoot: host.parentElement! })
+      player.setDisplayPalette(lessonTheme(appearance.current, THREE_BLUE_ONE_BROWN_PALETTE))
+      display.current = { player, palette: THREE_BLUE_ONE_BROWN_PALETTE }
+      controller = new LessonPlayback(player, !lesson.videoId)
       void controller.setSuspended(suspended.current)
       setPlayback(controller)
       if (lesson.videoId) {
         const current = controller
         disconnect = watchVideo(lesson.videoId, manifest => {
-          setManifest(manifest)
           void current.acceptManifest(manifest)
         }, setConnection)
         return
       }
       void controller.load(lessonScenes(lesson, {
-        background: theme === 'dark' ? Color.BLACK : Color.WHITE,
-        ink: theme === 'dark' ? Color.WHITE : Color.GREY_E,
-        accent: theme === 'dark' ? Color.BLUE : Color.BLUE_E,
+        background: Color.BLACK,
+        ink: Color.WHITE,
+        accent: Color.BLUE,
       }), lesson.duration * (lesson.progress ?? 0))
     }).catch(error => {
       if (active) setStartupError(error instanceof Error ? error.message : String(error))
     })
-    return () => { active = false; disconnect?.(); controller?.dispose(); host?.replaceChildren() }
-  }, [lesson.id, lesson.videoId, theme, attempt])
+    return () => { active = false; disconnect?.(); display.current = undefined; controller?.dispose(); host?.replaceChildren() }
+  }, [lesson.id, lesson.videoId, attempt])
+
+  useEffect(() => {
+    const current = display.current
+    current?.player.setDisplayPalette(lessonTheme(theme, current.palette))
+  }, [theme])
 
   useEffect(() => { void playback?.setSuspended(menuOpen || overlayOpen) }, [playback, menuOpen, overlayOpen])
   useEffect(() => {
@@ -102,15 +111,9 @@ export default function LessonPlayer({ lesson, theme, menuOpen, onMenu, menuCont
     void action?.catch(() => {})
   }
 
-  return <div className={`player-page ${isMath ? 'blue' : lesson.color} ${state.playing ? 'is-playing' : ''}`} ref={screen} onMouseMove={() => setControls(true)} onMouseLeave={() => setControls(false)}>
+  return <div className={`player-page ${state.playing ? 'is-playing' : ''}`} ref={screen} onMouseMove={() => setControls(true)} onMouseLeave={() => setControls(false)}>
     <div className="player-menu-anchor"><button className={`icon-button player-menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-label="Open video menu and settings" aria-expanded={menuOpen} aria-controls="navigation-drawer" onClick={onMenu}><MenuGlyph/></button>{menuContent}</div>
-    <div className={`player-heading ${controls || !state.playing ? 'show-controls' : ''}`}>
-      <h1>{lesson.title}</h1>
-      {lesson.videoId && <p>{manifest?.provider === 'simulated' || (!manifest && lesson.demo) ? 'Interactive sample · test tone only' : 'Narrated visual explanation'}</p>}
-      {lesson.demo && !lesson.videoId && <p>Sample preview · video generation coming soon</p>}
-      {(connection || state.generationError) && <p role="status">{state.generationError || connection}</p>}
-      {manifest && state.generating && <p>Preparing more scenes. Your video is saved to your library.</p>}
-    </div>
+    {(connection || (state.ready && state.generationError)) && <p className="player-notice" role="status">{state.generationError || connection}</p>}
     <div className="player-stage">
       <div ref={canvasHost} className="lesson-canvas-host"/>
       {!state.ready && !error && <p className="player-status" role="status">{state.generationError || 'Loading your lesson…'}</p>}

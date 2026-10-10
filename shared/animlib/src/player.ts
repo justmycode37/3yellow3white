@@ -15,6 +15,7 @@ export class Player {
   private readonly audio: AudioClock;
   private readonly sequence: SceneSequence;
   private readonly palette: ColorPalette;
+  private displayPalette?: ColorPalette;
   private readonly overlay?: ControlOverlay;
   private readonly behaviors: BehaviorRuntime;
   private readonly input: CanvasInput;
@@ -83,6 +84,18 @@ export class Player {
   get canvas(): HTMLCanvasElement { return this.renderer.canvasElement; }
   get backend(): "webgpu" | "webgl2" | undefined { return this.renderer.backend; }
 
+  /** Recolor the current frame and background without recompiling scenes or restarting playback. */
+  setDisplayPalette(palette: ColorPalette): void {
+    this.assertAlive();
+    const resolved = paletteResolver(palette).palette;
+    for (const name of Object.keys(this.palette.colors)) {
+      if (!Object.hasOwn(resolved.colors, name)) throw new Error(`Display palette is missing Color.${name}`);
+    }
+    this.renderer.setPalette(resolved);
+    this.displayPalette = resolved;
+    this.invalidateFrame();
+  }
+
   getInteractionSnapshot(view = '') { this.assertAlive(); return this.renderer.interactionSnapshot(view); }
   getPan(view = ''): Vec3 { this.assertAlive(); return this.renderer.getPan(view); }
   setPan(value: Vec3, view = ''): void { this.assertAlive(); this.renderer.setPan(value, view); this.invalidateFrame(); }
@@ -142,15 +155,17 @@ export class Player {
       this.input.sync();
       this.renderer.syncInteraction(this.sceneId!, this.time, scene, frame);
       this.renderer.setOrbitEnabled(scene.options.orbit && frame.camera.perspective > 0 && !frame.cameraAnimated);
-      this.renderer.render(frame, scene.options);
+      this.renderer.render(frame, this.displayPalette ? { ...scene.options, background: this.displayPalette.background } : scene.options);
     } else {
       this.renderer.setOrbitEnabled(false);
       this.renderer.render({
         elements: [], cameraAnimated: false,
         camera: { yaw: 0, pitch: 0, target: [0, 0, 0], height: 8, distance: 10, perspective: 0 },
-      }, { mode: "2d", end: "hold", orbit: false, background: this.palette.background, palette: this.palette });
+      }, { mode: "2d", end: "hold", orbit: false, background: (this.displayPalette ?? this.palette).background, palette: this.palette });
     }
-    this.overlay?.update(this.sceneId ?? "", scene?.controls ?? [], scene ? paletteResolver(this.palette).resolve(scene.options.background) : undefined);
+    this.overlay?.update(this.sceneId ?? "", scene?.controls ?? [], this.displayPalette
+      ? paletteResolver(this.displayPalette).resolve(this.displayPalette.background)
+      : scene ? paletteResolver(this.palette).resolve(scene.options.background) : undefined);
     this.notify();
     this.scheduleFrame();
   }

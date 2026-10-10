@@ -80,6 +80,7 @@ export class CanvasRenderer {
   private originalCanvas:HTMLCanvasElement;
   get backend():'webgpu'|'webgl2'|undefined {return this.gl?'webgl2':this.ready?'webgpu':undefined;}
   get canvasElement():HTMLCanvasElement {return this.canvas;}
+  setPalette(palette:ColorPalette):void {this.hostPalette=paletteResolver(palette).palette;}
   onOrbitChange:(()=>void)|undefined;
   onInvalidate:(()=>void)|undefined;
   onError:((error:Error)=>void)|undefined;

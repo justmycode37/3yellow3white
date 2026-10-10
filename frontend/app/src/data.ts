@@ -1,3 +1,6 @@
+import type { VideoMode } from '../../../shared/video/contract'
+export type { VideoMode } from '../../../shared/video/contract'
+
 export type Subject = string
 export type Artwork = 'molecule' | 'orbitals' | 'reaction' | 'vectors' | 'matrix' | 'eigen' | 'idea'
 export interface Lesson {
@@ -11,6 +14,7 @@ export interface Lesson {
   color: string
   progress?: number
   demo?: boolean
+  videoMode?: VideoMode
   source?: { text: string; chapter: string; name: string }
   videoId?: string
 }
