@@ -36,6 +36,10 @@ or explicitly set `VIDEO_GENERATOR=simulated` for scenes with a test tone. See [
 
 ## Run the combined app
 
+Visitor sign-in is provided by the VIScon reverse proxy using `X-User-Id` and
+`X-User-Name`. Aha displays that identity without a separate login. See
+[proxy identity, local development, and deployment requirements](docs/authentication.md).
+
 ```sh
 npm ci
 npm run backend:dev
@@ -73,26 +77,33 @@ and agent-state bind mounts. Candidate images are tested before replacing produc
 restores the previous container or legacy systemd service. See
 [deployment setup, container commands, and recovery](docs/deployment.md).
 
-The Plan page can organize extracted course text into AI-suggested topics with
-learning goals, visual ideas, prerequisites, condensed source notes, and suggested
-source references. Review and edit topic titles and learning goals before saving;
-the original material is retained for comparison. Notes and references are
-model-authored, not verified quotations. The same Pi login used for video generation
-powers `POST /api/study-plans`; narration credentials are not needed for planning.
-Requests accept up to 200,000 source characters, run for at most three minutes, and
-are limited to two concurrent plans per server. Saved plans remain in browser
-storage. Turn off “Organize topics with AI” to use the local document-outline method;
-this is also available when AI planning fails or the server runs in simulated mode.
+The Courses page stages files and pasted notes until the top-right **Add** button is
+clicked. Selected files remain visible and removable in the drop area, and both
+input tabs preserve their contents. Add always sends the combined material to AI,
+then saves topics containing individual 2–5 minute video lessons. Switching courses
+closes the previous panel; clicking the selected course closes it.
 
-Original scenegen prompts from PR #36 are preserved verbatim in
-`backend/prompts/scenegen/`, with source paths, commit, and SHA-256 checksums in
-`provenance.json`. The planning and visualization Markdown files are byte-for-byte
-copies; `topics-system.md` and `topics-format.md` contain the exact Python `SYSTEM`
-and `FORMAT` string values from `scenegen/distill.py`. Only the original
-`{max_topics}` substitution (default 8) and source-material insertion happen at
-runtime. `topicLessonText` uses the original `topic_notes` wording. The app adapts
-the original topic response to its chapter UI outside the prompt, using one chapter
-and a four-minute estimate. Existing saved plans remain readable.
+`POST /api/study-plans` accepts multipart files plus notes, or the existing JSON
+text-document request. It reads PDF (including scans), DOCX, PPTX, XLSX,
+OpenDocument, images, and UTF-8 text such as Markdown, CSV, code, and subtitles.
+Audio/video recordings use ElevenLabs Scribe transcription with the server's
+`ELEVENLABS_API_KEY`. Unsupported binary formats return an actionable error.
+Uploads allow 10 files, 50 MB each, 100 MB total, and up to 200,000 extracted
+characters. PDFs allow 500 pages, including up to 20 scanned pages per file.
+
+Classification uses the existing Pi login, defaulting to `gpt-6.1-sol`; set
+`STUDY_PLAN_MODEL=gpt-6-astra` to use Astra. Planning runs for at most three minutes
+with two concurrent requests per server. AI is required; missing credentials,
+processing errors, and cancellation leave the staged files and notes available to
+retry. The local preview needs `npm run agents:login` before real inference.
+Saved plans and source names remain in browser storage; raw files remain in memory
+only until submission or navigation. Condensed notes and references are
+model-authored, and the extracted original material is retained in the saved plan.
+
+Original scenegen prompt files in `backend/prompts/scenegen/` remain byte-for-byte
+intact, with source hashes in `provenance.json`. The course planner appends grouping
+and duration requirements, allows up to 40 lessons, and validates their topic
+groups, order, and 2–5 minute estimates. Existing saved plans remain readable.
 
 The full original visualization/planning rules are active, including 3D by default,
 interaction targets, fixed layout, and pacing. Existing host contracts still govern

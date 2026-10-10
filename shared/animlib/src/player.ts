@@ -32,6 +32,7 @@ export class Player {
   private playbackGeneration = 0;
   private disposed = false;
   private operations: Promise<unknown> = Promise.resolve();
+  private pendingControls = new Map<string, { change: { scene: string; id: string; value: ControlValue }; promise: Promise<void> }>();
 
   constructor(options: PlayerOptions) {
     const palette = paletteResolver(options.palette).palette;
@@ -179,6 +180,7 @@ export class Player {
   }
 
   submit(change: Submission): Promise<SubmitResult> {
+    this.pendingControls.clear(); // Source edits are ordering barriers for input coalescing.
     return this.enqueue(async () => {
       const oldSources = this.sequence.sources.slice();
       const oldCompiled = this.sequence.compiled.slice();
@@ -287,6 +289,7 @@ export class Player {
 
   async seek(position: { scene: string; time: number }): Promise<void> {
     this.assertAlive();
+    this.pendingControls.clear();
     if (!Number.isFinite(position.time)) throw new Error("Seek time must be finite");
     const index = this.sequence.index(position.scene);
     this.stopClock();
@@ -311,10 +314,27 @@ export class Player {
   }
 
   setControl(change: { scene: string; id: string; value: ControlValue }): Promise<void> {
-    return this.enqueue(async () => {
+    if (this.disposed) return Promise.reject(new Error('Player is disposed'));
+    const index = this.sequence.sources.findIndex(s => s.id === change.scene);
+    const reactive = this.sequence.compiled[index]?.controls.some(c => c.id === change.id && c.reactive);
+    // A builder input can change control bounds, dependencies, or even which
+    // controls exist. Never coalesce a later value across that reconstruction.
+    if (!reactive) this.pendingControls.clear();
+    const key = JSON.stringify([change.scene, change.id]);
+    const pending = this.pendingControls.get(key);
+    if (pending) { pending.change = { ...change }; return pending.promise; }
+    const batch = { change: { ...change }, promise: undefined as unknown as Promise<void> };
+    batch.promise = this.enqueue(async () => {
+      if (this.pendingControls.get(key) === batch) this.pendingControls.delete(key);
+      const change = batch.change;
       const oldScenes = new Map<string, CompiledScene>(this.sequence.sources.map((scene, index) => [scene.id, this.sequence.compiled[index]]));
       await this.sequence.setControl(change.scene, change.id, change.value);
       if (this.disposed) return;
+      if (this.currentScene() === oldScenes.get(this.sceneId ?? '')) {
+        // Reactive patches retain timeline and live behavior state; audio keeps running.
+        this.time = this.clockTime(); this.error = undefined; this.refresh();
+        return;
+      }
       const wasPlaying = this.status === "playing";
       this.stopClock(this.clockTime(oldScenes.get(this.sceneId ?? "")));
       this.input.cancel(); this.behaviors.reset();
@@ -325,6 +345,8 @@ export class Player {
       if (wasPlaying && this.time < (this.currentScene()?.duration ?? 0)) await this.play().catch(() => {});
       else if (wasPlaying) { this.status = "ended"; this.refresh(); }
     });
+    if (reactive) this.pendingControls.set(key, batch);
+    return batch.promise;
   }
 
   setMuted(muted: boolean): void { this.assertAlive(); this.audio.setMuted(muted); }
@@ -362,6 +384,7 @@ export class Player {
     if (this.disposed) return;
     this.stopClock();
     this.disposed = true;
+    this.pendingControls.clear();
     this.listeners.clear();
     this.input.dispose(); this.behaviors.reset();
     this.overlay?.dispose();

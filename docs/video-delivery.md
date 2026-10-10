@@ -117,7 +117,7 @@ and audio. Restoration rebuilds GPU resources, redraws, and permits explicit res
 
 `npm test` includes forced fallback/lifetime tests; these do not establish visual
 correctness. To run automated real-browser rendering checks, start
-`npm run dev -- --port 5178 --strictPort`, open
+`npm --workspace animlib run dev -- --port 5178 --strictPort`, open
 `http://localhost:5178/webgl-test.html`, and click **Run browser tests**.
 The page forces WebGPU unavailable locally, compiles real GLSL, reads actual pixels,
 and reports every assertion. Automation can await `window.webglTests` and inspect
@@ -128,3 +128,21 @@ synchronization, context replacement, restoration and disposal.
 The separate `npm --workspace animlib run test:gpu` suite checks real native WebGPU.
 WebGL antialiasing depends on the browser/context; edge pixels can differ between
 backends. This does not change authored colors or scene/timeline semantics.
+
+## Generation token usage
+
+`VideoManifest.tokenUsage` is optional for compatibility with existing and simulated
+jobs. `inputTokens`, `outputTokens`, and `totalTokens` are cumulative provider-reported
+model usage. Cached input is included once. `estimatedOutputTokens` separately tracks
+unconfirmed output observed in streamed text, reasoning, and tool-call deltas using
+roughly four characters per token. The UI displays their sum as a number in the
+DynaPuff title font with a small “tokens” label below. The title tooltip and accessible
+label identify estimates while they remain; confirmation may adjust the number downward.
+Hidden reasoning and input usage become visible when reported by the provider.
+
+Pi generation uses one request-scoped tracker for planning, review, scene, and thumbnail
+calls, including retries. Estimates publish at most four times per second; confirmed
+responses publish immediately. Totals are stored in SQLite and sent in authoritative
+SSE snapshots, including the final success/failure snapshot. Reconnects do not add totals
+again. Interrupted responses retain their unconfirmed estimate when usage is unavailable.
+Speech synthesis is excluded because it does not report model token usage.

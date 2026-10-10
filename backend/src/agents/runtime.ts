@@ -1,3 +1,4 @@
+import { createAgentUsageObserver } from '../token-usage.js';
 import { createAgentSession, DefaultResourceLoader, defineTool, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { AssistantMessage, ImageContent } from "@earendil-works/pi-ai";
@@ -168,6 +169,7 @@ export class PiAgentRunner implements AgentRunner {
         cwd: this.config.agentDir, agentDir: this.config.agentDir, settingsManager, resourceLoader,
         sessionManager: SessionManager.inMemory(), tools: customTools.map(tool => tool.name), customTools }));
       signal.throwIfAborted();
+      session.subscribe(createAgentUsageObserver());
       let turns = 0, turnStarted = 0, providerMs = 0;
       let providerStarted: number | undefined;
       const stream = session.agent.streamFunction;

@@ -98,7 +98,8 @@ helpers built from animlib's shapes, text, paths, meshes, and groups.
 - Seeking uses current control values, without replaying historical input.
 - Scene code chooses how elements and the camera transition between 2D and 3D.
 - Viewer rotation is disabled while an authored camera animation owns the camera.
-- Compatible ordinary shapes use automatic point matching for morphs.
+- Compatible curved paths interpolate authored control points; other compatible
+  single outlines use automatic point matching for morphs.
 - LaTeX morphs use explicit part mappings; unmatched parts fade in or out.
 - The host submits LLM-generated JavaScript through an API supporting initial
   loading, scene replacement, and scene insertion.
@@ -384,6 +385,67 @@ start of the interval. Scene-builder calls never draw intermediate frames.
 Basic creation methods are `circle`, `sphere`, `rectangle`, `line`, `arrow`,
 `path`, `text`, `latex`, `mesh`, and `group`. All take stable IDs and plain
 data. Groups supply parent transforms and operate on their children together.
+
+### Curved paths and organic shapes
+
+`s.path` accepts either a `points` array or SVG path data in `d`. Existing point
+paths use straight segments (`curve: "linear"`, also the default). Set
+`curve: "smooth"` to interpolate through the
+points with a Catmull–Rom spline; a closed spline has a smooth closing seam.
+Use at least two points for an open path and three for a closed smooth path.
+Set `closed: true` on a point path to close it; open is the default. `d` and
+`curve` are path-only properties, not options for rectangles, lines, or arrows.
+The spline can overshoot between points; use Bézier controls when exact boundaries
+or sharp tips matter.
+
+```js
+const leaf = s.path('leaf', {
+  d: 'M0 0 C0.5 0.6 1.3 0.7 2 0 C1.3 -0.5 0.5 -0.4 0 0 Z',
+  fill: Color.GREEN, stroke: Color.GREEN_A, strokeWidth: 0.03,
+});
+const root = s.path('root', {
+  points: [[0, 0], [0.1, -0.5], [-0.3, -1]], curve: 'smooth',
+  fill: Color.NONE, stroke: Color.GREEN_B, strokeWidth: 0.05,
+});
+s.play(leaf.morphTo({
+  kind: 'path',
+  d: 'M0 0 C0.5 0.8 1.3 1.0 2 0.3 C1.3 -0.2 0.5 -0.3 0 0 Z',
+}), { duration: 1 });
+```
+
+Path data supports absolute and relative `M`, `L`, `H`, `V`, `C`, `S`, `Q`,
+`T`, `A`, and `Z` commands. Start with `M` or `m` and include at least one drawing
+segment. Coordinates use the element's local XY plane,
+**positive Y upward**, in scene units (CSS pixels for screen-space elements).
+`d` is geometry data, not an SVG document: it does not carry colors, transforms,
+or a viewBox. Apply those through ordinary element/group properties. Do not mix
+`d` with `points`, `curve`, or `closed`; use `Z` to close each subpath.
+
+Closed contours receive fills and strokes; open contours receive strokes only.
+Compound paths support disjoint shapes and nested holes using an even-odd fill
+rule, independent of winding. Contours should be simple and must not intersect
+each other; self-intersecting fills are not supported. Curves are adaptively
+tessellated for both GPU backends using the element's projected scale. Subdivision
+is bounded (at most 12 levels and about 20,000 tessellated points per path), so
+extreme zoom or very complex paths can reach the quality limit. Path strings are
+limited to 20,000 characters and 20,000 normalized control points per path.
+Coordinates must be finite with magnitude at most 1,000,000, including after
+relative commands are made absolute. Normalized control points count toward
+the scene's geometry budget.
+
+Compatible `d` paths interpolate normalized segment controls before tessellation.
+Keep contour order, closure, segment types/counts, winding, and start points
+consistent to preserve intended correspondence. Quadratic curves and arcs are
+converted to cubic segments; matching SVG command counts alone do not guarantee
+matching normalized structures. Compatible smooth-point paths with matching
+point counts and closure interpolate the curves implied by corresponding points.
+Single outlines with different
+structures use ordinary outline matching; incompatible compound paths crossfade.
+Put a blade and its vein in a group at the leaf's base for growth/rotation, and
+author corresponding morphs for both when bending. See the
+[plant scene](../demo/plant.ts) and [demo page](../demo/plant.html) for a complete
+example using the library renderer. Curved geometry does not extend the supported
+hit shapes or surface connectors; see [behaviors and live bindings](#behaviors-and-live-bindings).
 
 ### Choosing how objects relate and move
 
@@ -759,13 +821,21 @@ s.play(shape.morphTo({ kind: "rectangle", width: 2, height: 1 }), {
 });
 ```
 
-Point matching aligns winding and the start of closed outlines before
-interpolation. Matching vertex counts retain their corners; other compatible
-outlines use arc-length samples that include every corner from both shapes.
+For ordinary single outlines, point matching aligns winding and the start of
+closed contours before interpolation. Matching vertex counts retain their corners;
+other compatible outlines use arc-length samples that include every corner from both shapes.
 An unchanged outline retains its exact geometry throughout the morph.
-Circles, rectangles, and closed paths can morph into one another; open paths,
-lines, and arrows can morph
+Circles, rectangles, and single-contour closed paths can morph into one another;
+open paths, lines, and arrows can morph
 into compatible open outlines. Arrow-to-arrow morphs retain arrowheads.
+
+Compatible curved paths use their authored correspondence instead: `d` paths
+with matching normalized segment structures interpolate their control points,
+and smooth-point paths with matching point counts interpolate corresponding
+curves. This keeps straight-to-bent segments and pointed leaf tips tied to their
+authored positions. Matching compound paths preserve contour correspondence;
+incompatible compound paths crossfade. See
+[curved paths](#curved-paths-and-organic-shapes) for authoring rules and limits.
 
 Meshes with matching vertex counts interpolate corresponding vertex positions.
 Use matching vertex ordering and compatible topology for meaningful mesh morphs.
@@ -900,7 +970,36 @@ unsubscribe();
 
 Do not recreate the host's controls on every frame if that would lose focus.
 The built-in overlay maintains keyed native widgets and reconciles pending input
-updates after their compilation finishes.
+updates after they finish.
+
+### Reactive sliders (prototype)
+
+Opt into retained JavaScript bindings for property changes:
+
+```js
+const size = s.slider('size', { reactive: true, default: 1, min: 0.5, max: 2 });
+const ball = s.sphere('ball', { radius: 0.45 });
+s.bind(ball, [size], value => ({ radius: 0.45 * value }));
+```
+
+The slider returns a handle, and the callback receives its numeric value.
+Callbacks must be pure and synchronous, returning a fixed set of supported
+properties: radius, position, rotation, scale, opacity, or fill. A binding and
+timeline cannot own the same property. The changed builder and earlier scenes
+are reused; downstream scenes still rebuild transactionally. Callbacks remain
+inside a retained QuickJS sandbox, with a fresh execution deadline per update;
+compiled snapshots contain only their validated results. See the
+[prototype contract, limitations, and measurements](reactive-controls.md).
+
+Use this opt-in path only when every value driven by the slider can be expressed
+with supported properties. Keep an ordinary numeric slider when a control changes
+text, LaTeX numbers, path/mesh geometry, object counts, camera settings, animation
+targets, or timing. For example, a vector-length slider that also updates a formula
+should continue using the ordinary builder path so both remain consistent. Both
+styles may coexist in one scene; this prototype does not replace or restrict the
+existing authoring API. Do not simplify a planned explanation to fit the fast path.
+Reactive callbacks must use their supplied values and immutable captured data;
+mutation of closure state or consuming random values breaks reproducibility.
 
 ### Control appearance
 
@@ -1130,6 +1229,9 @@ budget for subsequent TeX layout, tessellation, or GPU allocation.
 
 Current data limits include 256 KB per source, 100 scenes, 2,000 object IDs per
 builder, 100 controls, 32 view regions, 10,000 animation tracks, and a 24-hour visual timeline.
+SVG path data is limited to 20,000 characters and 20,000 normalized control
+points per path. Point arrays are limited to 20,000 entries; added scene geometry
+has a 100,000-point budget, including SVG path control points.
 The VM boundary validates finite numbers, geometry sizes, mesh indices, object
 lifetimes, and group references. The library intentionally does not expose
 arbitrary browser callbacks in the animation data.
@@ -1307,15 +1409,20 @@ The main implementation files are:
   reconstruction, transactions, and deterministic time evaluation.
 - [src/renderer.ts](../src/renderer.ts), [src/render-geometry.ts](../src/render-geometry.ts), [src/geometry.ts](../src/geometry.ts), and
   [src/latex.ts](../src/latex.ts): GPU drawing, outline matching, and vector formula layout.
+- [src/path.ts](../src/path.ts): shared SVG parsing and bounded curve tessellation
+  (also used by glyph layout), smooth-point curves, and path control-point morphing.
 - [src/overlap.ts](../src/overlap.ts): projected geometry intersections and sampled
   animation diagnostics.
 - [src/player.ts](../src/player.ts), [src/audio.ts](../src/audio.ts), and
   [src/controls.ts](../src/controls.ts): transport, audio, and optional native widgets.
 - [demo/scenes.ts](../demo/scenes.ts): application-level demo helpers and scene sources.
+- [demo/plant.ts](../demo/plant.ts): curved leaf shapes, smooth roots, grouped
+  growth, and coordinated blade/vein bending.
 
 Portable tests cover deterministic seeks, parallel property animation, persistence
 and group lifetimes, current-control reconstruction, code replacement/insertion,
 failure isolation, sandbox capabilities/limits, LaTeX mappings, shape matching,
+curved-path validation, compound fills, curve accuracy, control-point morphs,
 playback ownership, audio clocks, and control races.
 
 The separate `test:gpu` suite uses Dawn's native WebGPU API through Vulkan. It
@@ -1337,8 +1444,9 @@ GPU work and timeline evaluation and are not browser frame rates.
 
 This implementation targets modest explanatory scenes. It does not establish a
 large-scene performance guarantee. TeX layout is cached, and bounded caches reuse
-contour triangulations and morph correspondence across evaluated frames. Object
-transforms are prepared once per element, and vertex data is assembled directly
+parsed paths, curve tessellations, contour triangulations, and morph correspondence
+across evaluated frames. Object transforms are prepared once per element, and
+vertex data is assembled directly
 in typed arrays. Vertex generation/upload and timeline evaluation still happen
 each frame. Selective reconstruction and GPU-side animation are possible
 improvements after measuring real scenes.

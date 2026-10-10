@@ -5,7 +5,20 @@ export async function requestStudyPlan(document: PlanDocument, signal: AbortSign
   const response = await fetch('/api/study-plans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(document), signal })
   const data: unknown = await response.json()
   if (!response.ok) throw new Error(data && typeof data === 'object' && 'detail' in data && typeof data.detail === 'string' ? data.detail : 'Could not create a study plan.')
-  if (!isStudyPlan(data)) throw new Error('The server returned an invalid study plan. Try again or use the document outline.')
+  if (!isStudyPlan(data)) throw new Error('The server returned an invalid study plan. Please try again.')
+  return data
+}
+
+/** Submit files and notes together so AI can group overlapping material. */
+export async function requestMaterialPlan(material: { name: string; files: File[]; text: string }, signal: AbortSignal): Promise<StudyPlan> {
+  const body = new FormData()
+  body.set('name', material.name)
+  body.set('text', material.text)
+  for (const file of material.files) body.append('files', file)
+  const response = await fetch('/api/study-plans', { method: 'POST', body, signal })
+  const data: unknown = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(data && typeof data === 'object' && 'detail' in data && typeof data.detail === 'string' ? data.detail : 'AI planning is unavailable. Your material is still here — please try again.')
+  if (!isStudyPlan(data)) throw new Error('AI returned an incomplete plan. Your material is still here — please try again.')
   return data
 }
 

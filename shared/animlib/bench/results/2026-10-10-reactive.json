@@ -1,0 +1,2842 @@
+{
+  "date": "2026-10-10",
+  "notes": "Uncommitted reactive-control prototype. Sequential runs of identical legacy/reactive two-view geometry. CPU isolation suppresses WebGL submission. Last scene changed; no downstream scenes. Absent compileCalls means zero observed calls. Timings are inclusive; not displayed FPS.",
+  "legacy": {
+    "environment": {
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "backend": "webgl2",
+      "devicePixelRatio": 2,
+      "cssSize": [
+        1280,
+        800
+      ],
+      "canvasSize": [
+        2560,
+        1600
+      ],
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "submitGPU": false,
+      "samples": 20,
+      "warmup": 5,
+      "burstSize": 20,
+      "inputIntervalMs": 16.666666666666668
+    },
+    "rows": [
+      {
+        "name": "orbit: one pointermove per animation frame",
+        "view": "left",
+        "elementCount": 16,
+        "metrics": {
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 5.2,
+            "p95": 6.3,
+            "max": 7.6,
+            "total": 107.9
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 6,
+            "p95": 7.4,
+            "max": 8.6,
+            "total": 124.7
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.4
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 6.3,
+            "p95": 7.8,
+            "max": 8.9,
+            "total": 130.3
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 6.3,
+            "p95": 7.8,
+            "max": 8.9,
+            "total": 130.6
+          }
+        }
+      },
+      {
+        "name": "orbit: eight pointermoves in one task",
+        "metrics": {
+          "refreshCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.7
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 24,
+            "p95": 24,
+            "max": 24,
+            "total": 480
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 35.1,
+            "p95": 38.9,
+            "max": 40,
+            "total": 708.6
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 16837920,
+            "p95": 16837920,
+            "max": 16837920,
+            "total": 336758400
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 41.6,
+            "p95": 45.8,
+            "max": 46.8,
+            "total": 840.9
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.2,
+            "p95": 0.5,
+            "max": 0.6,
+            "total": 4.3
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.7,
+            "p95": 0.8,
+            "max": 0.8,
+            "total": 12.8
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.7,
+            "p95": 0.9,
+            "max": 0.9,
+            "total": 13.7
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 43.5,
+            "p95": 47.9,
+            "max": 48.8,
+            "total": 875.4
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 43.8,
+            "p95": 48.2,
+            "max": 49.1,
+            "total": 882.1
+          }
+        }
+      },
+      {
+        "name": "slider: sequential API changes",
+        "sceneCount": 1,
+        "changedSceneIndex": 0,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "compileCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "compileMs": {
+            "count": 20,
+            "median": 4.5,
+            "p95": 5.1,
+            "max": 5.4,
+            "total": 92.6
+          },
+          "prepareCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.6
+          },
+          "reconstructMs": {
+            "count": 20,
+            "median": 4.8,
+            "p95": 5.5,
+            "max": 5.5,
+            "total": 97
+          },
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.3
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 4.7,
+            "p95": 5.2,
+            "max": 6.1,
+            "total": 94.6
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 5.4,
+            "p95": 6.2,
+            "max": 7,
+            "total": 111.2
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1.8
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 1.4
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1.7
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 5.9,
+            "p95": 6.4,
+            "max": 7.3,
+            "total": 117.7
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 10.7,
+            "p95": 11.4,
+            "max": 12.9,
+            "total": 215.2
+          }
+        }
+      },
+      {
+        "name": "slider: rapid input",
+        "sceneCount": 1,
+        "maxPending": 1,
+        "completionMs": {
+          "count": 20,
+          "median": 10.4,
+          "p95": 11.7,
+          "max": 11.7,
+          "total": 210.8
+        },
+        "inputDurationMs": 322.3,
+        "totalDurationMs": 322.3,
+        "drainAfterInputMs": 0,
+        "finalValue": 0.7,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "compileCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "compileMs": {
+            "count": 1,
+            "median": 86.9,
+            "p95": 86.9,
+            "max": 86.9,
+            "total": 86.9
+          },
+          "prepareCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 1,
+            "median": 0.5,
+            "p95": 0.5,
+            "max": 0.5,
+            "total": 0.5
+          },
+          "reconstructMs": {
+            "count": 1,
+            "median": 92.4,
+            "p95": 92.4,
+            "max": 92.4,
+            "total": 92.4
+          },
+          "refreshCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 1,
+            "median": 0.4,
+            "p95": 0.4,
+            "max": 0.4,
+            "total": 0.4
+          },
+          "renderCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 1,
+            "median": 60,
+            "p95": 60,
+            "max": 60,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 1,
+            "median": 92,
+            "p95": 92,
+            "max": 92,
+            "total": 92
+          },
+          "packedVertexBytes": {
+            "count": 1,
+            "median": 42094800,
+            "p95": 42094800,
+            "max": 42094800,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 1,
+            "median": 109.7,
+            "p95": 109.7,
+            "max": 109.7,
+            "total": 109.7
+          },
+          "updateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 1,
+            "median": 1.9,
+            "p95": 1.9,
+            "max": 1.9,
+            "total": 1.9
+          },
+          "getStateCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameMs": {
+            "count": 1,
+            "median": 2.4,
+            "p95": 2.4,
+            "max": 2.4,
+            "total": 2.4
+          },
+          "getStateMs": {
+            "count": 1,
+            "median": 2.6,
+            "p95": 2.6,
+            "max": 2.6,
+            "total": 2.6
+          },
+          "refreshMs": {
+            "count": 1,
+            "median": 117.5,
+            "p95": 117.5,
+            "max": 117.5,
+            "total": 117.5
+          }
+        }
+      },
+      {
+        "name": "slider: sequential API changes",
+        "sceneCount": 5,
+        "changedSceneIndex": 4,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "compileCalls": {
+            "count": 20,
+            "median": 5,
+            "p95": 5,
+            "max": 5,
+            "total": 100
+          },
+          "compileMs": {
+            "count": 20,
+            "median": 19.6,
+            "p95": 21.9,
+            "max": 22.3,
+            "total": 400.9
+          },
+          "prepareCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.7
+          },
+          "reconstructMs": {
+            "count": 20,
+            "median": 20.4,
+            "p95": 22.8,
+            "max": 23.3,
+            "total": 417.7
+          },
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.4
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 4.8,
+            "p95": 6.9,
+            "max": 7,
+            "total": 99.3
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 5.6,
+            "p95": 7.8,
+            "max": 7.9,
+            "total": 115.4
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.1,
+            "max": 0.2,
+            "total": 1.4
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1.5
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1.7
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 6,
+            "p95": 8.2,
+            "max": 8.2,
+            "total": 121.1
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 26.4,
+            "p95": 28.8,
+            "max": 28.9,
+            "total": 539.2
+          }
+        }
+      },
+      {
+        "name": "slider: rapid input",
+        "sceneCount": 5,
+        "maxPending": 9,
+        "completionMs": {
+          "count": 20,
+          "median": 123.8,
+          "p95": 210,
+          "max": 220.5,
+          "total": 2575.6
+        },
+        "inputDurationMs": 338.6,
+        "totalDurationMs": 543.1,
+        "drainAfterInputMs": 204.5,
+        "finalValue": 0.7,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "compileCalls": {
+            "count": 1,
+            "median": 100,
+            "p95": 100,
+            "max": 100,
+            "total": 100
+          },
+          "compileMs": {
+            "count": 1,
+            "median": 397.8,
+            "p95": 397.8,
+            "max": 397.8,
+            "total": 397.8
+          },
+          "prepareCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 1,
+            "median": 0.7,
+            "p95": 0.7,
+            "max": 0.7,
+            "total": 0.7
+          },
+          "reconstructMs": {
+            "count": 1,
+            "median": 416.2,
+            "p95": 416.2,
+            "max": 416.2,
+            "total": 416.2
+          },
+          "refreshCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 1,
+            "median": 0.4,
+            "p95": 0.4,
+            "max": 0.4,
+            "total": 0.4
+          },
+          "renderCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 1,
+            "median": 60,
+            "p95": 60,
+            "max": 60,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 1,
+            "median": 99.1,
+            "p95": 99.1,
+            "max": 99.1,
+            "total": 99.1
+          },
+          "packedVertexBytes": {
+            "count": 1,
+            "median": 42094800,
+            "p95": 42094800,
+            "max": 42094800,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 1,
+            "median": 118.8,
+            "p95": 118.8,
+            "max": 118.8,
+            "total": 118.8
+          },
+          "updateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 1,
+            "median": 1.7,
+            "p95": 1.7,
+            "max": 1.7,
+            "total": 1.7
+          },
+          "getStateCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameMs": {
+            "count": 1,
+            "median": 1.9,
+            "p95": 1.9,
+            "max": 1.9,
+            "total": 1.9
+          },
+          "getStateMs": {
+            "count": 1,
+            "median": 2.4,
+            "p95": 2.4,
+            "max": 2.4,
+            "total": 2.4
+          },
+          "refreshMs": {
+            "count": 1,
+            "median": 126.1,
+            "p95": 126.1,
+            "max": 126.1,
+            "total": 126.1
+          }
+        }
+      },
+      {
+        "name": "slider: sequential API changes",
+        "sceneCount": 10,
+        "changedSceneIndex": 9,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "compileCalls": {
+            "count": 20,
+            "median": 10,
+            "p95": 10,
+            "max": 10,
+            "total": 200
+          },
+          "compileMs": {
+            "count": 20,
+            "median": 38.1,
+            "p95": 38.8,
+            "max": 38.9,
+            "total": 760.4
+          },
+          "prepareCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.2
+          },
+          "reconstructMs": {
+            "count": 20,
+            "median": 39.9,
+            "p95": 40.8,
+            "max": 40.9,
+            "total": 795.4
+          },
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.3
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 4.5,
+            "p95": 5.3,
+            "max": 5.6,
+            "total": 93.3
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 5.6,
+            "p95": 6.4,
+            "max": 6.6,
+            "total": 114
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1.7
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.2
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.2
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 6,
+            "p95": 6.7,
+            "max": 7.1,
+            "total": 120.6
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 46,
+            "p95": 47.2,
+            "max": 47.3,
+            "total": 917.1
+          }
+        }
+      },
+      {
+        "name": "slider: rapid input",
+        "sceneCount": 10,
+        "maxPending": 14,
+        "completionMs": {
+          "count": 20,
+          "median": 318.2,
+          "p95": 584.6,
+          "max": 615,
+          "total": 6579.8
+        },
+        "inputDurationMs": 328.1,
+        "totalDurationMs": 927,
+        "drainAfterInputMs": 598.9,
+        "finalValue": 0.7,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "compileCalls": {
+            "count": 1,
+            "median": 200,
+            "p95": 200,
+            "max": 200,
+            "total": 200
+          },
+          "compileMs": {
+            "count": 1,
+            "median": 772.9,
+            "p95": 772.9,
+            "max": 772.9,
+            "total": 772.9
+          },
+          "prepareCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 1,
+            "median": 1.8,
+            "p95": 1.8,
+            "max": 1.8,
+            "total": 1.8
+          },
+          "reconstructMs": {
+            "count": 1,
+            "median": 807.6,
+            "p95": 807.6,
+            "max": 807.6,
+            "total": 807.6
+          },
+          "refreshCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 1,
+            "median": 0.2,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 0.2
+          },
+          "renderCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 1,
+            "median": 60,
+            "p95": 60,
+            "max": 60,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 1,
+            "median": 92.3,
+            "p95": 92.3,
+            "max": 92.3,
+            "total": 92.3
+          },
+          "packedVertexBytes": {
+            "count": 1,
+            "median": 42094800,
+            "p95": 42094800,
+            "max": 42094800,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 1,
+            "median": 112.1,
+            "p95": 112.1,
+            "max": 112.1,
+            "total": 112.1
+          },
+          "updateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 1,
+            "median": 1.6,
+            "p95": 1.6,
+            "max": 1.6,
+            "total": 1.6
+          },
+          "getStateCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameMs": {
+            "count": 1,
+            "median": 2,
+            "p95": 2,
+            "max": 2,
+            "total": 2
+          },
+          "getStateMs": {
+            "count": 1,
+            "median": 2.5,
+            "p95": 2.5,
+            "max": 2.5,
+            "total": 2.5
+          },
+          "refreshMs": {
+            "count": 1,
+            "median": 118.7,
+            "p95": 118.7,
+            "max": 118.7,
+            "total": 118.7
+          }
+        }
+      }
+    ]
+  },
+  "reactive": {
+    "environment": {
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "backend": "webgl2",
+      "devicePixelRatio": 2,
+      "cssSize": [
+        1280,
+        800
+      ],
+      "canvasSize": [
+        2560,
+        1600
+      ],
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "submitGPU": false,
+      "samples": 20,
+      "warmup": 5,
+      "burstSize": 20,
+      "inputIntervalMs": 16.666666666666668
+    },
+    "rows": [
+      {
+        "name": "orbit: one pointermove per animation frame",
+        "view": "left",
+        "elementCount": 16,
+        "metrics": {
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.2
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 4.6,
+            "p95": 5.3,
+            "max": 5.5,
+            "total": 94.4
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 5.7,
+            "p95": 6.4,
+            "max": 6.5,
+            "total": 115.4
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.1,
+            "max": 0.2,
+            "total": 1.3
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.6
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.6
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 6.1,
+            "p95": 6.9,
+            "max": 7,
+            "total": 123.9
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 6.1,
+            "p95": 7,
+            "max": 7.1,
+            "total": 124.9
+          }
+        }
+      },
+      {
+        "name": "orbit: eight pointermoves in one task",
+        "metrics": {
+          "refreshCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.6
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 24,
+            "p95": 24,
+            "max": 24,
+            "total": 480
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 36.6,
+            "p95": 40.2,
+            "max": 42.3,
+            "total": 744
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 16837920,
+            "p95": 16837920,
+            "max": 16837920,
+            "total": 336758400
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 44.8,
+            "p95": 47.9,
+            "max": 50.5,
+            "total": 900.9
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.5,
+            "p95": 0.9,
+            "max": 0.9,
+            "total": 10.1
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 8,
+            "p95": 8,
+            "max": 8,
+            "total": 160
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.7,
+            "p95": 1,
+            "max": 1.2,
+            "total": 15.1
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.8,
+            "p95": 1.1,
+            "max": 1.2,
+            "total": 16.8
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 47,
+            "p95": 50.8,
+            "max": 53,
+            "total": 951.9
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 47.6,
+            "p95": 51.5,
+            "max": 53.5,
+            "total": 965.4
+          }
+        }
+      },
+      {
+        "name": "slider: sequential API changes",
+        "sceneCount": 1,
+        "changedSceneIndex": 0,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "reconstructMs": {
+            "count": 20,
+            "median": 0.2,
+            "p95": 0.3,
+            "max": 0.3,
+            "total": 3.3
+          },
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 4.7,
+            "p95": 5.7,
+            "max": 6.7,
+            "total": 96.7
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 5.7,
+            "p95": 6.9,
+            "max": 7.8,
+            "total": 116.7
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1.6
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.1
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 6.1,
+            "p95": 7.3,
+            "max": 8.4,
+            "total": 124.3
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 6.8,
+            "p95": 8.9,
+            "max": 8.9,
+            "total": 141.4
+          }
+        }
+      },
+      {
+        "name": "slider: rapid input",
+        "sceneCount": 1,
+        "maxPending": 1,
+        "completionMs": {
+          "count": 20,
+          "median": 6.5,
+          "p95": 7.6,
+          "max": 7.8,
+          "total": 133.8
+        },
+        "inputDurationMs": 322.7,
+        "totalDurationMs": 322.7,
+        "drainAfterInputMs": 0,
+        "finalValue": 0.7,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 1,
+            "median": 0.2,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 0.2
+          },
+          "reconstructMs": {
+            "count": 1,
+            "median": 2.7,
+            "p95": 2.7,
+            "max": 2.7,
+            "total": 2.7
+          },
+          "refreshCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 1,
+            "median": 0.2,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 0.2
+          },
+          "syncInteractionCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 1,
+            "median": 0.1,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "renderCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 1,
+            "median": 60,
+            "p95": 60,
+            "max": 60,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 1,
+            "median": 92.8,
+            "p95": 92.8,
+            "max": 92.8,
+            "total": 92.8
+          },
+          "packedVertexBytes": {
+            "count": 1,
+            "median": 42094800,
+            "p95": 42094800,
+            "max": 42094800,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 1,
+            "median": 113.5,
+            "p95": 113.5,
+            "max": 113.5,
+            "total": 113.5
+          },
+          "updateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 1,
+            "median": 2.1,
+            "p95": 2.1,
+            "max": 2.1,
+            "total": 2.1
+          },
+          "getStateCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameMs": {
+            "count": 1,
+            "median": 2.3,
+            "p95": 2.3,
+            "max": 2.3,
+            "total": 2.3
+          },
+          "getStateMs": {
+            "count": 1,
+            "median": 2.6,
+            "p95": 2.6,
+            "max": 2.6,
+            "total": 2.6
+          },
+          "refreshMs": {
+            "count": 1,
+            "median": 120.4,
+            "p95": 120.4,
+            "max": 120.4,
+            "total": 120.4
+          }
+        }
+      },
+      {
+        "name": "slider: sequential API changes",
+        "sceneCount": 5,
+        "changedSceneIndex": 4,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.2
+          },
+          "reconstructMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.7
+          },
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 4.6,
+            "p95": 5.2,
+            "max": 5.6,
+            "total": 92.7
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 5.5,
+            "p95": 6.2,
+            "max": 6.7,
+            "total": 111.5
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 1
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.5
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.6
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 5.9,
+            "p95": 6.6,
+            "max": 7.1,
+            "total": 118
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 6.5,
+            "p95": 7.8,
+            "max": 7.8,
+            "total": 133.5
+          }
+        }
+      },
+      {
+        "name": "slider: rapid input",
+        "sceneCount": 5,
+        "maxPending": 1,
+        "completionMs": {
+          "count": 20,
+          "median": 6.1,
+          "p95": 7.3,
+          "max": 7.4,
+          "total": 126.4
+        },
+        "inputDurationMs": 322,
+        "totalDurationMs": 322,
+        "drainAfterInputMs": 0,
+        "finalValue": 0.7,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "reconstructMs": {
+            "count": 1,
+            "median": 2.6,
+            "p95": 2.6,
+            "max": 2.6,
+            "total": 2.6
+          },
+          "refreshCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 1,
+            "median": 60,
+            "p95": 60,
+            "max": 60,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 1,
+            "median": 92.6,
+            "p95": 92.6,
+            "max": 92.6,
+            "total": 92.6
+          },
+          "packedVertexBytes": {
+            "count": 1,
+            "median": 42094800,
+            "p95": 42094800,
+            "max": 42094800,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 1,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 1,
+            "median": 109.5,
+            "p95": 109.5,
+            "max": 109.5,
+            "total": 109.5
+          },
+          "updateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 1,
+            "median": 1.3,
+            "p95": 1.3,
+            "max": 1.3,
+            "total": 1.3
+          },
+          "getStateCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameMs": {
+            "count": 1,
+            "median": 1.6,
+            "p95": 1.6,
+            "max": 1.6,
+            "total": 1.6
+          },
+          "getStateMs": {
+            "count": 1,
+            "median": 2,
+            "p95": 2,
+            "max": 2,
+            "total": 2
+          },
+          "refreshMs": {
+            "count": 1,
+            "median": 114.5,
+            "p95": 114.5,
+            "max": 114.5,
+            "total": 114.5
+          }
+        }
+      },
+      {
+        "name": "slider: sequential API changes",
+        "sceneCount": 10,
+        "changedSceneIndex": 9,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.2
+          },
+          "reconstructMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.5
+          },
+          "refreshCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "syncInteractionCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "renderCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 20,
+            "median": 3,
+            "p95": 3,
+            "max": 3,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 20,
+            "median": 4.5,
+            "p95": 5.9,
+            "max": 6.9,
+            "total": 94.9
+          },
+          "packedVertexBytes": {
+            "count": 20,
+            "median": 2104740,
+            "p95": 2104740,
+            "max": 2104740,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 20,
+            "median": 0,
+            "p95": 0,
+            "max": 0,
+            "total": 0
+          },
+          "renderMs": {
+            "count": 20,
+            "median": 5.4,
+            "p95": 7.1,
+            "max": 7.9,
+            "total": 113.7
+          },
+          "updateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 1.8
+          },
+          "getStateCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameCalls": {
+            "count": 20,
+            "median": 1,
+            "p95": 1,
+            "max": 1,
+            "total": 20
+          },
+          "frameMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 2.5
+          },
+          "getStateMs": {
+            "count": 20,
+            "median": 0.1,
+            "p95": 0.2,
+            "max": 0.3,
+            "total": 2.7
+          },
+          "refreshMs": {
+            "count": 20,
+            "median": 5.8,
+            "p95": 7.7,
+            "max": 8.4,
+            "total": 121.2
+          },
+          "wallMs": {
+            "count": 20,
+            "median": 6.6,
+            "p95": 8.1,
+            "max": 9.2,
+            "total": 136.8
+          }
+        }
+      },
+      {
+        "name": "slider: rapid input",
+        "sceneCount": 10,
+        "maxPending": 1,
+        "completionMs": {
+          "count": 20,
+          "median": 7,
+          "p95": 7.8,
+          "max": 8.3,
+          "total": 140.7
+        },
+        "inputDurationMs": 323.5,
+        "totalDurationMs": 323.5,
+        "drainAfterInputMs": 0,
+        "finalValue": 0.7,
+        "metrics": {
+          "reconstructCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "prepareMs": {
+            "count": 1,
+            "median": 0.2,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 0.2
+          },
+          "reconstructMs": {
+            "count": 1,
+            "median": 3.5,
+            "p95": 3.5,
+            "max": 3.5,
+            "total": 3.5
+          },
+          "refreshCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "evaluateMs": {
+            "count": 1,
+            "median": 0.1,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "syncInteractionCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "syncInteractionMs": {
+            "count": 1,
+            "median": 0.2,
+            "p95": 0.2,
+            "max": 0.2,
+            "total": 0.2
+          },
+          "renderCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "drawItemsCalls": {
+            "count": 1,
+            "median": 60,
+            "p95": 60,
+            "max": 60,
+            "total": 60
+          },
+          "drawItemsMs": {
+            "count": 1,
+            "median": 97.6,
+            "p95": 97.6,
+            "max": 97.6,
+            "total": 97.6
+          },
+          "packedVertexBytes": {
+            "count": 1,
+            "median": 42094800,
+            "p95": 42094800,
+            "max": 42094800,
+            "total": 42094800
+          },
+          "backendCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "backendMs": {
+            "count": 1,
+            "median": 0.1,
+            "p95": 0.1,
+            "max": 0.1,
+            "total": 0.1
+          },
+          "renderMs": {
+            "count": 1,
+            "median": 118.4,
+            "p95": 118.4,
+            "max": 118.4,
+            "total": 118.4
+          },
+          "updateCalls": {
+            "count": 1,
+            "median": 20,
+            "p95": 20,
+            "max": 20,
+            "total": 20
+          },
+          "updateMs": {
+            "count": 1,
+            "median": 1.8,
+            "p95": 1.8,
+            "max": 1.8,
+            "total": 1.8
+          },
+          "getStateCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameCalls": {
+            "count": 1,
+            "median": 21,
+            "p95": 21,
+            "max": 21,
+            "total": 21
+          },
+          "frameMs": {
+            "count": 1,
+            "median": 2.4,
+            "p95": 2.4,
+            "max": 2.4,
+            "total": 2.4
+          },
+          "getStateMs": {
+            "count": 1,
+            "median": 2.8,
+            "p95": 2.8,
+            "max": 2.8,
+            "total": 2.8
+          },
+          "refreshMs": {
+            "count": 1,
+            "median": 126,
+            "p95": 126,
+            "max": 126,
+            "total": 126
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import CurrentUser from './CurrentUser'
 import { ArrowUpRight, FolderOpen, Library, ListTree, Moon, Plus, Sun, X } from './Icons'
 
 type NavigationDrawerProps = {
@@ -66,6 +67,7 @@ export default function NavigationDrawer({ open, current, onClose, onWorkspace, 
         <button onClick={onCreate}><span className="drawer-icon sage"><Plus size={22}/></span><span>New video</span><ArrowUpRight size={18}/></button>
       </nav>
       <div className="drawer-bottom">
+        <CurrentUser open={open}/>
         <button className="drawer-theme-toggle" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onClick={() => onTheme(theme === 'light' ? 'dark' : 'light')}>
           {theme === 'light' ? <Sun size={22}/> : <Moon size={22}/>}
         </button>

@@ -21,8 +21,10 @@
   "dependencies": {
     "@earendil-works/pi-ai": "1.1.0",
     "@earendil-works/pi-coding-agent": "1.1.0",
+    "@napi-rs/canvas": "^0.1.80",
     "@xmldom/xmldom": "0.9.12",
     "animlib": "file:../shared/animlib",
+    "fflate": "^0.8.3",
     "mammoth": "1.13.0",
     "mdast-util-from-markdown": "^2.1.0",
     "mdast-util-gfm-table": "^2.0.0",

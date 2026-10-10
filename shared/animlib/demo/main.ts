@@ -2,6 +2,7 @@ import { createPlayer } from "../src/index";
 import type { PlayerState } from "../src/types";
 import { initialSources } from "./scenes";
 import { interactionSource } from "./interaction";
+import { reactiveInteractionSource } from "./reactive";
 import { loadNarration, narrationTranscript } from "./narration";
 import "./styles.css";
 
@@ -72,7 +73,7 @@ canvas.parentElement!.addEventListener("keydown", event => {
   if (event.target !== player.canvas) return;
   if (event.code === "Space") { event.preventDefault(); playButton.click(); }
 });
-const sources = (narration?.scenes ?? (narrationId ? [] : new URLSearchParams(location.search).has("interactive") ? [interactionSource] : initialSources)).map(scene => ({ ...scene }));
+const sources = (narration?.scenes ?? (narrationId ? [] : new URLSearchParams(location.search).has("reactive") ? [reactiveInteractionSource] : new URLSearchParams(location.search).has("interactive") ? [interactionSource] : initialSources)).map(scene => ({ ...scene }));
 const ready = player.submit({ type: "load", scenes: sources }).then(result => {
   if (!result.ok) reportError(result.diagnostics.map(diagnostic => diagnostic.message).join("\n"));
   if (narrationError) reportError(narrationError);
