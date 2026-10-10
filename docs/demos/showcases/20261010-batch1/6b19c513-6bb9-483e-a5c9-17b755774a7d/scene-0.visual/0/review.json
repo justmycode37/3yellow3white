@@ -1,0 +1,82 @@
+{
+  "sourceSha256": "79d9a9cd63e249077458590ba73bbbc573a708065ee3a0df3b583804400475dd",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9265625,
+        5.3671875,
+        6.5875,
+        7.807812500000001
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.2484375,
+        11.46875,
+        12.6890625,
+        15.1296875,
+        17.5703125,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9265625,
+        5.3671875,
+        6.5875,
+        7.807812500000001
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.2484375,
+        11.46875,
+        12.6890625,
+        15.1296875,
+        17.5703125,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 15.1296875,
+      "objectIds": [
+        "frame-tangent",
+        "moving-frame",
+        "torus-knot"
+      ],
+      "problem": "The yellow tangent arrow is buried in the tube, leaving only the normal and binormal readable. It is also invisible at 10.248 seconds and reduced to a detached-looking tip in several other samples, undermining the requested moving three-axis frame.",
+      "fix": "Expose the complete triad, for example by offsetting its common origin just outside the tube with a short link to the curve point. Preserve the computed directions, rigid axis lengths and exact curve-point trajectory."
+    },
+    {
+      "timeSec": 20,
+      "objectIds": [
+        "model-note"
+      ],
+      "problem": "The idealized-curve note sits around 90% of viewport height in both aspect ratios, inside the reserved bottom 12% playback-control region.",
+      "fix": "Move the note into the safe vertical region, adjusting the nearby key spacing only as needed to avoid overlap."
+    }
+  ]
+}

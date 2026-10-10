@@ -1,0 +1,84 @@
+{
+  "sourceSha256": "28d36ec5309d849b346130f978452437cf38af4a3ba92d65e90cb002353cf58d",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.8888888888888893,
+        4.111111111111112,
+        5.333333333333334,
+        6.555555555555556
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.777777777777779,
+        10.222222222222221,
+        12.666666666666666,
+        15.11111111111111,
+        17.555555555555557,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.8888888888888893,
+        4.111111111111112,
+        5.333333333333334,
+        6.555555555555556
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.777777777777779,
+        10.222222222222221,
+        12.666666666666666,
+        15.11111111111111,
+        17.555555555555557,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 12.666666666666666,
+      "objectIds": [
+        "magnetic-label",
+        "electric-label",
+        "electric-envelope",
+        "crest-plane-outline"
+      ],
+      "problem": "Moving geometry crosses the stationary field labels: the blue envelope intersects the B label near 12.67 s, and the traveling plane outline crosses the E label near 7.78 s. Both aspect ratios show these conflicts.",
+      "fix": "Move the field labels outside the full projected sweep of the envelopes and traveling plane, retaining their colors and upright orientation."
+    },
+    {
+      "timeSec": 20,
+      "objectIds": [
+        "phase-law",
+        "inspection-note"
+      ],
+      "problem": "The formula's upper fraction glyphs enter the reserved top 12%, and the final inspection note occupies the reserved bottom 12%, in both aspect ratios. Player overlays can obscure them.",
+      "fix": "Move the formula slightly downward and place the inspection note above the bottom exclusion zone, preserving clearance from the existing model note."
+    }
+  ]
+}

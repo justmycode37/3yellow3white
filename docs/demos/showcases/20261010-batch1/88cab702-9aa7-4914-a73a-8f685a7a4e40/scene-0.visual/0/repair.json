@@ -1,0 +1,1 @@
+{"sourceSha256":"9bc1a66f00e6fe475052d16b9a3a3c75d68352a942ea0c02396598c87a3e061a","edits":[{"finding":0,"before":"camera: { yaw: 0.42, pitch: 0.23, height: 5.9, distance: 15, target: [0, 0.18, 0], perspective: 0.35 }","after":"camera: { yaw: 0.42, pitch: 0.23, height: 6.6, distance: 15, target: [0, 0.5, 0], perspective: 0.35 }"}]}

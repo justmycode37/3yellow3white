@@ -1,0 +1,62 @@
+{
+  "elapsedMs": 126311.89960000012,
+  "providerCalls": 3,
+  "turns": [
+    {
+      "index": 1,
+      "elapsedMs": 82044.12800000003,
+      "providerMs": 82034.59909999999,
+      "stopReason": "toolUse",
+      "inputTokens": 2266,
+      "outputTokens": 4161,
+      "reasoningTokens": 1552,
+      "cacheReadTokens": 27520,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 7519
+    },
+    {
+      "index": 2,
+      "elapsedMs": 42598.57939999993,
+      "providerMs": 39569.13409999991,
+      "stopReason": "toolUse",
+      "inputTokens": 4306,
+      "outputTokens": 2661,
+      "reasoningTokens": 90,
+      "cacheReadTokens": 29696,
+      "cacheWriteTokens": 0,
+      "textChars": 0,
+      "toolArgumentChars": 7425
+    },
+    {
+      "index": 3,
+      "elapsedMs": 1663.6786999998149,
+      "providerMs": 1663.473200000124,
+      "stopReason": "stop",
+      "inputTokens": 2766,
+      "outputTokens": 12,
+      "reasoningTokens": 0,
+      "cacheReadTokens": 33920,
+      "cacheWriteTokens": 0,
+      "textChars": 29,
+      "toolArgumentChars": 0
+    }
+  ],
+  "validations": [
+    {
+      "kind": "tool",
+      "elapsedMs": 8.42339999997057,
+      "valid": false
+    },
+    {
+      "kind": "tool",
+      "elapsedMs": 3028.872600000119,
+      "valid": true
+    },
+    {
+      "kind": "final",
+      "elapsedMs": 0.2583999999333173,
+      "valid": true
+    }
+  ]
+}

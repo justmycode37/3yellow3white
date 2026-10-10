@@ -12,5 +12,6 @@ export default defineConfig({
     plant: fileURLToPath(new URL('./demo/plant.html', import.meta.url)),
     spatial: fileURLToPath(new URL('./demo/spatial.html', import.meta.url)),
     proofs: fileURLToPath(new URL('./demo/proofs.html', import.meta.url)),
+    showcases: fileURLToPath(new URL('./demo/showcases.html', import.meta.url)),
   } } },
 });
