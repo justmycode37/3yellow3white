@@ -98,9 +98,17 @@ describe('native Vulkan WebGPU rendering',()=> {
   it.each(retainedPrecisionCases)('retained precision/reference pixels: $name',async ({source,retained,orbit})=>{
     renderer.resetInteraction();
     expect((await sequence.submit({type:'load',scenes:[{id:'precision',source}]})).ok).toBe(true);
+    (renderer as unknown as {retained:RetainedGeometry}).retained.clear();
+    let warm=false;
     for(const [yaw,pitch,time] of [[0,0,0],[0,0,0],[0.3,0.15,1],[0,0,0]]) {
       const frame=sequence.frame(0,time);frame.camera={...frame.camera,yaw:orbit===false?0:yaw,pitch:orbit===false?0:pitch};
-      renderer.render(frame,sequence.compiled[0].options);const optimized=await pixels();
+      const uploads=vi.spyOn(device!.queue,'writeBuffer');
+      let geometryUploads=0;
+      try {
+        renderer.render(frame,sequence.compiled[0].options);
+        geometryUploads=uploads.mock.calls.filter(([buffer])=>buffer.usage&(GPUBufferUsage.VERTEX|GPUBufferUsage.INDEX)).length;
+      } finally {uploads.mockRestore();}
+      const optimized=await pixels();
       const resources=(renderer as unknown as {gpuRetained:{meshes:Map<unknown,unknown>}}).gpuRetained.meshes;
       const usedRetained=resources.size>0;
       const bypass=vi.spyOn(RetainedGeometry.prototype,'get').mockReturnValue(undefined);
@@ -109,9 +117,10 @@ describe('native Vulkan WebGPU rendering',()=> {
       expect(changedPixels(reference)).toBeGreaterThan(200);
       expect(optimized.filter((v,i)=>Math.abs(v-reference[i])>3)).toHaveLength(0);
       expect(usedRetained).toBe(retained);
+      if(warm&&retained)expect(geometryUploads).toBe(0);
       // Leave retained resources warm for the next sample (reference rendering
       // deliberately releases them), exercising both cold and reused meshes.
-      renderer.render(frame,sequence.compiled[0].options);await pixels();
+      renderer.render(frame,sequence.compiled[0].options);await pixels();warm=true;
     }
     expect(errors).toEqual([]);
   });

@@ -2,7 +2,7 @@ import { retainedPrecisionCases } from './retained-cases.js';
 import { describe, expect, it } from 'vitest';
 import { buildDrawItems } from '../src/render-geometry.js';
 import { composeItems } from '../src/composition.js';
-import { RetainedGeometry, MAX_INSTANCES, retentionForFrame } from '../src/retained-geometry.js';
+import { RetainedGeometry, MAX_INSTANCES, retentionForFrame, retainedPrecisionSafe, IDENTITY_INSTANCE } from '../src/retained-geometry.js';
 import { paletteResolver, THREE_BLUE_ONE_BROWN_PALETTE } from '../src/palette.js';
 import { compileSource } from '../src/compiler.js';
 import { evaluateScene } from '../src/timeline.js';
@@ -138,6 +138,34 @@ describe('retained local geometry',()=>{
     const items=draw(new RetainedGeometry(),frame);
     expect(items.every(item=>!item.mesh)).toBe(true);
     expect(items.map(item=>item.vertices)).toEqual(buildDrawItems(frame,frame.camera,800,600,paletteResolver()).map(item=>item.vertices));
+  });
+  it('rejects subnormal records and raw transform values lost before float32 packing',async()=>{
+    const scene=await compileSource(`export default scene({},s=>{s.rectangle('r',{fill:'BLUE'});s.wait(1);});`);
+    const frame=evaluateScene(scene,0),mesh=draw(new RetainedGeometry(),frame)[0].mesh!;
+    const origin:[number,number,number]=[0,0,0],basis:[number,number,number][]=[[1,0,0],[0,1,0],[0,0,1]];
+    const safe=(instance:Float32Array)=>retainedPrecisionSafe([mesh],origin,basis,instance,frame.camera,600,false);
+    expect(safe(IDENTITY_INSTANCE)).toBe(true);
+    for(let slot=0;slot<20;slot++)for(const value of [1e-38,-1e-38,1e-45,-1e-45]) {
+      const instance=IDENTITY_INSTANCE.slice();instance[slot]=value;expect(safe(instance)).toBe(false);
+    }
+    for(const value of [1e-50,-1e-50]) {
+      const instance=IDENTITY_INSTANCE.slice();origin[0]=value;instance[12]=value;
+      expect(instance[12]).toBe(value<0?-0:0);expect(safe(instance)).toBe(false);origin[0]=0;
+      basis[0][1]=value;instance[1]=value;instance[12]=0;
+      expect(safe(instance)).toBe(false);basis[0][1]=0;
+      instance[1]=0;instance[17]=value;expect(safe(instance)).toBe(false);
+    }
+  });
+  it('bounds intermediate flushing even when local coordinates, basis and divisor are normal',async()=>{
+    const scene=await compileSource(`export default scene({},s=>{
+      s.mesh('m',{vertices:[[0,0,0],[1e-20,0,0],[0,1e-20,0]],triangles:[[0,1,2]],scale:1e-20,fill:'BLUE'});s.wait(1);
+    });`);
+    const frame=evaluateScene(scene,0),cache=new RetainedGeometry();
+    // A world dot product may flush. At ordinary zoom its absolute error is
+    // invisible, but sufficient magnification must conservatively stream it.
+    expect(draw(cache,frame)[0].mesh).toBeDefined();
+    frame.camera.height=1e-34;expect(draw(cache,frame)[0].mesh).toBeUndefined();
+    frame.camera.height=8;expect(draw(cache,frame)[0].mesh).toBeDefined();
   });
   it('evicts geometry no longer present rather than retaining every seek/control sample',async()=>{
     const scene=await compileSource(source),cache=new RetainedGeometry(),frame=evaluateScene(scene,0);

@@ -957,7 +957,9 @@ projected stroke/tessellation behavior. Precision-sensitive local coordinates an
 transforms also use CPU world-space packing before float32 conversion, preserving
 small details when large authored coordinates cancel through object/group transforms.
 Geometry near uncertain depth clipping boundaries or with a float32-overflowing
-instance transform also uses that path.
+instance transform also uses that path. Subnormal local coordinates/transforms,
+values that would underflow to zero when packed, and unsafe intermediate underflow
+also opt out of retention; ordinary normal-valued geometry remains eligible.
 GPU handles are rebuilt after recovery;
 geometry unused by the current frame is released. See [performance](performance.md)
 for measurements and remaining limits.

@@ -245,7 +245,17 @@ unaffected elements keep retention. The guard uses the shader's unclamped
 homogeneous perspective divisor, streams bounds whose depth uncertainty crosses
 the near/far planes (including layer bias), and rejects nonfinite packed instance
 matrices/metadata or a zero normal divisor. Those checks also run after camera or
-transform changes. Authored texture coordinates are unchanged.
+transform changes. Before local float32 conversion, tessellation marks positions,
+normals and scale-dependent bump values outside the finite normal range (zero is
+allowed). Such geometry streams, including nonzero JS values that would round to
+zero. Raw and packed transforms must also be zero or finite normal float32 values.
+The error estimate includes an absolute `32 * 2^-126` allowance for GPU flushing
+of intermediate subnormal results; scales that could amplify this beyond one
+float32 rounding unit in transformed normals also stream. Intermediate affine and
+normal sums must stay within the finite float32 range. These are conservative
+eligibility rules, not an extension of the original world-packing path's precision
+limits. Ordinary normal-valued small-coordinate/large-scale controls remain retained.
+Authored texture coordinates are unchanged.
 The measurements below precede this precision guard; they are not a fresh timing
 claim for the review fix.
 

@@ -1,5 +1,5 @@
 /** CPU tessellation shared by rendering and overlap inspection; no browser or GPU required. */
-import { RetainedGeometry, retainableElement, canonicalPrimitive, retainedPrecisionSafe } from './retained-geometry.js';
+import { RetainedGeometry, retainableElement, canonicalPrimitive, retainedPrecisionSafe, normalFloat32 } from './retained-geometry.js';
 import { VERTEX_FLOATS, texturePatterns } from './texture-shader.js';
 import earcut from 'earcut';
 import { GeometryCache } from './cache.js';
@@ -43,7 +43,11 @@ export function triangulateContours(contours:Vec3[][]):Vec3[] {
   return triangulations.set(key,result.map(p=>[...p] as Vec3),result.length*64);
 }
 type DrawComponent = 'content' | 'fill' | 'stroke';
-export interface GeometryDrawItem extends DrawItem { elementId: string; component: DrawComponent; }
+export interface GeometryDrawItem extends DrawItem {
+  elementId: string; component: DrawComponent;
+  /** Records unsafe local packing before narrowing can turn nonzero into zero. */
+  retentionUnsafe?: boolean;
+}
 const isText = (geometry: Geometry): boolean => geometry.kind === 'text' || geometry.kind === 'latex';
 
 /** textOnly skips shape tessellation while retaining groups and the text portions of mixed morphs. */
@@ -126,25 +130,30 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       const textureKind=texture?texturePatterns.indexOf(texture.pattern)+1:0;
       const textureScale=typeof texture?.scale==='number'?[texture.scale,texture.scale,texture.scale]:texture?.scale??[1,1,1];
       const vertices=new Float32Array(points.length*VERTEX_FLOATS),screen=element.space==='screen',a=rgba[3]*opacity*alpha;
-      let sumX=0,sumY=0,sumZ=0;
+      let sumX=0,sumY=0,sumZ=0,retentionUnsafe=false;
       for(let i=0;i<points.length;i++) {
         const p=points[i],j=i*VERTEX_FLOATS;
         const x=origin[0]+p[0]*basis[0][0]+p[1]*basis[1][0]+p[2]*basis[2][0];
         const y=origin[1]+p[0]*basis[0][1]+p[1]*basis[1][1]+p[2]*basis[2][1];
         const z=origin[2]+p[0]*basis[0][2]+p[1]*basis[1][2]+p[2]*basis[2][2];
+        retentionUnsafe ||= !normalFloat32(x)||!normalFloat32(y)||!normalFloat32(z);
         sumX+=x;sumY+=y;sumZ+=z;
         vertices[j]=x;vertices[j+1]=y;vertices[j+2]=z;
         vertices[j+3]=rgba[0];vertices[j+4]=rgba[1];vertices[j+5]=rgba[2];vertices[j+6]=a;vertices[j+7]=screen?1:0;
         if(normals) {
           const n=normals[i];
-          for(let axis=0;axis<3;axis++)vertices[j+8+axis]=n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis];
+          for(let axis=0;axis<3;axis++) {
+            const value=n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis];
+            retentionUnsafe ||= !normalFloat32(value);vertices[j+8+axis]=value;
+          }
         } else {vertices[j+8]=normalBasis[2][0];vertices[j+9]=normalBasis[2][1];vertices[j+10]=normalBasis[2][2];}
         vertices[j+11]=normals?(twoSided?2:1):0;vertices[j+12]=elementIndex;vertices[j+13]=viewportOffset[0];vertices[j+14]=viewportOffset[1];
         if(texture) {
           for(let axis=0;axis<3;axis++)vertices[j+15+axis]=p[axis]*textureScale[axis]+(texture.offset?.[axis]??0);
           vertices[j+18]=textureKind;
           vertices[j+19]=secondary[0];vertices[j+20]=secondary[1];vertices[j+21]=secondary[2];vertices[j+22]=secondary[3]*opacity*alpha;
-          vertices[j+23]=texture.seed??0;vertices[j+30]=(texture.bumpStrength??0)*scale;
+          const bump=(texture.bumpStrength??0)*scale;retentionUnsafe ||= !normalFloat32(bump);
+          vertices[j+23]=texture.seed??0;vertices[j+30]=bump;
         }
         if(material) {
           vertices[j+24]=material.metalness??0;vertices[j+25]=material.roughness??0.45;vertices[j+26]=material.specular??0.5;
@@ -163,7 +172,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
         }
       } else {
         const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
-        items.push({depth,vertices,transparent,screen,groups,elementId:element.id,component});
+        items.push({depth,vertices,transparent,screen,groups,elementId:element.id,component,retentionUnsafe});
       }
     };
     const contours=(paths:Vec3[][],alpha=1,color=element.fill,component:DrawComponent='fill'):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha,undefined,component);};

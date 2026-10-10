@@ -14,6 +14,15 @@ export interface RetainedMesh {
 }
 export const INSTANCE_FLOATS = 20;
 export const MAX_INSTANCES = 32;
+const FLOAT32_MIN_NORMAL = 2**-126, FLOAT32_MAX = (2-2**-23)*2**127;
+const ROUNDING_UNIT = 2**-24;
+// GPUs may flush subnormal inputs/results to zero. Relative roundoff alone
+// cannot bound that error. Reserve an absolute allowance for the affine dot
+// products and subsequent camera arithmetic, including cancellation to zero.
+const FLUSH_ERROR = 32*FLOAT32_MIN_NORMAL;
+export function normalFloat32(value: number): boolean {
+  return value === 0 || Math.abs(value) >= FLOAT32_MIN_NORMAL && Math.abs(value) <= FLOAT32_MAX;
+}
 // Column-major affine transform; layer, signed uniform scale, viewport offset.
 export const IDENTITY_INSTANCE = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1, 0,1,0,0]);
 
@@ -65,13 +74,21 @@ export function retainedPrecisionSafe(meshes: RetainedMesh[], origin: Vec3, basi
   // A finite double-precision product does not imply a representable GPU
   // transform: tiny local coordinates may compensate for a scale above FLT_MAX.
   // Check the actual packed matrix AND metadata (including the normal divisor).
-  if (!instance.every(Number.isFinite) || instance[17] === 0) return false;
+  if (!instance.every(normalFloat32) || instance[17] === 0
+    || !origin.every(normalFloat32) || !basis.every(axis=>axis.every(normalFloat32))) return false;
+  // Normal dot-product underflow is amplified by division by the object scale.
+  // Stream if that absolute error could exceed one normal float32 rounding unit.
+  if (FLUSH_ERROR/Math.abs(instance[17]) > ROUNDING_UNIT) return false;
   const local: Vec3 = [0,0,0];
   for (const mesh of meshes) for (let axis=0;axis<3;axis++) local[axis]=Math.max(local[axis],mesh.magnitude[axis]);
   const extent=origin.map((_,axis)=>local.reduce((sum,v,i)=>sum+v*Math.abs(basis[i][axis]),0)) as Vec3;
+  // Bound intermediate sums too, even if their final value would cancel. Local
+  // normals are unit vectors; their transformed dot products use the same basis.
+  if (extent.some((v,i)=>v+Math.abs(origin[i]) > FLOAT32_MAX/(1+8*ROUNDING_UNIT))
+    || origin.some((_,i)=>basis.reduce((sum,axis)=>sum+Math.abs(axis[i]),0) > FLOAT32_MAX/(1+8*ROUNDING_UNIT))) return false;
   // Eight float32 roundoff units cover input/basis narrowing and the affine
   // multiply-adds, including a small margin for the already-rounded bounds.
-  const error=8*2**-24*Math.hypot(...extent.map((v,i)=>v+Math.abs(origin[i])));
+  const error=8*ROUNDING_UNIT*Math.hypot(...extent.map((v,i)=>v+Math.abs(origin[i])))+FLUSH_ERROR;
   let pixelsPerUnit=1;
   if (!screen) {
     const sy=Math.sin(camera.yaw),cy=Math.cos(camera.yaw),sp=Math.sin(camera.pitch),cp=Math.cos(camera.pitch);
@@ -125,7 +142,7 @@ export class RetainedGeometry {
     this.used.add(key);
     if (!this.meshes.has(key)) {
       const items = build();
-      this.meshes.set(key, items.some(item => item.transparent || item.cameraDependentGeometry) ? null : combine && items.length ? [indexGeometry(items)] : items.map(item => indexGeometry([item])));
+      this.meshes.set(key, items.some(item => item.transparent || item.cameraDependentGeometry || item.retentionUnsafe) ? null : combine && items.length ? [indexGeometry(items)] : items.map(item => indexGeometry([item])));
     }
     return this.meshes.get(key) ?? undefined;
   }
