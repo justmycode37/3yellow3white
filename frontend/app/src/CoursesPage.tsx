@@ -94,9 +94,9 @@ function DeleteCourse({ title, onDelete }: { title: string; onDelete: () => void
       <h3 id="delete-course-title">Delete {title}?</h3>
       <p>This removes the course and its uploaded material. Your videos stay in Library.</p>
       <div className="course-delete-actions">
-        <button className="delete-course-button" onClick={onDelete}><Trash size={16}/>Delete {title}</button>
+        <button className="delete-course-button" onClick={onDelete}><Trash size={20}/>Delete {title}</button>
         <button className="secondary-button" autoFocus onClick={cancel}>Cancel</button>
       </div>
-    </div> : <button ref={deleteButton} className="delete-course-button" onClick={() => setConfirming(true)}><Trash size={16}/>Delete course</button>}
+    </div> : <button ref={deleteButton} className="delete-course-button" onClick={() => setConfirming(true)}><Trash size={20}/>Delete course</button>}
   </div>
 }
