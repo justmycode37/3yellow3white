@@ -4,7 +4,7 @@ import { SceneSequence } from '../src/sequence.js';
 import { createPlayer } from '../src/player.js';
 import { compositionCases } from './composition-cases.js';
 import { reactiveCases } from './reactive-cases.js';
-import { materialCases, materialSource } from './material-cases.js';
+import { materialCases, materialSource, bumpSource } from './material-cases.js';
 import { textureCases, texturePixelIssues } from './texture-cases.js';
 import { transparencyCases } from './transparency-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
@@ -80,6 +80,18 @@ export async function runWebGLTests() {
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');
       assert(at(draw(), canvas, 320, 240).join() === '255,0,0', 'Center must be pure red');
       assert(foreground(draw()) > 15000, 'Expected a filled rectangle');
+    });
+    for(const metal of [false,true]) await test(`bump normals with constant albedo, metal=${metal}`,async()=>{
+      const images:Uint8Array[]=[];
+      for(const strength of [undefined,0,0.15,-0.15]){await load(bumpSource(strength,false,metal));images.push(draw());}
+      assert(!different(images[0],images[1]),'Zero bump changed baseline pixels');
+      assert(images[1].filter((v,i)=>Math.abs(v-images[2][i])>5).length>1000,'Bump did not affect lighting');
+      assert(images[2].filter((v,i)=>Math.abs(v-images[3][i])>5).length>1000,'Negative bump did not invert relief');
+      for(let i=0;i<images[0].length;i+=4)assert((images[2][i]>0)===(images[0][i]>0),'Bump changed silhouette');
+    });
+    await test('bump leaves unlit pixels unchanged',async()=>{
+      await load(bumpSource(0,true));const original=draw();await load(bumpSource(0.2,true));
+      assert(!different(original,draw()),'Bump affected unlit color');
     });
     for(const {name,a,b} of materialCases) await test(`material ${name} changes real shaded pixels`,async()=>{
       await load(materialSource(a));const first=draw();await load(materialSource(b));const second=draw();

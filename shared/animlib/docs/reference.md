@@ -469,7 +469,7 @@ export default scene({ mode: '3d', orbit: true }, s => {
     position: [1.6, 0, 0], fill: Color.BLUE_A,
     texture: {
       pattern: 'marble', color: Color.BLUE_E,
-      scale: [2, 3, 2], offset: [0.25, 0.25, 0.25], seed: 17,
+      scale: [2, 3, 2], offset: [0.25, 0.25, 0.25], seed: 17, bumpStrength: 0.08,
     },
     material: { roughness, specular: 0.6 },
   });
@@ -494,6 +494,19 @@ export default scene({ mode: '3d', orbit: true }, s => {
   antialiasing filter blends the neighboring colors.
 - `seed`: integer `0`–`65535`, default `0`. Varies noise, marble, and wood;
   checker and stripes ignore it. Independent of the scene's random seed.
+- `bumpStrength`: signed height in local scene units, from `-1` to `1`, default
+  `0`. Perturbs the lighting normal using the filtered pattern as a height field.
+  Positive values raise the secondary-color regions; negative values invert the
+  relief. Start around `0.02`–`0.15`. Use matching fill and texture colors for
+  relief without color variation. Requires sphere lighting or flat/smooth mesh
+  shading; works with both simple lighting and configurable materials.
+
+Bump mapping changes diffuse lighting and metallic/specular highlights, not
+vertices, silhouettes, picking, or shadows. It follows object/group transforms;
+bump height scales with the object. Grazing or degenerate projections retain
+the base normal. Fine patterns use the same approximate filtering as their color,
+and very strong/high-frequency bump can alias. There is no tangent-space normal
+image or displacement geometry.
 
 Patterns follow element/group translation, rotation, and uniform scale. They use
 local XYZ, not surface UV parameters or distance along a tube. Rebuilding or
@@ -540,9 +553,9 @@ settings for a continuous finish, or crossfade separate objects deliberately.
 The material model uses the renderer's camera-relative directional light and a
 procedural studio reflection approximation. It does not reflect other scene
 objects. No configurable lights, environment maps, shadows, image/video textures,
-normal/bump maps, displacement, physically based material guarantees, or bloom
+image normal/bump maps, displacement, physically based material guarantees, or bloom
 are provided. Try the **Textures** study in `/spatial.html` for pattern, palette,
-frequency, seed, metalness, roughness, highlight, and emission controls.
+frequency, seed, bump strength, metalness, roughness, highlight, and emission controls.
 
 ### Function and parametric surfaces
 
@@ -1762,7 +1775,7 @@ comprehensive physically based material system. Shape matching cannot infer sema
 part correspondence or arbitrary mesh topology.
 
 Not yet included: custom fonts and general text shaping, images/video textures,
-environment maps, bump/normal maps, displacement, bloom, configurable lights,
+environment maps, image bump/normal maps, displacement, bloom, configurable lights,
 shadows, general path/text hit shapes, LaTeX split/merge mappings, a full physics solver,
 infinite scenes, branching navigation, playback-rate controls,
 video export, or mobile-browser support guarantees. The initial control surface

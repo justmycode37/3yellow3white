@@ -6,7 +6,7 @@ import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 // Visualization intentionally revised for shaded meshes, sampled surfaces, solids,
 // swept tubes, procedural textures, and configurable materials. Other assets retain the original bytes. Pin exact reviewed text.
 const hashes = {
-  visualization: '98037b20f8cd6a01aca8030e0cf547a22ddbaaff4b0ea25aa1905d233b1646f2',
+  visualization: '804945b416bcb7fd5443b1d0cbd61962daa7873ea215db671d3938dbc96041f9',
   planning: '36af6cbcaaa3f858e515c1f8709f0893a537f73e8528a2e47875a27e21428533',
   'topics-system': 'ad3bcf9c7c1351f28c6f80b6fd2c8cfbb15655ebdb587d2d623af2d94eb37131',
   'topics-format': '260ba64060e06134c8208ba90533bdfeccbe28cff6d92bdb07d9d8e79a03afb7',

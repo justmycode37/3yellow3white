@@ -8,9 +8,9 @@ them afterward. A subsequent [reactive slider prototype](reactive-controls.md)
 implements and measures a callback path; the baseline results here predate it.
 
 The measurements are historical, not current performance promises. Procedural
-texture/material support now packs 30 floats (120 bytes) per vertex instead of
+texture/material support now packs 31 floats (124 bytes) per vertex instead of
 15 floats (60 bytes), including for plain geometry. The CPU benchmark should be
-rerun for current workloads; textures add fragment work without extra triangles.
+rerun for current workloads; textures and optional bump mapping add fragment work without extra triangles.
 
 ## Measurement conditions
 

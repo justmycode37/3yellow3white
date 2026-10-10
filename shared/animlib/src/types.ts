@@ -32,6 +32,8 @@ export interface ProceduralTexture {
   offset?: Vec3;
   /** Integer 0–65535, default 0. Varies noise, marble, and wood. */
   seed?: number;
+  /** Signed bump height in local units, -1–1; default 0. Changes lighting only. */
+  bumpStrength?: number;
 }
 
 /** Stylized surface lighting; omitted keeps the original directional shading. */

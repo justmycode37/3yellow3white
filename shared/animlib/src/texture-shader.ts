@@ -1,10 +1,18 @@
 /** Packed vertex layout shared by tessellation, composition, inspection and both GPUs. */
-export const VERTEX_FLOATS = 30;
+export const VERTEX_FLOATS = 31;
 export const texturePatterns = ['checker', 'stripes', 'noise', 'marble', 'wood'] as const;
 
 // Equivalent bounded value-noise and filtered pattern functions for the two backends.
 // Texture coordinates are local, interpolated per fragment (no extra tessellation).
 export const textureWGSL = `
+fn bumpNormal(n:vec3f,dx:vec3f,dy:vec3f,dh:vec2f,strength:f32)->vec3f {
+  let rx=cross(dy,n);let ry=cross(n,dx);let determinant=dot(dx,rx);
+  // Degenerate projections and grazing faces keep their finite base normal.
+  if(abs(determinant)<=0.000001*max(length(dx)*length(dy),1e-20)){return n;}
+  let gradient=(rx*dh.x+ry*dh.y)/determinant;
+  return normalize(n-strength*gradient);
+}
+
 fn textureHash(cell:vec3f,seed:f32)->f32 {
   var p=fract(cell*0.1031+vec3f(seed*0.001));
   p+=vec3f(dot(p,p.yzx+vec3f(33.33)));
@@ -36,6 +44,13 @@ fn textureMix(p:vec3f,kind:f32,seed:f32,footprint:vec3f)->f32 {
 `;
 
 export const textureGLSL = `
+vec3 bumpNormal(vec3 n,vec3 dx,vec3 dy,vec2 dh,float strength) {
+  vec3 rx=cross(dy,n),ry=cross(n,dx);float determinant=dot(dx,rx);
+  if(abs(determinant)<=0.000001*max(length(dx)*length(dy),1e-20)){return n;}
+  vec3 gradient=(rx*dh.x+ry*dh.y)/determinant;
+  return normalize(n-strength*gradient);
+}
+
 float textureHash(vec3 cell,float seed) {
   vec3 p=fract(cell*0.1031+vec3(seed*0.001));
   p+=vec3(dot(p,p.yzx+vec3(33.33)));

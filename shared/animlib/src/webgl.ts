@@ -30,6 +30,7 @@ layout(location=9) in vec4 texColor;
 layout(location=10) in float texSeed;
 layout(location=11) in vec3 material;
 layout(location=12) in vec3 emission;
+layout(location=13) in float bumpStrength;
 uniform vec4 focus;
 uniform vec4 angles;
 uniform vec4 viewport;
@@ -43,6 +44,8 @@ out float vTexSeed;
 out vec3 vViewDirection;
 out vec3 vMaterial;
 out vec3 vEmission;
+out vec3 vViewPosition;
+out float vBumpStrength;
 void main() {
   vec3 p=world-focus.xyz;
   float cy=cos(-angles.x), sy=sin(-angles.x);
@@ -63,7 +66,7 @@ void main() {
   vNormal=vec3(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
   vLit=lit; vColor=color;
   vTexPosition=texPosition;vTexKind=texKind;vTexColor=texColor;vTexSeed=texSeed;
-  vMaterial=material;vEmission=emission;vViewDirection=mix(vec3(0.,0.,1.),vec3(-p.x,-p.y,depth),angles.w);
+  vMaterial=material;vEmission=emission;vViewPosition=p;vBumpStrength=bumpStrength;vViewDirection=mix(vec3(0.,0.,1.),vec3(-p.x,-p.y,depth),angles.w);
 }`;
 const fragment = `#version 300 es
 precision highp float;
@@ -77,18 +80,26 @@ in float vTexSeed;
 in vec3 vViewDirection;
 in vec3 vMaterial;
 in vec3 vEmission;
+in vec3 vViewPosition;
+in float vBumpStrength;
 out vec4 outputColor;
 ${textureGLSL}
 ${materialGLSL}
 void main() {
   vec4 color=vColor;
   vec3 footprint=fwidth(vTexPosition);
-  if(vTexKind>0.5){color=mix(color,vTexColor,textureMix(vTexPosition,vTexKind,vTexSeed,footprint));}
+  float height=0.;
+  if(vTexKind>0.5){height=textureMix(vTexPosition,vTexKind,vTexSeed,footprint);color=mix(color,vTexColor,height);}
+  vec3 dx=dFdx(vViewPosition),dy=dFdy(vViewPosition);
+  vec2 dh=vec2(dFdx(height),dFdy(height));
   if(color.a<=0.){discard;}
   if(vLit>0.5) {
-    vec3 n=vNormal;if(vLit>1.5&&!gl_FrontFacing){n=-n;}
-    if(vMaterial.y>0.){color=vec4(materialColor(color.rgb,n/max(length(n),0.000001),normalize(vViewDirection),vMaterial),color.a);}
-    else {float amount=0.32+0.68*max(0.,dot(n/max(length(n),0.000001),normalize(vec3(-0.4,0.65,1.))));
+    vec3 n=vNormal;
+    n=n/max(length(n),0.000001);
+    if(vBumpStrength!=0.){n=bumpNormal(n,dx,dy,dh,vBumpStrength);}
+    if(vLit>1.5&&!gl_FrontFacing){n=-n;}
+    if(vMaterial.y>0.){color=vec4(materialColor(color.rgb,n,normalize(vViewDirection),vMaterial),color.a);}
+    else {float amount=0.32+0.68*max(0.,dot(n,normalize(vec3(-0.4,0.65,1.))));
     color=vec4(color.rgb*amount,color.a);}
   }
   outputColor=vec4(color.rgb+vEmission,color.a);
@@ -133,7 +144,7 @@ export class WebGLBackend {
       };
       this.focus = uniform('focus'); this.angles = uniform('angles'); this.viewport = uniform('viewport');
       gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108]]) {
+      for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108],[13,1,120]]) {
         gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, VERTEX_FLOATS*4, offset);
       }
       gl.bindVertexArray(null);

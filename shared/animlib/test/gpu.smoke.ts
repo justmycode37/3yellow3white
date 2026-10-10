@@ -16,7 +16,7 @@ import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
 import {lessons} from '../../../frontend/app/src/data';
 import {compositionCases} from './composition-cases.js';
 import {reactiveCases} from './reactive-cases.js';
-import {materialCases,materialSource} from './material-cases.js';
+import {materialCases,materialSource,bumpSource} from './material-cases.js';
 import {textureCases,texturePixelIssues} from './texture-cases.js';
 import {transparencyCases} from './transparency-cases.js';
 
@@ -79,6 +79,30 @@ describe('native Vulkan WebGPU rendering',()=> {
     await mkdir(directory,{recursive:true});await writeFile(join(directory,name+'.png'),Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(rows)),chunk('IEND',Buffer.alloc(0))]));
   }
   function changedPixels(image:Uint8Array,background:PaletteColor=Color.BLACK):number {const rgb=colorString.get.rgb(paletteResolver().resolve(background))!;let count=0;for(let i=0;i<image.length;i+=4)if(Math.abs(image[i]-rgb[0])+Math.abs(image[i+1]-rgb[1])+Math.abs(image[i+2]-rgb[2])>12)count++;return count;}
+  it.each([false,true])('bump changes normals with constant albedo, metal=%s',async metal=>{
+    const images:Uint8Array[]=[];
+    for(const strength of [undefined,0,0.15,-0.15]) {
+      renderer.resetInteraction();
+      expect((await sequence.submit({type:'load',scenes:[{id:'bump',source:bumpSource(strength,false,metal)}]})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);images.push(await pixels());
+    }
+    expect(Buffer.from(images[0]).equals(Buffer.from(images[1]))).toBe(true);
+    expect(images[1].filter((v,i)=>Math.abs(v-images[2][i])>5).length).toBeGreaterThan(1000);
+    expect(images[2].filter((v,i)=>Math.abs(v-images[3][i])>5).length).toBeGreaterThan(1000);
+    for(let i=0;i<images[0].length;i+=4)expect(images[2][i]>0).toBe(images[0][i]>0);
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
+  it('bump leaves unlit pixels unchanged',async()=>{
+    const images:Uint8Array[]=[];
+    for(const strength of [0,0.2]) {
+      expect((await sequence.submit({type:'load',scenes:[{id:'bump',source:bumpSource(strength,true)}]})).ok).toBe(true);
+      renderer.render(sequence.frame(0,0),sequence.compiled[0].options);images.push(await pixels());
+    }
+    expect(Buffer.from(images[0]).equals(Buffer.from(images[1]))).toBe(true);
+    expect(errors).toEqual([]);
+    expect((await sequence.submit({type:'load',scenes:initialSources})).ok).toBe(true);
+  });
   it.each(materialCases)('material $name changes real shaded pixels',async ({a,b})=>{
     const images:Uint8Array[]=[];
     for(const material of [a,b]) {

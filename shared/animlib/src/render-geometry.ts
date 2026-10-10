@@ -119,7 +119,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
           for(let axis=0;axis<3;axis++)vertices[j+15+axis]=p[axis]*textureScale[axis]+(texture.offset?.[axis]??0);
           vertices[j+18]=textureKind;
           vertices[j+19]=secondary[0];vertices[j+20]=secondary[1];vertices[j+21]=secondary[2];vertices[j+22]=secondary[3]*opacity*alpha;
-          vertices[j+23]=texture.seed??0;
+          vertices[j+23]=texture.seed??0;vertices[j+30]=(texture.bumpStrength??0)*scale;
         }
         if(material) {
           vertices[j+24]=material.metalness??0;vertices[j+25]=material.roughness??0.45;vertices[j+26]=material.specular??0.5;

@@ -58,7 +58,7 @@ function geometry(g: Geometry) {
   if (g.texture !== undefined) {
     const t = g.texture;
     check((g.kind === "mesh" || g.kind === "sphere") && t && typeof t === "object" && !Array.isArray(t), "Textures require mesh or sphere geometry");
-    check(Object.keys(t).every(key => ["pattern", "color", "scale", "offset", "seed"].includes(key)), "Unknown texture option");
+    check(Object.keys(t).every(key => ["pattern", "color", "scale", "offset", "seed", "bumpStrength"].includes(key)), "Unknown texture option");
     check(["checker", "stripes", "noise", "marble", "wood"].includes(t.pattern), "Invalid texture pattern");
     validateColor(t.color);
     if (t.scale !== undefined) {
@@ -67,6 +67,10 @@ function geometry(g: Geometry) {
       for (const value of scales) { number(value, "texture scale"); check(value > 0 && value <= 1000, "Texture scale must be in (0, 1000]"); }
     }
     if (t.offset !== undefined) vec(t.offset, "texture offset");
+    if (t.bumpStrength !== undefined) {
+      number(t.bumpStrength, "texture bumpStrength");
+      check(Math.abs(t.bumpStrength) <= 1, "Texture bumpStrength must be between -1 and 1");
+    }
     if (t.seed !== undefined) check(Number.isInteger(t.seed) && t.seed >= 0 && t.seed <= 65535, "Texture seed must be an integer 0–65535");
   }
   if (g.normals !== undefined) {

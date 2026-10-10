@@ -25,7 +25,8 @@ Keep these instructions in nonspoken planning; they are not narration.
   Labels can face the camera and remain attached to objects.
 - **Surface appearance:** spheres and meshes support checker, stripe, noise,
   marble, and wood patterns using two palette colors. Patterns stay attached under
-  object transforms. Metalness, roughness, specular highlights, and emissive
+  object transforms. Adjustable procedural bump perturbs lighting normals for
+  raised or recessed detail without changing silhouettes. Metalness, roughness, specular highlights, and emissive
   color/intensity create stylized metal, matte, plastic, and luminous surfaces.
   These settings can be explored with ordinary controls. Emission does not cast
   light or create bloom, and metallic reflections do not show other scene objects.
@@ -164,7 +165,7 @@ run asynchronous builders.
 ## Current boundaries
 
 - No image/video textures, UV mapping, imported 3D models, photorealistic materials,
-  bump/normal maps, displacement, environment maps, shadows, bloom, configurable lights,
+  image bump/normal maps, displacement, environment maps, shadows, bloom, configurable lights,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
 - SVG support accepts path geometry, not complete SVG files or their styling.
   Filled contours must be closed, simple, and nonintersecting; nested contours

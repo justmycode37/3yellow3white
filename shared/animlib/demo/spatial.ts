@@ -86,6 +86,7 @@ export const texturesSource: SceneSource = {
     const pattern=s.select('pattern',{label:'Pattern',default:'marble',options:['none','checker','stripes','noise','marble','wood']});
     const scale=s.slider('scale',{label:'Pattern frequency',default:2,min:0.5,max:6,step:0.1});
     const seed=s.slider('seed',{label:'Noise seed',default:17,min:0,max:100,step:1});
+    const bumpStrength=s.slider('bump',{label:'Bump strength',default:0,min:-0.3,max:0.3,step:0.01});
     const metalness=s.slider('metalness',{label:'Metalness',default:0,min:0,max:1,step:0.05});
     const roughness=s.slider('roughness',{label:'Roughness',default:0.35,min:0.05,max:1,step:0.05});
     const specular=s.slider('specular',{label:'Highlight strength',default:0.5,min:0,max:1,step:0.05});
@@ -93,7 +94,7 @@ export const texturesSource: SceneSource = {
     const tone=s.select('tone',{label:'Color',default:'blue',options:['blue','gold','copper','silver']});
     const colors={blue:['BLUE_A','BLUE_E'],gold:['GOLD_A','GOLD_E'],copper:['LIGHT_BROWN','DARK_BROWN'],silver:['GREY_A','GREY_D']};
     const fill=colors[tone][0];
-    const texture=pattern==='none'?undefined:{pattern,color:colors[tone][1],scale,seed,offset:[0.25,0.25,0.25]};
+    const texture=pattern==='none'?undefined:{pattern,color:colors[tone][1],scale,seed,bumpStrength,offset:[0.25,0.25,0.25]};
     const material={metalness,roughness,specular,emissive:fill,emissiveIntensity:emission};
     s.sphere('sphere',{radius:1.05,position:[-2,0.9,0],fill,texture,material});
     s.box('box',{width:1.7,height:1.7,depth:1.7,position:[1.8,0.9,0],rotation:[0,0.4,0],fill,texture,material});

@@ -7,7 +7,7 @@ import { paletteResolver } from '../src/palette.js';
 import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import type { Frame } from '../src/types.js';
 
-const texture = { pattern:'checker', color:'BLUE', scale:[2,3,4], offset:[0.2,0.3,0.4], seed:42 };
+const texture = { pattern:'checker', color:'BLUE', scale:[2,3,4], offset:[0.2,0.3,0.4], seed:42, bumpStrength:0.15 };
 const options = JSON.stringify(texture);
 const material = {metalness:0.8,roughness:0.2,specular:0.6,emissive:'GOLD',emissiveIntensity:0.25};
 const items = (frame: Frame) => buildDrawItems(frame,frame.camera,640,480,paletteResolver());
@@ -46,6 +46,17 @@ describe('procedural textures', () => {
     expect(last[0].vertices.slice(0,3)).not.toEqual(first[0].vertices.slice(0,3));
     const frame=evaluateScene(scene,1);frame.camera.yaw=1;
     expect(items(frame)[0].vertices).toEqual(last[0].vertices);
+  });
+
+  it('scales bump height with nested object transforms without changing geometry',async()=>{
+    const scene=await compileSource(`export default scene({},s=>{
+      const box=s.box('box',{texture:${options},scale:2});
+      const group=s.group('group',[box],{scale:3});s.play(group.scaleTo(6),{duration:1});
+    });`);
+    const start=evaluateScene(scene,0),end=evaluateScene(scene,1);
+    expect(end.elements[0].geometry).toEqual(start.elements[0].geometry);
+    expect(items(start)[0].vertices[30]).toBeCloseTo(0.15*6);
+    expect(items(end)[0].vertices[30]).toBeCloseTo(0.15*12);
   });
 
   it('routes either translucent color through triangle sorting and honors fill none', async () => {
@@ -111,6 +122,8 @@ describe('procedural textures', () => {
     "{pattern:'noise',color:'BLUE',scale:1001}", "{pattern:'noise',color:'BLUE',scale:[1,2]}",
     "{pattern:'noise',color:'BLUE',scale:NaN}", "{pattern:'noise',color:'BLUE',offset:[0,Infinity,0]}",
     "{pattern:'noise',color:'BLUE',seed:0.5}", "{pattern:'noise',color:'BLUE',seed:65536}",
+    "{pattern:'noise',color:'BLUE',bumpStrength:NaN}", "{pattern:'noise',color:'BLUE',bumpStrength:1.1}",
+    "{pattern:'noise',color:'BLUE',bumpStrength:-1.1}",
     "{pattern:'noise',color:'BLUE',url:'https://example.com'}",
   ])('rejects invalid texture %s', async value => {
     await expect(compileSource(`export default scene({},s=>{s.box('bad',{texture:${value}})});`)).rejects.toThrow();

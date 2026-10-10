@@ -74,9 +74,10 @@ limits are validation ceilings, not frame-rate guarantees.
 Spheres and all mesh builders accept `texture` for checker, stripes, noise,
 marble, and wood patterns, plus `material` for metalness, roughness, specular
 highlights, and emissive color/intensity. Patterns use local XYZ and two palette
-colors on both GPU backends; metal reflections approximate a studio environment.
+colors on both GPU backends; `texture.bumpStrength` adds raised or recessed relief
+to the lighting normals. Metal reflections approximate a studio environment.
 Ordinary controls can rebuild their parameters. There are no image textures,
-bump maps, scene reflections, or bloom. See
+image normal maps, displacement, scene reflections, or bloom. See
 [textures and materials](docs/reference.md#procedural-textures-and-materials).
 
 Open `http://localhost:5173/spatial.html` for interactive function, flower, and
