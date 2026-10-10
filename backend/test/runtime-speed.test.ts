@@ -146,13 +146,13 @@ for (const completedCalls of [0, 1]) {
   });
 }
 
-test('submit-only exposes only terminal submission and validates again before returning', async () => {
+test('submit-only exposes terminal submission and web access and validates again before returning', async () => {
   const { runner, contexts } = await harness([call('submit_output', 'complete-source')]);
   const checked: string[] = [];
   expect(await runner.run({ ...base, outputMode: 'submit-only', validate: async output => { checked.push(output); } })).toBe('complete-source');
   expect(contexts).toHaveLength(1);
   const names = contexts[0].messages.flatMap(message => message.role === 'system' ? (message.toolsAdded ?? []).map(tool => tool.name) : []);
-  expect(names).toEqual(['submit_output']);
+  expect(names).toEqual(['submit_output', 'web_enable']);
   expect(checked).toEqual(['complete-source', 'complete-source']);
 });
 

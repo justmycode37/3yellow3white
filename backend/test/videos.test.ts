@@ -20,6 +20,70 @@ async function waitFor(check: () => boolean) {
   throw new Error('Timed out waiting for generation')
 }
 
+test('videos start independently, deduplicate active jobs, and cancel only the deleted video', async () => {
+  const started = new Map<string, number>()
+  const signals = new Map<string, AbortSignal>()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  const service = new VideoService(':memory:', async (request, index, context) => {
+    if (index === 0) {
+      started.set(context!.videoId, (started.get(context!.videoId) ?? 0) + 1)
+      signals.set(context!.videoId, context!.signal)
+      await Promise.race([gate, new Promise<void>(resolve => context!.signal.addEventListener('abort', () => resolve(), { once: true }))])
+    }
+    return fixture(request, index)
+  }); services.push(service)
+  try {
+    const first = service.create(SHARED_OWNER, 'first', input)
+    await waitFor(() => started.has(first.id))
+    const others = Array.from({ length: 4 }, (_, i) => service.create(SHARED_OWNER, `other-${i}`, input))
+    expect(service.create(SHARED_OWNER, 'first', input).id).toBe(first.id)
+    await waitFor(() => started.size === 5)
+    expect([...started.values()]).toEqual([1, 1, 1, 1, 1])
+    service.delete(first.id)
+    expect(signals.get(first.id)!.aborted).toBe(true)
+    expect(others.every(video => !signals.get(video.id)!.aborted)).toBe(true)
+    release()
+    await waitFor(() => others.every(video => service.get(video.id, SHARED_OWNER)?.status === 'complete'))
+    for (const video of others) expect(service.get(video.id, SHARED_OWNER)!.scenes.map(scene => scene.index)).toEqual([0, 1])
+    expect(service.get(first.id, SHARED_OWNER)).toBeUndefined()
+  } finally { release() }
+})
+
+test('shutdown drains all active videos and restart resumes them concurrently', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'aha-concurrent-resume-'))
+  const started = new Set<string>(), aborted = new Set<string>()
+  let release!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  const service = new VideoService(join(dir, 'db'), async (request, index, context) => {
+    if (index === 1) {
+      started.add(context!.videoId)
+      await new Promise<void>(resolve => context!.signal.addEventListener('abort', () => { aborted.add(context!.videoId); resolve() }, { once: true }))
+    }
+    return fixture(request, index)
+  }); services.push(service)
+  try {
+    const videos = Array.from({ length: 3 }, (_, i) => service.create(SHARED_OWNER, `video-${i}`, input))
+    await waitFor(() => started.size === 3)
+    await service.close(); services.splice(services.indexOf(service), 1)
+    expect(aborted.size).toBe(3)
+    const resumed = new Map<string, number>()
+    const reopened = new VideoService(join(dir, 'db'), async (request, index, context) => {
+      if (!resumed.has(context!.videoId)) resumed.set(context!.videoId, index)
+      await gate
+      return fixture(request, index)
+    }); services.push(reopened)
+    await waitFor(() => resumed.size === 3)
+    expect([...resumed.values()]).toEqual([1, 1, 1])
+    release()
+    await waitFor(() => videos.every(video => reopened.get(video.id, SHARED_OWNER)?.status === 'complete'))
+  } finally {
+    release()
+    await Promise.all(services.splice(0).map(service => service.close()))
+    await rm(dir, { recursive: true, force: true })
+  }
+})
+
 test('JSON and multipart creation forward the viewing preference and distinguish idempotent requests', async () => {
   const received: unknown[] = []
   const service = new VideoService(':memory:', async request => { received.push(request.videoMode); return null }); services.push(service)
@@ -143,7 +207,7 @@ test('thumbnail generation overlaps scenes, persists, and finishes before the te
 test('thumbnail failure preserves playable videos and does not stop the queue', async () => {
   const service = new VideoService(':memory:', fixture, 'pi', async () => { throw new Error('private provider error') }); services.push(service)
   const first = service.create(SHARED_OWNER, 'one', input), second = service.create(SHARED_OWNER, 'two', input)
-  await waitFor(() => service.get(second.id, SHARED_OWNER)?.status === 'complete')
+  await waitFor(() => [first, second].every(video => service.get(video.id, SHARED_OWNER)?.status === 'complete'))
   const video = service.get(first.id, SHARED_OWNER)!
   expect(video).toMatchObject({ status: 'complete', thumbnailStatus: 'failed' })
   expect(video.scenes).toHaveLength(2)

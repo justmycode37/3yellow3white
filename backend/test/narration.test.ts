@@ -29,6 +29,26 @@ async function setup(synthesize = async (input: { text: string }) => speech(inpu
   const provider: SpeechProvider = { settings, synthesize: async input => { inputs.push(input); return synthesize(input); } };
   return { root, inputs, provider, service: new NarrationService({ root, provider }) };
 }
+test("independent narration jobs synthesize concurrently and identical submissions are deduplicated", async () => {
+  const started: string[] = [];
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const { service } = await setup(async input => { started.push(input.text); await gate; return speech(input.text); });
+  try {
+    const scripts = ['One.', 'Two.', 'Three.'].map(text => `Narration: ${text}`);
+    const jobs = await Promise.all(scripts.map(markdown => service.submit('owner', markdown)));
+    expect((await service.submit('owner', scripts[0])).id).toBe(jobs[0].id);
+    for (let i = 0; i < 300 && started.length < 3; i++) await Bun.sleep(10);
+    expect(started.sort()).toEqual(['One.', 'Three.', 'Two.']);
+    let idle = false;
+    const draining = service.idle().then(() => { idle = true; });
+    await Bun.sleep(10);
+    expect(idle).toBe(false);
+    release(); await draining;
+    for (const job of jobs) expect((await service.get('owner', job.id)).status).toBe('complete');
+  } finally { release(); await service.idle(); }
+});
+
 test("parses labelled Markdown without speaking context, preserving order and roles", () => {
   const parsed = parseStoryline(script);
   expect(parsed.title).toBe("Counting");
@@ -49,7 +69,7 @@ test("rejects ambiguity, empty labels, duplicate scenes, stage directions and pa
 });
 test("guidance production example is accepted by the actual parser", async () => {
   const guidance = await readFile(new URL("../prompts/guidance.md", import.meta.url), "utf8");
-  const example = /```md\n([\s\S]*?)```/.exec(guidance)![1];
+  const example = /```md\r?\n([\s\S]*?)```/.exec(guidance)![1];
   const parsed = parseStoryline(example);
   expect(parsed.beats).toHaveLength(2);
   expect(parsed.beats[0].blocks.filter(b => b.kind === "pause")).toHaveLength(2);
