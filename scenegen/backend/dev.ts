@@ -30,7 +30,13 @@ export class VisualizationPromptRunner implements AgentRunner {
     if (task.systemPrompt.includes(PLANNING_CONTRACT)) { // lesson authoring: plan + script
       const planning = await readFile(PLANNING, "utf8");
       console.log("[scenegen] lesson planning: appending scenegen/prompts/planning.md");
-      return this.inner.run({ ...task, systemPrompt: `${task.systemPrompt}\n\n${planning}` });
+      // Every scene must state its view, so "3D by default" is a checked decision.
+      const validate = task.validate && (async (output: string) => {
+        await task.validate!(output);
+        const unmarked = planScenes(output).filter(scene => !VIEW_MARK.test(scene.visualDescription ?? "")).map(scene => scene.id);
+        if (unmarked.length) throw new Error(`Start each scene's visualDescription with "3D:" or "2D (because <reason>):". Missing in: ${unmarked.join(", ")}. 3D is the default; 2D needs a real reason.`);
+      });
+      return this.inner.run({ ...task, validate, systemPrompt: `${task.systemPrompt}\n\n${planning}` });
     }
     if (!task.systemPrompt.includes(craft)) return this.inner.run(task); // review
     const visualization = await readFile(VISUALIZATION, "utf8"); // re-read: edits apply to the next scene
@@ -39,8 +45,25 @@ export class VisualizationPromptRunner implements AgentRunner {
     const name = `scene-task-${String(++this.count).padStart(3, "0")}.prompt.md`;
     await writeFile(new URL(name, LOG), `${systemPrompt}\n\n${task.prompt}`);
     console.log(`[scenegen] scene task ${this.count}: using scenegen/prompts/visualization.md (saved out/visualization-prompts/${name})`);
-    return this.inner.run({ ...task, systemPrompt });
+    // A scene planned as 3D must really be built in 3D.
+    const planned3D = /^\s*3D\b/i.test(currentVisualDescription(task.prompt));
+    const validate = task.validate && (async (output: string) => {
+      await task.validate!(output);
+      if (planned3D && !IS_3D.test(output)) throw new Error('This scene is planned in 3D, but the source is flat. Build it in real 3D: mode: "3d" with orbit: true, or an s.view(...) region, with spheres / line3D / arrow3D / meshes at real z coordinates, so the viewer can rotate it.');
+    });
+    return this.inner.run({ ...task, systemPrompt, validate });
   }
+}
+
+const VIEW_MARK = /^\s*(3D\s*:|2D\s*\(because\b)/i;
+const IS_3D = /mode\s*:\s*["']3d["']|\bs\.view\s*\(|\.to3D\s*\(/;
+
+function planScenes(output: string): { id: string; visualDescription?: string }[] {
+  try { return JSON.parse(output).plan?.scenes ?? []; } catch { return []; }
+}
+/** The scene task's prompt ends with the JSON packet that holds this scene's plan. */
+function currentVisualDescription(prompt: string): string {
+  try { return JSON.parse(prompt.slice(prompt.indexOf("{"))).planning?.current?.visualDescription ?? ""; } catch { return ""; }
 }
 
 if (import.meta.main) {

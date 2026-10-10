@@ -141,12 +141,16 @@ Read these before writing (paths relative to `{REPO}`):
 - `shared/animlib/src/types.ts`: exact option and method names.
 
 Hard rules:
-- The source is exactly one module: `export default scene({{ mode: "2d", end: "{'hold' if last else 'advance'}", background: "BLACK" }}, s => {{ ... }});`
+- The source is exactly one module: `export default scene({{ mode: "2d" | "3d", end: "{'hold' if last else 'advance'}", background: "BLACK" }}, s => {{ ... }});`
   No imports, no audio option, no DOM, timers or async code.
-- Use `mode: "2d"` for flat subjects. When the subject is genuinely spatial (molecules,
-  3D geometry), use 3D: spheres, `line3D` / `arrow3D`, camera transitions, and
-  `orbit: true` or an `s.view` region so the viewer can rotate it with the mouse
-  (reference section 6; the chemistry scene in `demo/scenes.ts` is a worked example).
+- 3D or 2D follows the plan above: if "What it shows" starts with "3D:", the scene must
+  be 3D: use `mode: "3d"` with `orbit: true`, or put the 3D objects in an
+  `s.view(id, {{ rect, camera }}, v => {{ ... }})` region (3D camera, rotatable by default)
+  and keep formulas outside it. Use `sphere`, `line3D`, `arrow3D`, `mesh` and real z
+  coordinates; move between flat and spatial views with `s.camera.to3D(...)` /
+  `s.camera.to2D(...)` as an animated transition (reference section 6; the chemistry
+  scene in `demo/scenes.ts` is a worked example). Only a scene marked "2D (because
+  ...)" stays flat with `mode: "2d"`.
 - Colours are palette tokens only (`Color.BLUE` or `"BLUE"`); raw CSS colours are rejected.
 - Timing is sequential: `s.play(action or [actions], {{ duration, ease: "smooth" }})` and
   `s.wait(seconds)`. The durations must add up to **{scene['duration']} s** (±0.5 s).

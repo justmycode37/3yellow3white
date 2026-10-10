@@ -66,22 +66,26 @@ On-screen text (strict):
 - If a word seems necessary, show the idea visually instead (highlight, colour,
   motion, side-by-side comparison).
 
-Spatial subjects (chemistry, biology and anything with a real 3D shape):
-- Prioritise real 3D: show molecules, orbitals, crystals, proteins, cells and organs
-  with their true spatial shape, proportions and angles, and let the viewer rotate
-  them, so the student grasps what the thing actually looks like and what is
-  physically happening (which parts approach, bond, bend, fold or move).
-- Switch to a simpler shape or a flat 2D diagram when that explains better (e.g. a
-  Lewis structure, a reaction scheme, an energy diagram, a cross-section), and make
-  the switch a visible transformation of the same object: the 3D model flattens or
-  simplifies into the diagram, or the diagram lifts back into 3D, so the student
-  sees they are the same thing.
-- Never leave the student with only the abstraction when a real shape exists: return
-  to the 3D picture when the abstract step is done.
+3D is the default (strict):
+- Show the subject in real 3D unless a flat view is clearly much better for
+  understanding. Anything with a real spatial shape or arrangement MUST be 3D:
+  molecules, atoms and bonds, orbitals, crystals, proteins, cells, organs, physical
+  objects, forces and fields in space, surfaces, solids. Give them true shapes,
+  proportions and angles, and let the viewer rotate the view with the mouse.
+- 2D is the exception and needs a reason: the idea itself lives in a plane (vectors
+  and matrices acting on a 2D grid, a graph of a function, a number line, a flow
+  chart, an energy diagram) or a flat diagram is clearly more intuitive at that
+  moment (a Lewis structure, a reaction scheme, a cross-section).
+- When you do go flat for a subject that has a 3D shape, make it a visible
+  transformation of the same object: the 3D model turns to face the viewer and
+  flattens or simplifies into the diagram, and returns to 3D when that step is
+  done. Never leave the student with only the abstraction.
+- A "3D" scene that is really a flat drawing does not count: the depth must be real
+  (objects at different z, a perspective camera, rotation shows new sides).
 
 Interactivity:
 - Keep interactive elements wherever they help: a planned slider, toggle or select
-  must be built and must drive the real geometry; 3D objects should be rotatable.
+  must be built and must drive the real geometry; 3D views are rotatable.
   Do not drop a planned interaction to simplify the scene.
 
 Layout (keep it identical in every scene):

@@ -62,10 +62,14 @@ Rules:
   next scene; ends_with is a clean picture.
 - Do not plan captions or explanatory sentences on screen: only labels, formulas,
   matrices and numbers. "shows" must explain through motion and pictures.
-- Chemistry, biology and other spatial subjects: plan real 3D views first, so the
-  student sees the true shape and what physically happens; the viewer can rotate
-  them with the mouse (that needs no control). Plan a transformation into a simpler
-  shape or a flat 2D diagram where it explains better, and back to 3D afterwards.
+- 3D is the default. Start each scene's "shows" with "3D:" or "2D (because
+  <reason>):". Anything with a real spatial shape or arrangement (molecules, orbitals,
+  crystals, proteins, cells, organs, physical objects, fields, surfaces, solids) must
+  be 3D, with its true shape, and rotatable by the viewer (that needs no control).
+  Use 2D only when the idea itself lives in a plane (vectors and matrices on a 2D
+  grid, a graph, a number line) or a flat diagram is clearly more intuitive at that
+  moment; for a spatial subject, plan that as a visible flattening of the same 3D
+  object and plan the return to 3D.
 - Interactivity: the player lets viewers change inputs live (sliders for numbers,
   toggles for show/hide or on/off, selects for a few named choices), even while the
   animation runs or is paused. Give a scene an interactive element when playing with
