@@ -94,8 +94,8 @@ such as Markdown, CSV, code, and subtitles. Screenshots can also be pasted direc
 into the upload area or notes field; short readable formulas are accepted.
 Audio/video recordings use ElevenLabs Scribe transcription with the server's
 `ELEVENLABS_API_KEY`. Unsupported binary formats return an actionable error.
-Uploads allow 10 files, 50 MB each, 100 MB total, and up to 200,000 extracted
-characters. PDFs allow 500 pages, including up to 20 scanned pages per file.
+Uploads have no app-enforced file-count, file-size, total-size, extracted-text,
+or PDF page-count limits, including scanned pages.
 
 Classification uses the existing Pi login, defaulting to `gpt-6.1-sol`; set
 `STUDY_PLAN_MODEL=gpt-6-astra` to use Astra. The frontend requests background

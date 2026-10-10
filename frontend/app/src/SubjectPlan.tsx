@@ -40,10 +40,6 @@ function MaterialUpload({ subject, nextNote, onAdd, onCancel }: { subject: Cours
     for (const file of selected) {
       if (!next.some(item => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) next.push(file)
     }
-    if (next.length > 10) { setError('Add up to 10 files at a time.'); return }
-    const oversized = next.find(file => file.size > 50 * 1024 * 1024)
-    if (oversized) { setError(`${oversized.name} is larger than 50 MB. Split it into smaller files.`); return }
-    if (next.reduce((size, file) => size + file.size, 0) > 100 * 1024 * 1024) { setError('Add up to 100 MB of material at a time.'); return }
     setFiles(next); setError('')
   }
   const addMaterial = async () => {
@@ -83,11 +79,10 @@ function MaterialUpload({ subject, nextNote, onAdd, onCancel }: { subject: Cours
           <span className="material-file-icon"><FileText size={21}/></span><span className="material-file-info"><strong>{file.name}</strong><small>{file.size < 1024 * 1024 ? `${Math.max(1, Math.ceil(file.size / 1024))} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}</small></span><button type="button" className="icon-button" disabled={busy} aria-label={`Remove ${file.name}`} onClick={() => { setFiles(current => current.filter((_, i) => i !== index)); setError('') }}><X size={16}/></button>
         </li>)}</ul> : <><Upload size={25}/><strong>Drop files or paste a screenshot</strong><span>PDFs, screenshots, photos, slides, spreadsheets, recordings, or notes</span></>}
         <button type="button" className="subject-upload-link" disabled={busy} onClick={() => picker.current?.click()}>{files.length ? 'Add more files' : 'Choose files'} <Plus size={14}/></button>
-        <span>Up to 10 files · 50 MB per file</span>
       </div>
     </div>
     <div id="material-text-panel" role="tabpanel" aria-labelledby="material-text-tab" hidden={mode !== 'text'}>
-      <div className="subject-pasted-text"><textarea aria-label={`Course notes for ${subject.title}`} value={text} readOnly={busy} onChange={event => { setText(event.target.value); setError('') }} maxLength={200000} placeholder={'Paste your lecture notes, a course outline, or anything you want to learn.\n\nYou can combine notes with uploaded files.'}/></div>
+      <div className="subject-pasted-text"><textarea aria-label={`Course notes for ${subject.title}`} value={text} readOnly={busy} onChange={event => { setText(event.target.value); setError('') }} placeholder={'Paste your lecture notes, a course outline, or anything you want to learn.\n\nYou can combine notes with uploaded files.'}/></div>
     </div>
     {status && <div className="material-reading" role="status"><span>{status}</span><button type="button" onClick={cancel}>Cancel <X size={13}/></button></div>}
     {error && <p className="subject-plan-error" role="alert">{error}</p>}

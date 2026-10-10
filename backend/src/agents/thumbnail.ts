@@ -91,7 +91,7 @@ export async function thumbnailTask(request: VideoRequest, signal: AbortSignal, 
     systemPrompt: `${style}\n\n## Existing app SVG examples\n${examples}`,
     prompt: `Draw the thumbnail for this lesson. Source excerpts may be truncated.\n${JSON.stringify({
       title: request.title, topic: request.topic.slice(0, 12_000),
-      documents: request.documents.slice(0, 10).map(d => ({ name: d.name, excerpt: d.text.slice(0, 4000) })),
+      documents: request.documents.map(d => ({ name: d.name, excerpt: d.text.slice(0, 4000) })),
     })}`,
     images, signal,
     validate: async output => { parseThumbnailSVG(output); },

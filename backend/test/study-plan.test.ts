@@ -29,13 +29,27 @@ test('reject missing notes/references, forward/self dependencies, duplicate IDs 
   ]) { const value = output(); mutate(value); expect(() => parseTopicPlan(JSON.stringify(value), document)).toThrow(); }
 });
 
-test('reject oversized and malformed input before model work', async () => {
-  expect(() => parsePlanDocument({ ...document, lines: [{ text: 'x'.repeat(200001) }] })).toThrow();
+test('reject malformed input before model work', async () => {
+  expect(() => parsePlanDocument({ ...document, lines: [{ text: 42 }] })).toThrow();
+  expect(() => parsePlanDocument({ ...document, lines: [{ text: ' ' }] })).toThrow();
   let called = false;
   const route = studyPlanRoutes(() => { called = true; throw new Error('should not run'); });
   expect((await route(new Request('http://localhost/api/study-plans', { method: 'POST', body: '{}' }))).status).toBe(400);
-  expect((await route(new Request('http://localhost/api/study-plans', { method: 'POST', body: 'x'.repeat(2000001) }))).status).toBe(413);
+  expect((await route(new Request('http://localhost/api/study-plans', { method: 'POST', body: 'x'.repeat(2000001) }))).status).toBe(400);
   expect(called).toBe(false);
+});
+
+test('course planning accepts source text and line counts above the former limits', async () => {
+  const paragraph = 'Vectors preserve direction. '.repeat(80_000);
+  const material = { name: 'Long lecture', lines: [{ text: paragraph }, ...Array.from({ length: 20_001 }, () => ({ text: 'A basis describes coordinates.' }))] };
+  expect(parsePlanDocument(material).lines).toEqual(material.lines);
+  const route = studyPlanRoutes(() => ({ run: async task => {
+    expect(task.prompt).toContain(paragraph);
+    return JSON.stringify(output());
+  } }));
+  const response = await route(new Request('http://localhost/api/study-plans', { method: 'POST', body: JSON.stringify(material) }));
+  expect(response.status).toBe(200);
+  expect((await response.json()).originalText).toBe(sourceMaterial(material));
 });
 
 test('model receives the original prompts plus course grouping requirements, final response validated again', async () => {

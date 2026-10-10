@@ -58,14 +58,17 @@ test('mixed files and notes are classified together, retaining all source names'
   body.set('name', 'Algebra material 1'); body.set('text', 'Pasted notes on bases.');
   body.append('files', new File([notes], 'lecture.md'));
   body.append('files', new File(['Matrix columns represent basis images.'], 'matrices.csv'));
+  const extraNames = Array.from({ length: 10 }, (_, i) => `lecture-${i}.txt`);
+  for (const name of extraNames) body.append('files', new File([`Notes from ${name}: ${notes}`], name));
   const material = await readCourseMaterial(body, noAI, signal());
-  expect(material.sourceNames).toEqual(['lecture.md', 'matrices.csv', 'Pasted notes']);
+  expect(material.sourceNames).toEqual(['lecture.md', 'matrices.csv', ...extraNames, 'Pasted notes']);
   expect(material.document.lines.map(l => l.text).join('\n')).toContain('Pasted notes on bases.');
   let calls = 0;
   const route = studyPlanRoutes(() => ({ run: async task => {
     calls++;
     expect(task.prompt).toContain('Matrix columns represent basis images.');
     expect(task.prompt).toContain('Pasted notes on bases.');
+    expect(task.prompt).toContain('Notes from lecture-9.txt:');
     return JSON.stringify({ source_title: 'Linear algebra', audience: 'Beginners', assumed: [], topics: [{ id: 'vectors', group: 'Vectors and bases', minutes: 3, title: 'Vector coordinates', summary: 'Understand coordinates', why_visual: 'See a vector', key_ideas: ['Coordinates'], requires: [], source_refs: 'lecture.md', notes }] });
   } }));
   const response = await route(new Request('http://localhost/api/study-plans', { method: 'POST', body }));
@@ -76,13 +79,26 @@ test('mixed files and notes are classified together, retaining all source names'
   expect(calls).toBe(1);
 });
 
-test('cancellation, empty material, and oversized file counts prevent AI work', async () => {
+test('cancellation, empty material, and invalid file entries prevent AI work', async () => {
   const controller = new AbortController(); controller.abort();
   await expect(readCourseFile(new File([notes], 'lecture.txt'), noAI, controller.signal)).rejects.toThrow();
   const form = new FormData(); form.set('name', 'Algebra');
   await expect(readCourseMaterial(form, noAI, signal())).rejects.toThrow('Choose files');
-  for (let i = 0; i < 11; i++) form.append('files', new File([notes], `lecture-${i}.txt`));
-  await expect(readCourseMaterial(form, noAI, signal())).rejects.toThrow('up to 10');
+  form.append('files', 'not a file');
+  await expect(readCourseMaterial(form, noAI, signal())).rejects.toThrow('Choose valid files');
+});
+
+test('course material accepts files and combined content above the former size limits', async () => {
+  const text = 'x'.repeat(51 * 1024 * 1024);
+  const form = new FormData(); form.set('name', 'Large course');
+  const pastedNotes = 'Notes. '.repeat(30_000);
+  form.set('text', pastedNotes);
+  form.append('files', new File([text], 'lecture-1.txt'));
+  form.append('files', new File([text], 'lecture-2.txt'));
+  const material = await readCourseMaterial(form, noAI, signal());
+  expect(material.sourceNames).toEqual(['lecture-1.txt', 'lecture-2.txt', 'Pasted notes']);
+  expect(material.document.lines.filter(line => line.text === text)).toHaveLength(2);
+  expect(material.document.lines.at(-1)?.text).toBe(pastedNotes);
 });
 
 test('course classification defaults to Sol and permits configured Astra', () => {

@@ -22,13 +22,13 @@ function positive(v: unknown): number {
 
 export function parsePlanDocument(value: unknown): PlanDocument {
   const d = record(value);
-  const lines = list(d.lines, 20000).map(value => {
+  if (!Array.isArray(d.lines)) throw new Error('Expected source lines.');
+  const lines = d.lines.map(value => {
     const line = record(value);
-    if (typeof line.text !== 'string' || line.text.length > 200000) throw new Error('Invalid source line.');
+    if (typeof line.text !== 'string') throw new Error('Invalid source line.');
     return { text: line.text, ...(line.page === undefined ? {} : { page: positive(line.page) }) };
   });
-  const length = lines.reduce((n, line) => n + line.text.length, 0);
-  if (length > 200000 || !lines.some(line => line.text.trim())) throw new Error('Provide readable material and at most 200,000 characters. Split longer material into sections.');
+  if (!lines.some(line => line.text.trim())) throw new Error('Provide readable material.');
   const pages = d.pages === undefined ? undefined : positive(d.pages);
   if (pages && lines.some(line => line.page !== undefined && line.page > pages)) throw new Error('Source page exceeds document length.');
   return { name: text(d.name, 255), lines, pages };
