@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ColorPalette, CompiledScene, Frame } from "../src/types.js";
+import type { CameraState, ColorPalette, CompiledScene, Frame } from "../src/types.js";
 
-const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, options: undefined as CompiledScene['options'] | undefined, palette: undefined as ColorPalette | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
+const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, options: undefined as CompiledScene['options'] | undefined, palette: undefined as ColorPalette | undefined, snapshotCamera: undefined as CameraState | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
 vi.mock("../src/renderer.js", () => ({
   CanvasRenderer: class {
     onOrbitChange?: () => void;
@@ -10,7 +10,12 @@ vi.mock("../src/renderer.js", () => ({
     setOrbitEnabled() {}
     setPalette(palette: ColorPalette) { rendering.palette = palette; }
     syncInteraction() {}
-    interactionSnapshot() { const frame=rendering.frame;return frame?{frame,camera:frame.camera,width:800,height:600,rect:[0,0,1,1]}:undefined; }
+    interactionSnapshot(view = '') {
+      const frame=rendering.frame, region=frame?.views?.find(v=>v.id===view);
+      if (!frame || (view && !region)) return;
+      const rect=region?.rect??[0,0,1,1];
+      return {frame,camera:rendering.snapshotCamera??region?.camera??frame.camera,width:800*rect[2],height:600*rect[3],rect};
+    }
     resetInteraction() { rendering.orbit = { yaw: 0, pitch: 0 }; }
     async prepare(_scenes: CompiledScene[]) {}
     render(frame: Frame, options: CompiledScene['options']) { rendering.frame = structuredClone(frame); rendering.options = structuredClone(options); }
@@ -31,9 +36,48 @@ let frames: Map<number, FrameRequestCallback>;
 beforeEach(() => {
   now = 0; frameId = 0; frames = new Map();
   rendering.frame = undefined; rendering.options = undefined; rendering.palette = undefined; rendering.orbit = { yaw: 0, pitch: 0 }; rendering.disposed = false;
+  rendering.snapshotCamera = undefined;
   vi.spyOn(performance, "now").mockImplementation(() => now);
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { const id = ++frameId; frames.set(id, callback); return id; });
   vi.stubGlobal("cancelAnimationFrame", (id: number) => { frames.delete(id); });
+});
+
+describe('player bounds', () => {
+  it('measures displayed animation and uses the effective camera and display palette', async () => {
+    const player = createPlayer({ canvas: new Canvas() as unknown as HTMLCanvasElement });
+    expect(player.getBounds('r')).toBeUndefined();
+    const result = await player.submit({type:'load', scenes:[{id:'a', source:`export default scene({}, s => {
+      const r=s.rectangle('r',{width:2,height:1,fill:Color.BLUE});
+      s.play(r.moveTo([2,0,0]),{duration:2,ease:'linear'});
+    });`}]});
+    expect(result.ok).toBe(true);
+    player.seek({scene:'a',time:1});
+    expect(player.getBounds('r')).toEqual({left:400,top:262.5,right:550,bottom:337.5});
+    expect(player.getBounds('r',{space:'world'})).toEqual({min:[0,-0.5,0],max:[2,0.5,0]});
+    rendering.snapshotCamera = {...rendering.frame!.camera,target:[1,0,0],height:4};
+    expect(player.getBounds('r')).toEqual({left:250,top:225,right:550,bottom:375});
+    expect(player.getBounds('r',{space:'camera'})).toEqual({min:[-1,-0.5,12],max:[1,0.5,12]});
+    player.setDisplayPalette({...THREE_BLUE_ONE_BROWN_PALETTE,colors:{...THREE_BLUE_ONE_BROWN_PALETTE.colors,BLUE:'#123456'}});
+    expect(player.getBounds('r')).toEqual({left:250,top:225,right:550,bottom:375});
+    player.dispose();
+    expect(() => player.getBounds('r')).toThrow('disposed');
+  });
+
+  it('selects the object view and reports pixels relative to that view', async () => {
+    const player = createPlayer({ canvas: new Canvas() as unknown as HTMLCanvasElement });
+    const result = await player.submit({type:'load',scenes:[{id:'a',source:`export default scene({},s=>{
+      s.view('right',{rect:[0.5,0,0.5,1],camera:{yaw:0,pitch:0,perspective:0,height:8}},v=>{
+        v.rectangle('r',{width:2,height:1});
+        v.rectangle('label',{width:100,height:20,space:'screen'});
+      });
+    });`}]});
+    expect(result.ok).toBe(true);
+    expect(player.getBounds('r')).toEqual({left:125,top:262.5,right:275,bottom:337.5});
+    expect(player.getBounds('label')).toEqual({left:150,top:290,right:250,bottom:310});
+    expect(player.getBounds('label',{space:'world'})).toBeUndefined();
+    expect(player.getBounds('unknown')).toBeUndefined();
+    player.dispose();
+  });
 });
 
 class NativeWidgetStub {

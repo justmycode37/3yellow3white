@@ -8,7 +8,8 @@ import { BehaviorRuntime } from "./behaviors.js";
 import { CanvasInput } from "./canvas-input.js";
 import { cameraRay } from "./spatial.js";
 import { project } from "./geometry.js";
-import type { Asset, ColorPalette, CompiledScene, ControlValue, PlayerOptions, PlayerState, Submission, SubmitResult, Vec3 } from "./types.js";
+import { getLocalBounds, getWorldBounds, getCameraBounds, getScreenBounds } from "./bounds.js";
+import type { Asset, Bounds2D, Bounds3D, ColorPalette, CompiledScene, ControlValue, PlayerBoundsOptions, PlayerOptions, PlayerState, Submission, SubmitResult, Vec3 } from "./types.js";
 
 export class Player {
   private readonly renderer: CanvasRenderer;
@@ -98,6 +99,30 @@ export class Player {
   }
 
   getInteractionSnapshot(view = '') { this.assertAlive(); return this.renderer.interactionSnapshot(view); }
+  /** Bounds of the displayed object, using its view's effective camera and CSS dimensions. */
+  getBounds(id: string, options: PlayerBoundsOptions & { space: 'local' | 'world' | 'camera' }): Bounds3D | undefined;
+  getBounds(id: string, options?: PlayerBoundsOptions & { space?: 'screen' }): Bounds2D | undefined;
+  getBounds(id: string, options: PlayerBoundsOptions): Bounds2D | Bounds3D | undefined;
+  getBounds(id: string, options: PlayerBoundsOptions = {}): Bounds2D | Bounds3D | undefined {
+    const main = this.getInteractionSnapshot();
+    const element = main?.frame.elements.find(e => e.id === id);
+    if (!main || !element) return;
+    const snapshot = element.view === undefined ? main : this.getInteractionSnapshot(element.view);
+    if (!snapshot) return;
+    const settings = { ...options, width: snapshot.width, height: snapshot.height, camera: snapshot.camera, palette: this.displayPalette ?? this.palette };
+    switch (options.space ?? 'screen') {
+      case 'local': return getLocalBounds(snapshot.frame, id, settings);
+      case 'world': return getWorldBounds(snapshot.frame, id, settings);
+      case 'camera': return getCameraBounds(snapshot.frame, id, settings);
+      case 'screen': {
+        // The core API uses canvas coordinates; player queries use the same
+        // view-local pixels as project() and ray(), including rounded viewport sizes.
+        const frame = { ...snapshot.frame, views: snapshot.frame.views?.map(v => v.id === element.view ? { ...v, rect: [0, 0, 1, 1] as [number, number, number, number] } : v) };
+        return getScreenBounds(frame, id, settings);
+      }
+      default: throw new Error(`Unknown bounds space: ${options.space}`);
+    }
+  }
   getPan(view = ''): Vec3 { this.assertAlive(); return this.renderer.getPan(view); }
   setPan(value: Vec3, view = ''): void { this.assertAlive(); this.renderer.setPan(value, view); this.invalidateFrame(); }
   setNavigationMode(mode: 'orbit' | 'pan'): void { this.assertAlive(); this.renderer.setNavigationMode(mode); }

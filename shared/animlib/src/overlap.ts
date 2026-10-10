@@ -1,10 +1,10 @@
 import { VERTEX_FLOATS } from './texture-shader.js';
-import { rotate } from './geometry.js';
+import { clip, projectedTriangle } from './projection.js';
 import { paletteResolver } from './palette.js';
 import { buildDrawItems } from './render-geometry.js';
 import { SpatialFrame } from './spatial.js';
 import { evaluateScene } from './timeline.js';
-import type { CameraState, CompiledScene, Frame, OverlapBounds, OverlapDiagnostic, OverlapOptions, SceneOverlapOptions, SceneOverlapSample, Vec2, Vec3 } from './types.js';
+import type { CompiledScene, Frame, OverlapBounds, OverlapDiagnostic, OverlapOptions, SceneOverlapOptions, SceneOverlapSample, Vec2, Vec3 } from './types.js';
 
 interface Primitive { points: Vec2[]; bounds: OverlapBounds; }
 interface Footprint { id: string; ancestors: Set<string>; bounds: OverlapBounds; primitives: Primitive[]; }
@@ -28,19 +28,6 @@ function signedArea(points: Vec2[]): number {
   return points.reduce((sum, p, i) => { const q = points[(i + 1) % points.length]; return sum + (p[0] - x) * (q[1] - y) - (q[0] - x) * (p[1] - y); }, 0) / 2;
 }
 
-/** Clip a convex polygon against a half-plane; retains positive-area intersections. */
-function clip<P extends number[]>(points: P[], distance: (point: P) => number): P[] {
-  const result: P[] = [];
-  for (let i = 0; i < points.length; i++) {
-    const a = points[i], b = points[(i + 1) % points.length], da = distance(a), db = distance(b);
-    if (da >= 0) result.push(a);
-    if ((da >= 0) !== (db >= 0)) {
-      const t = da / (da - db);
-      result.push(a.map((v, axis) => v + (b[axis] - v) * t) as P);
-    }
-  }
-  return result;
-}
 function intersection(a: Vec2[], b: Vec2[]): Vec2[] {
   const sign = signedArea(b) >= 0 ? 1 : -1;
   for (let i = 0; i < b.length && a.length; i++) {
@@ -48,29 +35,6 @@ function intersection(a: Vec2[], b: Vec2[]): Vec2[] {
     a = clip(a, r => sign * ((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])));
   }
   return a;
-}
-
-function projectedTriangle(points: Vec3[], screen: boolean, camera: CameraState, width: number, height: number, offset: Vec2): Vec2[] {
-  let projected: Vec2[];
-  if (screen) projected = points.map(p => [width / 2 + p[0], height / 2 - p[1]]);
-  else {
-    const perspective = Math.max(0, Math.min(1, camera.perspective));
-    let local = points.map(p => rotate(rotate(p.map((v, i) => v - camera.target[i]) as Vec3, [0, -camera.yaw, 0]), [-camera.pitch, 0, 0]));
-    // Clip before division: a triangle crossing the near plane still contributes visible ink.
-    local = clip(local, p => camera.distance - p[2] - 0.01);
-    local = clip(local, p => camera.distance * 100 - (camera.distance - p[2]));
-    projected = local.map(p => {
-      const divisor = 1 - perspective + perspective * (camera.distance - p[2]) / camera.distance;
-      const scale = height / camera.height / divisor;
-      return [width / 2 + p[0] * scale, height / 2 - p[1] * scale];
-    });
-  }
-  projected = projected.map(([x, y]) => [x + offset[0] * width, y - offset[1] * height]);
-  // The renderer clips each view independently, including screen-space elements in that view.
-  projected = clip(projected, p => p[0]);
-  projected = clip(projected, p => width - p[0]);
-  projected = clip(projected, p => p[1]);
-  return clip(projected, p => height - p[1]);
 }
 
 function validateOptions(options: OverlapOptions): number {

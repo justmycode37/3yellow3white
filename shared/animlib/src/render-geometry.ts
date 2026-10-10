@@ -46,7 +46,7 @@ export interface GeometryDrawItem extends DrawItem { elementId: string; componen
 const isText = (geometry: Geometry): boolean => geometry.kind === 'text' || geometry.kind === 'latex';
 
 /** textOnly skips shape tessellation while retaining groups and the text portions of mixed morphs. */
-export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string,textOnly=false):GeometryDrawItem[] {
+export function buildDrawItems(frame:Frame,camera:CameraState,width:number,height:number,palette:PaletteResolver,view?:string,textOnly=false,elementIds?:ReadonlySet<string>):GeometryDrawItem[] {
   const parents=new Map<string,ElementState>();
   for(const e of frame.elements)if(e.geometry.kind==='group')for(const child of e.geometry.children??[])parents.set(child,e);
   const items:GeometryDrawItem[]=[];
@@ -57,6 +57,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     -(x-camera.target[0])*sy*cp+(y-camera.target[1])*sp-(z-camera.target[2])*cy*cp;
   for(const [elementIndex,element] of frame.elements.entries()) {
     if(element.geometry.kind==='group'||element.view!==view)continue;
+    if(elementIds&&!elementIds.has(element.id))continue;
     if(textOnly && !(element.morph ? isText(element.morph.from)||isText(element.morph.to) : isText(element.geometry)))continue;
     const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
     while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
