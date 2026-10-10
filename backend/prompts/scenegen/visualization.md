@@ -177,6 +177,10 @@ Alignment (strict; misplaced parts are the most visible kind of jank):
 - Check the picture from the starting camera AND after rotating: nothing may sit
   beside what it belongs to.
 
+Plain text versus formulas: `s.text` shows its string exactly as written, so never
+put LaTeX escapes in it. Write a percent sign as `%` in `s.text` ("Inflation (%)")
+and as `\%` only inside `s.latex`.
+
 Layering (strict, checked; a dot hidden behind its own line looks broken):
 - In a flat scene, things are drawn in the order they are created, later on top, and
   an object carried from the previous scene is older than everything this scene
