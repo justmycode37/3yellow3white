@@ -12,6 +12,7 @@
     "agents:check": "bun src/agents/cli.ts check",
     "agents:logout": "bun src/agents/cli.ts logout",
     "agents:review": "bun src/agents/review.ts",
+    "agents:thumbnails": "bun src/agents/thumbnail-trial.ts",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "test": "bun test",
@@ -20,11 +21,13 @@
   "dependencies": {
     "@earendil-works/pi-ai": "1.1.0",
     "@earendil-works/pi-coding-agent": "1.1.0",
+    "@xmldom/xmldom": "0.9.12",
     "animlib": "file:../shared/animlib",
     "mammoth": "1.13.0",
     "mdast-util-from-markdown": "^2.1.0",
     "mdast-util-gfm-table": "^2.0.0",
     "micromark-extension-gfm-table": "^2.1.2",
+    "svg-pathdata": "8.0.0",
     "typebox": "1.3.27",
     "unpdf": "1.8.1"
   },

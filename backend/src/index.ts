@@ -4,13 +4,15 @@ import { NarrationService } from './narration/service.js';
 import { agentConfig } from './agents/config.js';
 import { PiAgentRunner } from './agents/runtime.js';
 import { createPiGenerator } from './agents/generator.js';
+import { createThumbnailGenerator, thumbnailAgentConfig } from './agents/thumbnail.js';
 
 const generation = process.env.VIDEO_GENERATOR ?? 'pi';
 if (generation !== 'pi' && generation !== 'simulated') throw new Error('VIDEO_GENERATOR must be pi or simulated.');
 const narration = new NarrationService();
 const config = generation === 'pi' ? agentConfig() : undefined;
 const videos = new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite',
-  config ? createPiGenerator(new PiAgentRunner(config), narration, config.dataDir) : undefined, generation);
+  config ? createPiGenerator(new PiAgentRunner(config), narration, config.dataDir) : undefined, generation,
+  config ? createThumbnailGenerator(new PiAgentRunner(thumbnailAgentConfig())) : undefined);
 
 const localNarration = process.env.NODE_ENV !== "production" && process.env.NARRATION_ALLOW_LOCAL === "1";
 const hostname = process.env.HOST ?? (localNarration ? "127.0.0.1" : "0.0.0.0");
