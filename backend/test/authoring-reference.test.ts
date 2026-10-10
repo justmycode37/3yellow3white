@@ -22,7 +22,7 @@ test('retains every authoring section verbatim while excluding host and developm
   }
   expect(output.length).toBeLessThan(reference.length);
   expect(output).toContain(between('### Procedural textures and materials', '### Function and parametric surfaces'));
-  expect(output).toContain('### Reactive sliders (prototype)');
+  expect(output).toContain('### Retained reactive bindings');
   expect(output).toContain('Do not simplify a planned explanation to fit the fast path.');
 });
 
@@ -56,4 +56,14 @@ test('retains curved-path authoring rules and the Bézier example', () => {
   const output = buildAuthoringReference(reference);
   expect(output).toContain(between('### Curved paths and organic shapes', '### Choosing how objects relate and move'));
   expect(output).toContain("d: 'M0 0 C0.5 0.6 1.3 0.7 2 0 C1.3 -0.5 0.5 -0.4 0 0 Z'");
+});
+
+
+test('retains deformation topology, sandbox, and snapshot authoring rules verbatim', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('### Fixed-topology deformation and scene time', '### Control appearance'));
+  expect(output).toContain('s.deform(wave, [s.time, amplitude]');
+  expect(output).toContain('triangle indices, order, and winding never change');
+  expect(output).toContain('Callbacks remain synchronous and sandboxed');
+  expect(output).toContain('await sequence.evaluate(index, time)');
 });

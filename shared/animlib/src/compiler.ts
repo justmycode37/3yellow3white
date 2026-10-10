@@ -328,7 +328,15 @@ export async function createSceneProgram(source: string, input: CompileInput = {
 }
 
 /** Standalone compilation remains serializable; runtime callbacks are disposed. */
-export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<CompiledScene> {
+export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number; sampleTime?: number | "end" } = {}): Promise<CompiledScene> {
   const program = await createSceneProgram(source, input, limits);
-  try { return program.scene; } finally { program.dispose(); }
+  try {
+    const scene = program.scene;
+    const requested = limits.sampleTime === 'end' ? scene.duration : limits.sampleTime ?? 0;
+    check(Number.isFinite(requested), 'Sample time must be finite');
+    const time = Math.max(0, Math.min(scene.duration, requested));
+    if (time === 0 || !scene.reactiveBindings?.some(b => b.time)) return scene;
+    const updates = program.update(Object.fromEntries(scene.controls.map(c => [c.id, c.value])), [], time);
+    return { ...scene, reactiveBindings: mergeReactiveUpdates(scene, updates, [], time), reactiveTime: time };
+  } finally { program.dispose(); }
 }

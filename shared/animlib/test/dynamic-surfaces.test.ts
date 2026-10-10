@@ -36,6 +36,12 @@ describe('retained fixed-topology deformation',()=>{
   expect(s.compiled[0]).toBe(original);expect(original).toEqual(before);
   expect(compile).not.toHaveBeenCalled();
  });
+ it('exports one-shot sampled snapshots and rejects invalid requested times',async()=>{
+  const snapshot=await compileSource(source,{}, {sampleTime:'end'});
+  expect(snapshot.reactiveTime).toBe(3);expect(evaluateScene(snapshot,3).elements[0].geometry.vertices![2]).toEqual([0,1,3]);
+  const middle=await compileSource(source,{}, {sampleTime:1.5});expect(middle.reactiveTime).toBe(1.5);
+  await expect(compileSource(source,{}, {sampleTime:NaN})).rejects.toThrow('finite');
+ });
  it('updates material independently, then deforms with current controls while paused',async()=>{
   const s=await load(), compiler=vi.spyOn(SourceCompiler.prototype,'update');
   await s.setControl('a','r',0.8);

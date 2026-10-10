@@ -1367,8 +1367,10 @@ Headless callers use `await sequence.evaluate(index, time)` for an exact frame o
 The latter records `reactiveTime`. `evaluateScene(snapshot, time)` and synchronous
 `sequence.frame` never execute callbacks: they evaluate tracks using the binding
 outputs already in the snapshot (canonical scenes and `compileSource` hold
-time-zero outputs). They cannot resample callbacks after JSON export. Use the
-async sequence API before exporting a desired time. Open `?surfaces` for the
+time-zero outputs by default). For a one-shot export use
+`compileSource(source, input, { sampleTime: seconds })` or `{ sampleTime: 'end' }`;
+it samples inside the sandbox and disposes the runtime. Snapshots cannot resample
+callbacks after JSON export. Use these APIs before exporting a desired time. Open `?surfaces` for the
 wave demo with independent material controls and two cameras.
 
 ### Control appearance

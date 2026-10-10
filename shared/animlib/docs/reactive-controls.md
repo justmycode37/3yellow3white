@@ -86,7 +86,8 @@ values. `evaluateScene` can evaluate that snapshot anywhere, using its already-s
 outputs. For exact time callbacks use `await sequence.evaluate(index, time)`;
 `await sequence.sample(index, time)` returns an exportable snapshot tagged with
 `reactiveTime`. Canonical compiled scenes retain time-zero outputs. `compileSource`
-returns a snapshot and disposes its runtime; use `SceneSequence` or the player
+returns a snapshot (optionally `{ sampleTime: seconds | 'end' }` in its third
+argument) and disposes its runtime; use `SceneSequence` or the player
 when values need to change through retained callbacks.
 
 ## Measured result
@@ -148,8 +149,8 @@ contents, even while scene and element identities remain unchanged.
 On 2026-10-10, Node 24.19.0 on Linux x64 measured 20.76 ms median / 21.40 ms p95
 for reconstruction versus 4.55 ms / 5.05 ms for retained updates (5 warmups,
 30 samples per path). These are CPU API timings, not frame-rate claims. The
-validation run passed 483 unit tests, 64 native Vulkan WebGPU checks, and 63
-Chrome 154 WebGL2/SwiftShader browser checks, including exact dynamic/static wave
+validation run passed 484 unit tests, 215 backend tests, 64 native Vulkan WebGPU
+checks, and 63 Chrome 154 WebGL2/SwiftShader browser checks, including exact dynamic/static wave
 pixel matches. The minified production worker demo also passed repeatable seeks,
 paused amplitude/material updates, and playback/pause checks. Combined rendering
 with the parallel clipping/scalar-color, lighting/shadow, and retained-GPU changes

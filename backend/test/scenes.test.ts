@@ -47,3 +47,17 @@ test("Bun reconstructs sequence handoffs after upstream control changes", async 
     sequence.dispose();
   }
 });
+
+
+test("Bun exports end-time deformations for generated scene handoffs", async () => {
+  const source = `export default scene({},s=>{
+    const mesh=s.surface('wave',{fn:()=>0,xSegments:2,ySegments:2});
+    s.deform(mesh,[s.time],([x,y],i,t)=>[x,y,t]);s.keep(mesh);s.wait(3);
+  });`;
+  const end = await compileSource(source, {}, { sampleTime: 'end' });
+  expect(end.reactiveTime).toBe(3);
+  const handoff = evaluateScene(end, end.duration);
+  expect(handoff.elements[0].geometry.vertices!.every(v=>v[2]===3)).toBe(true);
+  const incoming = await compileSource(`export default scene({},s=>{s.previous.get('wave');s.wait(1);});`, { previous: handoff });
+  expect(evaluateScene(incoming,0).elements[0].geometry.vertices).toEqual(handoff.elements[0].geometry.vertices);
+});
