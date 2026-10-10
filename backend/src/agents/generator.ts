@@ -7,6 +7,7 @@ import { buildSceneAgentInput, validateSceneAgainstNarration } from "../narratio
 import { atomicWrite } from "../narration/service.js";
 import type { NarrationService } from "../narration/service.js";
 import { AgentError } from "./config.js";
+import { attachTimingPrelude, TIMING_PRELUDE_INSTRUCTIONS } from "./timing-prelude.js";
 import type { AgentRunner, AgentTask } from "./runtime.js";
 import { parsePlannedLesson, scenePlanningContext, validateStory } from './planning.js';
 import { authorReviewedLesson } from './editorial.js';
@@ -26,7 +27,7 @@ async function saved(path: string): Promise<string | undefined> {
 }
 
 /** Host-owned stages. Script and narration identity survive restarts; model tools cannot access disk. */
-export function createPiGenerator(runner: AgentRunner, narration: NarrationService, root: string, options: { outputMode?: AgentTask['outputMode'] } = {}): Generator {
+export function createPiGenerator(runner: AgentRunner, narration: NarrationService, root: string, options: { outputMode?: AgentTask['outputMode']; timingMode?: 'inline' | 'host' } = {}): Generator {
   return async (request, index, context?: GenerationContext) => {
     if (!context) throw new AgentError("CONTEXT", "Pi generation requires a video job context.");
     const { videoId, owner, previousFrame, signal } = context;
@@ -82,8 +83,11 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
     if (!scene) return null;
     const { instructions, ...input } = buildSceneAgentInput(pkg, scene.id, previousFrame);
     const planning = scenePlanningContext(story, index, plan);
+    const assemble = (output: string) => options.timingMode === 'host'
+      ? attachTimingPrelude(sceneSource(output), input) : sceneSource(output);
     const diagnostics: string[] = [];
-    const validate = async (output: string) => {
+    // Cached sources are already self-contained; only new model output needs assembly.
+    const validateSource = async (output: string) => {
       try {
         const { compiled, finalFrame } = await validateSceneAgainstNarration(sceneSource(output), pkg, scene.id, previousFrame);
         if (Math.abs(compiled.duration - scene.durationSec) > 1e-6) throw new Error(`The scene must last ${scene.durationSec} seconds; it currently lasts ${compiled.duration}. Add the remaining time with a final s.wait().`);
@@ -95,6 +99,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
         throw error;
       }
     };
+    const validate = (output: string) => validateSource(assemble(output));
     const path = join(directory, `scene-${index}.js`);
     let source = await saved(path);
     if (!source) {
@@ -103,15 +108,15 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       const task = {
         outputMode: options.outputMode ?? 'text',
         systemPrompt: `${instructions.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${reference}`,
-        prompt: `Generate this scene using the authoritative narration packet and lesson plan:\n${JSON.stringify({ ...input, planning })}`, validate, signal,
+        prompt: `Generate this scene using the authoritative narration packet and lesson plan:${options.timingMode === 'host' ? '\n' + TIMING_PRELUDE_INSTRUCTIONS : ''}\n${JSON.stringify({ ...input, planning })}`, validate, signal,
       };
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
       await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning }));
-      source = sceneSource(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
-      await validate(source);
+      source = assemble(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
+      await validateSource(source);
       signal.throwIfAborted();
       await atomicWrite(path, source);
-    } else { await validate(source); logEvent('scene.reused', { videoId, sceneIndex: index, cached: true }); }
+    } else { await validateSource(source); logEvent('scene.reused', { videoId, sceneIndex: index, cached: true }); }
     const audio = new Uint8Array(await readFile(await narration.audio(owner, job.id, scene.audio.id)));
     return { audio, scene: { id: scene.id, index, source, duration: scene.durationSec,
       audio: { id: scene.audio.id },
