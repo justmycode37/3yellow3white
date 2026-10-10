@@ -157,7 +157,6 @@
 }
 @media(prefers-reduced-motion: reduce) { .topic-widget-title, .topic-widget-cta { transition: none; } }
 
-.plan-ai-choice { display: flex; align-items: center; gap: .5rem; margin-top: 1rem; }
 .plan-input-note { font-size: .85rem; opacity: .75; max-width: 48rem; }
 .plan-draft-topic { display: grid; gap: .65rem; padding: 1rem 0; border-bottom: 1px solid var(--border, #8885); }
 .plan-draft-topic label { display: grid; gap: .35rem; font-size: .85rem; }
@@ -166,3 +165,28 @@
 .plan-draft-actions { display: flex; gap: 1rem; margin-top: 1rem; }
 
 @media(hover: none) { .topic-widget-duration { position: static; align-self: flex-end; } .topic-video-widget:is(:hover, :focus-visible) .topic-widget-duration { visibility: visible; } }
+
+/* Stage material before starting the single AI Add action. */
+.subject-upload-copy { flex: 1; min-width: 0; }
+.subject-upload-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: none; }
+.subject-submit { min-width: 86px; justify-content: center; white-space: nowrap; }
+.subject-submit:disabled { opacity: .45; cursor: not-allowed; }
+.subject-input-tabs [role=tab] { border-bottom: 2px solid transparent; }
+.subject-input-tabs [aria-selected=true] { border-bottom-color: var(--ink); }
+.subject-input-tabs button:focus-visible, .subject-upload-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
+.subject-upload [hidden] { display: none !important; }
+.material-count { display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 6px; background: var(--soft); font-size: 10px; }
+.subject-dropzone.has-files { align-items: stretch; padding: 18px; }
+.material-file-list { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; width: 100%; }
+.material-file-list > li { display: flex; align-items: center; gap: 13px; padding: 13px; background: var(--surface); border-radius: 13px; text-align: left; }
+.material-file-icon { display: grid; place-items: center; width: 39px; height: 43px; flex: none; border-radius: 10px; background: var(--subject-color); color: var(--card-ink); }
+.material-file-info { display: grid; gap: 5px; min-width: 0; flex: 1; }
+.material-file-info strong { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.material-file-info small { color: var(--muted); font-size: 11px; }
+.material-file-list .icon-button { flex: none; }
+.subject-dropzone .subject-upload-link { align-self: center; padding: 8px; }
+@media(max-width: 650px) {
+  .subject-upload-intro { flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+  .subject-upload-copy { flex-basis: 55%; }
+  .subject-submit { min-width: 70px; padding: 11px 13px; font-size: 12px; }
+}

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { parsePlanDocument, parseTopicPlan, generateStudyPlan, sourceMaterial } from '../src/agents/study-plan.js';
+import { parsePlanDocument, parseTopicPlan, generateStudyPlan, sourceMaterial, COURSE_CLASSIFICATION, MAX_TOPICS } from '../src/agents/study-plan.js';
 import { scenegenPrompt } from '../src/agents/scenegen-prompts.js';
 import { studyPlanRoutes } from '../src/study-plans.js';
 
@@ -38,10 +38,10 @@ test('reject oversized and malformed input before model work', async () => {
   expect(called).toBe(false);
 });
 
-test('model receives original SYSTEM and FORMAT with the original source delimiters, final response validated again', async () => {
+test('model receives the original prompts plus course grouping requirements, final response validated again', async () => {
   const plan = await generateStudyPlan({ run: async task => {
     expect(task.systemPrompt).toBe(await scenegenPrompt('topics-system'));
-    expect(task.prompt).toBe((await scenegenPrompt('topics-format')).replace('{max_topics}', '8') + '\n\nSOURCE MATERIAL:\n<<<\n' + sourceMaterial(document) + '\n>>>');
+    expect(task.prompt).toBe((await scenegenPrompt('topics-format')).replace('{max_topics}', String(MAX_TOPICS)) + '\n\n' + COURSE_CLASSIFICATION + '\n\nSOURCE MATERIAL:\n<<<\n' + sourceMaterial(document) + '\n>>>');
     await expect(task.validate!('{}')).rejects.toThrow();
     return JSON.stringify(output());
   } }, document, new AbortController().signal);
@@ -71,4 +71,22 @@ test('long single-line lectures remain intact and work with the original notes r
   expect(normalized.lines.map(l => l.text).join('')).toBe(paragraph);
   expect(normalized.lines).toEqual([{ text: paragraph, page: 1 }]);
   expect(parseTopicPlan(JSON.stringify(output()), normalized).originalText).toBe('[Page 1]\n' + paragraph);
+});
+
+
+test('AI classifications group focused video lessons into distinct course topics', () => {
+  const value = { ...output(), topics: [
+    { ...topic('vectors', 1), group: 'Vectors', minutes: 2 },
+    { ...topic('bases', 1, ['vectors']), group: 'Vectors', minutes: 3 },
+    { ...topic('maps', 2, ['bases']), group: 'Linear maps', minutes: 5 },
+  ] };
+  const plan = parseTopicPlan(JSON.stringify(value), document);
+  expect(plan.chapters.map(c => [c.title, c.segments.length])).toEqual([['Vectors', 2], ['Linear maps', 1]]);
+  expect(plan.chapters[1].segments[0].minutes).toBe(5);
+  value.topics[2].minutes = 12;
+  expect(() => parseTopicPlan(JSON.stringify(value), document)).toThrow('2–5 minute');
+  value.topics[2].minutes = 4;
+  value.topics[1].group = 'Linear maps';
+  value.topics[2].group = 'Vectors';
+  expect(() => parseTopicPlan(JSON.stringify(value), document)).toThrow('teaching order');
 });
