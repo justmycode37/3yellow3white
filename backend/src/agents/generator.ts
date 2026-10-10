@@ -13,6 +13,7 @@ import { authorReviewedLesson } from './editorial.js';
 import type { LessonPlan } from './planning.js';
 import { validateScenePlan } from './scene-plan.js';
 import { validationMessage } from './runtime.js';
+import { logEvent, logStage } from '../logging.js';
 
 export function sceneSource(output: string): string {
   const fenced = /^```(?:js|javascript)?\s*\n([\s\S]*?)\n```$/.exec(output.trim());
@@ -47,7 +48,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       markdown = lesson.markdown; plan = lesson.plan;
     } else markdown = await saved(join(directory, 'script.md')); // Resume videos authored before structured planning.
     if (!markdown) {
-      const lesson = await authorReviewedLesson(runner, request, directory, signal, context.images);
+      const lesson = await logStage({ videoId, stage: 'script' }, () => authorReviewedLesson(runner, request, directory, signal, context.images, videoId));
       markdown = lesson.markdown; plan = lesson.plan;
       signal.throwIfAborted();
       await atomicWrite(join(directory, 'storyline.prompt.md'), await readFile(join(directory, 'editorial', lesson.editorialReview.runId,
@@ -55,27 +56,28 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       // The atomic envelope is authoritative; script.md is a readable export for local review.
       await atomicWrite(lessonPath, JSON.stringify(lesson, null, 2));
       await atomicWrite(join(directory, "script.md"), markdown);
-    }
+    } else logEvent('script.reused', { videoId, cached: true });
     const story = parseStoryline(markdown); validateStory(story);
     if (index >= story.beats.length) return null;
     const narrationId = await saved(join(directory, "narration-id"));
     const job = narrationId ? await narration.get(owner, narrationId) : await narration.submit(owner, markdown);
     if (!narrationId) await atomicWrite(join(directory, "narration-id"), job.id);
     if (job.status === 'interrupted') await narration.retry(owner, job.id);
-    let pkg;
-    // Poll only local durable state; the speech service owns its work and retry policy.
-    while (true) {
-      signal.throwIfAborted();
-      pkg = await narration.scenePackage(owner, job.id, index);
-      if (pkg) break;
-      const status = await narration.get(owner, job.id);
-      if (status.status === "failed" || status.status === "interrupted") throw new AgentError("NARRATION", status.error?.message ?? "Narration failed.");
-      await new Promise<void>((resolve, reject) => {
-        const abort = () => { clearTimeout(timer); reject(signal.reason); };
-        const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, 200);
-        signal.addEventListener("abort", abort, { once: true });
-      });
-    }
+    const pkg = await logStage({ videoId, narrationId: job.id, stage: 'narration', sceneIndex: index }, async () => {
+      // Poll only local durable state; the speech service owns its work and retry policy.
+      while (true) {
+        signal.throwIfAborted();
+        const ready = await narration.scenePackage(owner, job.id, index);
+        if (ready) return ready;
+        const status = await narration.get(owner, job.id);
+        if (status.status === "failed" || status.status === "interrupted") throw new AgentError("NARRATION", status.error?.message ?? "Narration failed.");
+        await new Promise<void>((resolve, reject) => {
+          const abort = () => { clearTimeout(timer); reject(signal.reason); };
+          const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, 200);
+          signal.addEventListener("abort", abort, { once: true });
+        });
+      }
+    });
     const scene = pkg.scenes[index];
     if (!scene) return null;
     const { instructions, ...input } = buildSceneAgentInput(pkg, scene.id, previousFrame);
@@ -88,6 +90,7 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
         if (plan) validateScenePlan(compiled, finalFrame, plan.scenes[index]);
       } catch (error) {
         diagnostics.push(validationMessage(error));
+        logEvent('scene.validation_failed', { videoId, sceneIndex: index, attempt: diagnostics.length }, 'warn');
         await atomicWrite(join(directory, `scene-${index}.diagnostics.json`), JSON.stringify(diagnostics.slice(-20), null, 2));
         throw error;
       }
@@ -103,11 +106,11 @@ export function createPiGenerator(runner: AgentRunner, narration: NarrationServi
       };
       await atomicWrite(join(directory, `scene-${index}.prompt.md`), `${task.systemPrompt}\n\n${task.prompt}`);
       await atomicWrite(join(directory, `scene-${index}.input.json`), JSON.stringify({ ...input, planning }));
-      source = sceneSource(await runner.run(task));
+      source = sceneSource(await logStage({ videoId, sceneIndex: index, stage: 'scene' }, () => runner.run(task)));
       await validate(source);
       signal.throwIfAborted();
       await atomicWrite(path, source);
-    } else await validate(source);
+    } else { await validate(source); logEvent('scene.reused', { videoId, sceneIndex: index, cached: true }); }
     const audio = new Uint8Array(await readFile(await narration.audio(owner, job.id, scene.audio.id)));
     return { audio, scene: { id: scene.id, index, source, duration: scene.durationSec,
       audio: { id: scene.audio.id },

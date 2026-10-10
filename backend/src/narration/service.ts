@@ -9,6 +9,7 @@ import { NarrationError, publicError } from "./errors.js";
 import { parseStoryline } from "./markdown.js";
 import { sceneAgentMarkdown } from "./handoff.js";
 import type { AudioAsset, NarrationJob, NarrationPackageV1, NarrationScene, NarrationScenePackage, RawAlignment, ScriptBlock, SpeechResult, Storyline, SynthesisInput } from "./types.js";
+import { logEvent } from '../logging.js';
 
 const PROCESSING_VERSION = "narration-v1.1";
 const validId = /^[a-f0-9]{64}$/;
@@ -63,6 +64,7 @@ export class NarrationService {
             job.status = "interrupted";
             job.error = { code: "INTERRUPTED", message: "The server stopped during narration. Completed chunks are saved; explicitly retry to resume. The last request may already have been billed.", retryable: true };
             await this.saveJob(job);
+            logEvent('narration.interrupted', { narrationId: job.id, completedChunks: job.completedChunks, totalChunks: job.totalChunks }, 'warn');
           }
         } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
       }
@@ -117,7 +119,11 @@ export class NarrationService {
     });
   }
   private enqueue(job: NarrationJob, story: Storyline) {
-    this.work = this.work.then(() => this.run(job, story)).catch(() => { /* job state is persisted by run; never log provider credentials */ });
+    logEvent('narration.queued', { narrationId: job.id, totalChunks: job.totalChunks });
+    this.work = this.work.then(() => this.run(job, story)).catch(() => {
+      // run normally persists failure; reaching here means that persistence also failed.
+      logEvent('narration.persistence_failed', { narrationId: job.id, code: 'PERSISTENCE' }, 'error');
+    });
   }
   async idle() { await this.mutations; await this.work; }
   async package(owner: string, id: string): Promise<NarrationPackageV1> {
@@ -150,15 +156,21 @@ export class NarrationService {
       const cached = await json<Omit<SpeechResult, "pcm"> & { pcmBase64: string }>(path);
       const pcm = new Uint8Array(Buffer.from(cached.pcmBase64, "base64"));
       validateAlignment(cached.normalizedAlignment, sampleCount(pcm) / SAMPLE_RATE);
+      logEvent('narration.chunk_reused', { narrationId: job.id, completedChunks: job.completedChunks, cached: true });
       return { ...cached, pcm };
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    const started = performance.now();
+    logEvent('narration.speech_started', { narrationId: job.id, completedChunks: job.completedChunks, totalChunks: job.totalChunks });
     const result = await this.provider.synthesize(input);
     validateAlignment(result.normalizedAlignment, sampleCount(result.pcm) / SAMPLE_RATE);
     // A single atomic cache artifact cannot expose audio without its matching alignment after a crash.
     await atomicWrite(path, JSON.stringify({ ...result, pcm: undefined, pcmBase64: Buffer.from(result.pcm).toString("base64") }));
+    logEvent('narration.speech_completed', { narrationId: job.id, completedChunks: job.completedChunks + 1, totalChunks: job.totalChunks, elapsedMs: Math.round(performance.now() - started) });
     return result;
   }
   private async run(job: NarrationJob, story: Storyline) {
+    const started = performance.now();
+    logEvent('narration.started', { narrationId: job.id, totalChunks: job.totalChunks });
     try {
       job.status = "running"; job.completedChunks = 0; await this.saveJob(job);
       const speeches = story.beats.flatMap(b => b.blocks).filter(b => b.kind === "speech");
@@ -198,6 +210,7 @@ export class NarrationService {
         await atomicWrite(join(this.dir(job.id), 'progress.json'), JSON.stringify({
           id: job.id, scriptHash: hash(story.markdown), totalScenes: story.beats.length, scenes,
         } satisfies NarrationScenePackage));
+        logEvent('narration.scene_ready', { narrationId: job.id, sceneIndex: scenes.length - 1, completedChunks: job.completedChunks, totalChunks: job.totalChunks });
       }
       const pkg: NarrationPackageV1 = { schemaVersion: 1, id: job.id, title: story.title, scriptHash: hash(story.markdown), settings: job.settings,
         sampleRate: SAMPLE_RATE, durationSec: lessonSamples / SAMPLE_RATE, scenes, combinedAudio: await saveAudio(`${job.id}.full`, joinPcm(allPcm)) };
@@ -205,8 +218,10 @@ export class NarrationService {
       await atomicWrite(join(this.dir(job.id), "narration.json"), JSON.stringify(pkg, null, 2));
       await atomicWrite(join(this.dir(job.id), "scene-agent.md"), sceneAgentMarkdown(pkg));
       job.status = "complete"; delete job.error; await this.saveJob(job);
+      logEvent('narration.completed', { narrationId: job.id, sceneCount: scenes.length, completedChunks: job.completedChunks, totalChunks: job.totalChunks, elapsedMs: Math.round(performance.now() - started) });
     } catch (error) {
       const failure = publicError(error); job.status = "failed";
+      logEvent('narration.failed', { narrationId: job.id, code: failure.code, completedChunks: job.completedChunks, totalChunks: job.totalChunks, elapsedMs: Math.round(performance.now() - started) }, 'error');
       job.error = { code: failure.code, message: failure.message, retryable: failure.retryable }; await this.saveJob(job);
     }
   }
