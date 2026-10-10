@@ -17,5 +17,5 @@ data/
 .aha/
 **/auth.json
 
-# scenegen wrapper output (sent prompts, scene candidates)
+# scenegen wrapper output (scene candidates)
 out/

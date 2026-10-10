@@ -1,7 +1,7 @@
 // animlib lays out LaTeX in the renderer, not when a scene is compiled, so a scene
 // with an unsupported command passes validation and then stops the player
 // ("Invalid LaTeX: ..."). This runs the renderer's own layout on every formula.
-import { compileSource, evaluateScene } from "animlib/core";
+import { compileSource, detectSceneOverlaps, evaluateScene } from "animlib/core";
 import type { CompiledScene } from "animlib/core";
 import { layoutLatexGeometry } from "../../shared/animlib/dist/latex.js";
 
@@ -65,11 +65,15 @@ export const STRAY_HINT = "These 3D objects are outside the 3D view, so they are
 export function renderProblems(compiled: CompiledScene): string[] {
   const problems: string[] = [];
   const broken = latexErrors(compiled);
-  if (broken.length) problems.push(`${broken.join("\n")}\n${LATEX_HINT}`);
+  if (broken.length) return [`${broken.join("\n")}\n${LATEX_HINT}`]; // nothing else can be laid out
   const frames = Array.from({ length: 13 }, (_, i) => evaluateScene(compiled, compiled.duration * i / 12));
   const stray = strayModelParts(frames as never);
   if (stray.length) problems.push(`Outside the 3D view: ${stray.slice(0, 12).join(", ")}${stray.length > 12 ? ", ..." : ""}.\n${STRAY_HINT}`);
+  // Overlapping text is found by animlib's own detector (settled text, real glyph shapes, any view).
+  const pairs = new Set(detectSceneOverlaps(compiled, { width: 800 * SAFE_ASPECT, height: 800 })
+    .flatMap(sample => sample.overlaps.map(overlap => overlap.elements.join(" and "))));
   const layout = layoutProblems(frames as never);
+  if (pairs.size) layout.unshift(`Text overlaps: ${[...pairs].slice(0, 8).join("; ")}.`);
   if (layout.length) problems.push(`${layout.join("\n")}\n${LAYOUT_HINT}`);
   const placed = compiled.controls.filter(control => control.position).map(control => control.id);
   if (placed.length) problems.push(`Controls with a position: ${placed.join(", ")}.\n${CONTROLS_HINT}`);
@@ -109,28 +113,19 @@ function formulaBoxes(frame: LayoutFrame): Box[] {
   return boxes;
 }
 
-/** Formulas that overlap each other, leave the frame, or pile up, as the viewer would see them. */
+/** Formulas that leave the frame or pile up, as the viewer would see them. */
 export function layoutProblems(frames: LayoutFrame[]): string[] {
-  const overlaps = new Map<string, number>(), outside = new Set<string>();
+  const outside = new Set<string>();
   let most = 0;
-  frames.forEach((frame, index) => {
-    const boxes = formulaBoxes(frame), last = index === frames.length - 1;
+  frames.forEach(frame => {
+    const boxes = formulaBoxes(frame);
     most = Math.max(most, boxes.length);
     const halfHeight = frame.camera.height / 2, halfWidth = halfHeight * SAFE_ASPECT, [cx, cy] = frame.camera.target;
     for (const box of boxes) {
       if (box.left < cx - halfWidth || box.right > cx + halfWidth || box.bottom < cy - halfHeight || box.top > cy + halfHeight) outside.add(box.id);
     }
-    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i], b = boxes[j];
-      const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.top, b.top) - Math.max(a.bottom, b.bottom);
-      if (w <= 0.02 || h <= 0.02) continue;
-      const key = `${a.id} and ${b.id}`;
-      overlaps.set(key, (overlaps.get(key) ?? 0) + (last ? 2 : 1)); // passing through each other once mid-motion is fine
-    }
   });
   const problems: string[] = [];
-  const overlapping = [...overlaps].filter(([, count]) => count >= 2).map(([pair]) => pair);
-  if (overlapping.length) problems.push(`Formulas overlap: ${overlapping.slice(0, 8).join("; ")}.`);
   if (outside.size) problems.push(`Formulas leave the frame (it can be as narrow as ${SAFE_ASPECT} x its height): ${[...outside].slice(0, 8).join(", ")}.`);
   if (most > MAX_FORMULAS) problems.push(`Too much text: ${most} formulas and labels are visible at once (at most ${MAX_FORMULAS}).`);
   return problems;

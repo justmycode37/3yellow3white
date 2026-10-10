@@ -1,13 +1,11 @@
-// The team's backend, unchanged, with two prompt hooks. Main ships a frozen copy of the
-// scenegen prompts in backend/prompts/scenegen/; this wrapper swaps those copies for the
-// current scenegen/prompts/visualization.md and planning.md, so prompt edits can be
-// tried without touching backend/, and adds the scenegen render checks.
-// Planning, script review, ElevenLabs narration, word timings, captions, validation
-// and delivery all run through the backend's own modules.
+// The team's backend, unchanged, plus extra checks on what the agents return.
+// The prompts are the backend's own (backend/prompts/scenegen/); this wrapper only adds
+// validation: lesson plans must mark every scene 3D or 2D, and scenes must pass the
+// render checks in scene-checks.ts. Failures go back to the model like any other
+// validation error.
 //
 // Run from backend/ (so .env.local and data/ resolve as usual):
-//   bun --watch ../scenegen/backend/dev.ts
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+//   bun ../scenegen/backend/dev.ts
 import { createHandler } from "../../backend/src/server.js";
 import { VideoService } from "../../backend/src/videos.js";
 import { NarrationService } from "../../backend/src/narration/service.js";
@@ -19,79 +17,51 @@ import type { Frame } from "animlib/core";
 import { createPiGenerator, sceneSource } from "../../backend/src/agents/generator.js";
 import { DEAD_CONTROL_HINT, deadControls, renderProblems } from "./scene-checks.ts";
 import { PLANNING_CONTRACT } from "../../backend/src/agents/planning.js";
+import { scenegenPrompt } from "../../backend/src/agents/scenegen-prompts.js";
 import { createThumbnailGenerator, thumbnailAgentConfig } from "../../backend/src/agents/thumbnail.js";
 
-const CRAFT = new URL("../../backend/prompts/scene-craft.md", import.meta.url);
-const VISUALIZATION = new URL("../prompts/visualization.md", import.meta.url);
-const PLANNING = new URL("../prompts/planning.md", import.meta.url);
-const MAIN_VISUALIZATION = new URL("../../backend/prompts/scenegen/visualization.md", import.meta.url);
-const MAIN_PLANNING = new URL("../../backend/prompts/scenegen/planning.md", import.meta.url);
-const optional = (url: URL) => readFile(url, "utf8").catch(() => "");
-const LOG = new URL("../../out/visualization-prompts/", import.meta.url);
-
-/** Swaps the scene-craft section of scene tasks for the scenegen visualization prompt. */
-export class VisualizationPromptRunner implements AgentRunner {
-  private count = 0;
+/** Adds the scenegen checks to the validate hook of planning and scene tasks. */
+export class CheckedRunner implements AgentRunner {
   constructor(private inner: AgentRunner) {}
   async run(task: AgentTask): Promise<string> {
-    const craft = await readFile(CRAFT, "utf8");
+    if (!task.validate) return this.inner.run(task);
     if (task.systemPrompt.includes(PLANNING_CONTRACT)) { // lesson authoring: plan + script
-      const planning = await readFile(PLANNING, "utf8");
-      const frozen = await optional(MAIN_PLANNING);
-      console.log("[scenegen] lesson planning: using scenegen/prompts/planning.md");
       // Every scene must state its view, so "3D by default" is a checked decision.
-      const validate = task.validate && (async (output: string) => {
+      return this.inner.run({ ...task, validate: async output => {
         await task.validate!(output);
         const unmarked = planScenes(output).filter(scene => !VIEW_MARK.test(scene.visualDescription ?? "")).map(scene => scene.id);
         if (unmarked.length) throw new Error(`Start each scene's visualDescription with "3D:" or "2D (because <reason>):". Missing in: ${unmarked.join(", ")}. 3D is the default; 2D needs a real reason.`);
-      });
-      const systemPrompt = frozen && task.systemPrompt.includes(frozen)
-        ? task.systemPrompt.replace(frozen, () => planning) : `${task.systemPrompt}\n\n${planning}`;
-      return this.inner.run({ ...task, validate, systemPrompt });
+      } });
     }
-    const frozen = await optional(MAIN_VISUALIZATION);
-    const target = frozen && task.systemPrompt.includes(frozen) ? frozen : craft; // older backends only have scene-craft
-    if (!task.systemPrompt.includes(target)) return this.inner.run(task); // review, thumbnails, ...
-    const visualization = await readFile(VISUALIZATION, "utf8"); // re-read: edits apply to the next scene
-    const systemPrompt = task.systemPrompt.replace(target, () => visualization);
-    await mkdir(LOG, { recursive: true });
-    const name = `scene-task-${String(++this.count).padStart(3, "0")}.prompt.md`;
-    await writeFile(new URL(name, LOG), `${systemPrompt}\n\n${task.prompt}`);
-    console.log(`[scenegen] scene task ${this.count}: using scenegen/prompts/visualization.md (saved out/visualization-prompts/${name})`);
-    // A scene planned as 3D must really be built in 3D.
-    const planned3D = /^\s*3D\b/i.test(currentVisualDescription(task.prompt));
-    const validate = task.validate && (async (output: string) => {
+    if (!task.systemPrompt.includes(await scenegenPrompt("visualization"))) return this.inner.run(task); // review, thumbnails, ...
+    // Formulas, view membership and layout only show up in the player; check them here so a broken scene cannot be published.
+    return this.inner.run({ ...task, validate: async output => {
       await task.validate!(output);
-      if (planned3D && !IS_3D.test(output)) throw new Error('This scene is planned in 3D, but the source is flat. Build it in real 3D: mode: "3d" with orbit: true, or an s.view(...) region, with spheres / line3D / arrow3D / meshes at real z coordinates, so the viewer can rotate it.');
-      // Formulas and view membership only show up in the player; check them here so a broken scene cannot be published.
-      const compiled = await compileSource(sceneSource(output), { previous: previousFrame(task.prompt) });
+      const previous = previousFrame(task.prompt);
+      const compiled = await compileSource(sceneSource(output), { previous });
       const problems = renderProblems(compiled);
-      const dead = await deadControls(sceneSource(output), compiled, previousFrame(task.prompt));
+      const dead = await deadControls(sceneSource(output), compiled, previous);
       if (dead.length) problems.push(`Controls without effect at the end: ${dead.join(", ")}.\n${DEAD_CONTROL_HINT}`);
       if (problems.length) throw new Error(problems.join("\n\n"));
-    });
-    return this.inner.run({ ...task, systemPrompt, validate });
+    } });
   }
 }
 
 const VIEW_MARK = /^\s*(3D\s*:|2D\s*\(because\b)/i;
-const IS_3D = /mode\s*:\s*["']3d["']|\bs\.view\s*\(|\.to3D\s*\(/;
 
 function planScenes(output: string): { id: string; visualDescription?: string }[] {
   try { return JSON.parse(output).plan?.scenes ?? []; } catch { return []; }
 }
-/** The scene task's prompt ends with the JSON packet that holds this scene's plan. */
-function packet(prompt: string): { previousFrame?: Frame; planning?: { current?: { visualDescription?: string } } } {
-  try { return JSON.parse(prompt.slice(prompt.indexOf("{"))); } catch { return {}; }
+/** The scene task's prompt ends with the JSON packet that holds the previous scene's final frame. */
+function previousFrame(prompt: string): Frame | undefined {
+  try { return JSON.parse(prompt.slice(prompt.indexOf("{"))).previousFrame; } catch { return undefined; }
 }
-function currentVisualDescription(prompt: string): string { return packet(prompt).planning?.current?.visualDescription ?? ""; }
-function previousFrame(prompt: string): Frame | undefined { return packet(prompt).previousFrame; }
 
 if (import.meta.main) {
   const narration = new NarrationService();
   const config = agentConfig();
   const videos = new VideoService(process.env.VIDEO_DB_PATH ?? "data/videos.sqlite",
-    createPiGenerator(new VisualizationPromptRunner(new PiAgentRunner(config)), narration, config.dataDir,
+    createPiGenerator(new CheckedRunner(new PiAgentRunner(config)), narration, config.dataDir,
       { outputMode: config.sceneOutputMode, timingMode: config.sceneTimingMode }), "pi",
     createThumbnailGenerator(new PiAgentRunner(thumbnailAgentConfig())));
   const handler = createHandler(undefined, videos, narration);
@@ -108,7 +78,7 @@ if (import.meta.main) {
     },
     error(error) { console.error(error); return Response.json({ detail: "Internal Server Error" }, { status: 500 }); },
   });
-  console.log(`Aha! backend (scenegen visualization prompt) listening on ${server.url}`);
+  console.log(`Aha! backend (scenegen checks) listening on ${server.url}`);
   let stopping = false;
   const shutdown = async () => { if (stopping) return; stopping = true; server.stop(true); await videos.close(); process.exit(0); };
   process.on("SIGTERM", shutdown);

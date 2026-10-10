@@ -1,6 +1,6 @@
 // Regenerate ONE scene of an existing video with the current
-// scenegen/prompts/visualization.md, keeping its narration, audio, captions and plan.
-// For iterating on the visualization prompt without waiting for a whole new video.
+// backend/prompts/scenegen/visualization.md, keeping its narration, audio, captions and
+// plan. For iterating on that prompt without waiting for a whole new video.
 //
 // Run from backend/:
 //   bun ../scenegen/backend/rescene.ts <videoId> <sceneIndex>           # write a candidate only
@@ -17,6 +17,7 @@ import { compileSource, evaluateScene, SceneSequence } from "animlib/core";
 import { agentConfig } from "../../backend/src/agents/config.js";
 import { PiAgentRunner, validationMessage } from "../../backend/src/agents/runtime.js";
 import { sceneSource } from "../../backend/src/agents/generator.js";
+import { scenegenPrompt } from "../../backend/src/agents/scenegen-prompts.js";
 import { validateScenePlan } from "../../backend/src/agents/scene-plan.js";
 import { SCENE_AGENT_INSTRUCTIONS } from "../../backend/src/narration/handoff.js";
 import { DEAD_CONTROL_HINT, deadControls, renderProblems } from "./scene-checks.ts";
@@ -108,11 +109,11 @@ if (restore >= 0) {
   await apply(await readFile(flags[restore + 1], "utf8"));
 } else {
   const reference = await readFile(new URL("../../shared/animlib/docs/reference.md", import.meta.url), "utf8");
-  const visualization = await readFile(new URL("../prompts/visualization.md", import.meta.url), "utf8");
+  const visualization = await scenegenPrompt("visualization");
   const craft = await readFile(new URL("../../backend/prompts/scene-craft.md", import.meta.url), "utf8");
   const systemPrompt = `${SCENE_AGENT_INSTRUCTIONS.replace("Return animlib SceneSource { id, source }.", "Return only JavaScript with one default-exported scene, without a JSON wrapper.")}\nFor video delivery, end your timeline at exactly durationSec using a final s.wait() as needed. Use validate_output before finishing.\n\n${craft}\n\n${visualization}\n\n${reference}`;
   const prompt = `Generate this scene using the authoritative narration packet and lesson plan:\n${JSON.stringify(input)}`;
-  console.log(`Regenerating scene ${index} of ${videoId} with scenegen/prompts/visualization.md ...`);
+  console.log(`Regenerating scene ${index} of ${videoId} with the current visualization prompt ...`);
   let source: string;
   try {
     source = sceneSource(await new PiAgentRunner(config).run({ systemPrompt, prompt, validate }));

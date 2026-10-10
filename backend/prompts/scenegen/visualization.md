@@ -1,11 +1,9 @@
 # Visualization prompt (scenegen)
 
-<!-- The working copy of the scenegen visualization rules. Main ships a frozen copy in
-     backend/prompts/scenegen/visualization.md; when the app runs through
-     scenegen/backend/dev.ts this file is used in its place. Edit it freely: it is
-     re-read for every scene, so the next generated scene uses your changes without a
-     restart. The backend adds its own scene-craft.md, narration, audio, captions, the
-     lesson plan and the animlib reference, unchanged. -->
+<!-- The scenegen visualization rules, added to every scene prompt after
+     scene-craft.md. Re-read for every scene, so an edit applies to the next generated
+     scene without a restart. After editing, update the checksums in provenance.json and
+     backend/test/scenegen-prompts.test.ts. -->
 
 ## Visual style (scenegen)
 
