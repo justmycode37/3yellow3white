@@ -57,7 +57,8 @@ out vec4 outputColor;
 void main() {
   vec4 color=vColor;
   if(vLit>0.5) {
-    float amount=0.32+0.68*max(0.,dot(normalize(vNormal),normalize(vec3(-0.4,0.65,1.))));
+    vec3 n=vNormal;if(vLit>1.5&&!gl_FrontFacing){n=-n;}
+    float amount=0.32+0.68*max(0.,dot(n/max(length(n),0.000001),normalize(vec3(-0.4,0.65,1.))));
     color=vec4(color.rgb*amount,color.a);
   }
   outputColor=color;

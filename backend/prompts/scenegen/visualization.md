@@ -150,10 +150,23 @@ How to build 3D with animlib:
   be 3D; if it starts with "2D (because ...):", keep it flat.
 - For a 3D scene use `mode: "3d"` with `orbit: true`, or put the 3D objects in an
   `s.view(id, { rect, camera }, v => { ... })` region (its camera is 3D and rotatable by
-  default) and keep formulas outside it. Use `sphere`, `line3D`, `arrow3D`, `mesh` and
-  real z coordinates. Move between flat and spatial views with `s.camera.to3D(...)` /
+  default) and keep formulas outside it. Use `sphere`, `line3D`, `arrow3D`, shaded
+  `mesh`, `surface`, `parametricSurface`, `box`, `cylinder`, `cone`, `torus`, or
+  `tube` with real depth. Move between flat and spatial views with `s.camera.to3D(...)` /
   `s.camera.to2D(...)` (or the view's camera) as an animated transition. See reference
   section 6 and the chemistry scene in the demo.
+- `s.surface(id, { fn: (x, y) => z, ... })` is a height graph; use
+  `s.parametricSurface(id, { fn: (u, v) => [x, y, z], ... })` for curved petals,
+  lobes, and other spatial sheets. Closed parameter axes share seam indices and
+  require periodic maps. `s.tube(id, { points: [...], radius, ... })` sweeps an
+  authored 3D centerline; it does not infer a curve from SVG path data.
+- Helpers create mesh geometry with smooth shading (boxes default flat) and no
+  stroke. Raw `s.mesh` needs `shading: 'smooth'` or `'flat'` to receive lighting.
+  Use palette tokens for fill. Start with modest sampling (surfaces default to
+  32 segments per axis; each mesh is limited to 20,000 vertices and triangles).
+  To vary surface callbacks, solid dimensions, or tube points, use an ordinary
+  numeric slider and rebuild from its value; `s.bind` cannot rebuild mesh geometry.
+  Keep dependent labels and the scene duration consistent.
 
 Alignment (strict; misplaced parts are the most visible kind of jank):
 - Everything that belongs to a 3D model lives in the SAME 3D view as the model:
@@ -169,8 +182,9 @@ Alignment (strict; misplaced parts are the most visible kind of jank):
 - Labels: use `billboard: true` with a small `billboardOffset` (just clear of the
   object, about its radius plus 0.2) so the label stays beside its object while the
   view rotates. To move a label, change the offset, not its world position.
-- Rounded 3D bodies (atoms, lobes, clouds) are built from spheres, which are shaded;
-  a `mesh` is drawn flat, so a lobe made of one mesh reads as a 2D blob.
+- Rounded 3D bodies (atoms, lobes, clouds) need actual spatial geometry and
+  lighting: use spheres or a mesh/parametric surface with smooth shading.
+  A planar silhouette remains planar even when shading is enabled.
 - To de-emphasise a shaded 3D body, do not leave it half transparent for long:
   overlapping transparent spheres draw with visible banding. Fade it fully, or keep
   it opaque and dim the other things instead.

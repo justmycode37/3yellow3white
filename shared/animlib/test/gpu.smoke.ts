@@ -345,6 +345,27 @@ describe('native Vulkan WebGPU rendering',()=> {
     for(const x of [width/2-40,width/2+40]){const at=(height/2*width+x)*4;expect(image[at]).toBeGreaterThan(40);expect(image[at+2]).toBeGreaterThan(40);}
     expect(errors).toEqual([]);
   });
+  it('lights both mesh windings identically and interpolates smooth vertex normals',async()=> {
+    renderer.resetInteraction();
+    const result=await sequence.submit({type:'load',scenes:[{id:'mesh-lighting',source:`export default scene({background:'BLACK'},s=>{
+      s.mesh('surface',{vertices:[[-2,-2,0],[2,-2,0],[0,2,0]],triangles:[[0,1,2]],shading:'flat',fill:'WHITE',stroke:'none'});s.wait(1);
+    });`}]});expect(result.ok).toBe(true);
+    const frame=sequence.frame(0,0),mesh=frame.elements.find(element=>element.id.endsWith('surface'))!;
+    const at=(image:Uint8Array,x=width/2,y=height/2)=>image[(y*width+x)*4];
+    renderer.render(frame,sequence.compiled[0].options);const front=await pixels();
+    const expected=Math.round(255*(0.32+0.68/Math.hypot(-0.4,0.65,1)));
+    expect(Math.abs(at(front)-expected)).toBeLessThanOrEqual(1);
+    mesh.geometry.triangles=[[2,1,0]];
+    renderer.render(frame,sequence.compiled[0].options);const back=await pixels();
+    expect(at(back)).toBe(at(front));
+    mesh.geometry.shading='unlit';
+    renderer.render(frame,sequence.compiled[0].options);expect(at(await pixels())).toBe(255);
+    mesh.geometry.triangles=[[0,1,2]];mesh.geometry.shading='smooth';
+    mesh.geometry.normals=[[-1,0,1],[1,0,1],[0,0,1]];
+    renderer.render(frame,sequence.compiled[0].options);const smooth=await pixels();
+    expect(at(smooth,width/2-40)-at(smooth,width/2+40)).toBeGreaterThan(8);
+    await artifact('mesh-smooth-lighting',smooth);expect(errors).toEqual([]);
+  });
   it('slides a grouped 3D element outside an ultrawide viewport under retained orbit',async()=> {
     const result=await sequence.submit({type:'load',scenes:[{id:'exit',source:String.raw`export default scene({mode:"3d",orbit:true,background:"BLACK"},s=>{
       const sphere=s.sphere("sphere",{radius:0.42,fill:"PURE_BLUE",stroke:"none"});const group=s.group("exit",[sphere]);

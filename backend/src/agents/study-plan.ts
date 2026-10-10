@@ -28,7 +28,7 @@ export function parsePlanDocument(value: unknown): PlanDocument {
     return { text: line.text, ...(line.page === undefined ? {} : { page: positive(line.page) }) };
   });
   const length = lines.reduce((n, line) => n + line.text.length, 0);
-  if (length > 200000 || lines.map(l => l.text).join(' ').trim().split(/\s+/).length < 20) throw new Error('Provide at least 20 words and at most 200,000 characters. Split longer material into sections.');
+  if (length > 200000 || !lines.some(line => line.text.trim())) throw new Error('Provide readable material and at most 200,000 characters. Split longer material into sections.');
   const pages = d.pages === undefined ? undefined : positive(d.pages);
   if (pages && lines.some(line => line.page !== undefined && line.page > pages)) throw new Error('Source page exceeds document length.');
   return { name: text(d.name, 255), lines, pages };
@@ -92,6 +92,7 @@ export async function generateStudyPlan(runner: AgentRunner, document: PlanDocum
   const [system, format] = await Promise.all([scenegenPrompt('topics-system'), scenegenPrompt('topics-format')]);
   // Retain the source prompt and delimiter contract, adding course grouping requirements.
   const prompt = format.replace('{max_topics}', String(MAX_TOPICS)) + '\n\n' + COURSE_CLASSIFICATION + '\n\nSOURCE MATERIAL:\n<<<\n' + sourceMaterial(document) + '\n>>>';
+  signal.throwIfAborted();
   const output = await runner.run({ systemPrompt: system, prompt,
     signal, validate: async output => { parseTopicPlan(output, document); } });
   signal.throwIfAborted();

@@ -10,6 +10,7 @@ import { layoutLatex, layoutLatexGeometry } from './latex.js';
 import type { LatexPath } from './latex.js';
 import { morphPathContours, pathContours } from './path.js';
 import type { PathContour } from './path.js';
+import { meshTriangles, morphMeshNormals } from './mesh-shading.js';
 
 export function textTex(text:string):string {return String.raw`\text{`+text.replace(/[\\{}$&#%_^~]/g,c=>({'\\':String.raw`\backslash `,'{':String.raw`\{`,'}':String.raw`\}`,'$':String.raw`\$`,'&':String.raw`\&`,'#':String.raw`\#`,'%':String.raw`\%`,'_':String.raw`\_`,'^':String.raw`\textasciicircum `,'~':String.raw`\textasciitilde `}[c]!))+'}';}
 function contains(contour:Vec3[],point:Vec3):boolean {
@@ -79,7 +80,9 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     // allocating vectors and recomputing trigonometry for every vertex.
     const origin=world([0,0,0]);
     const axes:Vec3[]=[[1,0,0],[0,1,0],[0,0,1]];
-    const normalBasis=axes.map(axis=>{let normal=axis;for(const state of chain)normal=rotate(normal,state.rotation);return normal;});
+    const normalBasis=element.billboard&&element.space!=='screen'
+      ?axes.map(axis=>rotate(rotate(axis,[0,0,element.rotation[2]]),[camera.pitch,camera.yaw,0]))
+      :axes.map(axis=>{let normal=axis;for(const state of chain)normal=rotate(normal,state.rotation);return normal;});
     const scale=chain.reduce((product,state)=>product*state.scale,1);
     // Subpixel local error at the element's projected scale. Power-of-two buckets
     // let nearby zoom levels share tessellation without ever exceeding 0.25px here.
@@ -87,10 +90,8 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     const pathTolerance=2**Math.floor(Math.log2(0.25/Math.max(1e-9,pixelsPerUnit)));
     // Transform directions separately to avoid subtracting nearly equal
     // translated points when a small object is far from the world origin.
-    const basis=element.billboard&&element.space!=='screen'
-      ?axes.map(axis=>rotate(rotate(axis.map(v=>v*scale) as Vec3,[0,0,element.rotation[2]]),[camera.pitch,camera.yaw,0]))
-      :normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
-    const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:DrawComponent='fill'):void=> {
+    const basis=normalBasis.map(axis=>axis.map(v=>v*scale) as Vec3);
+    const addTriangles=(points:Vec3[],color:ColorValue,alpha=1,normals?:Vec3[],component:DrawComponent='fill',twoSided=false):void=> {
       const rgba=parseColor(palette.resolve(color));if(!points.length||rgba[3]*opacity*alpha<=0)return;
       const vertices=new Float32Array(points.length*15),screen=element.space==='screen',a=rgba[3]*opacity*alpha;
       let sumX=0,sumY=0,sumZ=0;
@@ -106,7 +107,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
           const n=normals[i];
           for(let axis=0;axis<3;axis++)vertices[j+8+axis]=n[0]*normalBasis[0][axis]+n[1]*normalBasis[1][axis]+n[2]*normalBasis[2][axis];
         } else {vertices[j+8]=normalBasis[2][0];vertices[j+9]=normalBasis[2][1];vertices[j+10]=normalBasis[2][2];}
-        vertices[j+11]=normals?1:0;vertices[j+12]=elementIndex;vertices[j+13]=viewportOffset[0];vertices[j+14]=viewportOffset[1];
+        vertices[j+11]=normals?(twoSided?2:1):0;vertices[j+12]=elementIndex;vertices[j+13]=viewportOffset[0];vertices[j+14]=viewportOffset[1];
       }
       const transparent=a<0.999999;
       if(transparent&&!screen) {
@@ -140,9 +141,20 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
       if(color==='none')return;
       for(const path of paths)addTriangles(triangulateContours(path.contours).map(p=>p.map((v,i)=>v*size+offset[i]) as Vec3),color,alpha,undefined,'content');
     };
-    const addMesh=(geometry:Geometry,alpha=1):void=> {
-      const vertices=(geometry.vertices??[]).map(vec3);
-      for(const indices of geometry.triangles??[]){const triangle=indices.map(i=>vertices[i]).filter(Boolean);if(triangle.length===3){addTriangles(triangle,element.fill,alpha);stroke(triangle,true,alpha);}}
+    const addMesh=(geometry:Geometry,alpha=1,normalOverride?:Vec3[]):void=> {
+      const mesh=meshTriangles(normalOverride?{...geometry,shading:'unlit'}:geometry);
+      const normals=normalOverride??mesh.normals;
+      if(element.stroke!=='none'&&element.strokeWidth>0) {
+        // Keep each fill next to its wireframe in depth order. Batching fills
+        // across depths can otherwise cover the inner half of a rear stroke.
+        for(let i=0;i<mesh.points.length;i+=3) {
+          const triangle=mesh.points.slice(i,i+3);
+          if(element.fill!=='none')addTriangles(triangle,element.fill,alpha,normals?.slice(i,i+3),'fill',true);
+          stroke(triangle,true,alpha);
+        }
+        return;
+      }
+      if(element.fill!=='none')addTriangles(mesh.points,element.fill,alpha,normals,'fill',true);
     };
     const drawGeometry=(geometry:Geometry,alpha=1):void=> {
       if(textOnly&&!isText(geometry))return;
@@ -185,7 +197,7 @@ export function buildDrawItems(frame:Frame,camera:CameraState,width:number,heigh
     const shape=morphOutline(from,to,t,pathTolerance);
     if(shape){drawGeometry({kind:from.kind==='arrow'&&to.kind==='arrow'?'arrow':'path',points:shape.points,closed:shape.closed});continue;}
     if(from.kind==='sphere'&&to.kind==='sphere'){drawGeometry({kind:'sphere',radius:lerp(from.radius??1,to.radius??1,t)});continue;}
-    if(from.kind==='mesh'&&to.kind==='mesh'&&from.vertices&&to.vertices&&from.vertices.length===to.vertices.length){const target=to.vertices!;addMesh({...to,vertices:from.vertices!.map((p,i)=>vec3(p).map((v,j)=>lerp(v,vec3(target[i])[j],t)) as Vec3)});continue;}
+    if(from.kind==='mesh'&&to.kind==='mesh'&&from.vertices&&to.vertices&&from.vertices.length===to.vertices.length){const target=to.vertices!;addMesh({...to,normals:undefined,vertices:from.vertices!.map((p,i)=>vec3(p).map((v,j)=>lerp(v,vec3(target[i])[j],t)) as Vec3)},1,morphMeshNormals(from,to,t));continue;}
     if(from.kind==='latex'&&to.kind==='latex') {
       const a=layoutLatexGeometry(from),b=layoutLatexGeometry(to),map=morph.map??{},targets=new Set(Object.values(map));
       const sizeA=from.fontSize??(element.space==='screen'?24:0.6),sizeB=to.fontSize??(element.space==='screen'?24:0.6);

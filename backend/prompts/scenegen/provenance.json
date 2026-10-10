@@ -5,9 +5,15 @@
     {
       "file": "visualization.md",
       "source": "scenegen/prompts/visualization.md (maintained here since PR 59)",
-      "commit": "fd3cebffe3f7c03c0751d2c8a915af1d569701ed",
-      "pullRequest": 59,
-      "sha256": "95f53b9c8d61d02ccf9c1d02d3e967ab4768d270bc4a9ba6065a91c9d54a6ca2"
+      "sha256": "ffc583a8140b086066678bcfbc1b2ab142c64b1ec74435d10b16cb267230a90e",
+      "revisions": [
+        {
+          "reason": "Update spatial authoring guidance for mesh shading, function and parametric surfaces, basic solids, and swept tubes."
+        },
+        {
+          "reason": "Controls top right, formula budget and spacing, minimal objects, focus frame and pulse, layering (PR 65)."
+        }
+      ]
     },
     {
       "file": "planning.md",
