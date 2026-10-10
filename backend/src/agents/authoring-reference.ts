@@ -13,6 +13,7 @@ const headings = [
   '### Local timing',
   '### Elements and coordinates',
   '### Shaded meshes',
+  '### Scene lighting and planar shadows',
   '### Procedural textures and materials',
   '### Function and parametric surfaces',
   '### Basic solids and swept tubes',
