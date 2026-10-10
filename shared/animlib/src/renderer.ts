@@ -5,7 +5,11 @@ import { GeometryCache } from './cache.js';
 import { ViewInteraction } from './interaction.js';
 import { paletteResolver, parseColor } from './palette.js';
 import type { PaletteResolver } from './palette.js';
-import type { CameraState, ColorValue, ColorPalette, CompiledScene, ElementState, Frame, Geometry, Vec3 } from './types.js';
+import type { CameraState, ColorValue, ColorPalette, CompiledScene, ElementState, Frame, Geometry, InteractionSnapshot, Vec3 } from './types.js';
+import { add, sub, cameraRay, planePoint } from './spatial.js';
+import { composeItems } from './composition.js';
+import type { DrawItem } from './composition.js';
+import { GPUCompositor } from './gpu-compositor.js';
 import { lerp, matchPoints, morphOutline, outline, project, rotate, vec3, strokeTriangles, sphereTriangles, tubeTriangles, coneTriangles } from './geometry.js';
 import { layoutLatex, layoutLatexGeometry, validateLatexMap } from './latex.js';
 import type { LatexPath } from './latex.js';
@@ -39,7 +43,6 @@ struct Output { @builtin(position) position: vec4f, @location(0) color: vec4f, @
   if(input.lit>0.5){let amount=0.32+0.68*max(0.,dot(normalize(input.normal),normalize(vec3f(-0.4,0.65,1.))));color=vec4f(color.rgb*amount,color.a);}
   return color; }
 `;
-interface DrawItem { depth:number; vertices:Float32Array; transparent:boolean; screen:boolean }
 function textTex(text:string):string {return String.raw`\text{`+text.replace(/[\\{}$&#%_^~]/g,c=>({'\\':String.raw`\backslash `,'{':String.raw`\{`,'}':String.raw`\}`,'$':String.raw`\$`,'&':String.raw`\&`,'#':String.raw`\#`,'%':String.raw`\%`,'_':String.raw`\_`,'^':String.raw`\textasciicircum `,'~':String.raw`\textasciitilde `}[c]!))+'}';}
 function contains(contour:Vec3[],point:Vec3):boolean {
   let inside=false;
@@ -78,6 +81,7 @@ export class CanvasRenderer {
   get backend():'webgpu'|'webgl2'|undefined {return this.gl?'webgl2':this.ready?'webgpu':undefined;}
   get canvasElement():HTMLCanvasElement {return this.canvas;}
   onOrbitChange:(()=>void)|undefined;
+  onInvalidate:(()=>void)|undefined;
   onError:((error:Error)=>void)|undefined;
   private size={width:1,height:1};
   private observer:ResizeObserver;
@@ -86,7 +90,9 @@ export class CanvasRenderer {
   private regions:NonNullable<Frame["views"]>=[];
   private viewResources=new Map<string,{uniform:GPUBuffer;bindGroup:GPUBindGroup;transparentBindGroup:GPUBindGroup}>();
   private orbitEnabled=false;
-  private drag:{id:number;x:number;y:number;view:string}|null=null;
+  private drag:{id:number;x:number;y:number;view:string;pan?:boolean}|null=null;
+  private pans = new Map<string, Vec3>();
+  private navigationMode: 'orbit' | 'pan' = 'orbit';
   private lastFrame:Frame|undefined;
   private lastOptions:CompiledScene['options']|undefined;
   private device:GPUDevice|undefined;
@@ -94,6 +100,9 @@ export class CanvasRenderer {
   private pipeline:GPURenderPipeline|undefined;
   private transparentPipeline:GPURenderPipeline|undefined;
   private transparentBindGroup:GPUBindGroup|undefined;
+  private compositor:GPUCompositor|undefined;
+  private pipelineDescriptor:GPURenderPipelineDescriptor|undefined;
+  private depthOnlyPipeline:GPURenderPipeline|undefined;
   private uniform:GPUBuffer|undefined;
   private bindGroup:GPUBindGroup|undefined;
   private vertices:GPUBuffer|undefined;
@@ -106,12 +115,12 @@ export class CanvasRenderer {
   constructor(private canvas:HTMLCanvasElement, private hostPalette?:ColorPalette) {
     this.originalCanvas=canvas;
     if(hostPalette)this.hostPalette=paletteResolver(hostPalette).palette;
-    this.observer=new ResizeObserver(()=>{this.resize();if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);});
+    this.observer=new ResizeObserver(()=>{this.resize();if(this.onInvalidate)this.onInvalidate();else if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);});
     this.observer.observe(canvas);this.resize();
     this.listen(true);
   }
   private listen(add:boolean):void {
-    const events = {pointerdown:this.pointerDown,pointermove:this.pointerMove,pointerup:this.pointerUp,pointercancel:this.pointerUp,lostpointercapture:this.pointerUp};
+    const events = {pointerdown:this.pointerDown,pointermove:this.pointerMove,pointerup:this.pointerUp,pointercancel:this.pointerUp,lostpointercapture:this.pointerUp,contextmenu:this.contextMenu};
     for(const [name,handler] of Object.entries(events)) {
       if(add)this.canvas.addEventListener(name,handler as EventListener);
       else this.canvas.removeEventListener(name,handler as EventListener);
@@ -126,6 +135,8 @@ export class CanvasRenderer {
     this.onCanvasChange?.(next);
   }
   private releaseGPU():void {
+    this.compositor?.dispose();this.compositor=undefined;
+    this.depthOnlyPipeline=undefined;this.pipelineDescriptor=undefined;
     for(const resource of this.viewResources.values())resource.uniform.destroy();this.viewResources.clear();
     this.vertices?.destroy();this.uniform?.destroy();this.depthTexture?.destroy();this.colorTexture?.destroy();
     const device=this.device;this.device=undefined;
@@ -173,39 +184,67 @@ export class CanvasRenderer {
   get orbit():{yaw:number;pitch:number} {return this.interaction.get();}
   setOrbit(orbit:{yaw:number;pitch:number},view=''):void {this.interaction.set(orbit,view);}
   getOrbit(view=''):{yaw:number;pitch:number} {return this.interaction.get(view);}
+  getPan(view=''):Vec3 { return [...(this.pans.get(JSON.stringify([this.interactionScene,view])) ?? [0,0,0])] as Vec3; }
+  setPan(value:Vec3,view=''):void {
+    if(value.length!==3||!value.every(Number.isFinite))throw new Error('Pan requires three finite coordinates');
+    this.pans.set(JSON.stringify([this.interactionScene,view]),[...value]);
+  }
+  setNavigationMode(mode:'orbit'|'pan'):void { if(mode!=='orbit'&&mode!=='pan')throw new Error('Invalid navigation mode');this.pointerUp();this.navigationMode=mode; }
+  private effectiveCamera(camera:CameraState,enabled:boolean,view=''):CameraState {
+    const orbit=this.interaction.get(view);
+    return {...camera,target:add(camera.target,this.getPan(view)),yaw:camera.yaw+(enabled?orbit.yaw*camera.perspective:0),pitch:camera.pitch+(enabled?orbit.pitch*camera.perspective:0)};
+  }
+  interactionSnapshot(view=''):InteractionSnapshot|undefined {
+    if(!this.lastFrame||!this.lastOptions)return;
+    const region=view?this.lastFrame.views?.find(v=>v.id===view):undefined;
+    if(view&&!region)return;
+    const rect=region?.rect??[0,0,1,1];
+    const width=region?this.size.width*(Math.round((rect[0]+rect[2])*this.canvas.width)-Math.round(rect[0]*this.canvas.width))/this.canvas.width:this.size.width;
+    const height=region?this.size.height*(Math.round((rect[1]+rect[3])*this.canvas.height)-Math.round(rect[1]*this.canvas.height))/this.canvas.height:this.size.height;
+    return {frame:structuredClone(this.lastFrame),camera:structuredClone(this.effectiveCamera(region?.camera??this.lastFrame.camera,region?.orbit??this.lastOptions.orbit,view)),width,height,rect:[...rect] as [number,number,number,number]};
+  }
   syncInteraction(scene:string,time:number,compiled:CompiledScene,frame:Frame):void {
     if(this.interactionScene!==scene)this.pointerUp();
     this.interactionScene=scene;
     this.interaction.sync(scene,time,compiled);
     this.regions=frame.views??[];
-    if(this.drag&&!this.canOrbit(this.drag.view))this.pointerUp();
+    if(this.drag&&!this.drag.pan&&!this.canOrbit(this.drag.view))this.pointerUp();
   }
-  resetInteraction():void {this.pointerUp();this.interaction.reset();this.interactionScene=undefined;}
-  setOrbitEnabled(enabled:boolean):void {this.orbitEnabled=enabled;if(this.drag&&!this.canOrbit(this.drag.view))this.pointerUp();this.canvas.style.cursor=enabled||this.regions.some(v=>this.canOrbit(v.id))?'grab':'';}
+  resetInteraction():void {this.pointerUp();this.interaction.reset();this.pans.clear();this.interactionScene=undefined;}
+  setOrbitEnabled(enabled:boolean):void {this.orbitEnabled=enabled;if(this.drag&&!this.drag.pan&&!this.canOrbit(this.drag.view))this.pointerUp();this.canvas.style.cursor=enabled||this.regions.some(v=>this.canOrbit(v.id))?'grab':'';}
   private canOrbit(view:string):boolean {
     if(!view)return this.orbitEnabled;
     const region=this.regions.find(v=>v.id===view);
     return Boolean(region?.orbit&&region.camera.perspective>0&&!region.cameraAnimated);
   }
-  private hitView(event:PointerEvent):string|undefined {
+  private hitView(event:PointerEvent,pan=false):string|undefined {
     const bounds=this.canvas.getBoundingClientRect();
     const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;
     for(const region of [...this.regions].reverse()) {
       const [left,top,width,height]=region.rect;
-      if(x>=left&&x<left+width&&y>=top&&y<top+height)return this.canOrbit(region.id)?region.id:undefined;
+      if(x>=left&&x<left+width&&y>=top&&y<top+height)return pan||this.canOrbit(region.id)?region.id:undefined;
     }
-    return this.canOrbit('')?'':undefined;
+    return pan||this.canOrbit('')?'':undefined;
   }
   private pointerDown=(event:PointerEvent):void=>{
-    if(event.button!==0||this.drag)return;
-    const view=this.hitView(event);if(view===undefined)return;
+    if(event.defaultPrevented||event.button>2||this.drag)return;
+    const pan=event.shiftKey||event.button===1||event.button===2||this.navigationMode==='pan';
+    const view=this.hitView(event,pan);if(view===undefined)return;
     event.preventDefault();
-    this.drag={id:event.pointerId,x:event.clientX,y:event.clientY,view};this.canvas.setPointerCapture(event.pointerId);
+    this.drag={id:event.pointerId,x:event.clientX,y:event.clientY,view,pan};this.canvas.setPointerCapture(event.pointerId);
     this.canvas.style.cursor='grabbing';
   };
   private pointerMove=(event:PointerEvent):void=> {
     if(!this.drag){this.canvas.style.cursor=this.hitView(event)!==undefined?'grab':'';return;}
-    if(event.pointerId!==this.drag.id||!this.canOrbit(this.drag.view))return;
+    if(event.pointerId!==this.drag.id||!this.drag.pan&&!this.canOrbit(this.drag.view))return;
+    if(this.drag.pan) {
+      const snapshot=this.interactionSnapshot(this.drag.view);if(!snapshot)return;
+      const bounds=this.canvas.getBoundingClientRect(),[left,top,w,h]=snapshot.rect;
+      const point=(x:number,y:number)=>planePoint(cameraRay(((x-bounds.left)/bounds.width-left)/w*snapshot.width,((y-bounds.top)/bounds.height-top)/h*snapshot.height,snapshot.camera,snapshot.width,snapshot.height),snapshot.camera.target,rotate([0,0,1],[snapshot.camera.pitch,snapshot.camera.yaw,0]));
+      const before=point(this.drag.x,this.drag.y),after=point(event.clientX,event.clientY);
+      if(before&&after)this.setPan(add(this.getPan(this.drag.view),sub(before,after)),this.drag.view);
+      this.drag.x=event.clientX;this.drag.y=event.clientY;this.onOrbitChange?.();return;
+    }
     const orbit=this.interaction.get(this.drag.view);
     const region=this.regions.find(v=>v.id===this.drag!.view);
     const bounds=this.canvas.getBoundingClientRect();
@@ -224,6 +263,7 @@ export class CanvasRenderer {
     if(this.canvas.hasPointerCapture?.(id))this.canvas.releasePointerCapture(id);
     this.canvas.style.cursor=this.orbitEnabled||this.regions.some(v=>this.canOrbit(v.id))?'grab':'';
   };
+  private contextMenu=(event:Event):void=>{event.preventDefault();};
   private resize():void {
     const rect=this.canvas.getBoundingClientRect();this.size={width:Math.max(1,rect.width||this.canvas.width||800),height:Math.max(1,rect.height||this.canvas.height||450)};
     const ratio=globalThis.devicePixelRatio||1;
@@ -261,6 +301,7 @@ export class CanvasRenderer {
     const errors=compilation.messages.filter(m=>m.type==='error');if(errors.length)throw new Error(errors.map(m=>m.message).join('\n'));
     this.format=navigator.gpu.getPreferredCanvasFormat();
     const descriptor:GPURenderPipelineDescriptor={layout:'auto',vertex:{module,entryPoint:'vertex',buffers:[{arrayStride:60,attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x4'},{shaderLocation:2,offset:28,format:'float32'},{shaderLocation:3,offset:32,format:'float32x3'},{shaderLocation:4,offset:44,format:'float32'},{shaderLocation:5,offset:48,format:'float32'},{shaderLocation:6,offset:52,format:'float32x2'}]}]},fragment:{module,entryPoint:'fragment',targets:[{format:navigator.gpu.getPreferredCanvasFormat(),blend:{color:{srcFactor:'src-alpha',dstFactor:'one-minus-src-alpha',operation:'add'},alpha:{srcFactor:'one',dstFactor:'one-minus-src-alpha',operation:'add'}}}]},primitive:{topology:'triangle-list',cullMode:'none'},depthStencil:{format:'depth24plus',depthWriteEnabled:true,depthCompare:'less-equal'},multisample:{count:4}};
+    this.pipelineDescriptor=descriptor;
     const pipeline=await device.createRenderPipelineAsync(descriptor);
     if(this.disposed)throw new Error('Renderer is disposed.');
     this.pipeline=pipeline;
@@ -309,7 +350,13 @@ export class CanvasRenderer {
       const chain:ElementState[]=[element];let parent=parents.get(element.id);const seen=new Set([element.id]);
       while(parent&&!seen.has(parent.id)){chain.push(parent);seen.add(parent.id);parent=parents.get(parent.id);}
       const viewportOffset=[0,1].map(axis=>chain.reduce((sum,e)=>sum+(e.viewportOffset?.[axis]??0),0));
-      const opacity=chain.reduce((a,e)=>a*e.opacity,1);if(opacity<=0)continue;
+      const groups:{id:string;opacity:number}[]=[];
+      let opacity=1;
+      for(const e of [...chain].reverse()) {
+        opacity*=e.opacity;
+        if(e.geometry.kind==='group'&&e.geometry.isolated){groups.push({id:e.id,opacity});opacity=1;}
+      }
+      if(opacity<=0||groups.some(g=>g.opacity<=0))continue;
       const applyTransforms=(point:Vec3):Vec3=>{let p=point;for(const state of chain){p=rotate(p.map(v=>v*state.scale) as Vec3,state.rotation);p=p.map((v,i)=>v+state.position[i]) as Vec3;}return p;};
       const world=(point:Vec3):Vec3=> {
         if(!element.billboard||element.space==='screen')return applyTransforms(point);
@@ -351,7 +398,7 @@ export class CanvasRenderer {
         // Camera depth is linear in world position, so the centroid gives the
         // same sorting depth without projecting every vertex.
         const depth=screen?-1e9:project([sumX/points.length,sumY/points.length,sumZ/points.length],camera,width,height).depth;
-        items.push({depth,vertices,transparent:a<0.999999,screen});
+        items.push({depth,vertices,transparent:a<0.999999,screen,groups});
       };
       const contours=(paths:Vec3[][],alpha=1,color=element.fill):void=>{if(color!=='none')addTriangles(triangulateContours(paths),color,alpha);};
       const stroke=(points:Vec3[],closed:boolean,alpha=1,capEnd=true):void=> {
@@ -447,11 +494,7 @@ export class CanvasRenderer {
     if(!this.ready||this.contextLost||this.disposed)return;
     this.lastFrame=frame;this.lastOptions=options;this.regions=frame.views??[];
     const {width,height}=this.size;
-    const effective=(camera:CameraState,enabled:boolean,view=''):CameraState=>{
-      const offset=this.interaction.get(view);
-      return {...camera,yaw:camera.yaw+(enabled?offset.yaw*camera.perspective:0),pitch:camera.pitch+(enabled?offset.pitch*camera.perspective:0)};
-    };
-    const camera=effective(frame.camera,options.orbit);
+    const camera=this.effectiveCamera(frame.camera,options.orbit);
     const palette=paletteResolver(this.hostPalette??options.palette);
     const mainItems=this.drawItems(frame,camera,width,height,palette);
     const batches=[{camera,width,height,rect:undefined as number[]|undefined,items:mainItems.filter(i=>!i.screen),id:''}];
@@ -462,16 +505,16 @@ export class CanvasRenderer {
       const pixelWidth=Math.round((left+w)*this.canvas.width)-x,pixelHeight=Math.round((top+h)*this.canvas.height)-y;
       if(pixelWidth<1||pixelHeight<1)continue;
       const viewWidth=width*pixelWidth/this.canvas.width,viewHeight=height*pixelHeight/this.canvas.height;
-      const viewCamera=effective(region.camera,region.orbit,region.id);
+      const viewCamera=this.effectiveCamera(region.camera,region.orbit,region.id);
       batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:this.drawItems(frame,viewCamera,viewWidth,viewHeight,palette,region.id),id:region.id});
     }
     // Scene-wide screen labels stay above every regional 3D view.
     if(mainItems.some(i=>i.screen))batches.push({camera,width,height,rect:undefined,items:mainItems.filter(i=>i.screen),id:''});
+    let vertexOffset=0;
     const ordered=batches.map(batch=>{
-      const opaque=batch.items.filter(i=>!i.transparent).sort((a,b)=>b.depth-a.depth);
-      const transparent=batch.items.filter(i=>i.transparent).sort((a,b)=>b.depth-a.depth);
-      return {...batch,opaqueVertices:opaque.reduce((n,i)=>n+i.vertices.length/15,0),items:[...opaque,...transparent],
-        floatCount:batch.items.reduce((n,i)=>n+i.vertices.length,0)};
+      const composition=composeItems(batch.items,vertexOffset);
+      const floatCount=batch.items.reduce((n,i)=>n+i.vertices.length,0);vertexOffset+=floatCount/15;
+      return {...batch,...composition,floatCount,opaqueVertices:composition.commands.filter(c=>'first' in c&&c.opaque).reduce((n,c)=>n+('count' in c?c.count:0),0)};
     });
     const data=new Float32Array(ordered.reduce((n,batch)=>n+batch.floatCount,0));
     let offset=0;
@@ -486,7 +529,7 @@ export class CanvasRenderer {
     if(data.length)device.queue.writeBuffer(this.vertices!,0,data);
     const encoder=device.createCommandEncoder();
     const colorView=this.colorTexture!.createView(),target=this.context!.getCurrentTexture().createView(),depthView=this.depthTexture!.createView();
-    let firstVertex=0;
+    this.compositor?.beginFrame();
     for(const [index,batch] of ordered.entries()) {
       let resources=batch.id?this.viewResources.get(batch.id):{uniform:this.uniform!,bindGroup:this.bindGroup!,transparentBindGroup:this.transparentBindGroup!};
       if(!resources){
@@ -496,13 +539,21 @@ export class CanvasRenderer {
       }
       const c=batch.camera;
       device.queue.writeBuffer(resources.uniform,0,new Float32Array([...c.target,0,c.yaw,c.pitch,c.distance,c.perspective,batch.width,batch.height,c.height,0]));
-      const pass=encoder.beginRenderPass({colorAttachments:[{view:colorView,resolveTarget:target,clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:index===0?'clear':'load',storeOp:'store'}],depthStencilAttachment:{view:depthView,depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}});
-      if(batch.rect){const [x,y,w,h]=batch.rect;pass.setViewport(x,y,w,h,0,1);pass.setScissorRect(x,y,w,h);}
-      pass.setPipeline(this.pipeline!);pass.setBindGroup(0,resources.bindGroup);
-      const count=batch.floatCount/15;
-      if(count){pass.setVertexBuffer(0,this.vertices!);if(batch.opaqueVertices)pass.draw(batch.opaqueVertices,1,firstVertex);
-        if(count>batch.opaqueVertices){pass.setPipeline(this.transparentPipeline!);pass.setBindGroup(0,resources.transparentBindGroup);pass.draw(count-batch.opaqueVertices,1,firstVertex+batch.opaqueVertices);}}
-      firstVertex+=count;pass.end();
+      const descriptor:GPURenderPassDescriptor={colorAttachments:[{view:colorView,resolveTarget:target,clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:index===0?'clear':'load',storeOp:'store'}],depthStencilAttachment:{view:depthView,depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}};
+      if(batch.commands.some(command=>'children' in command)) {
+        this.compositor??=new GPUCompositor(device,this.format!);
+        this.depthOnlyPipeline??=device.createRenderPipeline({...this.pipelineDescriptor!,fragment:{...this.pipelineDescriptor!.fragment!,targets:[{format:this.format!,writeMask:0}]}});
+        const depthBindGroup=device.createBindGroup({layout:this.depthOnlyPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:resources.uniform}}]});
+        this.compositor.render(encoder,batch.commands,descriptor,batch.rect,this.canvas.width,this.canvas.height,(pass,command,depthOnly)=>{
+          pass.setPipeline(depthOnly?this.depthOnlyPipeline!:command.opaque?this.pipeline!:this.transparentPipeline!);pass.setBindGroup(0,depthOnly?depthBindGroup:command.opaque?resources!.bindGroup:resources!.transparentBindGroup);
+          pass.setVertexBuffer(0,this.vertices!);pass.draw(command.count,1,command.first);
+        });
+      } else {
+        const pass=encoder.beginRenderPass(descriptor);
+        if(batch.rect){const [x,y,w,h]=batch.rect;pass.setViewport(x,y,w,h,0,1);pass.setScissorRect(x,y,w,h);}
+        for(const command of batch.commands)if('first' in command){pass.setPipeline(command.opaque?this.pipeline!:this.transparentPipeline!);pass.setBindGroup(0,command.opaque?resources.bindGroup:resources.transparentBindGroup);pass.setVertexBuffer(0,this.vertices!);pass.draw(command.count,1,command.first);}
+        pass.end();
+      }
     }
     device.queue.submit([encoder.finish()]);
     } catch(error) {

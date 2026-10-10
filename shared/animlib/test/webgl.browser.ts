@@ -2,6 +2,7 @@ import { project } from '../src/geometry.js';
 import { CanvasRenderer } from '../src/renderer.js';
 import { SceneSequence } from '../src/sequence.js';
 import { createPlayer } from '../src/player.js';
+import { compositionCases } from './composition-cases.js';
 import { Color, paletteResolver, parseColor } from '../src/palette.js';
 import { initialSources } from '../demo/scenes.js';
 import { interactionSource } from '../demo/interaction.js';
@@ -74,6 +75,13 @@ export async function runWebGLTests() {
       assert(renderer.backend === 'webgl2', 'Fallback was not selected');
       assert(at(draw(), canvas, 320, 240).join() === '255,0,0', 'Center must be pure red');
       assert(foreground(draw()) > 15000, 'Expected a filled rectangle');
+    });
+    for (const {name,source,time,samples} of compositionCases) await test(name, async () => {
+      await load(source);
+      for (const t of [time,0,time]) {
+        const image=draw(t);
+        if(t===time)for(const [x,y,rgb] of samples){const actual=at(image,canvas,x,y);assert(rgb.every((v,c)=>Math.abs(actual[c]-v)<=2),`${name} at ${x},${y}: ${actual} expected ${rgb}`);}
+      }
     });
     for (const [name, gpu] of [
       ['null adapter', { requestAdapter: async () => null }],
@@ -184,7 +192,7 @@ export async function runWebGLTests() {
     await test('player sliders/toggles, append clock continuity and previous-scene handoffs', async () => {
       renderer.dispose(); canvas.remove();
       const surface = document.createElement('canvas'); stage.append(surface);
-      const player = createPlayer({ canvas: surface });
+      const player = createPlayer({ canvas: surface, controlsRoot: stage });
       try {
         const first: SceneSource = { id: 'one', source: `export default scene({end:'advance'},s=>{
           const r=s.slider('radius',{default:0.5,min:0.2,max:2});const show=s.toggle('show',{default:true});

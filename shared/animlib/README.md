@@ -31,7 +31,7 @@ the library handles reproducible playback, scene handoffs, and live updates.
   and borders should remain clean throughout an animation.
 - **Support 2D, 3D, and interaction.** Scene code controls geometry and camera
   transitions between modes. Sliders and other controls update the displayed frame
-  even while paused, with an automatic overlay panel or authored positions. Scenes
+  even while paused, with an explicitly requested overlay panel or host controls. Scenes
   can contain multiple clipped 3D view regions, each rotated independently with
   the mouse. Controls blend into the scene; `line3D` and `arrow3D` provide round
   shafts and cone heads. Authored camera rotations blend from the viewer's current
@@ -48,7 +48,10 @@ the library handles reproducible playback, scene handoffs, and live updates.
 ## Scope
 
 The core provides shapes, paths, text, LaTeX, meshes, groups, animation, and player
-behavior. Domain helpers for matrices, molecules, arrays, and graphs belong in the
+behavior. The default player renders and handles input on its canvas; it creates
+no surrounding DOM. Generic drag/spring/custom behaviors and live attachments or
+connectors compose with the authored timeline. Isolated groups let overlapping
+parts fade as one object. Domain helpers for matrices, molecules, arrays, and graphs belong in the
 surrounding app. Internal dependencies are allowed; the public API requires no
 framework.
 
@@ -70,6 +73,24 @@ The [demo scenes](demo/scenes.ts) exercise the three subject areas. The demo use
 fullscreen black canvas, mostly white drawing with selective color accents, and a
 bottom progress bar with play/pause controls and native scene controls. Open
 `http://localhost:5173/?interactive` for a two-view interaction example.
+Open `http://localhost:5173/behaviors.html` for a canvas-only example: draggable
+atoms, spring return, attached labels, a surface-clipped bond, pan/orbit and a
+composited object fade. All interaction is declared in the scene.
+
+```js
+s.behavior(atom, { type: 'drag', plane: 'screen' });
+s.behavior(atom, { type: 'spring', stiffness: 65, damping: 9 });
+s.attach(label, atom);
+s.connect(bond, atom, otherAtom, { endpoints: 'surface' });
+const object = s.group('object', [atom, otherAtom, label, bond], { isolated: true });
+s.play(object.fadeOut(), { duration: 1 });
+```
+
+Drag and spring are independent behaviors. Hosts can register additional behavior
+factories through `createPlayer({ canvas, behaviors })`; compiled scenes contain
+only declarative data. See [behaviors and bindings](docs/reference.md#behaviors-and-live-bindings).
+DOM controls now require an explicit `controlsRoot`; existing applications that
+want the native overlay should pass `canvas.parentElement` or another host.
 
 ## Development
 

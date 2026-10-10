@@ -69,6 +69,8 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const controls: ControlDefinition[] = [];
   const tracks: CompiledScene["tracks"] = [];
   const lifecycle: CompiledScene["lifecycle"] = [];
+  const behaviors: NonNullable<CompiledScene["behaviors"]> = [];
+  const bindings: NonNullable<CompiledScene["bindings"]> = [];
   let cursor = 0;
   let exiting: ElementHandle | undefined;
 
@@ -174,7 +176,19 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     text: (id, props) => add("text", id, { fontSize: props.space === "screen" ? 16 : 0.4, ...props }),
     latex: (id, props) => add("latex", id, { fontSize: props.space === "screen" ? 24 : 0.6, ...props }),
     mesh: (id, props) => add("mesh", id, props),
-    group: (id, children) => {
+    behavior: (target, behavior) => {
+      descendants(target.id);
+      behaviors.push({ target: target.id, behavior: clone(behavior) });
+    },
+    attach: (target, source, spec = {}) => {
+      descendants(target.id); descendants(source.id);
+      bindings.push({ type: "attach", target: target.id, source: source.id, ...(spec.offset ? { offset: vector(spec.offset) } : {}) });
+    },
+    connect: (target, from, to, spec = {}) => {
+      descendants(target.id); descendants(from.id); descendants(to.id);
+      bindings.push({ type: "connect", target: target.id, from: from.id, to: to.id, ...clone(spec) });
+    },
+    group: (id, children, spec = {}) => {
       const childIds = children.map(child => child.id);
       for (const child of childIds) if (states.get(child)?.view !== currentView) throw new Error("Groups must contain elements from the same view");
       for (const child of childIds) {
@@ -182,7 +196,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
         if (groups.has(child)) throw new Error(`Element ${child} already has a parent group`);
         groups.add(child);
       }
-      return add("group", id, { children: childIds });
+      return add("group", id, { children: childIds, space: states.get(childIds[0])?.space ?? "world", ...clone(spec) });
     },
     play: (actionList, timing) => {
       const duration = finite(timing.duration, "duration");
@@ -284,5 +298,5 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   };
   const returned: unknown = builder(context);
   if (returned && typeof (returned as { then?: unknown }).then === "function") throw new Error("Scene builders must be synchronous");
-  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks };
+  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks, behaviors, bindings };
 }
