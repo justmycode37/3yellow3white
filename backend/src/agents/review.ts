@@ -4,12 +4,14 @@ import { compileSource, evaluateScene } from 'animlib/core';
 import type { Frame } from 'animlib/core';
 import type { AgentRunner } from './runtime.js';
 import type { AgentConfig } from './config.js';
-import { validateScenePlan } from './scene-plan.js';
+import { validateScenePlan, validateViewingMode } from './scene-plan.js';
 import type { ScenePlan } from './planning.js';
 import { atomicWrite } from '../narration/service.js';
+import { loadPrompt } from './prompts.js';
 
 export interface ReviewInput {
   audioAssetId: string; endMode: 'hold' | 'advance'; scene: { id: string; durationSec: number };
+  videoMode?: 'classic' | 'interactive'; legacyPlan?: boolean;
   previousFrame?: Frame; planning: { current?: ScenePlan };
 }
 export interface SceneReview {
@@ -33,6 +35,7 @@ export async function validateReview(output: string, input: ReviewInput): Promis
     if (!review.findings.length || typeof review.source !== 'string' || !review.source.trim()) throw new Error('A repair needs findings and complete corrected source.');
     const compiled = await compileSource(review.source, { previous: input.previousFrame }, { sampleTime: "end" });
     if (compiled.options.audio !== input.audioAssetId || compiled.options.end !== input.endMode || Math.abs(compiled.duration - input.scene.durationSec) > 1e-6) throw new Error('Review repairs must preserve the audio asset, end mode, and exact measured duration.');
+    if (input.videoMode && !input.legacyPlan) validateViewingMode(compiled, input.videoMode);
     if (input.planning.current) validateScenePlan(compiled, evaluateScene(compiled, compiled.duration), input.planning.current);
   }
   return review;
@@ -46,7 +49,7 @@ export async function reviewScene(config: AgentConfig, runner: AgentRunner, vide
   const input: ReviewInput = JSON.parse(await readFile(join(root, `${prefix}.input.json`), 'utf8'));
   const source = await readFile(join(root, `${prefix}.js`), 'utf8');
   const task = await readFile(join(root, `${prefix}.prompt.md`), 'utf8');
-  const guidance = await readFile(new URL('../../prompts/scene-review.md', import.meta.url), 'utf8');
+  const guidance = await loadPrompt('scene-review');
   const attachments = await Promise.all(images.map(async path => {
     const mimeType = ({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' } as Record<string, string>)[path.split('.').at(-1)!.toLowerCase()];
     if (!mimeType) throw new Error('Review images must be PNG, JPEG, or WebP.');
