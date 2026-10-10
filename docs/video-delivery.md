@@ -22,6 +22,13 @@ Alternatively send multipart form data: `request` contains that JSON and repeate
 at most 100 MB, and a request contains at most ten source documents/files. Extracted
 source text is limited to 1 MB in total. File hashes are part of idempotency identity.
 
+POST and DELETE validate the browser's origin. Behind the production gateway, set
+`NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` to the exact public browser
+origin, without a trailing slash. Video and narration writes share this setting,
+so internal HTTP forwarding or a rewritten host does not reject legitimate requests.
+Without the setting, the expected origin uses `X-Forwarded-Proto` (or the request
+scheme) and the request URL's host. Cross-site requests remain rejected.
+
 `GET /api/videos` lists all saved jobs for the shared user. `GET /api/videos/:id`
 returns a snapshot. `GET /api/videos/:id/events` sends named `manifest` SSE events
 with monotonically increasing revision IDs. Every event is a full snapshot:

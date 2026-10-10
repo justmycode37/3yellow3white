@@ -71,6 +71,31 @@ test('invalid requests and idempotency conflicts are rejected', async () => {
   expect((await service.handle(api('', { method: 'POST', headers: { ...headers, origin: 'https://localhost', 'x-forwarded-proto': 'https' }, body: JSON.stringify(input) }))).status).toBe(202)
 })
 
+test('configured public origin permits proxied writes while rejecting other origins and cross-site requests', async () => {
+  const previousOrigin = process.env.NARRATION_PUBLIC_ORIGIN
+  const publicOrigin = 'https://11.hackathon.ethz.ch'
+  process.env.NARRATION_PUBLIC_ORIGIN = publicOrigin
+  try {
+    const service = new VideoService(':memory:', async () => null); services.push(service)
+    const headers = { 'Idempotency-Key': 'proxied', origin: publicOrigin, 'sec-fetch-site': 'same-origin' }
+    const internalURL = 'http://app:8080/api/videos'
+    const response = await service.handle(new Request(internalURL, { method: 'POST', headers, body: JSON.stringify(input) }))
+    expect(response.status).toBe(202)
+    const video = await response.json()
+    for (const method of ['POST', 'DELETE']) {
+      const url = method === 'POST' ? internalURL : `${internalURL}/${video.id}`
+      for (const origin of ['https://evil.test', 'http://11.hackathon.ethz.ch', 'http://app:8080']) {
+        expect((await service.handle(new Request(url, { method, headers: { ...headers, origin } }))).status).toBe(403)
+      }
+      expect((await service.handle(new Request(url, { method, headers: { ...headers, 'sec-fetch-site': 'cross-site' } }))).status).toBe(403)
+    }
+    expect((await service.handle(new Request(`${internalURL}/${video.id}`, { method: 'DELETE', headers: { ...headers, 'x-forwarded-proto': 'http' } }))).status).toBe(204)
+  } finally {
+    if (previousOrigin === undefined) delete process.env.NARRATION_PUBLIC_ORIGIN
+    else process.env.NARRATION_PUBLIC_ORIGIN = previousOrigin
+  }
+})
+
 test('multipart uploads are durable, extracted in the worker, and included in idempotency', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'aha-uploads-'))
   let release!: () => void
