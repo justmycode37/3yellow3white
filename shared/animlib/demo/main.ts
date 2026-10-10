@@ -61,7 +61,8 @@ scrubber.addEventListener("input", () => {
   }
   void player.seek({ scene: target.id, time }).catch(reportError);
 });
-canvas.addEventListener("keydown", event => {
+canvas.parentElement!.addEventListener("keydown", event => {
+  if (event.target !== player.canvas) return;
   if (event.code === "Space") { event.preventDefault(); playButton.click(); }
 });
 const sources = (new URLSearchParams(location.search).has("interactive") ? [interactionSource] : initialSources).map(scene => ({ ...scene }));

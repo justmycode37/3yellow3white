@@ -1,5 +1,6 @@
 /// <reference types="@webgpu/types" />
 import earcut from 'earcut';
+import { WebGLBackend } from './webgl.js';
 import { GeometryCache } from './cache.js';
 import { ViewInteraction } from './interaction.js';
 import { paletteResolver, parseColor } from './palette.js';
@@ -68,6 +69,14 @@ export function triangulateContours(contours:Vec3[][]):Vec3[] {
   return triangulations.set(key,result.map(p=>[...p] as Vec3),result.length*64);
 }
 export class CanvasRenderer {
+  onCanvasChange:((canvas:HTMLCanvasElement)=>void)|undefined;
+  onRecovered:(()=>void)|undefined;
+  private gl:WebGLBackend|undefined;
+  private contextLost=false;
+  private ready=false;
+  private originalCanvas:HTMLCanvasElement;
+  get backend():'webgpu'|'webgl2'|undefined {return this.gl?'webgl2':this.ready?'webgpu':undefined;}
+  get canvasElement():HTMLCanvasElement {return this.canvas;}
   onOrbitChange:(()=>void)|undefined;
   onError:((error:Error)=>void)|undefined;
   private size={width:1,height:1};
@@ -95,10 +104,71 @@ export class CanvasRenderer {
   private initializing:Promise<void>|undefined;
   private disposed=false;
   constructor(private canvas:HTMLCanvasElement, private hostPalette?:ColorPalette) {
+    this.originalCanvas=canvas;
     if(hostPalette)this.hostPalette=paletteResolver(hostPalette).palette;
     this.observer=new ResizeObserver(()=>{this.resize();if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);});
     this.observer.observe(canvas);this.resize();
-    canvas.addEventListener('pointerdown',this.pointerDown);canvas.addEventListener('pointermove',this.pointerMove);canvas.addEventListener('pointerup',this.pointerUp);canvas.addEventListener('pointercancel',this.pointerUp);canvas.addEventListener('lostpointercapture',this.pointerUp);
+    this.listen(true);
+  }
+  private listen(add:boolean):void {
+    const events = {pointerdown:this.pointerDown,pointermove:this.pointerMove,pointerup:this.pointerUp,pointercancel:this.pointerUp,lostpointercapture:this.pointerUp};
+    for(const [name,handler] of Object.entries(events)) {
+      if(add)this.canvas.addEventListener(name,handler as EventListener);
+      else this.canvas.removeEventListener(name,handler as EventListener);
+    }
+  }
+  private replaceCanvas():void {
+    // Context types are permanent, even after unconfigure()/device.destroy().
+    // Keep attributes/layout, but give the fallback a fresh drawing surface.
+    const previous=this.canvas, next=previous.cloneNode(false) as HTMLCanvasElement;
+    this.pointerUp();this.listen(false);this.observer.disconnect();
+    previous.replaceWith(next);this.canvas=next;this.listen(true);this.observer.observe(next);
+    this.onCanvasChange?.(next);
+  }
+  private releaseGPU():void {
+    for(const resource of this.viewResources.values())resource.uniform.destroy();this.viewResources.clear();
+    this.vertices?.destroy();this.uniform?.destroy();this.depthTexture?.destroy();this.colorTexture?.destroy();
+    const device=this.device;this.device=undefined;
+    this.context?.unconfigure();this.context=undefined;device?.destroy();
+    this.vertices=undefined;this.uniform=undefined;this.depthTexture=undefined;this.colorTexture=undefined;
+    this.pipeline=undefined;this.transparentPipeline=undefined;this.bindGroup=undefined;this.transparentBindGroup=undefined;this.capacity=0;
+  }
+  private initializeGL():void {
+    if(this.disposed)throw new Error('Renderer is disposed.');
+    const acquire=()=>this.canvas.getContext('webgl2',{alpha:false,antialias:true,depth:true,premultipliedAlpha:false});
+    let gl=acquire();
+    // The caller may reuse a canvas locked by an earlier renderer/context type.
+    if(!gl&&this.canvas===this.originalCanvas&&typeof this.canvas.cloneNode==='function'){this.replaceCanvas();gl=acquire();}
+    if(!gl)throw new Error('No WebGL2 context is available.');
+    this.gl=new WebGLBackend(gl);
+    this.canvas.addEventListener('webglcontextlost',this.glLost);
+    this.canvas.addEventListener('webglcontextrestored',this.glRestored);
+    this.contextLost=false;this.ready=true;this.resize();
+  }
+  private glLost=(event:Event):void=>{
+    event.preventDefault();
+    if(this.disposed)return;
+    this.contextLost=true;
+    this.onError?.(new Error('WebGL2 context lost. Playback is paused while the graphics context recovers; retry if it does not recover.'));
+  };
+  private glRestored=():void=>{
+    if(this.disposed||!this.gl)return;
+    try {
+      // Restored contexts have already invalidated every old GL handle.
+      const gl=this.gl.gl;this.gl=new WebGLBackend(gl);this.contextLost=false;this.ready=true;this.resize();
+      if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);
+      if(this.ready)this.onRecovered?.();
+    } catch(error){this.onError?.(error instanceof Error?error:new Error(String(error)));}
+  };
+  private fallback(reason:unknown):void {
+    const locked=Boolean(this.context);
+    this.ready=false;this.releaseGPU();
+    try {
+      if(locked)this.replaceCanvas();
+      this.initializeGL();
+    } catch(error) {
+      throw new Error(`Neither WebGPU nor WebGL2 could initialize. WebGPU: ${reason instanceof Error?reason.message:String(reason)} WebGL2: ${error instanceof Error?error.message:String(error)}`);
+    }
   }
   get orbit():{yaw:number;pitch:number} {return this.interaction.get();}
   setOrbit(orbit:{yaw:number;pitch:number},view=''):void {this.interaction.set(orbit,view);}
@@ -157,23 +227,32 @@ export class CanvasRenderer {
   private resize():void {
     const rect=this.canvas.getBoundingClientRect();this.size={width:Math.max(1,rect.width||this.canvas.width||800),height:Math.max(1,rect.height||this.canvas.height||450)};
     const ratio=globalThis.devicePixelRatio||1;
-    const max=this.device?.limits.maxTextureDimension2D??8192;
+    const max=this.gl?.maxSize??this.device?.limits.maxTextureDimension2D??8192;
     const width=Math.min(max,Math.max(1,Math.round(this.size.width*ratio))),height=Math.min(max,Math.max(1,Math.round(this.size.height*ratio)));
     if(this.canvas.width!==width)this.canvas.width=width;if(this.canvas.height!==height)this.canvas.height=height;
-    if(this.device && (!this.depthTexture||this.depthTexture.width!==width||this.depthTexture.height!==height)) { this.depthTexture?.destroy();this.depthTexture=this.device.createTexture({size:[width,height],format:'depth24plus',sampleCount:4,usage:GPUTextureUsage.RENDER_ATTACHMENT});this.colorTexture?.destroy();this.colorTexture=this.device.createTexture({size:[width,height],format:this.format!,sampleCount:4,usage:GPUTextureUsage.RENDER_ATTACHMENT}); }
+    if(this.device && this.context && (!this.depthTexture||this.depthTexture.width!==width||this.depthTexture.height!==height)) { this.depthTexture?.destroy();this.depthTexture=this.device.createTexture({size:[width,height],format:'depth24plus',sampleCount:4,usage:GPUTextureUsage.RENDER_ATTACHMENT});this.colorTexture?.destroy();this.colorTexture=this.device.createTexture({size:[width,height],format:this.format!,sampleCount:4,usage:GPUTextureUsage.RENDER_ATTACHMENT}); }
   }
   private async initialize():Promise<void> {
+    try {await this.initializeGPU();}
+    catch(error) {if(this.disposed)throw error;this.fallback(error);}
+  }
+  private async initializeGPU():Promise<void> {
     if(this.disposed)throw new Error('Renderer is disposed.');
     if(globalThis.isSecureContext===false)throw new Error('This page is using an insecure connection. Open it over HTTPS (or localhost): browsers hide WebGPU on remote HTTP pages.');
-    if(!globalThis.navigator?.gpu)throw new Error('WebGPU is required. Use a WebGPU-capable desktop browser on HTTPS or localhost; no rendering fallback is provided.');
+    if(!globalThis.navigator?.gpu)throw new Error('WebGPU is unavailable.');
     const adapter=await navigator.gpu.requestAdapter();
     if(this.disposed)throw new Error('Renderer is disposed.');
-    if(!adapter)throw new Error('WebGPU is required but no GPU adapter is available.');
+    if(!adapter)throw new Error('No WebGPU adapter is available.');
     const device=await adapter.requestDevice();if(this.disposed){device.destroy();throw new Error('Renderer is disposed.');}
-    const context=this.canvas.getContext('webgpu');if(!context){device.destroy();throw new Error('The canvas cannot create a WebGPU context.');}
-    this.device=device;this.context=context;
-    device.addEventListener('uncapturederror',event=>this.onError?.(new Error(event.error.message)));
-    void device.lost.then(info=>{if(!this.disposed)this.onError?.(new Error(`WebGPU device lost: ${info.message||info.reason}`));});
+    this.device=device;
+    let lost:string|undefined;
+    device.addEventListener('uncapturederror',event=>{if(!this.disposed&&this.device===device)this.onError?.(new Error(event.error.message));});
+    void device.lost.then(info=>{
+      lost=`WebGPU device lost: ${info.message||info.reason}`;
+      if(this.disposed||this.device!==device||!this.ready)return;
+      try {this.fallback(new Error(lost));if(this.lastFrame&&this.lastOptions)this.render(this.lastFrame,this.lastOptions);if(this.ready)this.onRecovered?.();}
+      catch(error){this.onError?.(error instanceof Error?error:new Error(String(error)));}
+    });
     const module=device.createShaderModule({code:shader});
     const compilation=await module.getCompilationInfo();
     // Navigation/retry can dispose this renderer during any GPU initialization
@@ -181,7 +260,6 @@ export class CanvasRenderer {
     if(this.disposed)throw new Error('Renderer is disposed.');
     const errors=compilation.messages.filter(m=>m.type==='error');if(errors.length)throw new Error(errors.map(m=>m.message).join('\n'));
     this.format=navigator.gpu.getPreferredCanvasFormat();
-    context.configure({device,format:this.format,alphaMode:'opaque'});
     const descriptor:GPURenderPipelineDescriptor={layout:'auto',vertex:{module,entryPoint:'vertex',buffers:[{arrayStride:60,attributes:[{shaderLocation:0,offset:0,format:'float32x3'},{shaderLocation:1,offset:12,format:'float32x4'},{shaderLocation:2,offset:28,format:'float32'},{shaderLocation:3,offset:32,format:'float32x3'},{shaderLocation:4,offset:44,format:'float32'},{shaderLocation:5,offset:48,format:'float32'},{shaderLocation:6,offset:52,format:'float32x2'}]}]},fragment:{module,entryPoint:'fragment',targets:[{format:navigator.gpu.getPreferredCanvasFormat(),blend:{color:{srcFactor:'src-alpha',dstFactor:'one-minus-src-alpha',operation:'add'},alpha:{srcFactor:'one',dstFactor:'one-minus-src-alpha',operation:'add'}}}]},primitive:{topology:'triangle-list',cullMode:'none'},depthStencil:{format:'depth24plus',depthWriteEnabled:true,depthCompare:'less-equal'},multisample:{count:4}};
     const pipeline=await device.createRenderPipelineAsync(descriptor);
     if(this.disposed)throw new Error('Renderer is disposed.');
@@ -192,9 +270,16 @@ export class CanvasRenderer {
     this.uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
     this.bindGroup=device.createBindGroup({layout:this.pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});
     this.transparentBindGroup=device.createBindGroup({layout:this.transparentPipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:this.uniform}}]});
-    this.resize();
+    if(lost)throw new Error(lost);
+    // Complete fallible async device/pipeline setup before locking the host canvas.
+    const context=this.canvas.getContext('webgpu');
+    if(!context)throw new Error('The canvas cannot create a WebGPU context.');
+    this.context=context;
+    context.configure({device,format:this.format,alphaMode:'opaque'});
+    this.resize();this.ready=true;
   }
   async prepare(scenes:CompiledScene[]):Promise<void> {
+    if(this.disposed)throw new Error('Renderer is disposed.');
     const prepareGeometry=(g:Geometry):void=>{if(g.kind==='latex')layoutLatexGeometry(g);if(g.kind==='text')layoutLatex(textTex(g.text??''));};
     for(const scene of scenes) {
       const palette=paletteResolver(this.hostPalette??scene.options.palette);
@@ -359,9 +444,9 @@ export class CanvasRenderer {
     return items;
   }
   render(frame:Frame,options:CompiledScene['options']):void {
-    if(!this.device||!this.context||!this.pipeline||!this.uniform||!this.bindGroup||this.disposed)return;
+    if(!this.ready||this.contextLost||this.disposed)return;
     this.lastFrame=frame;this.lastOptions=options;this.regions=frame.views??[];
-    const {width,height}=this.size,device=this.device;
+    const {width,height}=this.size;
     const effective=(camera:CameraState,enabled:boolean,view=''):CameraState=>{
       const offset=this.interaction.get(view);
       return {...camera,yaw:camera.yaw+(enabled?offset.yaw*camera.perspective:0),pitch:camera.pitch+(enabled?offset.pitch*camera.perspective:0)};
@@ -369,17 +454,8 @@ export class CanvasRenderer {
     const camera=effective(frame.camera,options.orbit);
     const palette=paletteResolver(this.hostPalette??options.palette);
     const mainItems=this.drawItems(frame,camera,width,height,palette);
-    const mainResources={uniform:this.uniform,bindGroup:this.bindGroup,transparentBindGroup:this.transparentBindGroup!};
-    const batches=[{camera,width,height,rect:undefined as number[]|undefined,items:mainItems.filter(i=>!i.screen),resources:mainResources}];
-    const viewIds=new Set(this.regions.map(v=>v.id));
-    for(const [id,resource] of this.viewResources)if(!viewIds.has(id)){resource.uniform.destroy();this.viewResources.delete(id);}
+    const batches=[{camera,width,height,rect:undefined as number[]|undefined,items:mainItems.filter(i=>!i.screen),id:''}];
     for(const region of this.regions) {
-      let resources=this.viewResources.get(region.id);
-      if(!resources){
-        const uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
-        resources={uniform,bindGroup:device.createBindGroup({layout:this.pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]}),transparentBindGroup:device.createBindGroup({layout:this.transparentPipeline!.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]})};
-        this.viewResources.set(region.id,resources);
-      }
       const [left,top,w,h]=region.rect;
       // Round shared edges once: adjacent regions neither overlap nor leave gaps at fractional DPR.
       const x=Math.round(left*this.canvas.width),y=Math.round(top*this.canvas.height);
@@ -387,10 +463,10 @@ export class CanvasRenderer {
       if(pixelWidth<1||pixelHeight<1)continue;
       const viewWidth=width*pixelWidth/this.canvas.width,viewHeight=height*pixelHeight/this.canvas.height;
       const viewCamera=effective(region.camera,region.orbit,region.id);
-      batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:this.drawItems(frame,viewCamera,viewWidth,viewHeight,palette,region.id),resources});
+      batches.push({camera:viewCamera,width:viewWidth,height:viewHeight,rect:[x,y,pixelWidth,pixelHeight],items:this.drawItems(frame,viewCamera,viewWidth,viewHeight,palette,region.id),id:region.id});
     }
     // Scene-wide screen labels stay above every regional 3D view.
-    if(mainItems.some(i=>i.screen))batches.push({camera,width,height,rect:undefined,items:mainItems.filter(i=>i.screen),resources:mainResources});
+    if(mainItems.some(i=>i.screen))batches.push({camera,width,height,rect:undefined,items:mainItems.filter(i=>i.screen),id:''});
     const ordered=batches.map(batch=>{
       const opaque=batch.items.filter(i=>!i.transparent).sort((a,b)=>b.depth-a.depth);
       const transparent=batch.items.filter(i=>i.transparent).sort((a,b)=>b.depth-a.depth);
@@ -400,27 +476,51 @@ export class CanvasRenderer {
     const data=new Float32Array(ordered.reduce((n,batch)=>n+batch.floatCount,0));
     let offset=0;
     for(const batch of ordered)for(const item of batch.items){data.set(item.vertices,offset);offset+=item.vertices.length;}
+    const clear=parseColor(palette.resolve(options.background));
+    try {
+    if(this.gl){this.gl.render(data,ordered,clear,this.canvas.width,this.canvas.height);return;}
+    const device=this.device!;
+    const viewIds=new Set(this.regions.map(v=>v.id));
+    for(const [id,resource] of this.viewResources)if(!viewIds.has(id)){resource.uniform.destroy();this.viewResources.delete(id);}
     if(data.byteLength>this.capacity){this.vertices?.destroy();this.capacity=Math.max(256,data.byteLength*2);this.vertices=device.createBuffer({size:this.capacity,usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});}
     if(data.length)device.queue.writeBuffer(this.vertices!,0,data);
-    const clear=parseColor(palette.resolve(options.background)),encoder=device.createCommandEncoder();
-    const colorView=this.colorTexture!.createView(),target=this.context.getCurrentTexture().createView(),depthView=this.depthTexture!.createView();
+    const encoder=device.createCommandEncoder();
+    const colorView=this.colorTexture!.createView(),target=this.context!.getCurrentTexture().createView(),depthView=this.depthTexture!.createView();
     let firstVertex=0;
     for(const [index,batch] of ordered.entries()) {
+      let resources=batch.id?this.viewResources.get(batch.id):{uniform:this.uniform!,bindGroup:this.bindGroup!,transparentBindGroup:this.transparentBindGroup!};
+      if(!resources){
+        const uniform=device.createBuffer({size:48,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+        resources={uniform,bindGroup:device.createBindGroup({layout:this.pipeline!.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]}),transparentBindGroup:device.createBindGroup({layout:this.transparentPipeline!.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]})};
+        this.viewResources.set(batch.id,resources);
+      }
       const c=batch.camera;
-      device.queue.writeBuffer(batch.resources.uniform,0,new Float32Array([...c.target,0,c.yaw,c.pitch,c.distance,c.perspective,batch.width,batch.height,c.height,0]));
+      device.queue.writeBuffer(resources.uniform,0,new Float32Array([...c.target,0,c.yaw,c.pitch,c.distance,c.perspective,batch.width,batch.height,c.height,0]));
       const pass=encoder.beginRenderPass({colorAttachments:[{view:colorView,resolveTarget:target,clearValue:{r:clear[0],g:clear[1],b:clear[2],a:1},loadOp:index===0?'clear':'load',storeOp:'store'}],depthStencilAttachment:{view:depthView,depthClearValue:1,depthLoadOp:'clear',depthStoreOp:'store'}});
       if(batch.rect){const [x,y,w,h]=batch.rect;pass.setViewport(x,y,w,h,0,1);pass.setScissorRect(x,y,w,h);}
-      pass.setPipeline(this.pipeline);pass.setBindGroup(0,batch.resources.bindGroup);
+      pass.setPipeline(this.pipeline!);pass.setBindGroup(0,resources.bindGroup);
       const count=batch.floatCount/15;
       if(count){pass.setVertexBuffer(0,this.vertices!);if(batch.opaqueVertices)pass.draw(batch.opaqueVertices,1,firstVertex);
-        if(count>batch.opaqueVertices){pass.setPipeline(this.transparentPipeline!);pass.setBindGroup(0,batch.resources.transparentBindGroup);pass.draw(count-batch.opaqueVertices,1,firstVertex+batch.opaqueVertices);}}
+        if(count>batch.opaqueVertices){pass.setPipeline(this.transparentPipeline!);pass.setBindGroup(0,resources.transparentBindGroup);pass.draw(count-batch.opaqueVertices,1,firstVertex+batch.opaqueVertices);}}
       firstVertex+=count;pass.end();
     }
     device.queue.submit([encoder.finish()]);
+    } catch(error) {
+      // Frame acquisition can fail before device.lost reaches the playback loop.
+      if(this.device&&!this.disposed) {
+        try {this.fallback(error);this.render(frame,options);if(this.ready)this.onRecovered?.();return;}
+        catch(fallbackError){error=fallbackError;}
+      }
+      this.ready=false;
+      this.onError?.(error instanceof Error?error:new Error(String(error)));
+    }
   }
   dispose():void {
-    this.pointerUp();for(const resource of this.viewResources.values())resource.uniform.destroy();this.viewResources.clear();
-    this.disposed=true;this.observer.disconnect();this.vertices?.destroy();this.uniform?.destroy();this.depthTexture?.destroy();this.colorTexture?.destroy();this.context?.unconfigure();this.device?.destroy();
-    this.canvas.removeEventListener('pointerdown',this.pointerDown);this.canvas.removeEventListener('pointermove',this.pointerMove);this.canvas.removeEventListener('pointerup',this.pointerUp);this.canvas.removeEventListener('pointercancel',this.pointerUp);this.canvas.removeEventListener('lostpointercapture',this.pointerUp);
+    if(this.disposed)return;
+    this.pointerUp();this.disposed=true;this.ready=false;this.observer.disconnect();this.listen(false);
+    if(this.gl){this.canvas.removeEventListener('webglcontextlost',this.glLost);this.canvas.removeEventListener('webglcontextrestored',this.glRestored);}
+    if(!this.contextLost)this.gl?.dispose();this.gl=undefined;this.releaseGPU();
+    // Restore caller ownership, including hosts that reuse the original canvas on retry.
+    if(this.canvas!==this.originalCanvas)this.canvas.replaceWith(this.originalCanvas);
   }
 }

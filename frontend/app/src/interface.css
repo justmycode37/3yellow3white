@@ -184,7 +184,8 @@ html, body, #root { min-height: 100%; background: var(--bg); }
 
 /* The scene owns the entire viewport; host UI floats above it. */
 .player-stage { position: absolute; inset: 0; isolation: isolate; }
-.player-stage > .lesson-canvas { width: 100%; height: 100%; display: block; }
+.lesson-canvas-host { position: absolute; inset: 0; }
+.lesson-canvas-host > .lesson-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
 .player-heading { position: absolute; z-index: 10; top: max(28px, env(safe-area-inset-top)); left: 90px; max-width: min(45vw, 560px); padding: 10px 16px; border-radius: 16px; background: var(--bg); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .25s; }
 .player-heading.show-controls, .player-page:focus-within .player-heading { opacity: .95; }
 .player-heading h1 { font-size: clamp(14px, 2vw, 20px); line-height: 1.35; margin: 0; font-weight: 500; }
