@@ -421,6 +421,7 @@ export interface ElementHandle {
   moveTo(position: Position): AnimationAction;
   rotateTo(rotation: Position | number): AnimationAction;
   scaleTo(scale: number): AnimationAction;
+  /** New elements start hidden when this is their first scheduled opacity animation. */
   fadeIn(): AnimationAction;
   fadeOut(): AnimationAction;
   morphTo(geometry: Geometry, options?: { map?: Record<string, string> }): AnimationAction;

@@ -408,10 +408,20 @@ Durations must be finite and nonnegative. Conflicting writes to the same propert
 in one `play` produce a diagnostic. Two animations may affect different properties
 of the same object in parallel.
 
-Object creation is recorded at the current cursor. A `fadeIn` begins from zero
-opacity at that cursor, so compiling the scene does not briefly expose its target
-state. Animation starting values come from the object's evaluated state at the
-start of the interval. Scene-builder calls never draw intermediate frames.
+Object creation is recorded at the current cursor. When a new element's first
+scheduled opacity animation is `fadeIn()`, it starts hidden from creation until
+that fade begins, even if other animations or waits come first. This also applies
+to groups: their children inherit the group's hidden state. No explicit
+`opacity: 0` is needed for these entrances. A zero-duration `fadeIn()` reveals the
+element instantly at its scheduled time.
+
+Elements without a fade-in entrance retain their authored opacity (default `1`).
+An earlier opacity animation, such as `fadeOut()`, preserves the preceding
+visibility; a later `fadeIn()` is a reappearance. Elements carried over from a
+previous scene also retain their initial visibility. Each `fadeIn()` animates
+from zero to one at its scheduled cursor. Other animation starting values come
+from the object's evaluated state at the start of the interval. Scene-builder
+calls never draw intermediate frames.
 
 ### Elements and coordinates
 
