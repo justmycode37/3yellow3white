@@ -77,7 +77,16 @@ export class SceneSequence {
     let previous: Frame | undefined = sources.length > prefix.length ? outgoing ?? (compiled.length ? evaluateScene(await this.sampleScene(compiled.at(-1)!, compiled.at(-1)!.duration), compiled.at(-1)!.duration) : undefined) : undefined;
     for (const source of sources.slice(prefix.length)) {
       try {
+        if (source.handoffFrom !== undefined) {
+          const index = source.handoffFrom === null ? -1 : sources.findIndex(s => s.id === source.handoffFrom);
+          if (source.handoffFrom !== null && (index < 0 || index >= compiled.length)) throw new Error(`Invalid handoff scene: ${source.handoffFrom}`);
+          // Reactive control updates supply the changed prefix's sampled frame;
+          // its temporary compiled copy does not own a callback runtime.
+          previous = index < 0 ? undefined : outgoing && index === prefix.length - 1 ? outgoing
+            : evaluateScene(await this.sampleScene(compiled[index], compiled[index].duration), compiled[index].duration);
+        }
         const scene = await this.compiler.compile(source.source, { models: this.options.models, previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
+        if (source.audioId !== undefined) scene.options.audio = source.audioId;
         await this.options.prepare?.([scene]);
         if (this.disposed) throw new Error("Scene sequence is disposed");
         compiled.push(scene); previous = evaluateScene(await this.sampleScene(scene, scene.duration), scene.duration);

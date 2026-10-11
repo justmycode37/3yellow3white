@@ -28,6 +28,7 @@ export class Player {
   private sampled?: { source: CompiledScene; bindings: CompiledScene['reactiveBindings']; time: number; snapshot: CompiledScene };
   private listeners = new Set<(state: PlayerState) => void>();
   private sceneId: string | null = null;
+  private sceneBarriers = new Set<string>();
   private time = 0;
   private status: PlayerState["status"] = "empty";
   private error?: string;
@@ -305,6 +306,7 @@ export class Player {
     if (this.rendererError) throw this.rendererError;
     if (!this.sceneId || this.status === "playing") return;
     const scene = this.currentScene()!;
+    if (this.time >= scene.duration && this.sceneBarriers.has(this.sceneId)) return;
     if (this.time >= scene.duration && scene.duration > 0) this.time = 0;
     const generation = ++this.playbackGeneration;
     this.error = undefined;
@@ -342,7 +344,7 @@ export class Player {
       if (this.time >= scene.duration) {
         this.stopClock();
         const next = this.currentIndex() + 1;
-        if (scene.options.end === "advance" && next < this.sequence.sources.length) {
+        if (scene.options.end === "advance" && !this.sceneBarriers.has(this.sceneId!) && next < this.sequence.sources.length) {
           this.input.cancel();
           this.sceneId = this.sequence.sources[next].id;
           this.time = 0;
@@ -358,6 +360,12 @@ export class Player {
       }
       void this.refresh();
     });
+  }
+
+  /** Hold these scene ends before advancing or starting the next audio asset. */
+  setSceneBarriers(ids: string[]): void {
+    this.assertAlive();
+    this.sceneBarriers = new Set(ids);
   }
 
   pause(): void {
