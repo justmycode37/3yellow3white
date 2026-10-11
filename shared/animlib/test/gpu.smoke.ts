@@ -18,7 +18,7 @@ import colorString from 'color-string';
 import {Color,paletteResolver} from '../src/palette.js';
 import type {PaletteColor} from '../src/types.js';
 import {lessonScenes} from '../../../frontend/app/src/lessonScenes';
-import {lessons} from '../../../frontend/app/src/data';
+import {lessons} from '../../../frontend/app/tests/fixtures/lessons';
 import {compositionCases} from './composition-cases.js';
 import {waveSource} from './dynamic-surface-cases.js';
 import {reactiveCases} from './reactive-cases.js';
