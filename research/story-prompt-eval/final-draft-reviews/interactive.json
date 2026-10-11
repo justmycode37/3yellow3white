@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "verdict": "pass",
+  "summary": "The lesson correctly derives the quadratic multiplier, connects its sign and magnitude to trajectory behavior, covers the requested boundaries, and provides a complete narrated path before optional slider exploration. No material editorial issue found.",
+  "issues": [],
+  "checks": [
+    "Recomputed the default update: f'(x)=2x and eta=0.25 give multiplier 0.5 and iterates 1, 0.5, 0.25. Their graph heights are 1, 0.25, and 0.0625.",
+    "Recomputed the alternating example: eta=0.75 gives multiplier -0.5 and iterates 1, -0.5, 0.25, -0.125, with heights 1, 0.25, 0.0625, 0.015625. The visual brackets represent absolute distance rather than signed height.",
+    "The decisive inference is delivered in speech and supported by geometry: repeated multiplication determines sign changes and distance scaling. The inequality |1-2eta|<1 is equivalent to 0<eta<1. For the stated nonzero initial value, this is the convergence interval; eta=0.5 reaches zero in one step.",
+    "The endpoint cases are correct: eta=0 gives no movement, and eta=1 gives the two-cycle 1,-1,1 from x0=1 with constant objective value 1. Above eta=1 the multiplier is less than -1, so distances grow and signs alternate.",
+    "Recomputed eta=1.2: multiplier -1.4 yields 1,-1.4,1.96,-2.744, with heights 1,1.96,3.8416,7.529536. Distance grows by 40% per iteration, consistent with speech and the planned brackets.",
+    "For all slider values in [0,1.2], |q| is at most 1.4. Six updates have |x6| at most 1.4^6 = 7.529536 and f(x6) at most 56.693912375296, so the declared exploration domain [-8,8] by [0,64] contains the trajectory. The scale-linked origin inset addresses contraction visibility.",
+    "Exactly one supported slider is planned, with default 0.25 and consistent dependencies for points, heights, labels, multiplier, and regime. It is specified to become available after fixed narrated comparisons, preserving those comparisons and scene duration. Actual control gating still requires implementation verification.",
+    "The narrated default requires no user action: it explains the update, alternating convergence, strict boundaries, divergence, and the limitation to this quadratic. Optional exploration instructions stay in metadata, and the final summary does not generalize the interval to arbitrary objectives.",
+    "Neighboring plans preserve curve identity, colors, and the factorized relation, explicitly retire previous comparison cases, and define discrete algorithm updates rather than motion of a physical ball. All graph heights are required to follow x squared.",
+    "Exactly three scenes and no scripted pauses match the request. The final mechanical-results row reports 377 spoken words and approximately 178 seconds at 140 words per minute with the stated margin, with a 166–199 second estimate range. Timing is estimated, not measured.",
+    "Reviewed the complete narration and scene plan using the supplied request and guidance. No rendered frames, generated audio, live interaction, or validate_output check was performed; this review does not certify implementation behavior."
+  ]
+}

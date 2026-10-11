@@ -1,15 +1,14 @@
+import { ModelAssets } from './model-assets.js';
 import { realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VideoService } from './videos.js';
 import { narrationRoutes } from "./narration/routes.js";
 import type { NarrationService } from "./narration/service.js";
-import { SHARED_OWNER } from './identity.js';
+import { proxyUser } from './identity.js';
 import { studyPlanRoutes } from './study-plans.js';
 
 const defaultFrontendDir = fileURLToPath(new URL("../../frontend/site/", import.meta.url));
-
-function user(_request: Request) { return { id: SHARED_OWNER, name: 'Demo user' }; }
 
 function notFound() {
   return Response.json({ detail: "Not Found" }, { status: 404 });
@@ -20,7 +19,7 @@ function inside(root: string, path: string) {
   return suffix !== ".." && !suffix.startsWith(`..${sep}`) && !isAbsolute(suffix);
 }
 
-export function createHandler(frontendDir = defaultFrontendDir, videoService?: VideoService, narrationService?: NarrationService) {
+export function createHandler(frontendDir = defaultFrontendDir, videoService?: VideoService, narrationService?: NarrationService, models = new ModelAssets()) {
   const root = resolve(frontendDir);
   let videos = videoService;
   const narration = narrationRoutes(narrationService);
@@ -45,7 +44,8 @@ export function createHandler(frontendDir = defaultFrontendDir, videoService?: V
     try { path = decodeURIComponent(new URL(request.url).pathname); }
     catch { return Response.json({ detail: "Invalid URL" }, { status: 400 }); }
     if (path.includes("\0")) return Response.json({ detail: "Invalid URL" }, { status: 400 });
-    if (path === '/api/study-plans') return studyPlans(request);
+    if (path === '/api/models' || path.startsWith('/api/models/')) return models.handle(request);
+    if (path === '/api/study-plans' || path.startsWith('/api/study-plans/')) return studyPlans(request);
     if (path === '/api/videos' || path.startsWith('/api/videos/')) {
       videos ??= new VideoService(process.env.VIDEO_DB_PATH ?? 'data/videos.sqlite');
       return videos.handle(request);
@@ -65,9 +65,13 @@ export function createHandler(frontendDir = defaultFrontendDir, videoService?: V
       ok: true,
       ...(process.env.APP_REVISION ? { revision: process.env.APP_REVISION } : {}),
     });
-    else if (path === "/api/me") response = Response.json({ user: user(request) });
-    else if (path === "/api/hello") response = Response.json({ message: "Hello from the 3yellow3white backend", user: user(request) });
+    else if (path === "/api/me") response = Response.json({ user: proxyUser(request) });
+    else if (path === "/api/hello") response = Response.json({ message: "Hello from the 3yellow3white backend", user: proxyUser(request) });
     else response = await serveFile(page ? "index.html" : path.slice("/static/".length));
+    if (path === "/api/me" || path === "/api/hello") {
+      response.headers.set("Cache-Control", "private, no-store");
+      response.headers.set("Vary", "X-User-Id, X-User-Name");
+    }
     return request.method === "HEAD" ? new Response(null, { status: response.status, headers: response.headers }) : response;
   };
 }

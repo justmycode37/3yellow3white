@@ -1,0 +1,1178 @@
+[
+  {
+    "batch": "20261010-batch1",
+    "topic": "fourier",
+    "path": "scene-0.prompt.md",
+    "sha256": "c09b18a902775143c278e58d152920cb69d30e80262e3a3aceb0f47470ea3561",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "fourier",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "abced9fb101e48d26a172b7e72ca6a3ed4d2812da9abae2fba51b3412e961be0",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "fourier",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "afcc84b7388dd4e7a46cde29a032a9aa720c23acd0d9c885d331223e9b1df517",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "fourier",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "d7413cc276bac8731b7a12faf27afaea488fcf8739993c3ddc2239a1b7b70fcb",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "convolution",
+    "path": "scene-0.prompt.md",
+    "sha256": "3874496ef31bd2f2b9e654c413b2583cb5fc8cd532c9a13646170a709c38c24f",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "convolution",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "db9e9b8f0720ff8113077bf0820fd950731664a3d65455e3b7bab185dff77e56",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "mobius",
+    "path": "scene-0.prompt.md",
+    "sha256": "298a36760e36bf8e548544f09e8514edba30af06bd37313b9793f5a025c5a277",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "mobius",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "56624bbe22ed8bc6052493e3a4547126a1869a29788d2aa043bf905d089ed812",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "mobius",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "704931c8be9ff18587775c5ddb0892755dea2fd9b041482a7a126f8a6f877bbb",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "mobius",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "49301b2f249906d5a7ce461d9cc906c44dd044a0dfc48ab16ef4f704d8a0838f",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "svd",
+    "path": "scene-0.prompt.md",
+    "sha256": "1ad4770000016de240631e9331529030f7a3924a7adba250564fd32fb8d85b15",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "svd",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "9a4117cb0c94e33355309a2a19c091bc83c41d268394642378e6406dadfbc59a",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "svd",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "f65817747009b3f66262bb123afb8ce6d1672904ba5c7fcc836eebaf457defa5",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "svd",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "a76365bd7ae3c0084cfa2288569c1e070ea4654c0089e4c461ceba0f8885c880",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "bezier",
+    "path": "scene-0.prompt.md",
+    "sha256": "d92ebc2d13387b414dca027ccd8c54ed691e2b86d008eae12e0dc3e0f25cce0c",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "bezier",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "9a6006583463e446aa1e2be72777dfe7c4c38b4ca00cc2a5a592a0aa1784a54c",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "bezier",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "bcdd4d08bb16abbbd0c8193c05ec9b6e7d4afeaca5f1b0d23d13609a11f50dae",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "bezier",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "508f301b172891b0ed3fd4fe5697be8d4621b1b9687c8490746b11370ad32ef6",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "torus-knot",
+    "path": "scene-0.prompt.md",
+    "sha256": "8fb8b12dad3a36c43f01c8a3309bb462ca5d3a9e7b5865ae33ad28e0d7412cac",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "torus-knot",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "ff0c90834425fb517fc097cb032d1b84f748beafef4c4eee7b52ff7dff1b0b3a",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "torus-knot",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "d4ad1a617062727966dc55382973e63fb2ae81eff8e7d0261bdb1d0f63da3b99",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "torus-knot",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "22e8f69910b13805e2d8d8a660ae00a6bc792991e31114852e2174aa9f5d8075",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "interference",
+    "path": "scene-0.prompt.md",
+    "sha256": "f67dd9fa0814eccf64d81ca035a0e8dd57f7522e5ad71e010615100776f96edc",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "interference",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "38bf306d7b4630dd0efb063377e038bb353c9c5c17300d286250c35b7c5c6ed5",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "interference",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "32df90f47ec0175ca068d847c1dfa59367e0f8da5b5249289e33ef1924e43c58",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "electromagnetic",
+    "path": "scene-0.prompt.md",
+    "sha256": "9629a673e36cbb58256f0d865080d1b12b8768a104b88e43202e9c79fcc8d9cf",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "electromagnetic",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "b761e9da90a5c35180424680f69bb9ff720421f5f7a00950473960503d4fb9c4",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "electromagnetic",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "674c9ae83c41ce901950d6a731f1336dcb5bdc119e214959114a8c319c44f737",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "electromagnetic",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "1a492370f416bc2583af17b6c7288bd9ff315928c1821fbcbe3d127b8129be2f",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "kepler",
+    "path": "scene-0.prompt.md",
+    "sha256": "7efda8ed10d078cc0eadfbdcdf38a35136d98d69eb1cc728435398165cb0024c",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "kepler",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "c5cef608efa3b0ebdeac8ae57a742c81a4d8076c4f1f887ef6bb1440ecaa30df",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "kepler",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "f321ad54f67218e554d15b2b74cea4b10fc8cb87798c6b1874d77156ff575735",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "kepler",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "11924496901a61784b4790dfa898ff4e72f358c0089a6a3963c38d428bf2f49f",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "dipole",
+    "path": "scene-0.prompt.md",
+    "sha256": "44b951f13769da63eb117c156ec8db01de9e727ffb3230109cb1f40de106c2e1",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "dipole",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "a65258f20eabd63f66291ab4882f79fa1e461624e1a5446b260ce9de98b2ceac",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "snell",
+    "path": "scene-0.prompt.md",
+    "sha256": "cf0e2cafa0b884360c035f740ff1972a5dc94edeb2de9c6d0cf79db53dd07845",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "snell",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "5c45f3c53974c90a968d0b01392cc242badf55da8288e017dfcd0292ee9c0dcb",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "snell",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "df58518b627a934580e85515b36b7810f5eca9bfbfcf73fd21df7abe8316b898",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "snell",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "1db2f6350fc46f3b2bbd67424d876f8ff19c9e77033829309e0cf3f4ad8397e5",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "gyroscope",
+    "path": "scene-0.prompt.md",
+    "sha256": "21bbd3164ba2d6066be3109b7276b30187336edcc19baffef4664d7e0c9243ef",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "gyroscope",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "765a363ca19c5d3e3fb5a4c375aa0fb4894fa42a70b09752162c8013d1bf2fbb",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "gyroscope",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "b2b521371119aa8c2d9f088a86e80197161622a1296445cf69f314e5f4f586e9",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "gyroscope",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "20215077f4b3c2f9c82c052dcaa1109c6ebaa28fb78dffedccb58c4bd72ee9d4",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "salt-crystal",
+    "path": "scene-0.prompt.md",
+    "sha256": "29fd7fd64ace09bb8fea11a4146c9e3893a245b880ce4ca930f6fd3e4f497e3d",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "salt-crystal",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "585e313d5e9605c2682951a49cb066a689675380ae7d972ce4e5431c2f260db6",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "salt-crystal",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "13757bb1c21d06cc1b02fc9797e4803558e88bda78d1471b0fb4a69ef0165e22",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "salt-crystal",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "ad7072fbd513764b15b604db647ff0beec5d738d86d877d574484a151a93065f",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "lipid",
+    "path": "scene-0.prompt.md",
+    "sha256": "47e38121df99d77ec79185679d68fc6d1e3cc96bee1c96f8eb8c6094a3deb9c3",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "capsid",
+    "path": "scene-0.prompt.md",
+    "sha256": "7b5116b79f1832b3c2917bcce8dd7e82b5db77be6f47b1a59270c6d7060b69a8",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "capsid",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "1355ec4d4f95c987a788b5f08c14091f5caf762a27c7ae01cce6084d090cfd96",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "protein",
+    "path": "scene-0.prompt.md",
+    "sha256": "e6b1f95d7ff3c076aaccab3d2ff4117867fb6f1e3924f753c94eb227908fc574",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "protein",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "bdafb3ba5e9c5316ca609e7f6d66f0fb4c8667cd8dab5ed739ddf59e1adb6c23",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "protein",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "22711f6293c1a19ac55a58b5e3cdea0b5763a72a694717b6e1b80e65277d792f",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "protein",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "98406ebae6c2fa55da613ef86ae8706928cfafaac14fb21f840da5d9450f06bb",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "planetary",
+    "path": "scene-0.prompt.md",
+    "sha256": "1fa9b634c57eac95caa9f7255cf415c6c5acd2d13f61e1d93d9d0a1c9485534b",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "crank",
+    "path": "scene-0.prompt.md",
+    "sha256": "ccd699b23d0a9df97ef995c442dc365414cc0ce45fecdf63dcbcc026c6d12657",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "crank",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "bec44caed8bafd653d95f07beaadbbb6cf28edbf96aebc75be6b8856586f4ad2",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "robot",
+    "path": "scene-0.prompt.md",
+    "sha256": "2b7b8443503d8d950b19a93f6cb3d4a2d31c24adb7ba2ba7b9243d60b866cf58",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "robot",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "013d3d32c5f3df33a1c30f3a1b6906a8e7a34d4b1b93349c747bc163aa1531fe",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "robot",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "008b62906b1d0aa26a26f1685a411c919978f4b42a532f492553e93756b653e2",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "robot",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "a9543023ad02ea8d861553a0e11caa57c03a2eb74da54e9370b961754dd79c7f",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "rosenbrock",
+    "path": "scene-0.prompt.md",
+    "sha256": "54cc2e068e5266ca44637de5e0512e5ca0d910f7336adeef7304371c6290b9ba",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "attention",
+    "path": "scene-0.prompt.md",
+    "sha256": "e5f9a2328d21cd88ae34ba390ea2314926195168619d1a399abc9bc01baa37a3",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "attention",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "f39417624a49b4524767495806fb5914836534bd11478a9dec71aeaf0d618593",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "dijkstra",
+    "path": "scene-0.prompt.md",
+    "sha256": "5825c5eb6f313625bda8ea815039b517b446be2e6d4eb7da4779e40a3c4a2166",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "dijkstra",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "b67ddc6208a036e2575e503100a666e909d4d019bce8781421deb6f7c238b6dd",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "dijkstra",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "c72a61e5ffdf65dfcfdb58f23de1dd67b25d723dc41c9ee1358aca8b5677371c",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "dijkstra",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "1b72e1da15633fb8f90f8b9373848cc01e8b9cbbc6bf04fd5a5e88709aa8e342",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "terrain",
+    "path": "scene-0.prompt.md",
+    "sha256": "50e520925c41a434e09c235cc1f11ec002a7843916424d7a8ef5b73d63186a2c",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "voxel",
+    "path": "scene-0.prompt.md",
+    "sha256": "6bdc6bf36065db105c15ea7bd1cbf61130cb074180b42a7542738cec2eaedf82",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "voxel",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "3f206226b436d184e17e97aeaecbec0d6daffa68fc4376dce3f98acb441239b4",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "voxel",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "613b23175af055a6ee0ecc4f7aa41fc0fae2d111229dfe34ce7eba5ed6746036",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-batch1",
+    "topic": "voxel",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "6faad19a7e3c8ed01e40ad5b85b4f1c8b21cc1c4a3c3efd70602374c0dca228c",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "interference",
+    "path": "scene-0.prompt.md",
+    "sha256": "9b6bd9585bb623a436e607e1749460cc9a2b08f7f62265d0dccec9e73f83b50b",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "interference",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "cb84c9507f3b1e838619e57713a03c4ce6496c386c79982bc830620fd0aaa7d0",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": [
+      "scene-verify.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "kepler",
+    "path": "scene-0.prompt.md",
+    "sha256": "b61d043a41e95122d19cbdb98d3a16d8c5327b35abaf6b5a749adb1705ef47f1",
+    "baselineComponents": [
+      "scene-craft.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "kepler",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "c26f4cfaa12b3f9a4049f79580f87e353626ca31df05ea019e59b9bb38ad1dd8",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "kepler",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "d5ee5222eb246f975bf30ae7ac1d586b00dbb6c0ebae893803c59ccefc99c63c",
+    "baselineComponents": [
+      "scene-craft.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "kepler",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "df67c3587472a2e42ecdd3ba57c7c54ed5e96f050502405f5e37decb7d77ba8f",
+    "baselineComponents": [
+      "scene-craft.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "lipid",
+    "path": "scene-0.prompt.md",
+    "sha256": "8a5ed855aa25ae36a1bf1344acc163a8066126d6a77927ca1f40f59df7895998",
+    "baselineComponents": [
+      "scene-craft.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "lipid",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "fb711bb96baf666aacc3f1241061f8c8f230b51c189047af358eb72192333202",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "lipid",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "d21c9f586ede91dfdcc5726c2fcb001df85f6ce1fd72e2ff4b6860ab1c48f518",
+    "baselineComponents": [
+      "scene-craft.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "lipid",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "8540cdf90a7067e1b33322c59dc6fac8db926d43eccb5b8e10e5789e79a2c9b6",
+    "baselineComponents": [
+      "scene-craft.md"
+    ],
+    "changedComponents": [
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "planetary",
+    "path": "scene-0.prompt.md",
+    "sha256": "e280302107eda3ea128cb070c38d51483e079f990fb9ae23de14f771d7102a27",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "planetary",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "99d94441d7bfff7437f8355eea6abff5b09d94a4709abca88201ca8c5ff1aca4",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-repair.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "planetary",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "18a776111f195d0faa9ec5a36fd69c0d36a8f0a3e7ffde2e1357d5929d4a7235",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "planetary",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "97eba7ad5bc171189d9af8a26c623e3dd6667365bd9b96c27283bc2895d8aa40",
+    "baselineComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ],
+    "changedComponents": []
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "rosenbrock",
+    "path": "scene-0.prompt.md",
+    "sha256": "f066f07f0c5f067100f587ee7848421aa5e4bcd2fdaf5098e90b92073b061a4b",
+    "baselineComponents": [],
+    "changedComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "terrain",
+    "path": "scene-0.prompt.md",
+    "sha256": "6c720f2d22a6980fc94c3ee4d94037f5808f01b7db40e349c95989bfb9882137",
+    "baselineComponents": [],
+    "changedComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "terrain",
+    "path": "scene-0.visual/0/repair.prompt.md",
+    "sha256": "5a44529bc11b6dbff1b0a6cd281a92e344ace6ad82bb8705aab9a356514c5f6a",
+    "baselineComponents": [
+      "scene-repair.md"
+    ],
+    "changedComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "terrain",
+    "path": "scene-0.visual/0/review.prompt.md",
+    "sha256": "8a290ab9ac483b6ba9fe276fc888f7a63cdd5f37b35cd5a1001ec50d60075add",
+    "baselineComponents": [],
+    "changedComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ]
+  },
+  {
+    "batch": "20261010-retry1",
+    "topic": "terrain",
+    "path": "scene-0.visual/1/review.prompt.md",
+    "sha256": "2131b6dcccf3539947890202b608a86fd7bcf15a77cd590a4f930a99128c79c6",
+    "baselineComponents": [],
+    "changedComponents": [
+      "scene-craft.md",
+      "scenegen/visualization.md",
+      "animation-quality.md",
+      "scene-verify.md"
+    ]
+  }
+]

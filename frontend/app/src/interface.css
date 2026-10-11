@@ -67,7 +67,7 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .panel-heading p { color: var(--muted); font-size: 14px; margin: 9px 0 0; }
 .section-icon { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
 
-/* A full-height drawer. Only its contents scroll; Settings stays at the bottom. */
+/* A full-height drawer. Only its contents scroll; the theme control stays at the bottom. */
 .navigation-layer { position: fixed; inset: 0; z-index: 100; visibility: hidden; pointer-events: none; transition: visibility 0s .32s; }
 .navigation-layer.is-open { visibility: visible; pointer-events: auto; transition-delay: 0s; }
 .drawer-scrim { position: absolute; inset: 0; width: 100%; height: 100%; background: #24232b30; opacity: 0; cursor: default; transition: opacity .32s ease; backdrop-filter: blur(4px); }
@@ -83,13 +83,13 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .drawer-links > button { display: flex; align-items: center; gap: 13px; min-height: 67px; width: 100%; padding: 10px; flex-shrink: 0; border-radius: 22px; text-align: left; font-size: 15px; }
 .drawer-links > button:hover, .drawer-links > button.active { background: var(--soft); }
 .drawer-icon { display: grid; place-items: center; width: 43px; height: 43px; flex-shrink: 0; border-radius: 15px; }
-.drawer-links > button > svg:last-child, .drawer-settings > svg:last-child { margin-left: auto; color: var(--muted); }
+.drawer-links > button > svg:last-child { margin-left: auto; color: var(--muted); }
 .drawer-bottom { margin-top: auto; padding-top: 24px; flex-shrink: 0; }
-.drawer-theme-toggle { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 14px; padding: 0; border: 0; border-radius: 15px; background: var(--sage); color: var(--card-ink); }
+.drawer-user { margin: 0 10px 20px; overflow-wrap: anywhere; }
+.drawer-user span { display: block; margin-bottom: 4px; color: var(--muted); font-size: 12px; }
+.drawer-user strong { display: block; font-size: 14px; font-weight: 600; }
+.drawer-theme-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 15px; background: var(--sage); color: var(--card-ink); }
 .drawer-theme-toggle:hover { filter: brightness(.95); }
-.drawer-settings { display: flex; align-items: center; gap: 15px; min-height: 63px; width: 100%; padding: 18px 20px; border: 1px solid var(--line); border-radius: 22px; font-size: 15px; text-align: left; background: var(--soft); }
-.drawer-settings:hover, .drawer-settings.active { background: var(--lavender); color: var(--card-ink); }
-.drawer-settings.active > svg:last-child { color: inherit; }
 
 .settings-page { max-width: 760px; margin: 0 auto; padding-bottom: 20px; }
 .settings-page .welcome { padding: 30px 8px; }
@@ -131,9 +131,14 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
 .lesson-text > p { font-size: 14px; }
 .progress-track { height: 8px; top: 8px; }
 .player-controls { width: min(640px, calc(100vw - 48px)); }
-.player-control-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; align-items: start; gap: 14px; }
+.player-control-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) repeat(2, 36px); align-items: start; gap: 14px; }
 .player-control-row > .icon-button, .player-control-row > .icon-button:hover { width: 36px; height: 36px; border-radius: 8px; background: transparent; color: inherit; box-shadow: none; }
 .player-control-row > .icon-button { opacity: 1; transform: none; }
+.captions-toggle { position: relative; }
+.captions-toggle svg { opacity: .6; transition: opacity .15s; }
+.captions-toggle:hover svg, .captions-toggle[aria-pressed="true"] svg { opacity: 1; }
+.captions-toggle::after { content: ''; position: absolute; bottom: 4px; left: 10px; right: 10px; height: 2px; border-radius: 2px; background: currentColor; opacity: 0; transition: opacity .15s; }
+.captions-toggle[aria-pressed="true"]::after { opacity: 1; }
 .player-timeline { min-width: 0; }
 .player-timeline .progress-wrap { height: 36px; }
 .player-timeline .progress-track { top: 50%; height: 8px; transform: translateY(-50%); }
@@ -187,7 +192,7 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
   .lesson-visual { height: 235px; margin-top: 26px; }
   .lesson-visual > .lesson-art { height: 245px; }
   .player-controls { bottom: max(27px, env(safe-area-inset-bottom)); }
-  .player-control-row { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 8px; }
+  .player-control-row { grid-template-columns: 40px minmax(0, 1fr) repeat(2, 40px); gap: 8px; }
   .player-control-row > .icon-button, .player-control-row > .icon-button:hover { width: 40px; height: 40px; opacity: 1; transform: none; }
   .player-timeline .progress-wrap { height: 40px; }
 }
@@ -212,9 +217,18 @@ html, body, #root { min-height: 100%; background: var(--bg); transition: backgro
   .navigation-layer, .navigation-drawer, .drawer-scrim { transition: none; }
 }
 
-/* The scene owns the entire viewport; host UI floats above it. */
-.player-stage { position: absolute; inset: 0; isolation: isolate; }
-.lesson-canvas-host { position: absolute; inset: 0; }
+/* Fit the authored 16:9 scene within the stage space available above captions. */
+.player-stage { position: absolute; inset: 0; isolation: isolate; container-type: size; }
+.lesson-canvas-host {
+  --available-height: 100cqh;
+  position: absolute;
+  inset: 0;
+  width: min(100cqw, calc(var(--available-height) * 16 / 9));
+  height: min(var(--available-height), calc(100cqw * 9 / 16));
+  margin: auto;
+}
+.has-captions .lesson-canvas-host { --available-height: max(0px, calc(100cqh - 160px)); bottom: 160px; }
+.lesson-subtitles { position: absolute; bottom: 94px; left: 10%; right: 10%; min-height: 2.8em; display: flex; align-items: center; justify-content: center; text-align: center; color: #fff; font-size: clamp(17px, 1.8vw, 24px); line-height: 1.4; pointer-events: none; white-space: normal; text-wrap: balance; }
 .lesson-canvas-host > .lesson-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
 .player-notice { position: absolute; z-index: 10; bottom: 104px; left: 24px; right: 24px; margin: 0; text-align: center; font-size: 12px; color: var(--player-ink); }
 .player-page .paused-indicator { z-index: 3; }

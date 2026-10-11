@@ -6,6 +6,7 @@ import type { ThumbnailArtwork, ThumbnailPath } from '../../../shared/video/thum
 import type { VideoRequest } from '../../../shared/video/contract.js';
 import type { AgentRunner, AgentTask } from './runtime.js';
 import { agentConfig } from './config.js';
+import { loadPrompt } from './prompts.js';
 
 export function thumbnailAgentConfig(env: Record<string, string | undefined> = process.env) {
   return { ...agentConfig(env), model: env.THUMBNAIL_MODEL ?? 'gpt-6.1-sol', thinking: 'low' as const };
@@ -84,14 +85,14 @@ export function parseThumbnailSVG(source: string): ThumbnailArtwork {
 
 export async function thumbnailTask(request: VideoRequest, signal: AbortSignal, images?: AgentTask['images']): Promise<AgentTask> {
   const [style, examples] = await Promise.all([
-    readFile(new URL('../../prompts/thumbnail.md', import.meta.url), 'utf8'),
+    loadPrompt('thumbnail'),
     readFile(new URL('../../prompts/thumbnail-examples.json', import.meta.url), 'utf8'),
   ]);
   return {
     systemPrompt: `${style}\n\n## Existing app SVG examples\n${examples}`,
     prompt: `Draw the thumbnail for this lesson. Source excerpts may be truncated.\n${JSON.stringify({
       title: request.title, topic: request.topic.slice(0, 12_000),
-      documents: request.documents.slice(0, 10).map(d => ({ name: d.name, excerpt: d.text.slice(0, 4000) })),
+      documents: request.documents.map(d => ({ name: d.name, excerpt: d.text.slice(0, 4000) })),
     })}`,
     images, signal,
     validate: async output => { parseThumbnailSVG(output); },

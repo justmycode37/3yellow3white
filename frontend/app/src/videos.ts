@@ -31,7 +31,7 @@ export function mergeVideoLessons(videos: VideoManifest[], previous: Lesson[], p
   const saved = new Map(previous.filter(lesson => lesson.videoId).map(lesson => [lesson.videoId, lesson]))
   const refreshed = videos.map(video => {
     const lesson = videoLesson(video), local = saved.get(video.id)
-    return local ? { ...lesson, videoMode: local.videoMode, subject: local.subject, subtitle: local.subtitle, color: local.color, artwork: local.artwork, source: local.source } : lesson
+    return local ? { ...lesson, videoMode: local.videoMode, subject: local.subject, subtitle: local.subtitle, color: local.color, artwork: local.artwork, source: local.source, courseLesson: local.courseLesson } : lesson
   })
   // A list request may finish after a newly submitted job has entered the library.
   const ids = new Set(videos.map(video => video.id))

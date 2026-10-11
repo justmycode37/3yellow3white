@@ -73,6 +73,25 @@ describe("typed palette colors", () => {
     expect(parseColor(new PaletteResolver(monochrome).resolve(middle.elements[0].fill))).toEqual([221/255,221/255,221/255,0.3]);
   });
 
+  it.each([8.087694351666065e-7, 1e-8, Number.MIN_VALUE, 0, 0.4, 1])(
+    "round-trips palette opacity %s without rounding away tiny fade values", opacity => {
+      const resolver = new PaletteResolver();
+      expect(parseColor(resolver.resolve({ color: Color.BLUE, opacity }))).toEqual([88 / 255, 196 / 255, 221 / 255, opacity]);
+    },
+  );
+
+  it("parses an evaluated color fade immediately after its transparent endpoint", async () => {
+    const scene = await compileSource(`export default scene({},s=>{
+      const square=s.circle('square',{fill:Color.NONE});
+      s.play(square.animate({fill:Color.BLUE}),{duration:1,ease:'linear'});
+    });`);
+    const frame = evaluateScene(scene, 8.087694351666065e-7);
+    expect(parseColor(new PaletteResolver().resolve(frame.elements[0].fill))).toEqual([88 / 255, 196 / 255, 221 / 255, 8.087694351666065e-7]);
+  });
+
+  it.each(["rgba(88,196,221,1e-)", "rgba(88,196,221,1e--7)", "rgba(88,196,221,Infinity)"])(
+    "still rejects malformed alpha in %s", source => { expect(() => parseColor(source)).toThrow("Unsupported CSS color"); },
+  );
   it("lets custom palettes remap slots and rejects slots absent from the active palette", async () => {
     const scene = await compileSource(`export default scene({},s=>{s.circle('a');s.circle('b',{fill:Color.WHITE});});`, { palette: monochrome });
     expect(scene.options.background).toBe(Color.WHITE);

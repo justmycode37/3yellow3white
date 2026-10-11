@@ -1,0 +1,209 @@
+{
+  "experiment": {
+    "batch": "rna-fast-slow-20261010",
+    "createdAt": "2026-10-10T18:21:01.958Z",
+    "snapshots": {
+      "fast": {
+        "revision": "1c79058d90af77f846df92d50dc608f3e3b99db8",
+        "files": {
+          "backend/src/agents/generator.ts": "0a50490e522bcc5b1ebee7827fcdf8f54890f13b43b4e457c43eb6c107bebcb3",
+          "backend/src/agents/visual-gate.ts": "da09905516c6edd1eee8f326ca3fb71f8fe5012c7e367f5cc9ab3d04363ad6ca"
+        }
+      },
+      "slow": {
+        "revision": "1d47cbedd5d2bb6d8281874cbb8a1dfbcee3c2bc",
+        "files": {
+          "backend/src/agents/generator.ts": "43d4e55cd45471550eba18e3f5e41ed8f9ac1633a73eeaaf4892699e9bc76ad2",
+          "backend/src/agents/visual-gate.ts": "a92f4f416f49921379d82bc7e508ce8d69004f3640bbcbad8440f95a59917b8f"
+        }
+      }
+    },
+    "model": "gpt-6-astra",
+    "thinking": "high",
+    "provider": "openai-codex",
+    "protocol": "Three paired fresh generations; same frozen inputs; no manual edits; retain all failures."
+  },
+  "runs": [
+    {
+      "test": 1,
+      "version": "fast",
+      "status": "complete",
+      "elapsedMs": 334248.5687,
+      "modelStagesMs": {
+        "scene": 308104.50080000004,
+        "review": 23069.006799999974
+      },
+      "providerCalls": 8,
+      "outputTokens": 14697,
+      "videoId": "7c2c0626-65e3-44a9-a56a-248467861282",
+      "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+      "sources": [
+        {
+          "sha256": "2d4e4117df4c486b288d705511a4a24b764c42d9c453ab58ac4b94e32c962a8c",
+          "approvedAttempt": 0,
+          "duration": 24.198291666666666
+        },
+        {
+          "sha256": "806ca1ad9013dedfaf365b2bd48f2a6bc69639ee0fc192528b49b0a8283a35d3",
+          "approvedAttempt": 0,
+          "duration": 26.3345
+        }
+      ]
+    },
+    {
+      "test": 1,
+      "version": "slow",
+      "status": "complete",
+      "elapsedMs": 910044.4731000001,
+      "modelStagesMs": {
+        "scene": 310739.9652,
+        "review": 587230.5674999999
+      },
+      "providerCalls": 22,
+      "outputTokens": 47072,
+      "videoId": "707a49c8-1be4-4df5-bcef-2e0ffafe2469",
+      "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+      "sources": [
+        {
+          "sha256": "d246d9f6ff0444e007d39207b3be18c63e84b934098c04eff93462f2034f922c",
+          "approvedAttempt": 1,
+          "duration": 24.198291666666666
+        },
+        {
+          "sha256": "12f3f289abc5c65b3f13504e72a5dc32fbf2ba3d586892f8c8911a485ea307f4",
+          "approvedAttempt": 2,
+          "duration": 26.3345
+        }
+      ]
+    },
+    {
+      "test": 2,
+      "version": "fast",
+      "status": "complete",
+      "elapsedMs": 317706.7722,
+      "modelStagesMs": {
+        "scene": 231173.64450000002,
+        "review": 68285.73020000008,
+        "repair": 11981.567500000034
+      },
+      "providerCalls": 12,
+      "outputTokens": 13252,
+      "videoId": "cad218d8-e6dd-4eae-be71-9c9286943ce4",
+      "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+      "sources": [
+        {
+          "sha256": "61a2c6fd3ab0ab04ece79a2f8cfdacb3a8a3cbb3387c584ced2364bc0d5cd6fb",
+          "approvedAttempt": 1,
+          "duration": 24.198291666666666
+        },
+        {
+          "sha256": "bb9517059ea0b3ded35cc337ccc7973a7435f39687223d4d605459ac043d14a8",
+          "approvedAttempt": 1,
+          "duration": 26.3345
+        }
+      ]
+    },
+    {
+      "test": 2,
+      "version": "slow",
+      "status": "complete",
+      "elapsedMs": 599313.616,
+      "modelStagesMs": {
+        "scene": 162163.2557,
+        "review": 426189.04379999987
+      },
+      "providerCalls": 18,
+      "outputTokens": 28849,
+      "videoId": "7bd0b3c9-ea94-4ddd-8780-329f7f48bc3b",
+      "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+      "sources": [
+        {
+          "sha256": "4951ba3dd59b44a6709087eaf362d525c38235e5cb1cc4a188d0f54a1d3c7eb6",
+          "approvedAttempt": 1,
+          "duration": 24.198291666666666
+        },
+        {
+          "sha256": "e7bbac924ce4fadf8dfc5c16036fb66f38ffb70902f16b92268150041309b5d5",
+          "approvedAttempt": 2,
+          "duration": 26.3345
+        }
+      ]
+    },
+    {
+      "test": 3,
+      "version": "fast",
+      "status": "complete",
+      "elapsedMs": 287209.83930000005,
+      "modelStagesMs": {
+        "scene": 167508.2306,
+        "review": 64795.52069999998,
+        "repair": 49016.984999999986
+      },
+      "providerCalls": 10,
+      "outputTokens": 11150,
+      "videoId": "a876d0eb-21f9-4afb-9a60-6dfc60344b58",
+      "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+      "sources": [
+        {
+          "sha256": "1f32000c85471630b4fb9c6265d29066c1552a8c5700ed68fdff74f15a26d81f",
+          "approvedAttempt": 1,
+          "duration": 24.198291666666666
+        },
+        {
+          "sha256": "989c0fafd58c2d42e6a5e425f174cd1bc532ea795d0b154a023b3fb4c342dc5b",
+          "approvedAttempt": 1,
+          "duration": 26.3345
+        }
+      ]
+    },
+    {
+      "test": 3,
+      "version": "slow",
+      "status": "complete",
+      "elapsedMs": 418723.6423,
+      "modelStagesMs": {
+        "scene": 261407.72679999997,
+        "review": 150748.68839999998
+      },
+      "providerCalls": 13,
+      "outputTokens": 20857,
+      "videoId": "924383a5-b685-4c2a-bc59-46775893b8a1",
+      "promptSha256": "d9fc8548aa918d87a164f15d4d2ad73e833b14517343ddfd67df683f567e9310",
+      "sources": [
+        {
+          "sha256": "e588a0f94ed0c97f0d273323d0220a7d226d0db05a01fab2a86ae3bd88530478",
+          "approvedAttempt": 1,
+          "duration": 24.198291666666666
+        },
+        {
+          "sha256": "078477e8d845d8864c7a40768cfd3f2b4315cd71df4d87d156aee5a89e58d080",
+          "approvedAttempt": 0,
+          "duration": 26.3345
+        }
+      ]
+    }
+  ],
+  "aggregates": {
+    "fast": {
+      "meanMs": 313055.0600666667,
+      "medianMs": 317706.7722,
+      "providerCalls": 30,
+      "outputTokens": 39099
+    },
+    "slow": {
+      "meanMs": 642693.9104666667,
+      "medianMs": 599313.616,
+      "providerCalls": 53,
+      "outputTokens": 96778
+    }
+  },
+  "meanTimeReduction": 0.5129017795744257,
+  "firstPromptHashes": [
+    "0fbfb5a9b63d70487dab8fb2f836c70033e27d370a2b88422dbc19778ae00df3",
+    "0fbfb5a9b63d70487dab8fb2f836c70033e27d370a2b88422dbc19778ae00df3",
+    "0fbfb5a9b63d70487dab8fb2f836c70033e27d370a2b88422dbc19778ae00df3",
+    "0fbfb5a9b63d70487dab8fb2f836c70033e27d370a2b88422dbc19778ae00df3",
+    "0fbfb5a9b63d70487dab8fb2f836c70033e27d370a2b88422dbc19778ae00df3",
+    "0fbfb5a9b63d70487dab8fb2f836c70033e27d370a2b88422dbc19778ae00df3"
+  ]
+}

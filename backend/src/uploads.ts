@@ -1,8 +1,6 @@
 import { createHash } from 'node:crypto'
 import { AgentError } from './agents/config.js'
 
-export const MAX_FILE_BYTES = 50 * 1024 * 1024
-export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 export interface Upload { name: string; mimeType: string; bytes: Uint8Array }
 const types: Record<string, string> = {
   pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -22,7 +20,6 @@ export async function extractUpload(upload: Upload): Promise<string> {
       const { extractText, getDocumentProxy } = await import('unpdf')
       const pdf = await getDocumentProxy(new Uint8Array(upload.bytes))
       try {
-        if (pdf.numPages > 500) throw new AgentError('DOCUMENT', 'Split PDFs with more than 500 pages into smaller files.')
         const pages = (await extractText(pdf, { mergePages: false })).text
         if (!pages.some(page => page.trim())) throw new AgentError('DOCUMENT', `No readable text in ${upload.name}. For scans, upload a photo or paste the text.`)
         text = pages.map((page, i) => `[Page ${i + 1}]\n${page}`).join('\n\n')
@@ -32,7 +29,6 @@ export async function extractUpload(upload: Upload): Promise<string> {
       text = (await mammoth.extractRawText({ buffer: Buffer.from(upload.bytes) })).value
     } else text = new TextDecoder('utf-8', { fatal: true }).decode(upload.bytes)
     if (!text.trim()) throw new AgentError('DOCUMENT', `No readable text in ${upload.name}. For scans, upload a photo or paste the text.`)
-    if (Buffer.byteLength(text) > 1_000_000) throw new AgentError('DOCUMENT', 'Extracted document text must be under 1 MB. Split the material into smaller files.')
     return text
   } catch (error) {
     if (error instanceof AgentError) throw error

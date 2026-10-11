@@ -21,19 +21,25 @@ export function addCourse(courses: Curriculum, name: string, color: SubjectColor
 }
 
 export function loadCourses(storage: Pick<Storage, 'getItem'>): Curriculum {
-  const subjects = [...exampleCurriculum.subjects]
+  let subjects = [...exampleCurriculum.subjects]
   try {
     const saved = JSON.parse(storage.getItem(coursesKey) || 'null')
-    if (saved?.version !== 1 || !Array.isArray(saved.subjects)) return { subjects }
+    if (![1, 2].includes(saved?.version) || !Array.isArray(saved.subjects)) return { subjects }
+    // Version 1 added custom courses to the defaults. Version 2 stores the active list, including deletions.
+    if (saved.version === 2) subjects = []
     for (const course of saved.subjects) {
-      if (!course || typeof course.id !== 'string' || !/^course-[\w-]+$/.test(course.id)
+      if (!course || typeof course.id !== 'string' || (!/^course-[\w-]+$/.test(course.id) && !exampleCurriculum.subjects.some(item => item.id === course.id))
         || typeof course.title !== 'string' || !course.title.trim() || course.title.length > 80
         || normalize(course.title) === 'all subjects' || !courseColors.includes(course.color)
         || subjects.some(item => item.id === course.id) || courseForSubject({ subjects }, course.title)) continue
-      subjects.push({ id: course.id, title: course.title.trim().replace(/\s+/g, ' '), color: course.color, sessions: [] })
+      subjects.push({ id: course.id, title: course.title.trim().replace(/\s+/g, ' '), color: course.color, sessions: exampleCurriculum.subjects.find(item => item.id === course.id)?.sessions ?? [] })
     }
   } catch { /* Keep the listed courses when browser storage is unavailable or damaged. */ }
   return { subjects }
+}
+
+export function deleteCourse(courses: Curriculum, id: string): Curriculum {
+  return { subjects: courses.subjects.filter(course => course.id !== id) }
 }
 
 export function loadRecentPlayback(storage: Pick<Storage, 'getItem'>): string[] {
@@ -55,4 +61,9 @@ export function recentLessons(history: string[], lessons: Lesson[], courses: Cur
     const course = courseForSubject(courses, lesson.subject)
     return [{ ...lesson, subject: course?.title ?? lesson.subject, color: course?.color ?? lesson.color }]
   }).slice(0, 3)
+}
+
+// Only videos with actual playback appear in the course overview.
+export function overviewLessons(history: string[], lessons: Lesson[], courses: Curriculum): Lesson[] {
+  return recentLessons(history, lessons, courses)
 }

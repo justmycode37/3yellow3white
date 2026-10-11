@@ -1,0 +1,77 @@
+[
+  {
+    "case": "bayes",
+    "label": "A",
+    "file": "control-bayes.json"
+  },
+  {
+    "case": "bayes",
+    "label": "B",
+    "file": "candidate-bayes.json"
+  },
+  {
+    "case": "bayes",
+    "label": "C",
+    "file": "baseline-bayes.json"
+  },
+  {
+    "case": "leaf",
+    "label": "A",
+    "file": "baseline-leaf.json"
+  },
+  {
+    "case": "leaf",
+    "label": "B",
+    "file": "control-leaf.json"
+  },
+  {
+    "case": "leaf",
+    "label": "C",
+    "file": "candidate-leaf.json"
+  },
+  {
+    "case": "protocol",
+    "label": "A",
+    "file": "candidate-protocol.json"
+  },
+  {
+    "case": "protocol",
+    "label": "B",
+    "file": "baseline-protocol.json"
+  },
+  {
+    "case": "protocol",
+    "label": "C",
+    "file": "control-protocol.json"
+  },
+  {
+    "case": "uniform",
+    "label": "A",
+    "file": "control-uniform.json"
+  },
+  {
+    "case": "uniform",
+    "label": "B",
+    "file": "baseline-uniform.json"
+  },
+  {
+    "case": "uniform",
+    "label": "C",
+    "file": "candidate-uniform.json"
+  },
+  {
+    "case": "history",
+    "label": "A",
+    "file": "candidate-history.json"
+  },
+  {
+    "case": "history",
+    "label": "B",
+    "file": "control-history.json"
+  },
+  {
+    "case": "history",
+    "label": "C",
+    "file": "baseline-history.json"
+  }
+]

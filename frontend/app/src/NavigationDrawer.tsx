@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { ArrowUpRight, FolderOpen, Library, ListTree, Moon, Plus, Settings, Sun, X } from './Icons'
+import CurrentUser from './CurrentUser'
+import { ArrowUpRight, FolderOpen, Library, ListTree, Moon, Plus, Sun, X } from './Icons'
 
 type NavigationDrawerProps = {
   open: boolean
@@ -9,12 +10,11 @@ type NavigationDrawerProps = {
   onLibrary: () => void
   onCourses: () => void
   onCreate: () => void
-  onSettings: () => void
   theme: 'light' | 'dark'
   onTheme: (theme: 'light' | 'dark') => void
 }
 
-export default function NavigationDrawer({ open, current, onClose, onWorkspace, onLibrary, onCourses, onCreate, onSettings, theme, onTheme }: NavigationDrawerProps) {
+export default function NavigationDrawer({ open, current, onClose, onWorkspace, onLibrary, onCourses, onCreate, theme, onTheme }: NavigationDrawerProps) {
   const drawer = useRef<HTMLElement>(null)
   const close = useRef(onClose)
   close.current = onClose
@@ -67,10 +67,10 @@ export default function NavigationDrawer({ open, current, onClose, onWorkspace, 
         <button onClick={onCreate}><span className="drawer-icon sage"><Plus size={22}/></span><span>New video</span><ArrowUpRight size={18}/></button>
       </nav>
       <div className="drawer-bottom">
+        <CurrentUser open={open}/>
         <button className="drawer-theme-toggle" aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onClick={() => onTheme(theme === 'light' ? 'dark' : 'light')}>
           {theme === 'light' ? <Sun size={22}/> : <Moon size={22}/>}
         </button>
-        <button className={`drawer-settings ${current === 'settings' ? 'active' : ''}`} aria-current={current === 'settings' ? 'page' : undefined} onClick={onSettings}><Settings size={22}/><span>Settings</span><ArrowUpRight size={18}/></button>
       </div>
     </aside>
   </div>

@@ -1,0 +1,72 @@
+{
+  "sourceSha256": "a20da3e386dc7d96d9109c3f772bb458b0cece037f6823365269047f440e4c26",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        1.72375,
+        2.9381250000000003,
+        5.3668749999999985,
+        6.581249999999999
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.795624999999999,
+        10.2425,
+        12.689374999999998,
+        15.118125,
+        17.564999999999998,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        1.72375,
+        2.9381250000000003,
+        5.3668749999999985,
+        6.581249999999999
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.795624999999999,
+        10.2425,
+        12.689374999999998,
+        15.118125,
+        17.564999999999998,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 0.5,
+      "objectIds": [
+        "fourier-sum"
+      ],
+      "problem": "In both aspect ratios, the formula's upper glyphs occupy approximately the top 10–12% of the viewport, intruding into the required player-control clearance band.",
+      "fix": "Move the formula slightly downward so its complete glyph bounds sit below the top 12%, preserving the construction and timing."
+    }
+  ]
+}

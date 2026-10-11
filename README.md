@@ -36,6 +36,10 @@ or explicitly set `VIDEO_GENERATOR=simulated` for scenes with a test tone. See [
 
 ## Run the combined app
 
+Visitor sign-in is provided by the VIScon reverse proxy using `X-User-Id` and
+`X-User-Name`. Aha displays that identity without a separate login. See
+[proxy identity, local development, and deployment requirements](docs/authentication.md).
+
 ```sh
 npm ci
 npm run backend:dev
@@ -50,6 +54,14 @@ command. The default bind address is `0.0.0.0:8080`; override it with `HOST` and
 `npm run backend:typecheck` to check the backend's TypeScript.
 
 The animation library remains a separate npm workspace. From the repository root, `npm ci` installs it, and the existing `npm run dev`, `npm test`, and `npm run build` scripts operate on that library. See its [README](shared/animlib/README.md).
+The library supports shaded solids, swept tubes, sampled function/parametric
+surfaces, procedural textures, and configurable metalness, roughness, highlights,
+and emission. The [capability brief](shared/animlib/docs/capabilities.md) and
+[API reference](shared/animlib/docs/reference.md) describe current behavior and limits.
+Static GLB models can include embedded image textures, UV maps, material factors,
+and named parts. Scene agents can publish downloaded or generated models using
+`publish_model`; clients receive asset manifests and fetch immutable GLBs separately.
+Container model storage lives in `/data/videos/models` on the existing video volume.
 
 Browser code imports the player from `animlib`; the Bun backend and other Node
 consumers can import scene compilation and state evaluation from `animlib/core`
@@ -61,8 +73,9 @@ The backend also normalizes AI-written storyline Markdown through `/api/narratio
 common label, formatting, pause, and table variations), generates
 ElevenLabs narration with word timings and explicit pauses, and provides a
 validated scene-agent handoff. See [narration setup and contracts](docs/narration.md).
-The storyline writer should receive `backend/prompts/guidance.md`; its section 16
-specifies the Markdown handoff. `buildStorylineMessages` loads it for that agent.
+The storyline writer receives `backend/prompts/guidance.md`; its **Output contract**
+specifies the Markdown handoff. `buildStorylineMessages` also loads the shared
+viewing-mode policy and animation capabilities.
 
 ## Automatic deployment
 
@@ -73,14 +86,41 @@ and agent-state bind mounts. Candidate images are tested before replacing produc
 restores the previous container or legacy systemd service. See
 [deployment setup, container commands, and recovery](docs/deployment.md).
 
-The Plan page can organize extracted course text into AI-suggested topics with
-learning goals, visual ideas, prerequisites, and original source excerpts. Review
-and edit topic titles and learning goals before saving. The same Pi login used for
-video generation powers `POST /api/study-plans`; narration credentials are not
-needed for planning. Requests accept up to 200,000 source characters, run for at
-most three minutes, and are limited to two concurrent plans per server. Long
-paragraphs are split into numbered spans for source references; page numbers are
-preserved. Reference validation checks that excerpts exist, not that every model
-claim follows from them. Saved plans remain in browser storage. Turn off
-“Organize topics with AI” to use the existing local document-outline method;
-this is also available when AI planning fails or the server runs in simulated mode.
+The Courses page stages files and pasted notes until the top-right **Add** button is
+clicked. Selected files remain visible and removable in the drop area, and both
+input tabs preserve their contents. Add always sends the combined material to AI,
+then saves topics containing individual 2–5 minute video lessons. Switching courses
+closes the previous panel; clicking the selected course closes it.
+
+`POST /api/study-plans` accepts multipart files plus notes, or the existing JSON
+text-document request. It reads PDF (including scans), DOCX, PPTX, XLSX,
+OpenDocument, screenshots/images (PNG, JPEG, WebP, GIF, BMP, AVIF), and UTF-8 text
+such as Markdown, CSV, code, and subtitles. Screenshots can also be pasted directly
+into the upload area or notes field; short readable formulas are accepted.
+Audio/video recordings use ElevenLabs Scribe transcription with the server's
+`ELEVENLABS_API_KEY`. Unsupported binary formats return an actionable error.
+Uploads have no app-enforced file-count, file-size, total-size, extracted-text,
+or PDF page-count limits, including scanned pages.
+
+Classification uses the existing Pi login, defaulting to `gpt-6.1-sol`; set
+`STUDY_PLAN_MODEL=gpt-6-astra` to use Astra. The frontend requests background
+processing with `Prefer: respond-async`: POST returns a job ID immediately after
+upload, GET `/api/study-plans/:id` polls reading/planning progress and the result,
+and DELETE cancels it. This avoids gateway timeouts during long model calls.
+Jobs run for up to ten minutes with two concurrent requests per server; results
+are available for fifteen minutes, with at most twenty jobs retained in memory.
+Jobs are scoped to the proxy user and expire on server restart. Legacy clients
+without the preference still receive a synchronous response. AI is required; missing credentials,
+processing errors, and cancellation leave the staged files and notes available to
+retry. The local preview needs `npm run agents:login` before real inference.
+Saved plans and source names remain in browser storage; raw files remain in memory
+only until submission or navigation. Condensed notes and references are
+model-authored, and the extracted original material is retained in the saved plan.
+
+Instruction ownership and prompt assembly are documented in
+[instruction architecture](docs/instruction-architecture.md). Teaching guidance,
+viewing-mode rules, scene craft, and API semantics each have one canonical source.
+The course planner loads `topics-system.md` and `topics-format.md`, appends grouping
+and duration requirements, and validates up to 40 lessons and their 2–5 minute
+estimates. Existing saved plans remain readable; completed generation artifacts
+are reused rather than rewritten when prompts change.

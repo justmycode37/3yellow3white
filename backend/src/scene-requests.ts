@@ -35,6 +35,7 @@ For a request for an interactive toy or exploration, include meaningful sliders,
 The inserted scene is independent and must create its own objects. The original lesson resumes afterward with its original handoff. Connect the explanation back to that lesson.
 Viewer request: ${input.question}`,
     videoMode: 'interactive',
+    ...(original?.narrationMode ? { narrationMode: original.narrationMode } : {}),
     documents: [
       ...(original?.documents ?? []),
       ...(original ? [{ name: 'Original lesson request', text: original.topic }] : []),

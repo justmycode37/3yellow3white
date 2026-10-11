@@ -1,0 +1,72 @@
+{
+  "sourceSha256": "3a086bd13a83ae8a84bd1c3efa43acaf37d925f137de3a9c13eb80903a9436fb",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3.3333333333333335,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        17.6,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        3.3333333333333335,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        17.6,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 3.3333333333333335,
+      "objectIds": [
+        "geometry-note"
+      ],
+      "problem": "In both aspect ratios, the idealization note sits around 89% of viewport height, inside the reserved bottom playback area. Its very small glyphs also make the model qualification difficult to read.",
+      "fix": "Move the note fully above the bottom 12% control region and modestly enlarge it, keeping it clear of the input/output labels and final speed ratio."
+    }
+  ]
+}

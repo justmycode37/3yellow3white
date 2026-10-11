@@ -1,6 +1,7 @@
 import type { CameraState, ColorValue, CompiledScene, ElementState, Frame, Track } from "./types.js";
 import { paletteResolver } from "./palette.js";
 import { applyBindings } from "./bindings.js";
+import { applyReactiveProperties } from "./reactive.js";
 
 export function easeAt(progress: number, ease: Track["ease"]): number {
   const t = Math.max(0, Math.min(1, progress));
@@ -73,9 +74,13 @@ export function evaluateScene(scene: CompiledScene, requestedTime: number, optio
       }
     }
   }
+  for (const binding of scene.reactiveBindings ?? []) {
+    const target = elements.get(binding.target);
+    if (target) applyReactiveProperties(target, binding.properties);
+  }
   for (const e of elements.values()) {
     palette.validate(e.fill); palette.validate(e.stroke);
   }
-  const frame = { elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
+  const frame = { ...(scene.options.lighting !== undefined ? { lighting: structuredClone(scene.options.lighting) } : {}), elements: [...elements.values()], camera, cameraAnimated, views: [...views.values()] };
   return options.bindings === false ? frame : applyBindings(frame, scene.bindings);
 }

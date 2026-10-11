@@ -1,0 +1,113 @@
+const __narration=(()=>{const data=JSON.parse("{\"audioAssetId\":\"silent-robot\",\"endMode\":\"hold\",\"durationSec\":20,\"words\":{}}");const get=(id,index)=>{if(!Object.hasOwn(data.words,id))throw new Error('Unknown narration word ID: '+id);return data.words[id][index];};return Object.freeze({audioAssetId:data.audioAssetId,endMode:data.endMode,durationSec:data.durationSec,start:id=>get(id,0),end:id=>get(id,1)});})();
+export default scene({ mode: '2d', orbit: false, background: Color.BLACK, audio: __narration.audioAssetId, end: __narration.endMode }, s => {
+  const D = __narration.durationSec;
+  let cursor = 0;
+  const hold = dt => { s.wait(dt); cursor += dt; };
+  const play = (actions, dt, ease = 'linear') => { s.play(actions, { duration: dt, ease }); cursor += dt; };
+  const L1 = 2.25, L2 = 2.05, toolLength = 0.65, H = 1;
+  const N = 150;
+  // Y is vertical. Joint 1 turns about Y; joints 2 and 3 turn about local Z.
+  // Every path sample uses the same joint angles and rigid link offsets as the model.
+  function angles(u) {
+    const t = u * u * (3 - 2 * u);
+    return [-1.25 + 2.35 * t, 0.65 + 0.4 * Math.sin(Math.PI * t), -0.95 - 0.5 * Math.sin(Math.PI * t)];
+  }
+  function fk(q) {
+    const r = L1 * Math.cos(q[1]) + (L2 + toolLength) * Math.cos(q[1] + q[2]);
+    return [Math.cos(q[0]) * r, H + L1 * Math.sin(q[1]) + (L2 + toolLength) * Math.sin(q[1] + q[2]), -Math.sin(q[0]) * r];
+  }
+  let yaw, shoulder, elbow, vModel;
+  const q0 = angles(0);
+  const metal = { metalness: 0.65, roughness: 0.48 };
+  s.view('robot-workspace', {
+    rect: [0.02, 0.08, 0.96, 0.79], orbit: true, orbitHitTest: 'geometry',
+    camera: { yaw: 0.5, pitch: 0.27, target: [1.2, 1.7, 0], height: 7.6, distance: 17, perspective: 0.5 }
+  }, v => {
+    vModel = v;
+    function box(id, p, size, color) {
+      return v.box(id, { position: p, width: size[0], height: size[1], depth: size[2], fill: color, material: metal });
+    }
+    function axle(id, p, r, length, color) {
+      return v.cylinder(id, { position: p, radius: r, height: length, radialSegments: 32, rotation: [Math.PI / 2, 0, 0], fill: color, material: metal });
+    }
+    function flange(id, x, radius) {
+      const parts = [axle(id + '-shaft', [x, 0, 0], radius, 0.72, Color.GREY_C)];
+      for (const side of [-1, 1]) {
+        parts.push(axle(id + '-cap-' + side, [x, 0, side * 0.39], radius * 0.84, 0.08, Color.GREY_A));
+        parts.push(axle(id + '-hub-' + side, [x, 0, side * 0.445], radius * 0.42, 0.06, Color.GREY_D));
+        for (let j = 0; j < 6; j++) {
+          const a = j * Math.PI / 3;
+          parts.push(axle(id + '-bolt-' + side + '-' + j, [x + radius * 0.64 * Math.cos(a), radius * 0.64 * Math.sin(a), side * 0.445], 0.027, 0.025, Color.WHITE));
+        }
+      }
+      return parts;
+    }
+    function housing(id, length, color) {
+      const verts = [];
+      const section = [[-1,-0.65],[-0.65,-1],[0.65,-1],[1,-0.65],[1,0.65],[0.65,1],[-0.65,1],[-1,0.65]];
+      for (let end = 0; end < 2; end++) {
+        const x = end ? length - 0.3 : 0.3;
+        const w = end ? 0.18 : 0.25;
+        for (const p of section) verts.push([x, p[0] * w, p[1] * 0.24]);
+      }
+      const tri = [];
+      for (let i = 0; i < 8; i++) { const j = (i + 1) % 8; tri.push([i,j,j+8],[i,j+8,i+8]); }
+      for (let i = 1; i < 7; i++) tri.push([0,i+1,i],[8,8+i,8+i+1]);
+      const body = v.mesh(id + '-shell', { vertices: verts, triangles: tri, shading: 'flat', fill: color, material: { metalness: 0.25, roughness: 0.55 } });
+      const parts = [body];
+      for (const side of [-1,1]) {
+        parts.push(box(id + '-rail-' + side, [length / 2, 0, side * 0.275], [length - 0.65, 0.085, 0.045], Color.GREY_A));
+        for (let j=0;j<3;j++) parts.push(box(id + '-vent-' + side + '-' + j, [0.62 + 0.13*j, 0.05, side * 0.247], [0.045,0.18,0.012], Color.GREY_E));
+      }
+      return parts;
+    }
+    const base = [box('mounting-plate',[0,-0.09,0],[1.3,0.18,1.15],Color.GREY_D)];
+    for (const x of [-0.48,0.48]) for (const z of [-0.4,0.4]) base.push(v.cylinder('anchor-'+x+'-'+z,{position:[x,0.015,z],radius:0.065,height:0.06,radialSegments:6,fill:Color.GREY_A,material:metal}));
+    base.push(v.cylinder('pedestal',{position:[0,0.23,0],radius:0.43,height:0.46,fill:Color.GREY_C,material:metal}));
+    base.push(v.cylinder('yaw-bearing',{position:[0,0.49,0],radius:0.47,height:0.12,fill:Color.GREY_A,material:metal}));
+    v.group('fixed-base',base);
+    const toolParts = [box('wrist-connector',[-0.15,0,0],[0.34,0.22,0.22],Color.GREY_A),box('tool-coupler',[0.14,0,0],[0.28,0.3,0.3],Color.GREY_A),box('gripper-palm',[0.31,0,0],[0.15,0.36,0.46],Color.GREY_D)];
+    for (const side of [-1,1]) {
+      toolParts.push(box('finger-'+side,[0.48,0,side*0.195],[0.26,0.12,0.07],Color.GREY_A));
+      toolParts.push(box('finger-tip-'+side,[0.60,0,side*0.14],[0.10,0.12,0.14],Color.GREY_A));
+    }
+    toolParts.push(v.sphere('tool-center',{position:[toolLength,0,0],radius:0.075,fill:Color.GOLD,material:{emissive:Color.GOLD,emissiveIntensity:0.25}}));
+    const tool = v.group('fixed-tool',toolParts,{position:[L2,0,0]});
+    const forearm = [...housing('forearm',L2,Color.TEAL),...flange('elbow-rotor',0,0.28),tool];
+    forearm.push(v.arrow3D('axis-3',{points:[[0,0,-0.7],[0,0,0.85]],stroke:Color.TEAL_A,strokeWidth:0.025}));
+    elbow = v.group('joint-3',forearm,{position:[L1,0,0],rotation:[0,0,q0[2]]});
+    const upper = [...housing('upper-arm',L1,Color.BLUE),...flange('shoulder-rotor',0,0.34),elbow];
+    upper.push(v.arrow3D('axis-2',{points:[[0,0,-0.76],[0,0,0.95]],stroke:Color.BLUE_A,strokeWidth:0.025}));
+    shoulder = v.group('joint-2',upper,{position:[0,H,0],rotation:[0,0,q0[1]]});
+    const turret = [v.cylinder('turret',{position:[0,0.60,0],radius:0.36,height:0.15,fill:Color.GREY_D,material:metal}),shoulder];
+    for (const side of [-1,1]) turret.push(box('shoulder-yoke-'+side,[0,0.81,side*0.48],[0.43,0.46,0.12],Color.GREY_C));
+    turret.push(v.arrow3D('axis-1',{points:[[0,0.3,0],[0,1.85,0]],stroke:Color.WHITE,strokeWidth:0.025}));
+    yaw = v.group('joint-1',turret,{rotation:[0,q0[0],0]});
+    const label1=v.latex('q1',{tex:'q_1',fontSize:0.26,fill:Color.WHITE,billboard:true});
+    const label2=v.latex('q2',{tex:'q_2',fontSize:0.26,fill:Color.BLUE_A,billboard:true});
+    const label3=v.latex('q3',{tex:'q_3',fontSize:0.26,fill:Color.TEAL_A,billboard:true});
+    v.attach(label1,yaw,{offset:[-0.65,0.62,0]});
+    v.attach(label2,shoulder,{offset:[-1.05,0.8,0.2]});
+    v.attach(label3,elbow,{offset:[0,0.65,0.1]});
+    // A quiet, bounded inspection volume, not a claim about the full reachable set.
+    const xmin=-0.8,xmax=4.6,zmin=-4.2,zmax=4.2,ymin=-0.2,ymax=4.0;
+    const corners=[[xmin,ymin,zmin],[xmax,ymin,zmin],[xmax,ymin,zmax],[xmin,ymin,zmax],[xmin,ymax,zmin],[xmax,ymax,zmin],[xmax,ymax,zmax],[xmin,ymax,zmax]];
+    const edges=[[0,1],[1,2],[2,3],[3,0],[0,4],[1,5],[2,6],[3,7],[4,5],[5,6],[6,7],[7,4]];
+    edges.forEach((e,i)=>v.line3D('workspace-edge-'+i,{points:[corners[e[0]],corners[e[1]]],stroke:{color:Color.GREY_B,opacity:0.19},strokeWidth:0.012}));
+    const samples=[];
+    for(let i=0;i<=N;i++) samples.push(fk(angles(i/N)));
+    v.path('planned-fk-path',{points:samples,stroke:{color:Color.GOLD,opacity:0.2},strokeWidth:0.018,strokeProfile:'round',fill:Color.NONE});
+  });
+  s.text('model-note',{text:'Idealized 3R arm',position:[0,-2.94],fontSize:0.25,fill:Color.GREY_A});
+  hold(D * 0.1);
+  for(let i=1;i<=N;i++) {
+    const qa=angles((i-1)/N), qb=angles(i/N);
+    const segment=[];
+    // The sampled trace follows the actual linearly interpolated joint rotations,
+    // rather than interpolating a free endpoint or solving an unrelated IK target.
+    for(let j=0;j<=4;j++) segment.push(fk(qa.map((a,k)=>a+(qb[k]-a)*j/4)));
+    const trail=vModel.path('tool-trace-'+i,{points:segment,stroke:Color.GOLD,strokeWidth:0.035,strokeProfile:'round',fill:Color.NONE});
+    play([yaw.rotateTo([0,qb[0],0]),shoulder.rotateTo([0,0,qb[1]]),elbow.rotateTo([0,0,qb[2]]),trail.fadeIn()],D*0.75/N);
+  }
+  hold(D-cursor);
+});

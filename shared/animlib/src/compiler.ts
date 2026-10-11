@@ -1,14 +1,22 @@
+import { validateModelMetadata } from './model-metadata.js';
+import { validateSurfaceAppearance } from "./appearance-validation.js";
 import { parse } from "acorn";
 import { getQuickJS } from "quickjs-emscripten";
 import { buildScene } from "./runtime.js";
+import { createSurfaceBuilders } from "./surfaces.js";
+import { createSolidBuilders } from "./solids.js";
+import { createMoleculeBuilders } from './molecules.js';
+import { validateLighting } from "./lighting.js";
+import { validatePath } from "./path.js";
 import { Color, enforceScenePalette, paletteResolver, validateColor } from "./palette.js";
-import type { CameraState, CompileInput, CompiledScene, Diagnostic, ElementState, Geometry } from "./types.js";
+import type { CameraState, CompileInput, CompiledScene, ControlValue, Diagnostic, ElementState, Geometry, ReactiveUpdate } from "./types.js";
+import { mergeReactiveUpdates, validateReactiveBindings } from './reactive.js';
 
 export class SceneCompileError extends Error {
   constructor(public diagnostic: Diagnostic) { super(diagnostic.message); this.name = "SceneCompileError"; }
 }
 
-const kinds = new Set(["circle", "sphere", "rectangle", "path", "line", "arrow", "text", "latex", "mesh", "group"]);
+const kinds = new Set(["circle", "sphere", "rectangle", "path", "line", "arrow", "text", "latex", "mesh", "group", "model"]);
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -16,6 +24,13 @@ function number(value: unknown, label: string) { check(typeof value === "number"
 function vec(value: unknown, label: string, size = 3) { check(Array.isArray(value) && value.length === size, `Invalid ${label}`); value.forEach(n => number(n, label)); }
 function geometry(g: Geometry) {
   check(g && kinds.has(g.kind), "Invalid geometry kind");
+  check(!Object.keys(g).some(k => k.startsWith('_')), 'Internal geometry fields are host-owned');
+  if (g.kind === 'model') {
+    const r = g.model;
+    check(r && typeof r.asset === 'string' && r.asset.length > 0 && r.asset.length <= 256 && Number.isInteger(r.primitive) && r.primitive >= 0 && r.primitive < 256, 'Invalid model reference');
+    vec(r.bounds?.min, 'model bounds'); vec(r.bounds?.max, 'model bounds');
+    check(r.bounds.min.every((v,i) => v <= r.bounds.max[i]), 'Invalid model bounds');
+  } else check(g.model === undefined, 'Model references require model geometry');
   for (const key of ["radius", "width", "height", "fontSize"] as const) if (g[key] !== undefined) { number(g[key], key); check(g[key]! >= 0, `${key} must be nonnegative`); }
   for (const key of ["points", "vertices"] as const) if (g[key]) {
     check(Array.isArray(g[key]) && g[key]!.length <= 20000, `Invalid or oversized ${key}`);
@@ -35,10 +50,46 @@ function geometry(g: Geometry) {
       check(Math.abs(Number(value.toFixed(decimals))) < 10 ** digits, `Numeric slot ${id} exceeds its reserved digit width`);
     }
   }
-  if (g.kind === "path") check((g.points?.length ?? 0) >= 2, "Path requires at least two points");
+  if (g.d !== undefined || g.curve !== undefined) check(g.kind === "path", "Only paths support d or curve");
+  if (g.kind === "path") validatePath(g);
   if (g.kind === "line" || g.kind === "arrow") check((g.points?.length ?? 0) >= 2, "Line/arrow requires at least two points");
   if (g.kind === "group") check(Array.isArray(g.children) && g.children.length <= 2000 && g.children.every(id => typeof id === "string"), "Invalid group children");
   if (g.isolated !== undefined) check(g.kind === "group" && typeof g.isolated === "boolean", "Only groups support isolation");
+  if (g.shading !== undefined) check(g.kind === "mesh" && ["unlit", "flat", "smooth"].includes(g.shading), "Invalid mesh shading");
+  validateSurfaceAppearance(g);
+  if (g.clipPlanes !== undefined) {
+    check((g.kind === "mesh" || g.kind === "sphere") && Array.isArray(g.clipPlanes) && g.clipPlanes.length <= 4, "Clipping requires at most four planes on a mesh or sphere");
+    for (const p of g.clipPlanes) {
+      check(p && typeof p === "object", "Invalid clip plane");
+      vec(p.normal, "clip normal"); check(Math.hypot(...p.normal) > 1e-12, "Clip normal must be nonzero"); number(p.offset, "clip offset");
+      if (p.section !== undefined) {
+        check(p.section && typeof p.section === "object" && !Array.isArray(p.section), "Invalid section");
+        validateColor(p.section.color);
+        if (p.section.cap !== undefined) validateColor(p.section.cap);
+        if (p.section.width !== undefined) { number(p.section.width, "section width"); check(p.section.width > 0, "Section width must be positive"); }
+      }
+    }
+  }
+  if (g.outline !== undefined) {
+    const o = g.outline;
+    check((g.kind === "mesh" || g.kind === "sphere") && o && typeof o === "object" && !Array.isArray(o), "Outlines require mesh or sphere geometry");
+    validateColor(o.color);
+    if (o.width !== undefined) { number(o.width, "outline width"); check(o.width > 0, "Outline width must be positive"); }
+    if (o.creaseAngle !== undefined) { number(o.creaseAngle, "crease angle"); check(o.creaseAngle >= 0 && o.creaseAngle <= Math.PI, "Crease angle must be in [0, PI]"); }
+    if (o.silhouette !== undefined) check(typeof o.silhouette === "boolean", "Invalid silhouette flag");
+  }
+  if (g.scalarColors !== undefined) {
+    const c = g.scalarColors;
+    check(g.kind === "mesh" && c && typeof c === "object" && Array.isArray(c.values) && c.values.length === g.vertices?.length, "Scalar values must match mesh vertices");
+    c.values.forEach(v => number(v, "scalar value")); vec(c.domain, "scalar domain", 2); check(c.domain[0] < c.domain[1], "Scalar domain must increase");
+    check(Array.isArray(c.colors) && c.colors.length >= 2 && c.colors.length <= 16, "Scalar ramp requires 2–16 colors");
+    for (const color of c.colors) { check(typeof color === "string" && (color as string) !== "none", "Scalar ramp requires named palette colors"); validateColor(color); }
+  }
+  if (g.labelOcclusion !== undefined) check((g.kind === "text" || g.kind === "latex") && ["depth", "overlay", "hide", "fade"].includes(g.labelOcclusion), "Invalid label occlusion");
+  if (g.normals !== undefined) {
+    check(g.kind === "mesh" && Array.isArray(g.normals) && g.normals.length === g.vertices?.length, "Mesh normals must match vertices");
+    for (const normal of g.normals) { vec(normal, "mesh normal"); check(Math.hypot(...normal) > 0, "Mesh normals must be nonzero"); }
+  }
   if (g.kind === "mesh") {
     check(Array.isArray(g.vertices) && Array.isArray(g.triangles) && g.triangles.length <= 20000, "Mesh requires vertices and triangles");
     for (const triangle of g.triangles) check(triangle.length === 3 && triangle.every(i => Number.isInteger(i) && i >= 0 && i < g.vertices!.length), "Invalid mesh triangle index");
@@ -57,6 +108,7 @@ function element(e: ElementState) {
     check(e.strokeProfile === "flat" || e.strokeProfile === "round", "Invalid stroke profile");
     check(e.strokeProfile !== "round" || e.space === "world", "Round strokes require world space");
   }
+  if (e.castShadow !== undefined) check(typeof e.castShadow === "boolean", "Invalid castShadow flag");
   if (e.billboard !== undefined) check(typeof e.billboard === "boolean", "Invalid billboard flag");
   if (e.billboardOffset !== undefined) vec(e.billboardOffset,"billboard offset");
   if (e.viewportOffset !== undefined) vec(e.viewportOffset,"viewport offset",2);
@@ -77,6 +129,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
   check(scene.options && ["2d", "3d"].includes(scene.options.mode) && ["hold", "advance"].includes(scene.options.end), "Invalid scene options");
   check(typeof scene.options.orbit === "boolean" && typeof scene.options.background === "string" && scene.options.background.length <= 128, "Invalid scene display options");
   if (scene.options.audio !== undefined) check(typeof scene.options.audio === "string" && scene.options.audio.length <= 256, "Invalid audio asset ID");
+  validateLighting(scene.options.lighting);
   camera(scene.camera);
   check(scene.views === undefined || Array.isArray(scene.views) && scene.views.length <= 32, "Invalid or oversized views");
   const viewIds = new Set<string>();
@@ -87,13 +140,14 @@ export function validateCompiledScene(scene: CompiledScene): void {
     const [x,y,w,h] = view.rect;
     check(x >= 0 && y >= 0 && w > 0 && h > 0 && x+w <= 1+1e-9 && y+h <= 1+1e-9, "View rectangle must fit within the canvas");
     check(typeof view.orbit === "boolean", "Invalid view orbit flag");
+    check(view.orbitHitTest === undefined || view.orbitHitTest === 'geometry', 'Invalid view orbit hit test');
     camera(view.camera);
   }
   const checkView = (e: ElementState) => check(e.view === undefined || typeof e.view === "string" && viewIds.has(e.view), "Element references unknown view");
   check(Array.isArray(scene.initial) && scene.initial.length <= 2000, "Invalid initial elements"); scene.initial.forEach(e => { element(e); checkView(e); });
   check(Array.isArray(scene.lifecycle) && scene.lifecycle.length <= 20000, "Invalid lifecycle");
   let totalPoints = 0;
-  const examine = (e: ElementState) => { element(e); checkView(e); totalPoints += (e.geometry.points?.length ?? 0) + (e.geometry.vertices?.length ?? 0); check(totalPoints <= 100000, "Scene geometry budget exceeded"); };
+  const examine = (e: ElementState) => { element(e); checkView(e); totalPoints += (e.geometry.kind === 'path' ? validatePath(e.geometry) : e.geometry.points?.length ?? 0) + (e.geometry.vertices?.length ?? 0); check(totalPoints <= 100000, "Scene geometry budget exceeded"); };
   const groupGraph = new Map<string, string[]>();
   for (const e of scene.initial) if (e.geometry.children) groupGraph.set(e.id, e.geometry.children);
   for (const event of scene.lifecycle) {
@@ -153,7 +207,7 @@ export function validateCompiledScene(scene: CompiledScene): void {
     if (b.type === "attach") { if (b.offset !== undefined) vec(b.offset, "attachment offset"); }
     else {
       check(["line", "arrow"].includes(target.geometry.kind), "Connect requires a line or arrow");
-      check(b.endpoints === undefined || ["center", "surface"].includes(b.endpoints), "Invalid connector endpoints");
+      check(b.endpoints === undefined || ["center", "surface", "bounds"].includes(b.endpoints), "Invalid connector endpoints");
       if (b.offset !== undefined) number(b.offset, "connector offset");
       if (b.endpoints === "surface") for (const id of sources) check(["sphere", "circle"].includes(all.get(id)!.geometry.kind), "Surface connectors require spheres or circles");
     }
@@ -224,17 +278,28 @@ export function validateCompiledScene(scene: CompiledScene): void {
   for (const c of scene.controls) {
     check(typeof c.id === "string" && !ids.has(c.id) && typeof c.label === "string" && c.label.length <= 512, "Invalid control ID or label"); ids.add(c.id);
     check(["slider", "toggle", "select"].includes(c.kind), "Invalid control kind");
+    check(c.reactive === undefined || typeof c.reactive === 'boolean' && c.kind === 'slider', 'Only sliders support reactive inputs');
     if (c.position !== undefined) { vec(c.position, "control position", 2); check(c.position.every(v => v >= 0 && v <= 1), "Control position must be within the canvas"); }
     if (c.width !== undefined) { number(c.width, "control width"); check(c.width > 0 && c.width <= 4096, "Invalid control width"); }
     if (c.kind === "slider") { number(c.value, "slider value"); number(c.default, "slider default"); number(c.min, "slider min"); number(c.max, "slider max"); check(c.min! <= c.max! && Number(c.value) >= c.min! && Number(c.value) <= c.max!, "Invalid slider range"); if (c.step !== undefined) { number(c.step, "slider step"); check(c.step > 0, "Invalid slider step"); } }
     if (c.kind === "toggle") check(typeof c.value === "boolean" && typeof c.default === "boolean", "Invalid toggle value");
     if (c.kind === "select") check(Array.isArray(c.options) && c.options.length <= 100 && c.options.every(o => typeof o === "string" && o.length <= 256) && c.options.includes(String(c.value)), "Invalid select options/value");
   }
+  validateReactiveBindings(scene);
 }
 
-export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<CompiledScene> {
+export interface SceneProgram {
+  scene: CompiledScene;
+  update(values: Record<string, ControlValue>, changed: string[], time?: number, duration?: number): ReactiveUpdate[];
+  dispose(): void;
+}
+
+/** A worker-owned program retains callback closures; only plain data leaves this boundary. */
+export async function createSceneProgram(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number } = {}): Promise<SceneProgram> {
   let vm: ReturnType<Awaited<ReturnType<typeof getQuickJS>>["newContext"]> | undefined;
+  let retained = false;
   try {
+    for (const m of Object.values(input.models ?? {})) validateModelMetadata(m);
     const resolver = paletteResolver(input.palette);
     input = { ...input, palette: resolver.palette };
     check(typeof source === "string" && source.length <= 256000, "Scene source limit exceeded (256 KB)");
@@ -248,7 +313,7 @@ export async function compileSource(source: string, input: CompileInput = {}, li
     vm = QuickJS.newContext();
     vm.runtime.setMemoryLimit(32 * 1024 * 1024);
     vm.runtime.setMaxStackSize(512 * 1024);
-    const deadline = Date.now() + (limits.executionLimitMs ?? 200);
+    let deadline = Date.now() + (limits.executionLimitMs ?? 200);
     vm.runtime.setInterruptHandler(() => Date.now() > deadline);
     const execute = (code: string, file: string): string | undefined => {
       const result = vm!.evalCode(code, file);
@@ -270,7 +335,8 @@ export async function compileSource(source: string, input: CompileInput = {}, li
       const Color = __tokens(${JSON.stringify(Color)});
       const palette = Object.freeze({ ...__input.palette, colors: __tokens(Object.fromEntries(Object.keys(__input.palette.colors).map(name => [name, name]))) });
       const __buildScene = ${buildScene.toString()};
-      const scene = (options, builder) => __buildScene(options, builder, __input);
+      const __meshBuilders = Object.freeze({ ...(${createSurfaceBuilders.toString()})(), ...(${createSolidBuilders.toString()})(), ...(${createMoleculeBuilders.toString()})() });
+      const scene = (options, builder) => __buildScene(options, builder, __input, update => { globalThis.__animlibUpdate = update; }, __meshBuilders);
       let __seed = ${JSON.stringify(input.seed ?? 1)} >>> 0;
       Math.random = () => { __seed = (__seed * 1664525 + 1013904223) >>> 0; return __seed / 4294967296; };
       const math = Object.freeze(Math);
@@ -281,11 +347,55 @@ export async function compileSource(source: string, input: CompileInput = {}, li
     check(json && json.length <= 8 * 1024 * 1024, "Invalid or oversized compiled scene");
     const compiled = JSON.parse(json) as CompiledScene;
     validateCompiledScene(compiled);
+    const verifyModel = (g: Geometry) => {
+      if (g.kind !== 'model') return;
+      const reference = g.model!, metadata = input.models?.[reference.asset];
+      check(metadata && JSON.stringify(metadata.primitives[reference.primitive]?.bounds) === JSON.stringify(reference.bounds), 'Model reference is missing or does not match its registered metadata');
+    };
+    for (const e of [...compiled.initial, ...compiled.lifecycle.flatMap(e => e.elements ?? []), ...compiled.tracks.flatMap(t => Object.values(t.from))]) verifyModel(e.geometry);
+    let importedTriangles=0;
+    for(const e of [...compiled.initial,...compiled.lifecycle.flatMap(e=>e.elements??[])]) {
+      const ref=e.geometry.model;
+      if(ref)importedTriangles+=input.models![ref.asset].primitives[ref.primitive].triangles;
+    }
+    check(importedTriangles<=500000,'Scene imported model budget exceeded (500,000 triangles across instances)');
+    for (const t of compiled.tracks) if (t.action.geometry) { check(t.action.geometry.kind !== 'model', 'Model geometry cannot be morphed'); verifyModel(t.action.geometry); }
     enforceScenePalette(compiled, resolver);
-    return compiled;
+    retained = true;
+    return {
+      scene: compiled,
+      update(values, changed, time, duration = compiled.duration) {
+        if (!vm) throw new Error('Scene runtime is disposed');
+        // Audio preparation can extend the host scene after this worker program
+        // was compiled. Clamp against the authoritative duration sent by the host.
+        check(Number.isFinite(duration) && duration >= 0 && duration <= 1e6, 'Invalid reactive duration');
+        if (time !== undefined) { check(Number.isFinite(time), 'Reactive time must be finite'); time = Math.max(0, Math.min(duration, time)); }
+        deadline = Date.now() + (limits.executionLimitMs ?? 200);
+        const json = execute(`JSON.stringify(globalThis.__animlibUpdate(JSON.parse(${JSON.stringify(JSON.stringify(values))}), JSON.parse(${JSON.stringify(JSON.stringify(changed))}), ${time === undefined ? "undefined" : time}))`, 'bindings.js');
+        check(json && json.length <= 1024 * 1024, 'Invalid or oversized reactive update');
+        const updates = JSON.parse(json) as ReactiveUpdate[];
+        mergeReactiveUpdates(compiled, updates, changed, time);
+        return updates;
+      },
+      dispose() { vm?.dispose(); vm = undefined; },
+    };
   } catch (error) {
     if (error instanceof SceneCompileError) throw error;
     const e = error as Error & { loc?: { line: number; column: number } };
     throw new SceneCompileError({ severity: "error", code: e.loc ? "SYNTAX" : "SCENE_VALIDATION", message: e.message ?? String(error), ...(e.loc ? { line: e.loc.line, column: e.loc.column + 1 } : {}) });
-  } finally { vm?.dispose(); }
+  } finally { if (!retained) vm?.dispose(); }
+}
+
+/** Standalone compilation remains serializable; runtime callbacks are disposed. */
+export async function compileSource(source: string, input: CompileInput = {}, limits: { executionLimitMs?: number; sampleTime?: number | "end" } = {}): Promise<CompiledScene> {
+  const program = await createSceneProgram(source, input, limits);
+  try {
+    const scene = program.scene;
+    const requested = limits.sampleTime === 'end' ? scene.duration : limits.sampleTime ?? 0;
+    check(Number.isFinite(requested), 'Sample time must be finite');
+    const time = Math.max(0, Math.min(scene.duration, requested));
+    if (time === 0 || !scene.reactiveBindings?.some(b => b.time)) return scene;
+    const updates = program.update(Object.fromEntries(scene.controls.map(c => [c.id, c.value])), [], time);
+    return { ...scene, reactiveBindings: mergeReactiveUpdates(scene, updates, [], time), reactiveTime: time };
+  } finally { program.dispose(); }
 }

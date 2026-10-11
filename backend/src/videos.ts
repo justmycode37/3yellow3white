@@ -1,3 +1,4 @@
+import { emptyTokenUsage, TokenUsageTracker, withTokenUsage } from './token-usage.js'
 import { Database } from 'bun:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
@@ -10,7 +11,7 @@ import { insertedSceneId } from '../../shared/video/scene-requests'
 import type { SceneRequest, SceneRequestInput } from '../../shared/video/scene-requests'
 import { videoFailureMessage } from './video-errors.js'
 import type { ImageContent } from '@earendil-works/pi-ai'
-import { extractUpload, MAX_FILE_BYTES, MAX_UPLOAD_BYTES, uploadMetadata, uploadType } from './uploads.js'
+import { extractUpload, uploadMetadata, uploadType } from './uploads.js'
 import type { Upload } from './uploads.js'
 
 import { SHARED_OWNER } from './identity.js'
@@ -54,15 +55,13 @@ export const simulatedGenerator: Generator = async (_request, index) => {
   } }
 }
 
-/** One durable queue per Bun process. A replacement process resumes unfinished jobs. */
+/** Durable concurrent jobs in one Bun process. A replacement process resumes unfinished jobs. */
 export class VideoService {
   private db: Database
   private listeners = new Map<string, Set<(manifest: VideoManifest | null) => void>>()
-  private running = false
   private stopped = false
-  private idle: Promise<void> = Promise.resolve()
   private abort = new AbortController()
-  private active?: { id: string; abort: AbortController }
+  private active = new Map<string, { abort: AbortController; work: Promise<void> }>()
 
   constructor(path: string, private generate: Generator = simulatedGenerator, private provider: VideoManifest['provider'] = 'simulated', private generateThumbnail?: ThumbnailGenerator) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
@@ -90,7 +89,7 @@ export class VideoService {
       if (prior.request !== JSON.stringify(request)) throw new Error('Idempotency key already used for a different request')
       return publicManifest(JSON.parse(prior.manifest))
     }
-    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, createdAt: new Date().toISOString(), scenes: [] }
+    const manifest: VideoManifest = { schemaVersion: 1, id: crypto.randomUUID(), title: request.title, revision: 0, status: 'queued', provider: this.provider, ...(request.narrationMode ? { narrationMode: request.narrationMode } : {}), createdAt: new Date().toISOString(), scenes: [], ...(this.provider !== 'simulated' ? { tokenUsage: emptyTokenUsage() } : {}) }
     this.db.transaction(() => {
       this.db.query('INSERT INTO videos VALUES (?, ?, ?, ?, ?)').run(manifest.id, owner, key, JSON.stringify(request), JSON.stringify(manifest))
       uploads.forEach((upload, index) => this.db.query('INSERT INTO video_uploads VALUES (?, ?, ?, ?, ?, NULL)').run(manifest.id, index, upload.name, upload.mimeType, upload.bytes))
@@ -142,7 +141,7 @@ export class VideoService {
   delete(id: string): boolean {
     if (!this.row(id)) return false
     for (const child of this.sceneRequests(id)) this.delete(child.id)
-    if (this.active?.id === id) this.active.abort.abort()
+    this.active.get(id)?.abort.abort()
     this.db.transaction(() => {
       this.db.query('DELETE FROM video_audio WHERE video = ?').run(id)
       this.db.query('DELETE FROM video_uploads WHERE video = ?').run(id)
@@ -167,7 +166,6 @@ export class VideoService {
         request.documents.push({ name: upload.name, text })
       }
     }
-    if (Buffer.byteLength(JSON.stringify(request)) > 1_000_000) throw new AgentError('DOCUMENT', 'Combined source text must be under 1 MB. Split your material into smaller videos.')
     return { request, images }
   }
   private save(manifest: VideoManifest) {
@@ -192,81 +190,95 @@ export class VideoService {
     this.save(manifest); this.notify(manifest)
   }
   private kick() {
-    if (this.running || this.stopped) return
-    this.running = true
-    this.idle = Promise.resolve().then(async () => {
-      while (!this.stopped) {
-        const row = this.db.query("SELECT * FROM videos WHERE json_extract(manifest, '$.status') IN ('queued','generating') ORDER BY rowid LIMIT 1").get() as Row | null
-        if (!row) break
-        const manifest: VideoManifest = JSON.parse(row.manifest)
-        const sequence = new SceneSequence()
-        const abort = new AbortController()
-        const signal = AbortSignal.any([this.abort.signal, abort.signal])
-        this.active = { id: row.id, abort }
-        const started = performance.now()
-        logEvent('video.started', { videoId: manifest.id, sceneCount: manifest.scenes.length, resumed: manifest.status === 'generating' })
-        let thumbnailWork: Promise<void> | undefined
-        try {
-          if (manifest.provider === 'pi' && this.provider !== 'pi') throw new AgentError('CONFIG', 'This video requires VIDEO_GENERATOR=pi.')
-          const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
-          manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
-          const { request: input, images } = await logStage({ videoId: manifest.id, stage: 'sources' }, () => this.sources(row, signal))
-          if (input.sceneRequest) {
-            // The original can grow after the click; check capacity again when its
-            // queued follow-up starts, before publishing anything into the timeline.
-            const link = this.db.query('SELECT lesson FROM scene_requests WHERE video = ?').get(manifest.id) as { lesson: string } | null
-            if (link) {
-              const parent = this.row(link.lesson)
-              const baseCount = parent ? (JSON.parse(parent.manifest) as VideoManifest).scenes.length : 1
-              const otherCount = this.sceneRequests(link.lesson).filter(r => r.id !== manifest.id).reduce((sum, r) => sum + r.video.scenes.length, 0)
-              if (baseCount + otherCount + 1 > 100) throw new AgentError('LIMIT', 'This lesson has reached its added-scene limit.')
-            }
-          }
-          thumbnailWork = this.thumbnail(manifest, input, { signal, images })
-          const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
-          if (!initial.ok) throw new Error('Stored scenes could not be restored')
-          while (!this.stopped) {
-            const priorIndex = manifest.scenes.length - 1
-            const next = input.sceneRequest && manifest.scenes.length >= 1 ? null : await generate(input, manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
-              previousFrame: priorIndex >= 0 ? sequence.frame(priorIndex, manifest.scenes[priorIndex].duration) : undefined, signal, images })
-            if (this.stopped || !this.row(row.id)) break
-            if (!next) {
-              await thumbnailWork
-              if (this.stopped || !this.row(row.id)) break
-              manifest.status = 'complete'; this.save(manifest); this.notify(manifest)
-              logEvent('video.completed', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
-              break
-            }
-            const scene: VideoScene = { ...next.scene, audio: { id: next.scene.audio?.id ?? `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
-            if (scene.index !== manifest.scenes.length || !Number.isFinite(scene.duration) || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
-            const result = await sequence.submit({ type: 'insert', after: manifest.scenes.at(-1)?.id ?? null, scenes: [scene] })
-            if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join('; '))
-            if (Math.abs(sequence.compiled.at(-1)!.duration - scene.duration) > 1e-6) throw new Error('Scene timing does not match its declared duration')
-            signal.throwIfAborted()
-            // Publish the scene and its asset atomically before sending an event.
-            this.db.transaction(() => {
-              this.db.query('INSERT INTO video_audio VALUES (?, ?, ?)').run(manifest.id, scene.id, next.audio)
-              manifest.scenes.push(scene); this.save(manifest)
-            })()
-            this.notify(manifest)
-            logEvent('video.scene_published', { videoId: manifest.id, sceneIndex: scene.index, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
-          }
-        } catch (error) {
-          await thumbnailWork
-          if (this.stopped || !this.row(row.id)) continue
-          manifest.status = 'failed'; manifest.errorCode = error instanceof AgentError ? error.code : 'GENERATION'
-          manifest.error = videoFailureMessage(manifest.errorCode, manifest.scenes.length > 0)
-          logEvent('video.failed', { videoId: manifest.id, sceneCount: manifest.scenes.length, code: error instanceof AgentError ? error.code : 'GENERATION', elapsedMs: Math.round(performance.now() - started) }, 'error')
-          this.save(manifest); this.notify(manifest)
-        } finally {
-          await thumbnailWork
-          if (this.stopped) logEvent('video.interrupted', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
-          this.active = undefined; sequence.dispose()
+    if (this.stopped) return
+    const rows = this.db.query("SELECT * FROM videos WHERE json_extract(manifest, '$.status') IN ('queued','generating') ORDER BY rowid").all() as Row[]
+    for (const row of rows) {
+      if (this.active.has(row.id)) continue
+      const abort = new AbortController()
+      // Register before starting so repeated kicks cannot launch the same job twice.
+      const work = Promise.resolve().then(() => {
+        if (this.stopped || !this.row(row.id)) return
+        return this.run(row, abort)
+      }).finally(() => { this.active.delete(row.id) })
+      this.active.set(row.id, { abort, work })
+    }
+  }
+  private async run(row: Row, abort: AbortController) {
+    const manifest: VideoManifest = JSON.parse(row.manifest)
+    const models: import('animlib/core').CompileInput['models'] = Object.create(null)
+    for (const scene of manifest.scenes) for (const [id, asset] of Object.entries(scene.assets ?? {})) models![id] = asset.metadata
+    const sequence = new SceneSequence({ models })
+    const signal = AbortSignal.any([this.abort.signal, abort.signal])
+    const usage = new TokenUsageTracker(tokenUsage => {
+      if (!this.row(row.id)) return
+      manifest.tokenUsage = tokenUsage; this.save(manifest); this.notify(manifest)
+    }, manifest.tokenUsage)
+    const started = performance.now()
+    logEvent('video.started', { videoId: manifest.id, sceneCount: manifest.scenes.length, resumed: manifest.status === 'generating' })
+    let thumbnailWork: Promise<void> | undefined
+    try {
+      if (manifest.provider === 'pi' && this.provider !== 'pi') throw new AgentError('CONFIG', 'This video requires VIDEO_GENERATOR=pi.')
+      const generate = manifest.provider === 'simulated' && this.provider === 'pi' ? simulatedGenerator : this.generate
+      manifest.status = 'generating'; this.save(manifest); this.notify(manifest)
+      const { request: input, images } = await logStage({ videoId: manifest.id, stage: 'sources' }, () => this.sources(row, signal))
+      if (input.sceneRequest) {
+        const link = this.db.query('SELECT lesson FROM scene_requests WHERE video = ?').get(manifest.id) as { lesson: string } | null
+        if (link) {
+          const parent = this.row(link.lesson)
+          const baseCount = parent ? (JSON.parse(parent.manifest) as VideoManifest).scenes.length : 1
+          const otherCount = this.sceneRequests(link.lesson).filter(r => r.id !== manifest.id).reduce((sum, r) => sum + Math.max(1, r.video.scenes.length), 0)
+          if (baseCount + otherCount + 1 > 100) throw new AgentError('LIMIT', 'This lesson has reached its added-scene limit.')
         }
       }
-    }).finally(() => { this.running = false })
+      thumbnailWork = withTokenUsage(usage, () => this.thumbnail(manifest, input, { signal, images }))
+      const initial = await sequence.submit({ type: 'load', scenes: manifest.scenes })
+      if (!initial.ok) throw new Error('Stored scenes could not be restored')
+      while (!this.stopped) {
+        const priorIndex = manifest.scenes.length - 1
+        const previousFrame = priorIndex >= 0 ? await sequence.evaluate(priorIndex, manifest.scenes[priorIndex].duration) : undefined
+        const next = input.sceneRequest && manifest.scenes.length >= 1 ? null : await withTokenUsage(usage, () => generate(input, manifest.scenes.length, { videoId: manifest.id, owner: row.owner,
+          previousFrame, signal, images }))
+        if (this.stopped || !this.row(row.id)) break
+        if (!next) {
+          await thumbnailWork
+          if (this.stopped || !this.row(row.id)) break
+          usage.flush(); manifest.status = 'complete'; this.save(manifest); this.notify(manifest)
+          logEvent('video.completed', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
+          break
+        }
+        const scene: VideoScene = { ...next.scene, audio: { id: next.scene.audio?.id ?? `audio-${next.scene.index}`, url: `/api/videos/${manifest.id}/audio/${next.scene.id}` } }
+        if (scene.index !== manifest.scenes.length || !Number.isFinite(scene.duration) || scene.duration <= 0) throw new Error('Invalid generated scene order or duration')
+        for (const [id, asset] of Object.entries(scene.assets ?? {})) models![id] = asset.metadata
+        const result = await sequence.submit({ type: 'insert', after: manifest.scenes.at(-1)?.id ?? null, scenes: [scene] })
+        if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join('; '))
+        if (Math.abs(sequence.compiled.at(-1)!.duration - scene.duration) > 1e-6) throw new Error('Scene timing does not match its declared duration')
+        signal.throwIfAborted()
+        // Publish the scene and its asset atomically before sending an event.
+        this.db.transaction(() => {
+          this.db.query('INSERT INTO video_audio VALUES (?, ?, ?)').run(manifest.id, scene.id, next.audio)
+          manifest.scenes.push(scene); this.save(manifest)
+        })()
+        this.notify(manifest)
+        logEvent('video.scene_published', { videoId: manifest.id, sceneIndex: scene.index, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
+      }
+    } catch (error) {
+      await thumbnailWork
+      if (this.stopped || !this.row(row.id)) return
+      usage.flush(); manifest.status = 'failed'; manifest.errorCode = error instanceof AgentError ? error.code : 'GENERATION'
+      manifest.error = videoFailureMessage(manifest.errorCode, manifest.scenes.length > 0)
+      logEvent('video.failed', { videoId: manifest.id, sceneCount: manifest.scenes.length, code: error instanceof AgentError ? error.code : 'GENERATION', elapsedMs: Math.round(performance.now() - started) }, 'error')
+      this.save(manifest); this.notify(manifest)
+    } finally {
+      await thumbnailWork
+      if (this.stopped) logEvent('video.interrupted', { videoId: manifest.id, sceneCount: manifest.scenes.length, elapsedMs: Math.round(performance.now() - started) })
+      usage.flush(); sequence.dispose()
+    }
   }
-  async close() { this.stopped = true; this.abort.abort(); await this.idle; this.db.close() }
+  async close() {
+    this.stopped = true; this.abort.abort()
+    await Promise.all([...this.active.values()].map(job => job.work))
+    this.db.close()
+  }
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url), parts = url.pathname.split('/')
@@ -284,14 +296,10 @@ export class VideoService {
       if (request.method !== 'POST') return json({ detail: 'Method Not Allowed' }, 405)
       const key = request.headers.get('Idempotency-Key')
       if (!key || key.length > 128) return json({ detail: 'An Idempotency-Key is required' }, 400)
-      // Bound streamed bodies as well as Content-Length before JSON parsing.
       const multipart = request.headers.get('content-type')?.startsWith('multipart/form-data')
-      const limit = multipart ? MAX_UPLOAD_BYTES + 1_000_000 : 1_000_000
-      const reader = request.body?.getReader(); let size = 0; const chunks: Uint8Array[] = []
+      const reader = request.body?.getReader(); const chunks: Uint8Array[] = []
       if (reader) while (true) {
         const { value, done } = await reader.read(); if (done) break
-        size += value.length
-        if (size > limit) { await reader.cancel(); return json({ detail: multipart ? 'Uploads must total 100 MB or less' : 'Source text must be under 1 MB' }, 413) }
         chunks.push(value)
       }
       let body: VideoRequest
@@ -302,24 +310,22 @@ export class VideoService {
           const form = await new Response(blob, { headers: { 'Content-Type': request.headers.get('content-type')! } }).formData()
           const payload = form.get('request')
           if (typeof payload !== 'string') return json({ detail: 'Provide request JSON with your files' }, 400)
-          if (Buffer.byteLength(payload) > 1_000_000) return json({ detail: 'Source text must be under 1 MB' }, 413)
           body = JSON.parse(payload)
           const files = form.getAll('files')
-          if (files.length > 10) return json({ detail: 'Upload at most 10 files' }, 400)
-          let total = 0
           for (const file of files) {
             if (typeof file === 'string' || !file.name || file.name.length > 255) return json({ detail: 'Provide named files' }, 400)
             const mimeType = uploadType(file.name)
             if (!mimeType) return json({ detail: 'Choose PDF, DOCX, TXT, Markdown, PNG, JPEG, or WebP files' }, 415)
-            total += file.size
-            if (!file.size || file.size > MAX_FILE_BYTES || total > MAX_UPLOAD_BYTES) return json({ detail: 'Each file must be 1 byte–50 MB; total uploads must be at most 100 MB' }, 413)
+            if (!file.size) return json({ detail: 'Provide nonempty files' }, 400)
             uploads.push({ name: file.name, mimeType, bytes: new Uint8Array(await file.arrayBuffer()) })
           }
         } else body = JSON.parse(await blob.text())
       } catch { return json({ detail: 'Invalid request body' }, 400) }
-      if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.length + uploads.length > 10 || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
+      if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 || typeof body.topic !== 'string' || !Array.isArray(body.documents) || body.documents.some(d => !d || typeof d.name !== 'string' || typeof d.text !== 'string') || (!body.topic.trim() && !body.documents.some(d => d.text.trim()) && !uploads.length)) return json({ detail: 'Provide a title and topic, document text, or files' }, 400)
       if (body.videoMode !== undefined && body.videoMode !== 'classic' && body.videoMode !== 'interactive') return json({ detail: 'Choose classic or interactive video mode' }, 400)
+      if (body.narrationMode !== undefined && !['speech', 'subtitles'].includes(body.narrationMode)) return json({ detail: 'Choose speech or subtitles' }, 400)
       const normalized: VideoRequest = { title: body.title.trim(), topic: body.topic, documents: body.documents.map(d => ({ name: d.name, text: d.text })),
+        ...(body.narrationMode !== undefined ? { narrationMode: body.narrationMode } : {}),
         ...(body.videoMode !== undefined ? { videoMode: body.videoMode } : {}),
         ...(uploads.length ? { uploads: uploads.map(uploadMetadata) } : {}) }
       try { return json(this.create(owner, key, normalized, uploads), 202) } catch (error) { return json({ detail: (error as Error).message }, 409) }

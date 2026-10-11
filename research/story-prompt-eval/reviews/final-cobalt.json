@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "verdict": "revise",
+  "summary": "The script repeats the tradeoff without explaining its mechanism, and the visual plan expressly replaces causal evidence with conclusion labels. It is also substantially shorter than requested.",
+  "issues": [
+    {
+      "severity": "error",
+      "sceneId": "beat-2",
+      "detail": "The speech says 'Opening is good for carbon and bad for conserving water' and claims the diagram makes this clear, but the visualDescription explicitly forbids gas paths, the shared passage and humidity differences. Neither speech nor visuals establishes carbon dioxide use in photosynthesis, the moist interior supplying water vapor, or how the shared opening permits both exchanges. Supply those causal links in audience-appropriate narration and observable visual relationships, including two-way gas movement with different net directions, so the restriction in beat-3 follows from the model rather than another assertion. The richer keyPoints and entity notes do not supply an explanation the viewer receives."
+    },
+    {
+      "severity": "error",
+      "sceneId": "beat-1",
+      "detail": "The carry list includes guard-cells, and later scenes carry carbon-dioxide and water, but the introducing visual descriptions only construct a still leaf and conclusion text. Establish the pore and its surrounding cells before carrying them, and introduce the gas representations before reuse; synchronize these constructions and end states with the causal explanation and later narrowing."
+    },
+    {
+      "severity": "error",
+      "sceneId": null,
+      "detail": "The entire lesson contains only 72 spoken words and no pauses, estimating about 32-38 seconds at 125-150 words per minute with the supplied 10% allowance, far below roughly two minutes. Use the missing explanatory content and its observation time to meet the requested scope; do not merely stretch the three repeated slogans with silence."
+    }
+  ],
+  "checks": [
+    "Exactly three scenes, no equations, no scripted pauses and empty classic-mode interaction arrays match those structural requirements.",
+    "The narration avoids conscious decision-making and states that some water loss continues, but does not explain the requested carbon dioxide/photosynthesis and water-vapor mechanism.",
+    "Inspected the actual speech and visual descriptions against the stronger planning claims; conclusion labels are not evidence for the causal tradeoff.",
+    "The proposed static leaf and text are supported primitives; missing explanatory construction, rather than unavailable rendering features, is the problem.",
+    "Duration is an estimate from the supplied speech, not a claim of measured audio timing."
+  ]
+}

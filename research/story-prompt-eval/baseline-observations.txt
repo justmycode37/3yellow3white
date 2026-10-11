@@ -1,0 +1,8 @@
+Baseline observations recorded before prompt revision
+
+Three completed original-prompt cases inspected: history, uniform convergence, Bayes.
+History: 193 spoken words, two scenes, estimated 85–102 seconds for requested ~90s. Strong source/inference distinction. Does not demonstrate a general baseline failure.
+Uniform convergence: 470 words, four scenes, estimated 212–254s for ~4min. Correct endpoint, moving witness and supremum argument; honors requested definition-first opening despite guidance saying to skip definitions. Four scenes of 110/111/130/119 words ignore guidance's 20–30/30–60 word targets. Success depends on prioritizing user constraints over incompatible defaults; not evidence that caps improved it.
+Bayes: script correctly changes denominator to 108 and recalculates at higher prevalence. Parser rejects sourceRefs.document='bayes.request.json', since allowed names are supplied documents or literal 'request'. Author confused harness filename with source name. Preserve raw result; don't silently repair before reporting validation rate. This may be a harness artifact, so don't attribute it solely to narrative guidance.
+
+Prompt-level hypotheses, not yet observed output failures: visual plans need an explicit encoding→operation→observable→inference relationship; scene word caps conflict with requested duration/count; definition-first and naming order should be audience-dependent; review should test central inferential bridges rather than favor a story template. Baseline samples already show capable models can overcome these weaknesses. Tests must permit no gain, regressions, and equally good contract-only controls.

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# A leaf trades water for carbon\n\n## Beat 1 — Carbon needs a way in\n\nContent needed: An idealized leaf and enlarged lower-surface cutaway. Introduce the same guard-cell pair and pore used in all three beats; connected parts remain connected as the gap narrows in beat-3. GOLD dots mean carbon dioxide. Show movement both ways, with net inward movement as leaf cells use carbon dioxide. No water-vapor reveal yet.\n\nNarration: To make sugar using sunlight, a leaf needs carbon dioxide from the air. But much of that work happens inside the leaf. How does the gas get there? Look at this tiny opening in the leaf’s surface. It is called a stoma. The gap leads into air spaces among the leaf’s cells. The gold dots represent carbon dioxide. Molecules move through the opening in both directions. As cells use carbon dioxide for photosynthesis, more can enter than leave. An open pore helps keep that carbon supply coming.\n\n## Beat 2 — The same gap lets water out\n\nContent needed: Keep the same open pore. BLUE dots mean water vapor from moist internal cell surfaces. Establish evaporation, then movement through the pore. Drier outside air supports net outward vapor movement while GOLD carbon dioxide has net inward movement. Paths are illustrative, not measurements or a one-for-one swap.\n\nNarration: Now follow the blue dots: water. The surfaces of cells inside the leaf are moist. Some of that water evaporates into the air spaces as water vapor. The same opening that admits carbon dioxide also gives this vapor a route out. When the outside air is drier, more water vapor moves outward than inward. The opening does not sort the gases or exchange one water molecule for one carbon dioxide molecule. Both move through it. So gaining access to carbon dioxide also exposes the leaf to water loss.\n\n## Beat 3 — A smaller gap has two effects\n\nContent needed: Start with the same open pore and both gases. Guard-cell shape changes narrow the gap; show reduced passage for both species under the same outside conditions. Explain the response without conscious intent. Retain some water loss through other routes; closing a pore must not appear to seal the whole leaf.\n\nNarration: In dry conditions, water loss can become difficult to replace. Signals within the plant change the water content and shape of the guard cells around the pore, narrowing the opening. The plant does not think through a choice; this is a biological response. With a smaller gap, less water vapor escapes through that route. But less carbon dioxide can enter, too, which can limit photosynthesis. Closing helps conserve water; it does not instantly stop all water loss. Some water can still escape through other routes. That is the tradeoff: the opening supports sugar-making while also letting precious water leave.",
+  "plan": {
+    "audience": "A curious 12-year-old; classic viewing mode. Roughly two minutes, exactly three scenes, with no equations or scripted pauses.",
+    "prerequisites": [
+      "Plants have leaves and need water.",
+      "Air contains gases, including water vapor."
+    ],
+    "learningGoal": "Explain how a shared pore allows carbon dioxide uptake and water-vapor loss, and why narrowing it conserves water while restricting photosynthesis.",
+    "centralQuestion": "Why does the opening that helps a leaf make sugar also put its water supply at risk?",
+    "keyInsight": "An open stoma provides a shared diffusion route. Carbon dioxide use inside the leaf supports net carbon dioxide entry, while moist interior surfaces and drier outside air support net water-vapor escape; reducing that route therefore affects both.",
+    "runningExample": "One idealized lower-surface stomatal pore, shown open and then narrowed in drier outside air. GOLD denotes carbon dioxide and BLUE denotes water. Molecular densities, paths and crossing frequencies are qualitative; no species-specific dimensions or measured rates are claimed.",
+    "misconceptions": [
+      "A stoma is a one-way valve.",
+      "A plant consciously weighs water against carbon.",
+      "Water loss and carbon entry occur as a one-for-one exchange.",
+      "Closing stomata instantly eliminates all leaf water loss."
+    ],
+    "entities": [
+      {
+        "id": "leaf-tissue",
+        "meaning": "The same leaf and selected surface patch throughout beat-1 to beat-3. The beat-1 enlarged cutaway preserves the connection between the outside, pore and interior air spaces; tissue surfaces supply water vapor in beat-2 and remain attached around the narrowing pore in beat-3. Schematic scale, not species-specific anatomy.",
+        "color": "GREEN"
+      },
+      {
+        "id": "guard-cells",
+        "meaning": "The same curved pair surrounding the stomatal gap in beat-1 and beat-2. In beat-3, water-content-associated shape changes narrow their shared opening while their ends and boundaries remain attached to the surrounding leaf surface. A deforming teaching model, not rigid hinged doors.",
+        "color": "TEAL"
+      },
+      {
+        "id": "stomatal-pore",
+        "meaning": "The gap between the guard cells connecting outside air to interior spaces in all beats. Open in beat-1 and beat-2; narrowed in beat-3. It is an absence of tissue, marked by a restrained WHITE boundary or local label, not a separate membrane. Its outline must follow guard-cell shape.",
+        "color": "WHITE"
+      },
+      {
+        "id": "carbon-dioxide",
+        "meaning": "GOLD illustrative gas molecules introduced in beat-1, moving both ways through the pore with net entry while leaf cells use carbon dioxide. Continue in beat-2 and show reduced access after the same pore narrows in beat-3. No one-for-one pairing with water.",
+        "color": "GOLD"
+      },
+      {
+        "id": "water",
+        "meaning": "BLUE liquid-water accents and vapor dots introduced in beat-2: evaporation links moist cell surfaces to interior air and outward diffusion through the shared pore. In beat-3 pore escape decreases while a small separate residual route remains. Liquid and vapor forms need distinct local labels during introduction.",
+        "color": "BLUE"
+      }
+    ],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Connect photosynthesis inside the leaf to the need for an opening through its surface.",
+        "whyNow": "Opens with the carbon source for making sugar and establishes the route whose cost the next scene examines.",
+        "keyPoints": [
+          "Photosynthesis uses carbon dioxide inside the leaf.",
+          "A stomatal pore connects outside air with spaces among leaf cells.",
+          "Gas molecules move both ways; ongoing carbon dioxide use supports a net inward movement."
+        ],
+        "visualDescription": "3D: Construct an idealized broad, thin leaf with connected upper and lower surfaces, then inspect a selected lower-surface patch. Use a deliberate enlarged cutaway of that same patch to expose a pair of curved guard cells surrounding an open slit, an air space beneath, and several neighboring leaf cells. The leaf model is schematic, not a species-specific reconstruction; enlarged pore and cell dimensions are not proportional to the whole leaf. Keep the guard cells attached to the surrounding surface. GOLD dots denote carbon dioxide, not all air molecules. First establish their key, then show some dots crossing the pore in both directions, with more inward crossings as dots inside are taken up by leaf cells. Do not show a one-way membrane or an arrow implying every molecule travels inward. A short local label identifies the carbon dioxide used in making sugar; omit detailed photosynthesis chemistry. Preserve the pore geometry and spatial identities for beats 2 and 3. No water symbols yet.",
+        "endsWith": "The selected open stomatal pore connects outside air to the interior space; some GOLD carbon dioxide dots move each way, with more moving inward and being used by leaf cells.",
+        "carry": [
+          "leaf-tissue",
+          "guard-cells",
+          "stomatal-pore",
+          "carbon-dioxide"
+        ],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Opening stomata admits carbon dioxide for photosynthesis; explain to a curious 12-year-old without implying a one-way valve."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-2",
+        "purpose": "Explain why the same opening that admits carbon dioxide also provides an escape route for water vapor.",
+        "whyNow": "Builds directly on the established open pore and introduces the water movement needed to understand the dry-condition tradeoff.",
+        "keyPoints": [
+          "Water evaporates from moist surfaces within the leaf.",
+          "Water vapor can diffuse through the same open pore.",
+          "In drier outside air the overall movement is outward; water loss and carbon uptake share access through the pore."
+        ],
+        "visualDescription": "3D: Continue the same enlarged lower-surface cutaway and unchanged open pore. Retain a few GOLD carbon dioxide dots and introduce BLUE water at moist interior cell surfaces, with a short local key distinguishing BLUE vapor dots from GOLD carbon dioxide. Show several blue dots leaving a moist surface into the interior air, then crossing the open pore. Use sparse, illustrative molecular paths in both directions, with more water crossings outward under the stated drier-outside condition. The interior has a higher illustrative density of water vapor dots than the exterior; no counts are experimental measurements. Stage evaporation before pore crossing so water is not depicted as being produced by the opening. After introducing water paths, show both gases together long enough to inspect their opposite net movements. There is no synchronized one-for-one exchange, collision simulation or one-way gate. The pore itself remains fixed and open.",
+        "endsWith": "The same open pore visibly supports net inward GOLD carbon dioxide movement and net outward BLUE water vapor movement, with moist surfaces supplying the vapor.",
+        "carry": [
+          "leaf-tissue",
+          "guard-cells",
+          "stomatal-pore",
+          "carbon-dioxide",
+          "water"
+        ],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Explain water vapor escaping as stomata open and show the causal tradeoff, not a list of parts."
+          }
+        ],
+        "interactions": []
+      },
+      {
+        "id": "beat-3",
+        "purpose": "Show that reducing the shared opening conserves water while restricting carbon dioxide access.",
+        "whyNow": "Uses both gas pathways from the previous scene to explain the benefit and cost of closing in dry conditions, then concludes the lesson.",
+        "keyPoints": [
+          "Dry conditions can trigger changes in guard-cell water content and shape.",
+          "Narrowing the pore reduces passage for both gases.",
+          "Water conservation comes with restricted carbon dioxide uptake; closure does not eliminate every route of water loss."
+        ],
+        "visualDescription": "3D: Start from the previous open pore and both gas pathways. Use the same idealized guard-cell pair as an articulated deforming biological schematic: anchored cell ends and continuous boundaries remain attached to the surface while their curvature changes, narrowing the gap toward closure. This depicts a change in cell shape associated with water content, not hinged doors or conscious action. Keep the leaf patch, outside dryness and viewing scale fixed during the comparison. After narrowing, show fewer GOLD inward crossings and fewer BLUE outward crossings over comparable illustrative observation intervals; do not tie the two species to equal rates or exact numerical counts. Then show a sparse residual BLUE path through the surrounding leaf surface, labeled 'some water loss remains', to establish that closing stomata does not seal the whole leaf. This residual route is a schematic reminder of other water-loss routes, not a permeability measurement. Finish on the actual narrowed-pore cutaway with modest carbon supply, reduced pore water escape and residual water loss all legible. No formulas, summary cards, controls or decorative model rotation.",
+        "endsWith": "The narrowed pore restricts both gas pathways. A small residual water-loss route across surrounding leaf surface remains visible, supporting the spoken qualification.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "topic",
+            "supports": "Closing in dry conditions protects water but restricts carbon uptake; do not imply conscious decisions or instantaneous elimination of all water loss."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

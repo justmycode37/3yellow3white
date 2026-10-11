@@ -1,0 +1,73 @@
+{
+  "sourceSha256": "52bfcbb8656533ab09d1b5ca1e8a8e811904a3952efa91045dceaa107c2ad3fd",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.4,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        16.666666666666668,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.4,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        16.666666666666668,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 10,
+      "objectIds": [
+        "model-qualification",
+        "illustrative-index-law"
+      ],
+      "problem": "In both aspect ratios, the essential ‘Illustrative dispersion, not measured glass’ qualification occupies roughly 89% of viewport height, inside the reserved bottom 12% playback-control area. This persists through the final hold.",
+      "fix": "Shift the two-line dispersion annotation upward slightly, preserving its spacing, so the qualification lies entirely above the bottom control region."
+    }
+  ]
+}

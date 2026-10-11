@@ -3,10 +3,15 @@
 The backend uses pinned Pi 1.1.0 to write a lesson plan and storyline Markdown in
 one JSON response, reviews it in a separate editorial conversation, then writes animlib scene JavaScript. The host sends only the approved script
 to ElevenLabs, then gives each scene agent its narration timing, the lesson plan,
-and the animlib API reference. Each task gets a separate
-conversation and only a `validate_output` tool. Shell, file access, discovered
-extensions, skills, and local instructions are disabled. Scene validation uses
+and the authoring sections extracted verbatim from the animlib API reference. Each task gets a separate
+conversation with host validation/submission tools and the pinned `pi-web-access`
+extension. Built-in shell/file tools, discovered extensions, skills, and local
+instructions are disabled. Scene validation uses
 the existing QuickJS compiler with memory and execution limits.
+
+Prompt ownership, shared policies, assembly order, validation boundaries, and saved-job
+compatibility are described in [instruction architecture](instruction-architecture.md).
+That map is the maintainer entry point; runtime prompts live in `backend/prompts/`.
 
 The scene and thumbnail runners share the configured login. Pi persists subscription refreshes with file
 locking. The host saves scripts, narration IDs, and validated scene sources per
@@ -16,6 +21,46 @@ export. Videos with an older saved `script.md` resume without a new planning cal
 Each completed narration scene becomes available immediately; scene code generation
 overlaps later speech. Code agents run sequentially with the previous scene’s evaluated
 end-state. Scenes are published progressively with audio, word timings, and captions.
+
+## Web research
+
+`npm ci` installs `pi-web-access` 0.38.0. The backend loads that package explicitly
+for every Pi conversation; no separate CLI installation or extension discovery is
+needed. On models that support adding tools during a conversation, `web_enable`
+activates `web_search`, `fetch_content`, `get_search_content`, and `source_check`.
+Other models receive the research tools immediately. Web access also works in
+validated-reference and submission modes; `submit_output` must still be called
+alone when finishing a task.
+
+Search works without extra API keys through Exa MCP. The extension can also reuse
+the session's supported OpenAI/ChatGPT authentication or use configured search
+providers. Optional provider settings go in `web-search.json` under an explicitly
+set `PI_CODING_AGENT_DIR`; when unset, the extension uses Pi's own default config
+location (`~/.pi/agent`, with legacy/XDG fallbacks), independently of Aha's
+credential-directory default. For a headless backend, keep `workflow` at `none`
+(the package default) to return source-linked results without a curator browser
+or summary model call. Restart the backend after changing extension settings.
+
+Fetched pages and search results are reference material, and research failures
+are returned to the agent for handling. The extension can clone GitHub repositories
+and process local videos; it maintains its own private result cache. Its session
+shutdown hooks run after each conversation, including failures and cancellation,
+to release results and stop pending background fetches.
+
+## Scene generation speed
+
+Set `AGENT_SCENE_OUTPUT_MODE=validated-reference` to let a scene agent finish
+with the ID returned by a successful `validate_output` call. The host retrieves
+that exact source and validates it again. The model can still inspect validation
+results and revise its candidate before finishing; the planning and editorial
+review calls are unchanged. This avoids generating the same scene code again
+in the final response. The default is `text`; set it explicitly to roll back.
+
+The three-topic benchmark measured about 26% less scene-generation time across
+two rounds with Astra/high and unchanged narration, scene plans, and full API
+reference. This is a small empirical comparison, not a guarantee of identical
+generations or universal quality preservation. See [benchmark results](scene-speed-results.md)
+for variants, rejected outputs, saved animations, and limitations.
 
 ## Planning and scene quality
 
@@ -60,7 +105,8 @@ visual holds do not require scripted silence.
 
 `shared/animlib/docs/capabilities.md` is the compact visual-capability brief for
 the top-level storyboard planner and its editorial reviewer. It covers supported
-geometry, motion, math, 3D views, interaction, scene continuity, diagrams assembled
+geometry, sampled 3D surfaces/solids, procedural textures and materials, motion,
+math, 3D views, interaction, scene continuity, diagrams assembled
 from primitives, and current limitations. The host adds it to the system guidance
 on every draft and review, including repairs; the reviewer checks visual feasibility
 before speech synthesis. Scene authors continue to receive the full API reference.
@@ -142,7 +188,68 @@ the agent's validation tool and repair turns. Repairs must preserve established
 facts, IDs, inherited state and measured audio timing. These files contain lesson
 material and source; keep the existing private job-directory permissions.
 
-### Optional rendered review
+### Scene inspection before submission
+
+Scene authors have two nonterminal tools. `inspect_scene` checks up to 24 local
+timestamps for text/LaTeX glyph collisions, paint outside its view, and potentially
+undersized text at 960×540. It can also return unclipped bounds for up to 20 named
+objects, including hidden paint for layout. Default overlap checks skip moving
+text; `includeAnimating` includes it. These are advisory warnings: entrances,
+exits, and intentional overlaps are not automatic validation failures. Reports
+cap warning output at 60 and automatic bounds checks at 200 elements per frame;
+`truncated` indicates incomplete reporting. Expensive inspection runs in a worker
+with a 15-second timeout and cancellation.
+
+`preview_scene` renders up to six PNG frames at requested local times, or samples
+timeline boundaries and transition midpoints. It returns image content directly
+to the author, with timestamps. `focusObjectId` requests a padded crop. The author
+is prompted to inspect, preview, repair concrete defects, and verify a repair;
+limits are four inspection calls and two preview batches per scene-agent run,
+including provider retries. Calls that fail consume that budget. These limits
+bound tool work; use of the tools is prompted, not a new submission requirement.
+
+Both tools accept either complete `output` or a `candidateId` returned by a prior
+check. Sources must pass the existing narration/plan validator first. Successful
+`validate_output` calls now return candidate IDs for scene tasks in text mode too;
+text-mode completion still returns source. Validated-reference completion can
+select candidates from inspection without retransmitting the source. Planning,
+editorial review and thumbnail conversations do not receive these tools.
+
+The host reuses validated compilation, samples the actual inherited frame and
+default controls, and reevaluates time-dependent bindings at each timestamp.
+Generated code executes only in the existing QuickJS sandbox. A warm, serial
+Chromium worker uses animlib's production WebGL2 renderer with SwiftShader;
+only validated scene/frame data enters its isolated browser context. Requests
+from the page are blocked, and no audio is loaded. Batches have no overall
+execution deadline, and browser commands have no time limit. Chromium startup
+retains its 15-second timeout. At most four batches may be active/queued.
+Active cancellation terminates and discards the browser process without waiting
+for a browser response; the next batch launches a replacement. Shutdown also
+terminates the browser. Queued cancellation does not interrupt another batch.
+
+`npm run build` also bundles the trusted browser renderer. Docker installs
+Chromium; the release smoke test renders frames and checks actual colored pixels,
+seeking and cropping under the deployed Compose restrictions. The container uses
+`SCENE_PREVIEW_NO_SANDBOX=1` because its existing dropped capabilities and
+`no-new-privileges` disallow a nested Chromium sandbox. It remains an unprivileged,
+read-only container; `/tmp` has a 512 MiB limit for Chromium's profile/shared data.
+Do not load arbitrary pages or generated JavaScript into this browser.
+
+Locally, install Chromium and set `SCENE_PREVIEW_CHROMIUM` to its executable
+(default `/usr/bin/chromium`). Keep Chromium's sandbox enabled where supported.
+Set `SCENE_PREVIEW=0` to expose only analytical inspection. Missing Chromium or a
+render failure returns a tool error; the author may finish using analytical
+feedback. Private `scene-inspection/SCENE_INDEX-RUN_UUID/` job folders preserve
+inspected sources, reports, preview PNGs, sample times, and elapsed milliseconds.
+Structured logs contain counts/timing, not source or images.
+
+Still samples cannot certify continuous motion, occlusion, control extremes, or
+audio synchronization. Bounds are not a visibility test, and small-text warnings
+are heuristic. These checks do not rewrite existing saved scenes. Quality and
+end-to-end latency gains still require comparing generated lessons; the smoke
+test measures rendering correctness and overhead only.
+
+### Optional rendered review after generation
 
 After capturing 1-5 screenshots or timestamped contact sheets of a scene, run:
 

@@ -16,11 +16,11 @@ as image attachments. Scanned PDFs without selectable text need photos or pasted
 `shared/video/contract.ts` defines the versioned manifest and request types.
 `POST /api/videos` accepts `{title, topic, documents: [{name, text}]}` with an
 `Idempotency-Key` header, returning HTTP 202 and a stable manifest. Reusing the key
-with different input returns 409. JSON source bodies are limited to 1 MB.
+with different input returns 409.
 Alternatively send multipart form data: `request` contains that JSON and repeated
-`files` fields contain the original files. Each file is at most 50 MB, all uploads
-at most 100 MB, and a request contains at most ten source documents/files. Extracted
-source text is limited to 1 MB in total. File hashes are part of idempotency identity.
+`files` fields contain the original files. The app imposes no file-count, file-size,
+total-upload-size, source-text-size, or PDF page-count limits. File hashes are part
+of idempotency identity.
 
 POST and DELETE validate the browser's origin. Behind the production gateway, set
 `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` to the exact public browser
@@ -51,8 +51,10 @@ removes videos deleted by another viewer.
 
 ## Generation and persistence
 
-`VideoService` runs one durable queue in one Bun process. Startup resumes queued
-or generating jobs at their first unpublished scene. `VIDEO_DB_PATH` defaults to
+`VideoService` runs durable jobs concurrently in one Bun process, with no app-level
+cap on active videos. Separate videos and narration jobs progress independently;
+provider rate limits still apply. Startup resumes all queued or generating jobs at
+their first unpublished scene. `VIDEO_DB_PATH` defaults to
 `data/videos.sqlite`; deployment sets it outside release directories. Run only one
 worker against this database. Multiple workers require leases/claims before use.
 Back up the SQLite database using a SQLite-aware backup procedure.
@@ -63,7 +65,7 @@ duration, narration, visual description, word timings, captions, an audio ID and
 completed scripts and scenes separately and reuses the narration service cache. The service compiles and validates scenes with
 `animlib/core` before publication. Narration publishes each completed scene's audio and timing packet atomically to
 disk. Scene generation starts from the first ready packet while later speech continues;
-it does not wait for the combined narration WAV. Code agents run one scene at a time.
+it does not wait for the combined narration WAV. Code agents run one scene at a time per video.
 Interrupted narration for a resumed video is retried automatically using saved chunks;
 a speech request interrupted before its result was saved may be billed again.
 Provider failures persist a terminal failure
@@ -107,7 +109,8 @@ been set; fixture delays are not estimates of real generation performance.
 ## Renderer fallback and verification
 
 WebGL2 preserves scene colors, triangulated text/LaTeX, 2D/3D geometry, lighting,
-transparency, regional cameras and orbit controls. Playback, source recompilation,
+procedural textures, configurable materials (metalness, roughness, highlights,
+and emission), transparency, regional cameras and orbit controls. Playback, source recompilation,
 handoffs, audio clocks and progressive append are shared above the rendering layer.
 A canvas context type is permanent: failed WebGPU surfaces are replaced, with
 controls and resize observation rebound. The React player mounts an imperative
@@ -117,7 +120,7 @@ and audio. Restoration rebuilds GPU resources, redraws, and permits explicit res
 
 `npm test` includes forced fallback/lifetime tests; these do not establish visual
 correctness. To run automated real-browser rendering checks, start
-`npm run dev -- --port 5178 --strictPort`, open
+`npm --workspace animlib run dev -- --port 5178 --strictPort`, open
 `http://localhost:5178/webgl-test.html`, and click **Run browser tests**.
 The page forces WebGPU unavailable locally, compiles real GLSL, reads actual pixels,
 and reports every assertion. Automation can await `window.webglTests` and inspect
@@ -169,3 +172,60 @@ Generation or preparation failures leave the original lesson available.
 The Pi pipeline interprets the request and authors the actual explanation/toy.
 `VIDEO_GENERATOR=simulated` exercises the complete flow with the existing diagnostic
 slider scenes and test tone; it does not interpret the request or generate speech.
+
+## Generation token usage
+
+`VideoManifest.tokenUsage` is optional for compatibility with existing and simulated
+jobs. `inputTokens`, `outputTokens`, and `totalTokens` are cumulative provider-reported
+model usage. Cached input is included once. `estimatedOutputTokens` separately tracks
+provisional output usage. A model request starts its estimate immediately, before response
+headers or visible output arrive, and advances it every 500 ms while the request is active.
+This uses a heuristic of 20 tokens per second, bounded by the model's output limit;
+streamed text, reasoning summaries, and tool arguments also establish a lower bound at
+roughly four characters per token. These are activity-based estimates, not measured hidden
+reasoning tokens. The UI displays the sum in the DynaPuff title font with a small “tokens”
+label below and a visible `~` while estimates remain. Digits roll upward as usage increases
+(downward for confirmed corrections), with immediate updates when reduced motion is requested.
+The counter appears only before the first playable scene and stays hidden during playback
+and later buffering. The tooltip and accessible label also identify estimates.
+Provider-reported usage replaces each response's estimate,
+including hidden reasoning and input; this can adjust the number downward.
+
+Pi generation uses one request-scoped tracker for planning, review, scene, and thumbnail
+calls, including retries. The heartbeat stops on response completion, error, cancellation,
+and session disposal, so queued jobs, validation, and speech synthesis do not invent
+ongoing model activity. Confirmed responses publish immediately. Totals are stored in
+SQLite and sent in authoritative SSE snapshots, including the final success/failure
+snapshot. Reconnects do not add totals again. Interrupted responses retain their
+unconfirmed estimate when usage is unavailable.
+Speech synthesis is excluded because it does not report model token usage.
+
+Below the count, an `≈` symbol and small grey glasses with animated blue water show an
+illustrative water comparison, without a visible caption. Each glass represents 250 mL.
+The reference is [Mistral's July 2025 Le Chat lifecycle study](https://mistral.ai/news/our-contribution-to-a-global-environmental-standard-for-ai/),
+which reports 45 mL per 400-token response. We scale that reference linearly by confirmed
+plus provisional **output** tokens; input/cache tokens are excluded. This extrapolation
+is a visual comparison, not measured water consumption for the generation's model or
+datacenter. The tooltip and accessible label make that limitation explicit. The glasses
+hide together with the count once the first scene is playable, and reduced motion
+disables the sketch/wave/fill animations.
+
+## Subtitle-only videos
+
+Set `narrationMode: "subtitles"` in a video request to bypass speech synthesis.
+The saved script supplies short caption cues with deterministic reading-time
+estimates (2.5 words/second or 15 characters/second, whichever is slower, with
+explicit script pauses retained). These are not provider speech alignments.
+A silent PCM/WAV track retains the existing player clock; no ElevenLabs calls
+are made. Scene validation and visual verification/repair remain enabled.
+
+Subtitle-mode manifests enable captions by default. Captions also work for
+existing narrated videos when the user enables CC. Cues track scene-local times
+through global seeking and streaming scene appends; the canvas reserves a lower
+band so captions do not cover visual content. Existing speech mode is unchanged.
+
+The resumed RNA job keeps its already-published first scene and original cue
+schedule; only that scene's audio bytes were replaced with silence. New scenes
+use the subtitle reading schedule. Original job metadata/audio were backed up
+locally before conversion. Mode changes require explicit job migration; they
+are not an automatic fallback on provider errors.

@@ -1,4 +1,5 @@
-import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { setTimeout as delay } from 'node:timers/promises';
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { alignWords, validateAlignment } from "./alignment.js";
@@ -15,7 +16,19 @@ const PROCESSING_VERSION = "narration-v1.1";
 const validId = /^[a-f0-9]{64}$/;
 export async function atomicWrite(path: string, data: string | Uint8Array) {
   const tmp = `${path}.${randomUUID()}.tmp`;
-  await writeFile(tmp, data, { mode: 0o600 }); await rename(tmp, path);
+  try {
+    await writeFile(tmp, data, { mode: 0o600 });
+    for (let attempt = 0; ; attempt++) {
+      try { await rename(tmp, path); return; }
+      catch (error) {
+        // Windows readers/antivirus may briefly prevent replacement. Never unlink
+        // the destination: readers must always see either the old or new state.
+        const code = (error as NodeJS.ErrnoException).code;
+        if (attempt >= 4 || !['EPERM', 'EACCES', 'EBUSY'].includes(code ?? '')) throw error;
+        await delay(10 * 2 ** attempt);
+      }
+    }
+  } catch (error) { await unlink(tmp).catch(() => {}); throw error; }
 }
 async function json<T>(path: string): Promise<T> { return JSON.parse(await readFile(path, "utf8")); }
 function split(text: string): string[] {
@@ -43,7 +56,7 @@ export class NarrationService {
   readonly available: boolean;
   private initialized?: Promise<void>;
   private mutations: Promise<unknown> = Promise.resolve();
-  private work: Promise<void> = Promise.resolve();
+  private work = new Set<Promise<void>>();
   constructor(options: { root?: string; provider?: SpeechProvider } = {}) {
     this.root = resolve(options.root ?? process.env.NARRATION_DATA_DIR ?? ".narration");
     this.provider = options.provider ?? createElevenLabs(settingsFromEnv());
@@ -120,12 +133,13 @@ export class NarrationService {
   }
   private enqueue(job: NarrationJob, story: Storyline) {
     logEvent('narration.queued', { narrationId: job.id, totalChunks: job.totalChunks });
-    this.work = this.work.then(() => this.run(job, story)).catch(() => {
+    const work = this.run(job, story).catch(() => {
       // run normally persists failure; reaching here means that persistence also failed.
       logEvent('narration.persistence_failed', { narrationId: job.id, code: 'PERSISTENCE' }, 'error');
-    });
+    }).finally(() => { this.work.delete(work); });
+    this.work.add(work);
   }
-  async idle() { await this.mutations; await this.work; }
+  async idle() { await this.mutations; await Promise.all(this.work); }
   async package(owner: string, id: string): Promise<NarrationPackageV1> {
     const job = await this.get(owner, id);
     if (job.status !== "complete") throw new NarrationError("NOT_READY", "Narration is not complete.", 409);

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "verdict": "pass",
+  "summary": "The three-scene lesson earns the positive-only denominator, correctly computes both populations, and preserves the fixed-rate and toy-model qualifications. No material editorial issue found.",
+  "issues": [],
+  "checks": [
+    "Recomputed the supplied cohort: 9/10 = 90% sensitivity, 99/990 = 10% false-positive rate, 9+99 = 108 positives, and 9/108 = 1/12, approximately 8.3%.",
+    "The central inferential bridge is spoken and visual: the same nine true positives are regrouped with the 99 false positives, and narration explicitly distinguishes the denominator 10 from 108.",
+    "Recomputed the comparison population: 90% of 100 = 90 true positives; 10% of 900 = 90 false positives; 90/180 = 50%. For the same population size and fixed rates, increased prevalence increases true positives and decreases false positives.",
+    "The different comparison cohort is explicitly introduced without implying that the original people acquire the condition. Condition colors and white positive-result markings retain separate meanings.",
+    "The sole four-second pause follows an explicit invitation to compare 10% of 990 with nine. Its visual guard withholds the 99 selected grey marks, count, positive total, and posterior until confirmation.",
+    "All three scenes use empty interactions arrays, appropriate to classic mode. Carry, cleanup, source groups, and retained reference fractions agree across neighboring scene plans.",
+    "The narration identifies a hypothetical probability model and keeps the fixed-rate condition in its final summary; it gives no clinical recommendation.",
+    "The final mechanical-results row for this draft reports 379 spoken words, exactly three scenes and four seconds of silence: approximately 183 seconds at 140 words per minute with the stated margin, within the requested roughly three-minute scope. This is an estimate, not measured audio.",
+    "Reviewed the complete narration and plan against the request and supplied review guidance. No external research, rendered frames, generated audio, or validate_output check was performed; the mechanical validity report does not establish visual implementation quality."
+  ]
+}

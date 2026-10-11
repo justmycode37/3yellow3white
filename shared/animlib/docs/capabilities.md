@@ -10,15 +10,62 @@ Keep these instructions in nonspoken planning; they are not narration.
 ## Visual building blocks
 
 - **2D geometry:** circles, rectangles, open or closed paths, lines, arrows,
-  and groups. Curves and plots can be constructed from sampled points. Use these
-  for diagrams, axes, grids, bars, regions, vectors, and correspondences.
+  and groups. Paths support smooth curves through points, precise Bézier curves,
+  SVG path data, and compound outlines with holes. Use these for organic shapes
+  such as leaves, curved diagrams, plots, axes, grids, bars, regions, and vectors.
 - **Text and mathematics:** short vector-rendered labels and mathematical LaTeX,
   including fractions, scripts, and matrices. Named formula parts allow specific
   symbols or terms to move between equations; anchored parts can stay fixed.
   Numeric slots can count between values without shifting surrounding symbols.
-- **3D geometry:** spheres, explicit triangle meshes, round lines and arrows,
-  and grouped objects. Useful for spatial vectors, simple surfaces, and schematic
-  molecules. Labels can face the camera and remain attached to objects.
+- **3D geometry:** shaded spheres, boxes, cylinders, cones, tori, swept tubes,
+  function graphs `z = f(x, y)`, two-parameter surfaces, explicit triangle meshes,
+  round lines and arrows, and groups. Use these for spatial vectors, curved sheets,
+  flower petals, stems, and schematic molecules. Meshes support flat or smooth
+  directional shading; raw meshes remain unlit unless shading is requested.
+  Labels can face the camera and remain attached to objects. Static opaque objects
+  retain GPU geometry during navigation; repeated spheres and matching round bonds
+  and arrows share indexed geometry. Orbit and pan input render once per animation
+  frame. Transparency and morphs still require more per-frame geometry work.
+- **Molecular coordinates:** `s.molecule` batches coordinate-centered display
+  beads into meshes for efficient protein/RNA structures. An offline legacy-PDB
+  importer selects deposited heavy atoms or CA/P residue anchors and preserves
+  provenance. Choose chains and detail to fit scene budgets. Radii, subsampling
+  and envelopes remain schematic. A host-only Gaussian envelope generator can
+  produce smooth native meshes from supplied positions, with explicit density
+  scale, threshold, grid resolution and smoothing. No automatic atomic surfaces, bond inference,
+  folding physics, biological assembly reconstruction or mmCIF parsing.
+- **Imported static models:** registered GLB assets can include named parts,
+  UV-mapped image materials, vertex colors, and image normal maps on both GPU
+  backends. The scene agent publishes/downloads assets through `publish_model`,
+  then references their IDs with `s.model`. Parts can move, rotate, fade, and
+  receive palette tints; assets persist through scene handoffs. No skinning,
+  animation clips, imported topology morphs, or deformation of imported models.
+- **Surface appearance:** spheres and meshes support checker, stripe, noise,
+  marble, and wood patterns using two palette colors. Patterns stay attached under
+  object transforms. Adjustable procedural bump perturbs lighting normals for
+  raised or recessed detail without changing silhouettes. Metalness, roughness, specular highlights, and emissive
+  color/intensity create stylized metal, matte, plastic, and luminous surfaces.
+  These settings can be explored with ordinary controls or retained bindings
+  without rebuilding geometry. Emission does not cast
+  light or create bloom, and metallic reflections do not show other scene objects.
+- **Lighting and contact:** scene ambient and directional lights, with an explicit
+  world-fixed or camera-relative direction. Optional deterministic soft shadows from
+  opaque mesh/sphere fills fall onto a finite horizontal receiving plane. Overlapping
+  casters keep one silhouette's darkness. Transparent objects and labels do not cast;
+  `castShadow: false` excludes an element. There is no self-shadowing or arbitrary
+  mesh receiver. Omitted lighting preserves the original studio default.
+
+- **Explanatory 3D tools:** up to four object-local clipping planes can expose
+  interiors. Optional section contours trace the actual sampled intersection;
+  optional colored caps fill closed nonbranching loops, preserving holes. Open
+  surfaces show contours without invented solid caps. Boundary, crease, and
+  camera-dependent silhouette outlines reveal shape without full wireframes.
+  Scalar values on mesh vertices or sampled surface positions map through 2–16
+  named palette colors on an explicit clamped domain. Colors interpolate across
+  triangles; author a legend when needed. World labels can preserve default
+  glyph depth testing or use whole-label overlay, hiding, or 20% fading based on
+  their anchor's visibility against opaque fills in the same view. These options
+  update with geometry, transforms, seeking, and orbit; screen labels stay fixed.
 - **Views:** a main camera plus clipped rectangular regions with independent
   cameras. Side-by-side views can compare the same construction from different
   angles. Screen-space labels can remain fixed while world geometry moves.
@@ -32,12 +79,23 @@ Objects can move, rotate, scale, change style, fade in or out, and animate toget
 or in sequence, with explicit holds. Groups can move as one object; isolated
 groups let overlapping components fade as one composited object.
 
-Compatible closed outlines (circles, rectangles, closed paths) can morph into
-each other; compatible open outlines (paths, lines, arrows) can also morph.
+Compatible single closed outlines (circles, rectangles, single-contour closed
+paths) can morph into each other; compatible open outlines (paths, lines, arrows)
+can also morph.
+Curved paths with matching segment structures can bend by interpolating their
+control points; corresponding parts such as leaf veins need coordinated morphs.
+Compound paths can morph when their contours and segment structures correspond;
+incompatible compound paths crossfade. The author must preserve contour order
+and meaningful correspondence rather than relying on semantic shape matching.
 Arrow-to-arrow morphs retain arrowheads. Formula morphs require explicit
 one-to-one correspondence between named parts; unmatched parts fade in or out.
 Mesh morphs need corresponding vertices and compatible topology. Other
 incompatible representations crossfade.
+Sampled surfaces, solids, and tubes are ordinary meshes with the same rules;
+changing sample counts, holes, or caps can break correspondence. Shape construction callbacks
+are sampled during compilation. Retained deformations can update the existing
+vertices from absolute scene time and controls while preserving triangle connectivity;
+lighting normals follow the changed shape.
 
 A geometric morph does not establish a mathematical or physical transformation.
 If intermediate states matter, ask for geometry calculated from the underlying
@@ -103,6 +161,12 @@ what the viewer should discover. The current lesson-plan contract permits
 0–2 such controls per scene; no controls is the default. Control changes must
 preserve the measured scene duration.
 
+An ordinary slider can resample a surface or rebuild a solid/tube together with
+its dependent labels, or vary texture/material parameters. Retained bindings can deform fixed-topology meshes and independently update
+material/texture settings. They can respond to scene time and paused controls.
+Changing sample counts, holes, or connectivity still requires reconstruction.
+Keep sampling modest so planned controls remain responsive.
+
 Animlib also supports requested orbit rotation in 3D, independent rotation of
 view regions, draggable objects, spring return, attached labels, and connectors
 that follow object endpoints. These are scene-authored behaviors, not additional
@@ -112,9 +176,10 @@ dragged an object. Custom behaviors require host-registered implementations.
 
 ## Diagrams assembled by scene code
 
-Matrices, coordinate systems, charts, molecules, arrays, graphs, trees, and
-algorithm traces are built from the primitives above; dedicated domain APIs are
-not built into animlib. Suitable requests include:
+Matrices, coordinate systems, charts, chemical bonds, arrays, graphs, trees, and
+algorithm traces are assembled from the primitives above. Molecular coordinate
+display has the limited `s.molecule` helper described above; it does not infer
+chemistry or simulate a molecule. Suitable requests include:
 
 - Show a matrix acting on two basis vectors and a small grid, with the same
   vectors carried into a second view.
@@ -124,6 +189,12 @@ not built into animlib. Suitable requests include:
   and clear the comparison highlight before the next step.
 - Plot a sampled function and vary one parameter with a slider, updating the
   curve and its numeric label together.
+- Show a shaded two-variable height graph, then vary its amplitude with a slider.
+- Build a spatial flower from parametric petals and a swept tube stem, grouping
+  parts that rotate together. Surface maps and tube centerlines must be authored;
+  there is no botanical growth or automatic modeling system.
+- Grow a plant from a stem, curved leaves, and branching roots; group each leaf
+  with its vein at the attachment point and coordinate their bends.
 
 State the exact example values and teaching relation. Do not assume symbolic
 algebra, chemistry simulation, automatic graph layout, or an algorithm simulator.
@@ -131,10 +202,30 @@ Scene code can calculate modest examples with JavaScript and provided math
 helpers; it cannot import packages, fetch data, access the surrounding page, or
 run asynchronous builders.
 
+Hosts can inspect object/group bounds in local, world, camera, or screen space,
+and detect projected glyph overlaps between distinct text/LaTeX elements.
+Inspection is opt-in and does not reposition labels or enforce clearance from
+shapes. Animation inspection samples settled text by default and can miss
+collisions between samples; it is not automatic layout or proof of visual quality.
+
 ## Current boundaries
 
-- No images or video textures, imported 3D models, photorealistic materials,
+- Imported models require self-contained static triangle GLBs with embedded
+  PNG/JPEG images. FBX/OBJ/Blender files need conversion outside animlib. Each GLB
+  is limited to 200,000 vertices/triangles; scenes allow 500,000 imported triangles
+  across instances. Imported materials retain their own colors; palette tints
+  highlight them. These ceilings are not recommended scene sizes.
+- No standalone image/video textures, photorealistic materials,
+  image maps on procedural primitives, displacement, environment maps, self-shadowing, arbitrary mesh shadow receivers, bloom, point/spot lights,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
+- SVG support accepts path geometry, not complete SVG files or their styling.
+  Filled contours must be closed, simple, and nonintersecting; nested contours
+  create holes. Open paths are stroked. Smooth curves through points can overshoot;
+  explicit Bézier controls give more precise boundaries and pointed leaf tips.
+- Curved paths use bounded tessellation, so extreme zoom or very complex shapes
+  can expose approximation limits. Curved outlines do not add general path
+  picking or automatic surface-clipped connectors; those retain their existing
+  supported shapes.
 - Text uses bundled glyphs. Custom fonts, emoji, broad international text
   coverage, full document TeX, and automatic multiline text layout are not
   available. Use short labels and supported mathematical notation; narration
@@ -144,13 +235,26 @@ run asynchronous builders.
   a deliberate exit and entrance.
 - Transparent intersecting surfaces may render incorrectly. Prefer opaque
   geometry or views that do not depend on correct transparency ordering.
+- Surface and solid helpers produce bounded triangle meshes with simple lighting,
+  not physically based materials. Each mesh is limited to 20,000 vertices and
+  20,000 triangles; 32 segments per surface axis is the default. Nonfinite numeric
+  samples leave holes. Closed parameter axes require periodic maps. Tubes have
+  constant radius and authored centerline samples; avoid immediate reversals and
+  self-intersections. Caps close ends but do not resolve intersecting geometry.
 - No branching lesson navigation, infinite scenes, playback-rate controls, or
   built-in video export. Interactive controls vary visuals within the lesson.
 - Target modest explanatory scenes rather than dense particle simulations or
-  huge datasets. There is no large-scene performance guarantee. Compiler
-  ceilings include 2,000 object IDs per builder and 32 view regions; these are
-  hard limits, not recommended scene sizes.
+  huge datasets. There is no large-scene performance guarantee.
+  Section caps require closed nonbranching contours and do not repair
+  self-intersections/nonmanifold meshes. Fine outlines follow finite tessellation.
+  Anchor label modes ignore translucent occluders and do not place labels
+  automatically. Scalar ramps require sufficient surface sampling for detail.
+  Compiler ceilings include 256,000 JavaScript source characters, 2,000 object IDs
+  per builder, 100,000 added geometry points, and 32 view regions, with a default
+  200 ms execution budget and 32 MiB VM memory budget. Molecular batching still
+  consumes mesh/aggregate/source budgets. These are hard limits, not recommended
+  scene sizes.
 
-For implementation details, the scene author receives the full
+For implementation details, the scene author receives the authoring sections of the
 [API reference](reference.md). Maintain this summary alongside changes to that
 reference and the public [scene types](../src/types.ts).

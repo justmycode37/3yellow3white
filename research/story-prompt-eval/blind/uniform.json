@@ -1,0 +1,594 @@
+{
+  "request": {
+    "title": "Pointwise is not uniform",
+    "topic": "Write a roughly 4-minute lesson in exactly 4 scenes for second-year mathematics students who know limits and epsilon notation. Begin with the definitions of pointwise and uniform convergence, then make the quantifier difference meaningful using f_n(x)=x^n on [0,1] and on [0,a] for fixed 0<a<1. Explain why taking n large for each fixed x does not give one n for every x, and why the restricted interval fixes this. A plot may support the argument but must not stand in for it. Include one reachable prediction and one brief pause. Preserve the endpoint x=1 and the distinction between pointwise limit and uniform error.",
+    "videoMode": "classic",
+    "documents": []
+  },
+  "samples": [
+    {
+      "label": "A",
+      "draft": {
+        "schemaVersion": 1,
+        "markdown": "# Pointwise is not uniform\n\n## Beat 1 — Where the cutoff may depend on x\n\nContent needed: State pointwise convergence as ∀x∈D ∀ε>0 ∃N ∀n≥N: |f_n(x)−f(x)|<ε, and uniform convergence as ∀ε>0 ∃N ∀x∈D ∀n≥N: |f_n(x)−f(x)|<ε. N is a positive integer. Emphasize allowed dependence N(x,ε) versus N(ε); keep the same error inequality.\n\nNarration: Pointwise convergence means this: for every point x and every positive tolerance epsilon, there is an integer cutoff N such that, for all n at least N, the distance between f sub n of x and f of x is less than epsilon.\n\nNarration: Uniform convergence means that for every positive tolerance epsilon, there is one cutoff N that works for every x in the domain and every n at least N.\n\nNarration: The error test is identical. What changes is when we must choose the cutoff. Pointwise, we may first inspect x and then choose N. Uniformly, we must choose N before knowing which x will be tested. A collection of successful individual choices need not contain one choice that works everywhere. Let us see exactly where that can fail.\n\n## Beat 2 — Keep the endpoint\n\nContent needed: Introduce f_n(x)=x^n for positive integers n on [0,1]. Show selected curves n=1,2,8,32. Derive the pointwise limit f(x)=0 for 0≤x<1 and f(1)=1. In the limit graph, use an open point at (1,0) and filled point at (1,1). Inspect x=1/2 and x=1 separately. Do not substitute distance to zero for error at x=1.\n\nNarration: Take f sub n of x equal to x to the n, on the closed interval from zero to one. At one half, repeated powers approach zero. The same happens at every fixed x strictly below one: powers of a nonnegative number smaller than one tend to zero. At zero, they are already zero.\n\nNarration: But at one, every power is one. So our pointwise limit is zero everywhere below one, and one at the endpoint. That endpoint belongs to the domain; we cannot quietly remove it.\n\nNarration: Now measure error against this actual limit. Below one, the error is x to the n. At one, the error is zero, because both functions equal one. The difficulty must therefore come from points near the endpoint, rather than the endpoint itself.\n\n## Beat 3 — A moving witness\n\nContent needed: For every positive integer n define x_n=(1/2)^(1/n), strictly below one, so x_n^n=1/2. Use ε=1/4. Withhold the prediction's answer until Reveal. Then demonstrate that any proposed N fails already at n=N and x=x_N. Show uniform error E_n=sup_{x∈[0,1]}|x^n−f(x)|=1; this supremum is not attained. Distinguish the changing witness x_n from a fixed x.\n\nNarration: For any positive n, choose x to be the nth root of one half. This point lies strictly below one, and raising it to the nth power gives one half. Its limit value is zero, so its error is one half.\n\nInvitation (spoken): Predict whether any cutoff can make every error smaller than one quarter. Take a few seconds to use this chosen point.\n\nPause: 5s\n\nReveal (spoken): No cutoff can work. Whatever cutoff N you propose, take n equal to N and choose that corresponding root. The error is still one half, exceeding one quarter.\n\nNarration: The chosen point changes with n, approaching one. This does not contradict pointwise convergence, which keeps x fixed while n grows. In fact, for every n, errors below one approach one as x approaches one. Their supremum is one, although no point attains it. That uniform error never tends to zero.\n\n## Beat 4 — One bound for the whole interval\n\nContent needed: Restrict the same sequence to [0,a] with fixed 0<a<1. Its pointwise limit is now zero everywhere, and E_n=sup_{x∈[0,a]}x^n=a^n→0. Derive 0≤x^n≤a^n and choose N with a^N<ε; for n≥N, a^n≤a^N<ε. Use a=0.9 and ε=1/4 as an optional visible concrete instance: N=14 works since 0.9^14≈0.229. The bound and cutoff may depend on fixed a and ε, but not x. Conclude the quantifier comparison on this construction.\n\nNarration: Now restrict the domain to the interval from zero to a, where a is fixed and strictly less than one. The pointwise limit is zero throughout this interval.\n\nNarration: Every x is at most a, so every error is at most a to the n. This time the supremum is exactly a to the n, attained at a. And that bound tends to zero.\n\nNarration: Given any positive epsilon, choose N so that a to the N is smaller than epsilon. For every n at least N, and every x in our interval, the error is at most a to the n, which is at most a to the N. So one cutoff works everywhere.\n\nNarration: The cutoff may depend on our fixed endpoint a and on epsilon. It does not depend on x. Restricting the interval gives all points a shared distance from one, and therefore a shared error bound. That is the extra requirement hidden in uniform convergence.",
+        "plan": {
+          "audience": "Second-year mathematics students familiar with limits and epsilon notation.",
+          "prerequisites": [
+            "Limits of numerical sequences",
+            "Epsilon notation",
+            "Powers and roots of positive real numbers"
+          ],
+          "learningGoal": "Distinguish the cutoff dependencies in pointwise and uniform convergence, construct a moving witness to nonuniform convergence of x^n on [0,1], and prove uniform convergence on [0,a] for fixed 0<a<1.",
+          "centralQuestion": "Why can a cutoff work for each fixed x without one cutoff working for every x, and how does restricting the interval change this?",
+          "keyInsight": "On [0,1], points depending on n retain error one half for arbitrarily large n, while on [0,a] every error is bounded by the single sequence a^n tending to zero.",
+          "runningExample": "f_n(x)=x^n for integers n≥1, first on [0,1] with limit f(x)=0 for x<1 and f(1)=1, then on [0,a], 0<a<1, with limit zero. Use ε=1/4, witnesses x_n=(1/2)^(1/n), and a=0.9 with N=14 as a numerical illustration only.",
+          "misconceptions": [
+            "Pointwise cutoffs can always be replaced by one common cutoff.",
+            "The pointwise limit of x^n is zero at x=1.",
+            "The function value and convergence error coincide at the endpoint.",
+            "A changing x_n contradicts convergence at each fixed x.",
+            "A supremum must be attained.",
+            "Uniform convergence on each fixed [0,a] supplies one cutoff valid for every a<1."
+          ],
+          "entities": [
+            {
+              "id": "cutoff-definition",
+              "meaning": "The two quantifier orders and common error inequality introduced in beat-1; retain their mathematical meaning when locally recalled in beat-4. The cutoff dependence changes, not the error test.",
+              "color": "WHITE"
+            },
+            {
+              "id": "domain-scaffold",
+              "meaning": "The horizontal x axis, domain, and shared unit scale introduced in beat-2, retained in beat-3 and restricted explicitly from [0,1] to [0,a] in beat-4. Vertical axis represents function values, with error segments measured in the same units.",
+              "color": "GREY"
+            },
+            {
+              "id": "power-curve",
+              "meaning": "The function x^n introduced in beat-2, retained through beat-4. Each curve and selected point must be calculated from the stated n, not geometrically morphed through unrelated curves.",
+              "color": "BLUE"
+            },
+            {
+              "id": "pointwise-limit",
+              "meaning": "The actual pointwise limit introduced in beat-2: zero below one and one at one. Preserve its open/filled endpoint distinction through beat-3; restrict it to zero on [0,a] in beat-4.",
+              "color": "GREEN"
+            },
+            {
+              "id": "error-measure",
+              "meaning": "Distance between the power curve and actual pointwise limit, introduced in beat-2 and retained through beat-4. At x=1 on the original domain the distance is zero. Its supremum is one in beat-3 and a^n on the restricted domain in beat-4.",
+              "color": "YELLOW"
+            },
+            {
+              "id": "moving-witness",
+              "meaning": "The selected point x_n=(1/2)^(1/n) introduced in beat-3, always below one with power value one half and limit value zero. As n changes, its horizontal position changes while its error remains one half; remove before the restricted-domain proof.",
+              "color": "PURPLE"
+            },
+            {
+              "id": "restricted-endpoint",
+              "meaning": "The fixed endpoint a<1 introduced in beat-4, default illustration a=0.9. It stays fixed while n increases; its function value a^n determines the shared error bound.",
+              "color": "TEAL"
+            }
+          ],
+          "scenes": [
+            {
+              "id": "beat-1",
+              "purpose": "Make the quantifier order and permitted cutoff dependencies explicit.",
+              "whyNow": "Opens with the definitions requested by the user and prepares the concrete power-sequence example.",
+              "keyPoints": [
+                "State pointwise quantifiers with x before N.",
+                "State uniform quantifiers with N before x.",
+                "Identify the unchanged inequality and changed cutoff dependence."
+              ],
+              "visualDescription": "2D (because quantifier order and dependence are symbolic relations): On a black stage, introduce the pointwise definition, then the uniform definition, using short readable vector mathematics. Keep |f_n(x)-f(x)|<ε identical in the two statements. Locally emphasize x and N in order and annotate N(x,ε) versus N(ε). Do not suggest swapping quantifiers is an algebraic identity. These definitions are the opening content, not a title-card detour. Estimate roughly one minute of speech; measured audio determines actual duration.",
+              "endsWith": "A settled comparison of the two definitions with the cutoff dependency legible; definition text then exits to prepare the concrete graph.",
+              "carry": [],
+              "cleanup": [
+                "cutoff-definition"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "uniform.request.json",
+                  "location": "topic",
+                  "supports": "Requested opening definitions, audience, and quantifier comparison."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-2",
+              "purpose": "Derive the correct pointwise limit and distinguish value from error at the endpoint.",
+              "whyNow": "Applies the definitions to x^n and supplies the exact limit needed for the subsequent uniform-error argument.",
+              "keyPoints": [
+                "For each fixed x<1, x^n tends to zero.",
+                "At x=1 every value is one.",
+                "Error is x^n below one but zero at one."
+              ],
+              "visualDescription": "2D (because a scalar function and its domain are naturally planar): After the definitions exit, construct a shared coordinate scaffold with both axes spanning zero to one. Plot x^n for n=1,2,8,32 in sequence, calculating each curve from its exponent and retaining only enough previous curves to show the trend without clutter. Inspect x=1/2 with successive powers, then x=1 with constant value one. Derive and label the piecewise limit only after these two arguments. Show an open limit point at (1,0) and a filled point at (1,1); the blue curves all meet the filled endpoint. Introduce yellow vertical error segments joining corresponding graph and limit values below one. At one, explicitly show zero error without creating a spurious segment down to zero. Keep these same axes, functions, and units ready for beat-3. All graph annotations must fit the safe player area in 16:9 and 4:3.",
+              "endsWith": "The n=32 power curve and actual piecewise limit share one scaffold, with the endpoint distinction clear and the error interpretation established. Earlier sample curves and inspection labels have exited.",
+              "carry": [
+                "domain-scaffold",
+                "power-curve",
+                "pointwise-limit",
+                "error-measure"
+              ],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "uniform.request.json",
+                  "location": "topic",
+                  "supports": "Sequence x^n on [0,1], preservation of x=1, and distinction between pointwise limit and uniform error."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-3",
+              "purpose": "Disprove uniform convergence with a point chosen after the proposed exponent or cutoff.",
+              "whyNow": "Uses the established limit and error rule to turn the quantifier comparison into a counterexample, preparing a search for a shared bound.",
+              "keyPoints": [
+                "Construct x_n whose power value and error are one half.",
+                "Invite the one prediction and hold for five seconds.",
+                "For any N, n=N and x_N violate tolerance one quarter.",
+                "Explain the moving witness and supremum one without endpoint confusion."
+              ],
+              "visualDescription": "2D (because the counterexample is a relation between points, errors, and quantifiers on one graph): Continue the existing n=32 curve, limit, and scaffold. Introduce the point x_n=(1/2)^(1/n) and a yellow error segment of height one half, then show the same relation for a larger n using curves and witness coordinates computed from that n. Keep the limit endpoint at one intact. Place the ε=1/4 threshold so comparison with the half-height error is immediate. During the announced five-second pause, hold this evidence without displaying the words 'not uniform' or the quantified refutation. At Reveal, show an arbitrary proposed N paired with n=N and x_N, with the failing inequality. Then make clear that x_n moves while each fixed-point statement holds x constant. Show errors at points increasingly close to one approaching height one; their value at one itself remains zero. Label E_n=sup |x^n-f(x)|=1 and 'not attained' only after this reasoning. Remove the witness and temporary prediction annotations at the end; the error identity remains as the comparison state.",
+              "endsWith": "The original graph, correct limit, and uniform-error value one remain. The moving witness has exited, leaving the near-one obstruction clear for domain restriction.",
+              "carry": [
+                "domain-scaffold",
+                "power-curve",
+                "pointwise-limit",
+                "error-measure"
+              ],
+              "cleanup": [
+                "moving-witness"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "uniform.request.json",
+                  "location": "topic",
+                  "supports": "Explain why pointwise choices do not supply one cutoff; include one reachable prediction and brief pause. The root witness is an original derivation for the supplied sequence."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-4",
+              "purpose": "Prove uniform convergence on a fixed restricted interval using its maximal error.",
+              "whyNow": "Resolves the near-one obstruction from beat-3 and concludes by identifying exactly which cutoff dependency changes.",
+              "keyPoints": [
+                "Fix a<1 and visibly restrict the domain.",
+                "Derive x^n≤a^n and supremum a^n.",
+                "Choose N from a^N<ε and prove the bound for every n≥N and x≤a.",
+                "Conclude that N depends on a and ε but not x."
+              ],
+              "visualDescription": "2D (because the proof compares scalar errors on a restricted interval): Begin from the actual preceding graph and error annotation. Mark fixed a=0.9 on the existing axis, then remove the domain portion beyond a and its now-excluded endpoint while preserving the zero limit on the remaining domain. Exit the old supremum-one annotation before introducing the new bound. Show that the power curve is increasing in x for n≥1, with its largest vertical gap at a; label the same gap a^n and derive 0≤x^n≤a^n. Preserve the horizontal value a while increasing n and calculating both curve and bound together. For the continuing ε=1/4 example, indicate N=14 and 0.9^14≈0.229 only as a concrete illustration; the spoken general proof must remain primary. Reveal the inequality chain x^n≤a^n≤a^N<ε synchronized with the narration, then locally recall the uniform quantifiers and the permitted dependence N(a,ε). No interaction or extra prediction. Finish on the graph supporting the inequality rather than a detached recap card.",
+              "endsWith": "The fixed restricted domain, its zero limit, a power curve below the tolerance, and the shared error bound form a stable final proof picture. The cutoff has no x dependence.",
+              "carry": [],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "uniform.request.json",
+                  "location": "topic",
+                  "supports": "Requested proof on [0,a] for fixed 0<a<1 and explanation of why restriction fixes the failure."
+                }
+              ],
+              "interactions": []
+            }
+          ]
+        }
+      },
+      "measurements": {
+        "valid": false,
+        "error": "beat-1 references unavailable source uniform.request.json. Use an exact supplied filename or request.",
+        "scenes": 4,
+        "words": 555,
+        "wordsPerScene": [
+          129,
+          128,
+          141,
+          157
+        ],
+        "pauseCount": 1,
+        "pauseSeconds": 5,
+        "estimateSecondsAt140": 267,
+        "estimateSecondsRange": [
+          250,
+          299
+        ]
+      }
+    },
+    {
+      "label": "B",
+      "draft": {
+        "schemaVersion": 1,
+        "markdown": "# Pointwise is not uniform\n\n## Beat 1 — Who chooses the threshold?\n\nContent needed: Define pointwise convergence on D as: for every x in D and epsilon>0 there exists N such that all n>=N satisfy |f_n(x)-f(x)|<epsilon. Uniform convergence: for every epsilon>0 there exists N such that for every x in D and every n>=N the inequality holds. Compare N(x,epsilon) with N(epsilon).\n\nNarration: Pointwise convergence means this: for each point x and each positive tolerance epsilon, there is a threshold N beyond which every function value is within epsilon of the limit at that point. The threshold may depend on x.\n\nNarration: Uniform convergence asks for more. For each positive epsilon, one threshold must work at every point, for every index beyond that threshold. We choose N before anyone chooses x.\n\nNarration: Both definitions require all later indices. The difference is whether the threshold can adapt to the point. For x to the power n, how much does that freedom matter? Compare the interval from zero to one with an interval stopping short of one.\n\n## Beat 2 — Find the actual limit\n\nContent needed: For n>=1, f_n(x)=x^n on [0,1]. The pointwise limit is zero for 0<=x<1 and one at x=1. Preserve the open endpoint at (1,0) and filled endpoint at (1,1). Error is x^n below one and zero at one. Illustrate with n=1,2,8,32 and fixed probes x=1/2,9/10,1.\n\nNarration: Fix x strictly between zero and one. Repeated multiplication by that fixed number gives a geometric sequence tending to zero. At zero, every term is already zero. But at one, every power is one. The pointwise limit is zero below one, and one at the endpoint.\n\nNarration: This endpoint matters for the error. Below one, the error is x to the power n. At one, the error is zero: the function and its limit are both one.\n\nNarration: One half settles toward zero quickly; nine tenths more slowly. Each fixed point eventually meets any positive tolerance. But this lets the threshold change with the point. It supplies no threshold for the whole interval.\n\n## Beat 3 — Defeat every threshold\n\nContent needed: Fix epsilon=1/4. For every n>=1 choose x_n=(1/2)^(1/n)<1. Its limit value is zero and its error is 1/2. The witness changes with n. For each n, sup over [0,1] of |f_n-f| equals one, approached below one but never attained; endpoint error remains zero. A sampled plot supports this algebraic argument but cannot prove it.\n\nNarration: Set the tolerance to one quarter. For any index n, choose x to be the nth root of one half. This point is below one, so its limit value is zero. Yet its nth power is one half. The error exceeds our tolerance.\n\nNarration: Whatever threshold you propose, choose an index beyond it and then this point. Your threshold fails. The point moves toward one; we are not claiming that one fixed point fails forever. Uniform convergence must withstand this changing choice.\n\nNarration: At every index, errors approach one as x approaches one from below, while the error at one itself is zero. The supremum error is one, although no point attains it. Every fixed point converges, but the uniform error never shrinks. Our defeating point proves failure; the graph illustrates it.\n\n## Beat 4 — Stop short of one\n\nContent needed: Restrict to [0,a] for fixed 0<a<1; the limit is zero everywhere. For n>=1, x^n preserves order on nonnegative x. Withhold maximum-error location and value until Reveal. Show maximum error a^n, tending to zero. Choose N with a^N<epsilon, then x^n<=a^n<=a^N<epsilon for every x in [0,a] and n>=N. N may depend on fixed a and epsilon, not x.\n\nNarration: Restrict the domain to zero through a, with a fixed below one. The limit is zero throughout. For each positive index, raising nonnegative numbers to that power preserves their order.\n\nInvitation (spoken): Where is the largest error on this shorter interval? Take a moment to predict it.\n\nPause: 5s\n\nReveal (spoken): At a. Every error is at most a to the power n. That bound tends to zero because a is fixed below one. Choose N so that a to the power N is below epsilon. Every later power is smaller, so this N works for every x.\n\nNarration: N may depend on a and epsilon, but not x. Pointwise convergence handles each fixed point separately. Uniform convergence requires one threshold for the entire fixed domain.",
+        "plan": {
+          "audience": "Second-year mathematics students",
+          "prerequisites": [
+            "Limits and epsilon notation",
+            "Geometric sequences with ratio strictly between zero and one",
+            "Powers, roots, and the meaning of a supremum"
+          ],
+          "learningGoal": "Distinguish pointwise and uniform quantifiers, prove x^n is not uniformly convergent on [0,1], and establish uniform convergence on every fixed [0,a] with 0<a<1.",
+          "centralQuestion": "Why does a threshold for each fixed point fail to control every point, and why does a fixed cutoff below one fix this?",
+          "keyInsight": "Every proposed threshold on [0,1] can be defeated by a new point close enough to one; on [0,a], the common error bound a^n tends to zero and controls all points simultaneously.",
+          "runningExample": "f_n(x)=x^n for integer n>=1 on [0,1], then [0,a] for fixed 0<a<1. Illustrative indices 1,2,8,32; fixed probes 1/2,9/10,1; tolerance 1/4; witness x_n=(1/2)^(1/n). A drawing may use a=3/4 while the proof retains general fixed a.",
+          "misconceptions": [
+            "A threshold depending on x automatically works for every x.",
+            "The limit at x=1 is zero.",
+            "Function height at x=1 is an error of one.",
+            "The supremum error must be attained.",
+            "A moving witness contradicts convergence at a fixed x.",
+            "The fixed-a proof also applies when a varies toward one with n."
+          ],
+          "entities": [
+            {
+              "id": "threshold-rule",
+              "meaning": "The quantified common error inequality introduced in beat-1. N(x,epsilon) versus N(epsilon) is the logical distinction. Reintroduced in beat-4 as N(a,epsilon), with a fixed and no x dependence; preserve formula-part meaning.",
+              "color": "WHITE"
+            },
+            {
+              "id": "domain-axis",
+              "meaning": "Unit-coordinate x and y scaffold introduced in beat-2 and retained through beat-4. Restriction removes points above a without silently changing coordinates or scale.",
+              "color": "WHITE"
+            },
+            {
+              "id": "power-curve",
+              "meaning": "The same family f_n(x)=x^n in beats 2–4. Curve, probe coordinates and numerical readouts share integer n; recalculate true curves when n changes. Beat-4 restricts the domain, not the function values.",
+              "color": "BLUE"
+            },
+            {
+              "id": "limit-graph",
+              "meaning": "Pointwise limit introduced in beat-2: zero for x<1 and one at x=1. Preserve open (1,0) and filled (1,1) endpoints through beat-3, without a connecting jump segment. Restriction in beat-4 removes x=1, leaving zero throughout [0,a].",
+              "color": "GREEN"
+            },
+            {
+              "id": "error-measure",
+              "meaning": "Vertical distance |f_n-f| in beats 2–4, not function height where f is nonzero. Zero at x=1, one half at moving witnesses, supremum one on [0,1], and maximum a^n on [0,a]. Update annotations when domain changes.",
+              "color": "YELLOW"
+            },
+            {
+              "id": "fixed-probes",
+              "meaning": "Temporary fixed x probes 1/2,9/10,1 in beat-2; each stays fixed as n changes, then exits before the moving witness.",
+              "color": "GREY"
+            },
+            {
+              "id": "moving-witness",
+              "meaning": "Beat-3 point x_n=(1/2)^(1/n)<1: changes with n while graph height and error remain one half; distinct from the endpoint x=1.",
+              "color": "PURPLE"
+            },
+            {
+              "id": "tolerance",
+              "meaning": "Fixed error tolerance epsilon=1/4 in beat-3, compared with error one half; removed before domain restriction.",
+              "color": "RED"
+            },
+            {
+              "id": "cutoff-a",
+              "meaning": "Fixed endpoint 0<a<1 in beat-4, illustrated at 3/4 if needed. Coordinate stays fixed as n increases; do not identify it as maximum-error location before the prediction reveal.",
+              "color": "TEAL"
+            }
+          ],
+          "scenes": [
+            {
+              "id": "beat-1",
+              "purpose": "Establish exactly how the two definitions differ in threshold dependence.",
+              "whyNow": "The request explicitly begins with definitions; these supply the distinction tested by the following power example.",
+              "keyPoints": [
+                "Pointwise convergence allows N(x,epsilon).",
+                "Uniform convergence chooses N before x on a fixed domain.",
+                "Both require all n>=N."
+              ],
+              "visualDescription": "2D (because logical quantifier order is a planar relation): Begin with the full pointwise definition, then the uniform definition, showing the same absolute-error inequality and all n>=N in both. Associate each N with its allowed inputs. Keep common formula parts stable while emphasizing the changed order of x and N; use deliberate entrances rather than unsupported split/merge formula morphs. Introduce x^n only after the definitions, with no conclusions. Use black background, clean mathematical serif labels, vector formulas and white scaffold within the player-safe area; no decorative framing.",
+              "endsWith": "Both definitions and their threshold dependencies remain legible. The power example is named but unevaluated.",
+              "carry": [
+                "threshold-rule"
+              ],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Definitions first, second-year audience, and the prescribed comparison of x^n on two domains."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-2",
+              "purpose": "Determine the actual pointwise limit and its corresponding error, preserving the endpoint.",
+              "whyNow": "The definitions require a specified limit before uniform error can be tested in beat-3.",
+              "keyPoints": [
+                "Geometric decay at each fixed x<1.",
+                "The endpoint x=1 stays one.",
+                "Error is x^n below one and zero at one.",
+                "Different fixed points can require different thresholds."
+              ],
+              "visualDescription": "2D (because scalar function graphs directly show fixed inputs and value errors): Begin from the preceding definitions; use the common error expression as a bridge, then remove the definitions. Construct axes in unit coordinates on [0,1] by [0,1]. Display exact power curves at n=1,2,8,32, keeping only curves needed for the active comparison. Hold probes at x=1/2,9/10,1 fixed while n changes. Construct the green limit as narration derives it: zero on [0,1), an open circle at (1,0) and a filled point at (1,1), with no joining segment. Yellow error measures distance to this green limit, including zero at x=1 despite its height one. Curve and probes use the same integer n. Preserve these core relationships for the moving-witness proof and later restriction; finite plots are illustrative. Remove temporary fixed probes at the end.",
+              "endsWith": "The current power curve, full pointwise limit, axes and correct error relation remain, including endpoint error zero. Definitions and temporary probes have exited.",
+              "carry": [
+                "domain-axis",
+                "power-curve",
+                "limit-graph",
+                "error-measure"
+              ],
+              "cleanup": [
+                "threshold-rule",
+                "fixed-probes"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "The function x^n on [0,1] and explicit preservation of x=1 and the limit-versus-error distinction."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-3",
+              "purpose": "Prove nonuniform convergence using a point chosen after every proposed threshold.",
+              "whyNow": "Beat-2 identified the pointwise limit and the unproven common threshold; this scene supplies a counterexample before the domain is restricted.",
+              "keyPoints": [
+                "Fix tolerance 1/4.",
+                "For every n, x_n=(1/2)^(1/n) has error 1/2.",
+                "An index beyond any N and its witness defeat uniform convergence.",
+                "The witness changes with n, consistent with pointwise convergence.",
+                "Supremum error is one and is not attained."
+              ],
+              "visualDescription": "2D (because a scalar graph paired with the witness algebra makes the quantifier failure explicit): Preserve the actual preceding axes, curve, limit and error. Introduce epsilon=1/4 and calculate x_n=(1/2)^(1/n) from the same integer n as the blue curve. Its vertical yellow error from zero to one half stays constant while its purple x position moves toward one. Keep it strictly below one and visibly distinct from the endpoint whose error remains zero. Show the witness algebra only as narrated; the universal choice of x_n proves the claim, not the samples. After the threshold argument, show that x^n approaches one from below as x approaches one for each fixed n, then introduce sup error=1 with an unattained annotation. Never label a sampled maximum as one. Remove witness and tolerance when their explanation finishes; keep the original domain for the next restriction.",
+              "endsWith": "The same core graph remains with supremum error one and endpoint error zero clearly distinguished. Temporary witness and tolerance have exited.",
+              "carry": [
+                "domain-axis",
+                "power-curve",
+                "limit-graph",
+                "error-measure"
+              ],
+              "cleanup": [
+                "moving-witness",
+                "tolerance"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Explain why point-dependent thresholds do not give one threshold for all points, with proof beyond a plot."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-4",
+              "purpose": "Derive one uniform bound on the fixed restricted domain and conclude the comparison.",
+              "whyNow": "The preceding failure occurs arbitrarily close to one; a fixed cutoff supplies a bound shared by all remaining points. This final scene answers the opening question.",
+              "keyPoints": [
+                "Fix 0<a<1 and restrict the limit to zero on [0,a].",
+                "Use order preservation to predict the maximum-error location.",
+                "After the sole pause, reveal maximum error a^n.",
+                "Choose N with a^N<epsilon; x^n<=a^n<=a^N for all x<=a and n>=N.",
+                "The threshold depends on the fixed domain and epsilon, not x."
+              ],
+              "visualDescription": "2D (because the uniform estimate is an order bound on a one-dimensional domain): Continue from the actual previous graph. Remove the old supremum annotation before marking a fixed cutoff a, optionally drawn at 3/4 but retaining general 0<a<1. Remove domain and graph portions above a, including x=1, without changing retained coordinates or values. The limit remains zero. Establish order preservation, then hold the graph during the announced five-second prediction pause without highlighting a as the maximum or showing a^n. At Reveal mark the error at a and display 0<=|f_n(x)|=x^n<=a^n. Hold a fixed as integer n increases, deriving graph and bound from the same values. Show a^N<epsilon, then x^n<=a^n<=a^N for n>=N, making the single threshold explicit. Reintroduce the compact threshold-rule with N(a,epsilon) independent of x. Conclude on the actual bound and restricted graph, without a decorative recap card. Estimated total scope is about four minutes; measured narration determines timing.",
+              "endsWith": "The restricted graph and zero limit remain with maximum error at fixed a, the complete common-bound inequality, and a threshold independent of x.",
+              "carry": [],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Fixed 0<a<1, exactly four scenes, roughly four minutes, one reachable prediction and one brief pause."
+                }
+              ],
+              "interactions": []
+            }
+          ]
+        }
+      },
+      "measurements": {
+        "valid": true,
+        "scenes": 4,
+        "words": 470,
+        "wordsPerScene": [
+          110,
+          111,
+          130,
+          119
+        ],
+        "pauseCount": 1,
+        "pauseSeconds": 5,
+        "estimateSecondsAt140": 227,
+        "estimateSecondsRange": [
+          212,
+          254
+        ]
+      }
+    },
+    {
+      "label": "C",
+      "draft": {
+        "schemaVersion": 1,
+        "markdown": "# Pointwise is not uniform\n\n## Beat 1 — Who chooses the threshold?\n\nContent needed: Begin with the two definitions on a domain D: pointwise, for every x in D and every epsilon > 0, there exists N such that all n >= N satisfy |f_n(x)-f(x)| < epsilon; uniform, for every epsilon > 0, there exists N such that every x in D and every n >= N satisfy the same inequality. Mark N=N(x,epsilon) versus N=N(epsilon). Use identical error notation and distinguish the order of the quantifiers.\n\nNarration: Pointwise convergence means this: for every point x and every positive tolerance epsilon, there is a threshold N after which the difference between f n of x and f of x is smaller than epsilon. The threshold may depend on the point as well as the tolerance.\n\nNarration: Uniform convergence changes the order. For every positive epsilon, there is one threshold N that works for every point x, for all indices beyond that threshold. We choose the tolerance, then the threshold, before knowing which point will be tested. Both definitions demand that every later index works. The difference is whether different points can need different thresholds.\n\n## Beat 2 — Find the limit, including the endpoint\n\nContent needed: On D=[0,1], f_n(x)=x^n for integer n>=1. Graph selected powers n=1,2,8,32 with fixed axes, then retain one current curve. Pointwise limit f(x)=0 for 0<=x<1 and f(1)=1. The limit graph has an open marker at (1,0) and filled marker at (1,1). Error e_n(x)=|f_n(x)-f(x)| is x^n below 1 but is 0 at 1. Introduce error only after establishing the limit.\n\nNarration: Consider x to the power n on the closed interval from zero to one. At any fixed point strictly between zero and one, repeated multiplication by that same number drives the value to zero. At zero, every value is already zero. At one, however, every value is one.\n\nNarration: So the pointwise limit is zero below one, and one at the endpoint. Keep that endpoint: we are not comparing our functions with the zero function everywhere. Below one, the error is x to the power n. At one, the error is zero, because the function and its limit both equal one. As n grows, the graph drops near each fixed interior point. Does that give a common threshold?\n\n## Beat 3 — Let the test point move\n\nContent needed: Initially show the current power curve and established limit only. Pose the prediction for epsilon=1/4 without a witness, half-height guide, answer label, or highlighted near-endpoint region during the pause. At Reveal introduce x_n=2^(-1/n), with 0<x_n<1 and x_n^n=1/2. For increasing n, calculate the witness and curve from the same exponent; the witness approaches 1 from below while its error remains 1/2. Show e_n(1)=0 separately. State sup_{x in [0,1]} e_n(x)=1, not attained, only after the witness argument.\n\nInvitation (spoken): Set the tolerance to one quarter. Could some index make the error smaller than this at every point? Take a few seconds to decide, remembering that the test point can depend on the index.\n\nPause: 5s\n\nReveal (spoken): No. For any positive index n, choose x to be the nth root of one half. This point lies strictly below one, so its limiting value is zero. But its nth power is exactly one half. Its error therefore exceeds one quarter, however large n is.\n\nNarration: These are different test points, moving toward one. Pointwise convergence holds each point fixed; uniform convergence must also withstand this moving choice. In fact, for each n, errors approach one as x approaches one from below. Their supremum is one, although the error at one itself is zero.\n\n## Beat 4 — A boundary away from one\n\nContent needed: Restrict the same family to [0,a], with fixed 0<a<1. Mark the excluded interval (a,1] before removing it from the active domain. Use a=0.8 only as an illustrative drawing; label the argument for general fixed a. The restricted pointwise limit is identically zero. For every x in [0,a], 0<=x^n<=a^n, so sup_{x in [0,a]}|f_n(x)-0|=a^n -> 0, attained at x=a. For any epsilon>0 choose N with a^N<epsilon; all n>=N have x^n<=a^n<=a^N<epsilon. Threshold depends on a and epsilon, not x.\n\nNarration: Now restrict the domain to zero through a, where a is fixed and strictly less than one. The pointwise limit is zero throughout this smaller interval. Every point x is at most a, so its nth power is at most a to the power n. That upper bound is also attained at a: it is the largest error on the whole interval.\n\nNarration: Because a is fixed below one, its powers tend to zero. Choose a threshold for which a to that power is below epsilon. Every later power is smaller still, and every point's error is bounded by it. This threshold depends on a and epsilon, but not on x. That proves uniform convergence. The restriction supplies a single shrinking error bound; pointwise convergence on the original interval supplied only a separate promise for each fixed point.",
+        "plan": {
+          "audience": "Second-year mathematics students who know limits and epsilon notation",
+          "prerequisites": [
+            "Limits of real sequences",
+            "Epsilon notation",
+            "Powers of numbers between zero and one",
+            "Basic quantifier notation"
+          ],
+          "learningGoal": "Distinguish pointwise and uniform quantifiers, prove that x^n converges pointwise but not uniformly on [0,1], and prove uniform convergence on every fixed [0,a] with 0<a<1.",
+          "centralQuestion": "Why does convergence at every fixed point fail to provide a common threshold on [0,1], and why does a fixed boundary a<1 provide one?",
+          "keyInsight": "Below one each fixed point has vanishing error, but the moving points x_n=2^(-1/n) retain error 1/2 at every index; on [0,a] all pointwise errors are bounded by the same vanishing quantity a^n.",
+          "runningExample": "The family f_n(x)=x^n, n>=1, first on [0,1], then restricted to [0,a] for fixed 0<a<1. The full-domain limit is 0 below 1 and 1 at 1. Use epsilon=1/4 and witness x_n=2^(-1/n). The final drawing may use a=0.8, with the proof explicitly for arbitrary fixed a.",
+          "misconceptions": [
+            "The pointwise limit is zero at x=1",
+            "A large threshold at each point automatically gives one threshold for every point",
+            "A moving counterexample point contradicts pointwise convergence",
+            "The supremum error must occur at x=1 or must be attained",
+            "A visual impression of flattening proves uniform convergence",
+            "The threshold on [0,a] must be independent of a"
+          ],
+          "entities": [
+            {
+              "id": "quantifier-definitions",
+              "meaning": "The two definitions in beat-1, with identical error conditions but pointwise N(x,epsilon) and uniform N(epsilon). Exit before the running example.",
+              "color": "WHITE"
+            },
+            {
+              "id": "domain-axes",
+              "meaning": "Fixed horizontal x and vertical function-value scales introduced in beat-2 and retained through beat-4. The active domain begins as [0,1]; beat-4 deliberately restricts it to [0,a] without changing scale.",
+              "color": "WHITE"
+            },
+            {
+              "id": "power-family",
+              "meaning": "The graph of x^n, BLUE, introduced in beat-2 and calculated for actual integer n in beat-3. In beat-4 the same family is restricted to [0,a]. Curve, witness and numerical readouts always use the same exponent.",
+              "color": "BLUE"
+            },
+            {
+              "id": "pointwise-limit",
+              "meaning": "GREEN target limit, introduced in beat-2: zero for x<1 and one at x=1, with explicit open/closed endpoint markers. Preserved through beat-3; restriction in beat-4 removes the excluded endpoint and leaves zero throughout [0,a].",
+              "color": "GREEN"
+            },
+            {
+              "id": "uniform-error",
+              "meaning": "GOLD vertical error comparison and associated error expressions. Introduced only after the limit in beat-2, distinguishes zero endpoint error from positive errors below one in beat-3, then displays the maximum a^n in beat-4. Error is always distance from the applicable pointwise limit.",
+              "color": "GOLD"
+            },
+            {
+              "id": "moving-witness",
+              "meaning": "YELLOW point x_n=2^(-1/n) and its corresponding point on the power graph, introduced only at beat-3 Reveal. The point approaches one from below while its height and error stay 1/2. Removed before the restricted-domain argument.",
+              "color": "YELLOW"
+            },
+            {
+              "id": "restricted-boundary",
+              "meaning": "TEAL boundary x=a in beat-4; a is fixed during the argument, illustratively 0.8, with all active x bounded by a.",
+              "color": "TEAL"
+            }
+          ],
+          "scenes": [
+            {
+              "id": "beat-1",
+              "purpose": "Define both forms of convergence and make the dependency of N explicit.",
+              "whyNow": "Opens with the requested definitions and prepares the common-threshold question tested by x^n.",
+              "keyPoints": [
+                "Pointwise: every x and epsilon may have their own N",
+                "Uniform: choose N for epsilon before x is specified",
+                "Both conditions require all n>=N"
+              ],
+              "visualDescription": "2D (because quantifier dependencies are logical relations): On a black background show the two exact definitions with a shared white error inequality. Reveal pointwise first and uniform second in speech order. Group each quantifier with its variable and compare the position of 'for every x' relative to 'there exists N'; display N(x,epsilon) and N(epsilon) near their own definitions. Keep the all-later-n clause present in both. No decorative graph is needed. Exit the definitions after the final spoken comparison.",
+              "endsWith": "Definitions have exited after being compared; no graph or future answer has appeared.",
+              "carry": [],
+              "cleanup": [
+                "quantifier-definitions"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Begin with pointwise and uniform definitions for students familiar with limits and epsilon notation"
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-2",
+              "purpose": "Establish the correct pointwise limit and define the error relative to it.",
+              "whyNow": "Applies the definitions just introduced to the requested family and prepares a valid uniform-error test.",
+              "keyPoints": [
+                "Fixed x<1 gives x^n -> 0",
+                "x=1 gives 1 for every n",
+                "The limit is discontinuous at 1",
+                "Error equals x^n below 1 but zero at 1"
+              ],
+              "visualDescription": "2D (because graphs compare two scalar quantities): Introduce fixed white axes with x from 0 to 1 and values from 0 to 1. Plot calculated BLUE curves for n=1,2,8,32 sequentially, keeping only the active curve after each comparison. A fixed interior sample such as x=1/2 can support the repeated-multiplication reasoning; remove its temporary annotation when done. Establish the GREEN zero limit below 1 with an open endpoint at (1,0), and filled GREEN point at (1,1). Explain marker meaning through the simultaneous endpoint narration. After the limit is established, use GOLD vertical distance at an interior point and e_n(1)=0 to distinguish function height from error. End with the n=32 curve, the complete limit and a concise error definition. Preserve scales, endpoint identities and independent curve/limit/error roles for beat-3.",
+              "endsWith": "The active BLUE x^32 curve and GREEN piecewise limit share fixed axes; the GOLD error definition distinguishes x<1 from x=1. No moving witness or uniform conclusion is visible.",
+              "carry": [
+                "domain-axes",
+                "power-family",
+                "pointwise-limit",
+                "uniform-error"
+              ],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Use x^n on [0,1] and preserve x=1 and the distinction between pointwise limit and uniform error"
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-3",
+              "purpose": "Disprove uniform convergence with an explicit point for every index, while preserving pointwise convergence.",
+              "whyNow": "The viewer knows the target limit and error, so can attempt the common-threshold prediction before seeing the moving witness.",
+              "keyPoints": [
+                "Predict whether epsilon=1/4 has a common threshold",
+                "For each n, x_n=2^(-1/n)<1 gives error 1/2",
+                "Changing x with n is allowed when challenging uniformity",
+                "The full-domain supremum error is 1 and is not attained"
+              ],
+              "visualDescription": "2D (because the argument concerns a scalar error over a scalar domain): Begin from the exact beat-2 end state. Show epsilon=1/4 as the test tolerance but keep the witness, half-height guide, answer, and near-endpoint emphasis absent throughout the five-second pause. At Reveal introduce the YELLOW moving-witness point and formula x_n=2^(-1/n), identifying its GREEN target value as zero. Show the algebra (2^(-1/n))^n=1/2 and a GOLD error segment of height 1/2. Calculate later curves and witnesses for n=32,64,128 from the same exponent: witness x changes and approaches 1, while its height stays 1/2. Preserve the filled limit point at (1,1) and zero endpoint error. After the contradiction is spoken, support the supremum claim with a fixed-n approach x -> 1 from below and e_n(x) -> 1, contrasted with e_n(1)=0; clearly label sup=1 as not attained. The witness proof, not the plot, establishes failure. Remove witness and its temporary guides before the next scene.",
+              "endsWith": "Fixed axes, active power curve, full GREEN limit, and GOLD supremum error statement remain. Moving-witness marks and guides have exited, preserving the original domain for its explicit restriction next.",
+              "carry": [
+                "domain-axes",
+                "power-family",
+                "pointwise-limit",
+                "uniform-error"
+              ],
+              "cleanup": [
+                "moving-witness"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Explain why point-dependent large n does not yield one threshold for every x; include one reachable prediction and one brief pause"
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-4",
+              "purpose": "Prove uniform convergence on [0,a] by a single vanishing bound on every error.",
+              "whyNow": "Responds directly to the near-one obstruction by restricting the domain; concludes with a complete uniform estimate.",
+              "keyPoints": [
+                "Fix a<1 and restrict the domain",
+                "The restricted pointwise limit is zero everywhere",
+                "Every error is at most a^n, attained at a",
+                "a^n -> 0 gives one N for every x and every later n"
+              ],
+              "visualDescription": "2D (because an ordered interval and a scalar upper bound are the mathematical evidence): Start from beat-3's actual graph. Introduce TEAL x=a, using a=0.8 for a representative drawing but keep all formulas general. Mark (a,1] as excluded before removing that curve section and the excluded GREEN endpoint; preserve the zero limit and unchanged axes on the retained domain. Clear the previous supremum statement before replacing it. After the restriction is explicit, choose an illustrative current exponent such as n=4 so the maximum height is readable, then show n=8,16 with a fixed a. State this deliberate exponent change through the visible n readout; it is a comparison of family members, not a continuation of monotone time. GOLD vertical error at x=a establishes the exact maximum a^n. Display 0<=x^n<=a^n for all 0<=x<=a, then the full bound x^n<=a^n<=a^N<epsilon for n>=N. Match every height and readout to the same a,n. The shrinking maximum and inequality provide the common threshold; no control or extra pause is needed.",
+              "endsWith": "The restricted BLUE graph, GREEN zero limit, fixed TEAL boundary a and GOLD bound x^n<=a^n<=a^N<epsilon for n>=N remain as the concluding proof. N depends on a and epsilon, not x.",
+              "carry": [],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Explain why [0,a] with fixed 0<a<1 restores uniform convergence, with a plot supporting rather than replacing proof"
+                }
+              ],
+              "interactions": []
+            }
+          ]
+        }
+      },
+      "measurements": {
+        "valid": true,
+        "scenes": 4,
+        "words": 487,
+        "wordsPerScene": [
+          105,
+          117,
+          128,
+          137
+        ],
+        "pauseCount": 1,
+        "pauseSeconds": 5,
+        "estimateSecondsAt140": 235,
+        "estimateSecondsRange": [
+          220,
+          263
+        ]
+      }
+    }
+  ]
+}

@@ -4,27 +4,27 @@ The narration stage normalizes AI-written Markdown, synthesizes the requested Al
 
 ## Give the storyline writer its instructions
 
-`backend/prompts/guidance.md` contains the explanation guidance and the production Markdown contract in section 16. `buildStorylineMessages(material)` from `backend/src/storyline-prompt.ts` loads this file into a system message and places the source material in a separate user message. Pass those messages to the future storyline writer, then pass its Markdown response to `NarrationService.submit(owner, markdown)`. Release packaging includes the prompt, and the smoke check verifies it is present.
+`backend/prompts/guidance.md` owns explanation guidance and the Markdown **Output contract**. `buildStorylineMessages(material)` loads it with the shared viewing-mode policy and animation capabilities, keeping source material in a separate user message. The production lesson author returns a structured plan and Markdown script; a separate editorial review must pass before the host calls `NarrationService.submit(owner, markdown)`. See [instruction architecture](instruction-architecture.md) for prompt ownership and precedence. Release smoke checks verify that the prompts ship.
 
 Preferred output:
 
 ```md
-# A lesson title
+# Guessing a hidden card
 
-## Beat 1 — A question
+## Beat 1 — Narrow the possibilities
 
-Content needed: The facts and running example available to the viewer.
+Content needed: Show eight cards, split them into two equal groups, and retain the four candidates consistent with the answer. During the pause, show only those four; reveal the remaining two with the confirmation.
 
 Narration:
-These are the exact words to read aloud.
+Imagine guessing a hidden card from eight cards. A yes-or-no question divides them into two equal groups. Its answer leaves four possible cards.
 
 Invitation (spoken):
-What do you think happens next?
+How many remain if our next question divides those four equally? Take a moment to work it out.
 
 Pause: 5s
 
 Reveal (spoken):
-If you guessed this result, you are right.
+Two remain. The answer rules out half because we split the candidates into two equal groups.
 ```
 
 `Hint (spoken):` and `Credit (spoken):` are also supported. Formatting is normalized through the Markdown syntax tree, with GFM table support; the parser does not ask another model to rewrite the script. Common variations are accepted:
@@ -61,7 +61,7 @@ From the repository root, install dependencies with `npm ci`, copy `backend/.env
 
 Never use `VITE_` for credentials. `.env` files and generated audio are ignored by Git. The checked-in example contains no API key.
 
-Narration uses stability `0.45` and style exaggeration `0.2` for a more expressive delivery, with similarity `0.75`, speaker boost enabled, and normal speed. ElevenLabs documents that [lower stability broadens emotional range and style exaggeration amplifies the speaker's delivery](https://elevenlabs.io/docs/api-reference/voices/settings/update). The production workflow pins the same Alexander voice. Restart the backend after changing its environment; newly generated narration uses the new settings, while existing video audio keeps its original voice.
+Narration keeps Alexander and uses stability `0.15`, style exaggeration `0.9`, and speed `1.12` for a highly animated, enthusiastic delivery, with similarity `0.75` and speaker boost enabled. The storyline guidance also asks for warm, upbeat wording, lively questions, varied sentence lengths, and occasional exclamation marks at meaningful discoveries, while preserving clear explanations and respecting explicit tone requests. Delivery directions and emotion tags remain excluded from spoken text. ElevenLabs documents that [lower stability broadens emotional range, style exaggeration amplifies the speaker's delivery, and higher speed increases the pace](https://elevenlabs.io/docs/api-reference/voices/settings/update); its [speech guidance](https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices) also recommends phrasing and context to guide emotion. The production workflow pins the same Alexander voice. Restart or redeploy the backend after changing these settings; newly generated narration uses them, while existing video audio keeps its original delivery.
 
 Generate the smoke sample before starting the backend worker:
 
@@ -77,7 +77,7 @@ node_modules/.bin/bun --env-file=backend/.env.local backend/src/index.ts
 npm run dev
 ```
 
-Open `http://localhost:5173/?narration=JOB_ID`. Press Play to grant browser audio permission. The transcript highlights the current word and the marker moves at selected word starts; seeking and pauses use animlib's single Web Audio clock. A WebGPU-capable browser is required. For alternative ports, set `PORT` on the backend and `NARRATION_API_TARGET=http://127.0.0.1:PORT` for the demo server.
+Open `http://localhost:5173/?narration=JOB_ID`. Press Play to grant browser audio permission. The transcript highlights the current word and the marker moves at selected word starts; seeking and pauses use animlib's single Web Audio clock. Rendering prefers WebGPU and automatically falls back to WebGL2 when WebGPU is unavailable. For alternative ports, set `PORT` on the backend and `NARRATION_API_TARGET=http://127.0.0.1:PORT` for the demo server.
 
 Run only one writer process per data directory. Do not run the direct CLI while a backend using that directory is active; use the HTTP API instead. Stop the backend before using the CLI to resume an interrupted job.
 
@@ -114,17 +114,17 @@ All utterance, sentence, word, and pause timestamps are **local to their scene**
 
 The provider's normalized text supplies spoken word boundaries, including expanded numbers. Original character alignment is retained separately; original and normalized words are not assumed to map one-to-one. Provider timestamps can round up to one millisecond beyond the PCM boundary; canonical word times are bounded to the audio length while raw alignment is preserved. Larger mismatches fail. Timing precision is not a promise of perfect acoustic alignment.
 
-Audio uses signed 16-bit mono PCM at 24 kHz wrapped in WAV. Default voice settings are stability 0.6, similarity 0.75, style 0, speaker boost enabled, and speed 1. Adjacent text is supplied for vocal continuity. An animation selects its assigned audio asset at local time zero; visuals may finish early and hold, but cannot run past the narration duration. Animlib owns playback, seeking, pause/resume, and mute synchronization.
+Audio uses signed 16-bit mono PCM at 24 kHz wrapped in WAV. Default voice settings are stability 0.15, similarity 0.75, style 0.9, speaker boost enabled, and speed 1.12. Adjacent text is supplied for vocal continuity. An animation selects its assigned audio asset at local time zero; visuals may finish early and hold, but cannot run past the narration duration. Animlib owns playback, seeking, pause/resume, and mute synchronization.
 
 ## Persistence, failures, and deployment
 
-The initial worker is serial and in-process. Job metadata, complete audio/alignment chunks, source Markdown, scene WAVs, the combined WAV, and the handoff package are written atomically beneath `NARRATION_DATA_DIR`. Identical requests reuse their owner-scoped content hash. Context, settings, and processing version are included in chunk identity. Regenerated or changed speech requires a new package; never combine new audio with old timings.
+The worker runs jobs concurrently in-process, with sequential chunks within each job. Job creation and retry mutations remain serialized to preserve content-hash deduplication. Job metadata, complete audio/alignment chunks, source Markdown, scene WAVs, the combined WAV, and the handoff package are written atomically beneath `NARRATION_DATA_DIR`. Identical requests reuse their owner-scoped content hash. Context, settings, and processing version are included in chunk identity. Regenerated or changed speech requires a new package; never combine new audio with old timings.
 
 After a restart, queued/running jobs become `interrupted`; an explicit retry reuses saved chunks. Resuming an unfinished video automatically retries its interrupted narration. Completed scene audio and timings are available to the video generator before the full narration package is complete. Reposting identical failed input only returns its current state. Explicit retries can repeat the last request if the provider completed it but the server never received/saved it, so it may be billed twice. Network timeouts are not retried automatically. Only explicit HTTP 429/503 rejection gets bounded retries; auth, quota, voice and invalid-alignment errors are surfaced separately. Logs/public errors never include the key or provider response body.
 
 Production runs Bun in the Docker Compose app container and reads `/etc/3yellow3white/environment`. Create a persistent directory owned by `deploy`, such as `/var/lib/3yellow3white/narration`, outside the immutable release directories. Set the key, pinned voice, data directory, and public origin there. No external queue/database is required. Artifacts are retained until explicitly removed by an operator; monitor disk use. Horizontal workers and automatic retention are not part of this version.
 
-The existing storyline and scene AI services are not yet implemented on main. This change defines their boundary, makes the guidance loadable, and supplies executable validation/demo integration without replacing the production mock creation flow.
+The storyline and scene services use the Pi agent pipeline described in [agent setup](agents.md). Narration packets feed scene generation and progressive playback through the boundaries above; [video delivery](video-delivery.md) describes the integrated production flow.
 
 ## Verification
 

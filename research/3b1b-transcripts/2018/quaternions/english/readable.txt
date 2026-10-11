@@ -1,0 +1,188 @@
+[00:00–00:17] What you're looking at right now is something called quaternion multiplication, or rather you're looking at a certain representation of a specific motion happening on a four-dimensional sphere being represented in our three-dimensional space, one which you'll understand by the end of this video.
+[00:21–00:26] Quaternions are an absolutely fascinating and often underappreciated number system from math.
+[00:27–00:34] Just as complex numbers are a two-dimensional extension of the real numbers, quaternions are a four-dimensional extension of complex numbers.
+[00:35–00:43] But they're not just playful mathematical shenanigans, they have a surprisingly pragmatic utility for describing rotation in three dimensions, and even for quantum mechanics.
+[00:45–00:47] The story of their discovery is also quite famous in math.
+[00:48–00:55] The Irish mathematician William Rowan Hamilton spent much of his life seeking a three-dimensional number system, analogous to the complex numbers.
+[00:55–01:02] And as the story goes, his son would ask him every morning whether or not he had figured out how to divide triples, and he would always say no, not yet.
+[01:03–01:23] But on October 16, 1843, while crossing the Broom Bridge in Dublin, he realized, with a supposed flash of insight, that what he needed was not to add a single dimension to the complex numbers, but to add two more imaginary dimensions, three imaginary dimensions describing space and the real numbers, sitting perpendicular to that in some kind of fourth dimension.
+[01:23–01:31] He carved the crucial equation describing these three imaginary units into the bridge, which today bears a plaque in his honor showing that equation.
+[01:32–01:42] Now you have to understand, our modern notion of vectors with their dot product and the cross product and things like that didn't really exist in Hamilton's time, at least not in a standardized form.
+[01:42–01:54] So after his discovery, he pushed hard for quaternions to be the primary language with which we teach students to describe three-dimensional space, even forming an official quaternion society to proselytize his discovery.
+[01:55–02:10] Unfortunately, this was balanced with mathematicians on the other side of the fence, who believed that the confusing notion of quaternion multiplication was not necessary for describing three dimensions, resulting in some truly hilarious old-timey trash talk legitimately calling them evil.
+[02:10–02:25] It's even believed that the Mad Hatter scene from Alice in Wonderland, whose author you may know was an Oxford mathematician, was written in reference to quaternions, that the chaotic table placement changes were mocking their multiplication, and that certain quotes were referencing their non-commutative nature.
+[02:26–02:36] Fast forward about a century, and the computing industry gave quaternions a resurgence among programmers who work with graphics and robotics and anything involving orientation in 3D space.
+[02:36–02:48] And this is because they give an elegant way to describe and compute 3D rotations, which is computationally more efficient than other methods, and which also avoids a lot of the numerical errors that arise in these other methods.
+[02:49–02:54] The 20th century also brought quaternions some more love from a completely different direction, quantum mechanics.
+[02:55–03:06] The special actions that quaternions describe in four dimensions are actually quite relevant to the way that two-state systems like spin of an electron or the polarization of a photon are described mathematically.
+[03:07–03:12] What I'll show you here is a way to visualize quaternions in their full four-dimensional glory.
+[03:12–03:25] It would surprise me if this approach was fully original, but I can say that it's certainly not the standard way to teach quaternions, and that the specific four-dimensional right-hand rule image that I'd like to build up to is something that I haven't seen elsewhere.
+[03:25–03:34] Building up an understanding for this visual will take us meaningful time, but once you have it, there is a very natural and satisfying intuition for how to think about quaternion multiplication.
+[03:35–03:53] It won't be until the next video that I show you how exactly quaternions describe orientation in three dimensions, which is for some people the whole reason we care about it, but once we're able to go at it armed with the image of what they're doing to a 4D hypersphere, there's a pleasing understanding to be had for the otherwise opaque formulas characterizing this relationship.
+[03:55–04:12] The structure here will be to start by imagining teaching complex numbers to someone who only understands one dimension, then describing 3D rotations to someone who only understands two dimensions, and ultimately to represent what quaternions are doing up in four dimensions within the constraints of our 3D space.
+[04:17–04:24] Our first character is Linus the Linelander, whose mind can only grasp the one-dimensional geometry of lines and the algebra of real numbers.
+[04:25–04:34] We're going to try to describe complex numbers to Linus, and it's really important for you to empathize with him as much as you can during this, because in a few minutes you're going to be in his shoes.
+[04:34–04:38] On the one hand, you could define complex numbers purely algebraically.
+[04:38–04:48] You say each one is expressed as some real number plus some other real number times i, where i is a newly invented constant whose defining property is that i times i equals negative one.
+[04:49–05:03] Then you say to Linus, to multiply two complex numbers, you just use the distributive property, what many people learn in school as FOIL, and you apply this rule that i times i equals negative one to simplify things down further.
+[05:04–05:11] And that's fine, that totally works, and the standard textbook way to introduce quaternions is analogous to this, showing the algebraic rules and calling it done.
+[05:12–05:25] But I think something is missing if we don't at least try to show Linus the geometry of complex numbers, and what complex multiplication looks like, since the problems in math and physics where complex numbers are shockingly useful often leverage this spatial intuition.
+[05:26–05:29] You and I, who understand two dimensions, might think of it like this.
+[05:29–05:38] When you multiply two complex numbers, z times w, you can think of z as a sort of function acting on w, rotating and stretching it in some way.
+[05:40–05:44] I like to think of this by broadening the view and asking, what does z do to the entire plane?
+[05:44–05:57] You can think of that bird's eye view action by imagining using one hand to fix the number zero in place, and using another hand to drag the point at one up to z, since anything times zero is zero, and anything times one is itself.
+[05:57–06:02] In two dimensions, there is one and only one stretching rotating action on the plane that'll do this.
+[06:03–06:20] This is also how I'll have you thinking about quaternion multiplication later on, where the number on the left acts as a kind of function to the one on the right, and we'll understand this function by seeing how it acts by transforming space, although instead of rotating 2d space, it does a sort of double rotation in 4d space.
+[06:22–06:31] By the way, if you want to review thinking about complex numbers as a kind of action, a good warmup for this video might be the one I did on e to the pi i explained with introductory group theory.
+[06:32–06:38] Now Linus the line lander is pretty comfortable with the idea of stretching, that's what multiplication by real numbers looks like.
+[06:38–06:43] Maybe it's a little weird for him to think about stretching in multiple dimensions, but it's not fundamentally different.
+[06:44–06:47] The difficult thing to communicate to Linus is rotation.
+[06:48–06:53] Specifically, focus on the unit circle of the complex plane, all the numbers a distance 1 from 0.
+[06:54–07:02] Since multiplication by these numbers corresponds to pure rotation, how would you explain to Linus the look and feel of multiplying by these numbers?
+[07:04–07:10] At first, that might seem impossible, rotation is just such an intrinsically two-dimensional idea.
+[07:11–07:19] But, on the other hand, rotation involves only one degree of freedom, a single number, the angle, specifies a given rotation uniquely.
+[07:20–07:27] So in principle, it should be possible to associate the set of all rotations to the one-dimensional continuum that is Linus's world.
+[07:28–07:41] And there are many ways you could do this, but the one I'm going to show you is called a stereographic projection, it's a special way to map a circle onto a line, or a sphere into a plane, or even a 4D hypersphere into 3D space.
+[07:45–07:57] For every point on the unit circle, draw a line from negative 1 through that point, and wherever it intersects the vertical line through the circle's center, that's where the point of the circle gets projected.
+[07:59–08:07] So for example, the point at 1 gets projected into the center of the line, the point i actually stays fixed in place, as does negative i.
+[08:10–08:19] All of the points on that 90 degree arc between 1 and i will get projected somewhere in the interval between where 1 landed and where i landed.
+[08:20–08:28] As you continue farther around the circle on the arc between i and negative 1, the projected points end up farther and farther away at an increasing rate.
+[08:29–08:35] Similarly, if you come around the other way towards negative 1, the projected points end up farther and farther on the other end of the line.
+[08:36–08:44] This line of projected points is what we show to Linus, labeling a few key points, like 1 and i and negative 1 all for reference.
+[08:44–08:52] Technically, the point at negative 1 has no projection under this map, since the tangent line to the circle at that point never crosses the vertical line.
+[08:52–09:03] But what we say is that negative 1 ends up at the point at infinity, a special point you imagine adding to the line where you would approach it if you walk infinitely far along the line in either direction.
+[09:04–09:12] It's important to remember, and remind Linus, that what he's seeing is only the complex numbers that are a distance 1 from the origin, the unit circle.
+[09:13–09:28] Linus doesn't see most numbers, like 0, or 1 plus i, or negative 2 minus i, but that's okay, because right now we just want to describe complex numbers z where multiplying by z has the effect of a pure rotation, so he only needs to understand the unit circle.
+[09:30–09:45] For example, when we take the number i and multiply it by any other complex number w, the effect is to rotate by 90 degrees counterclockwise, and when we apply this action to the circle being projected down to the line for Linus, what does he see?
+[09:46–09:52] Well, it's a bit of a strange morphing action on the line, one which I want you to become familiar with for something we'll see later on.
+[09:52–09:56] It's easiest to understand by following a few key reference points.
+[09:57–10:01] i times 1 is i, so that means the number 1 should move up to i.
+[10:03–10:09] i times i is negative 1, so the point at i slides off to infinity.
+[10:11–10:19] i times negative 1 is equal to negative i, so that point at infinity kind of comes back around from the bottom to the position 1 unit below the center.
+[10:20–10:25] i times negative i is 1, so the point at negative i slides up to 1.
+[10:26–10:30] Even though this is kind of a weird motion, it lets us communicate some important ideas to Linus.
+[10:31–10:38] For example, multiplying by i four times, which corresponds to rotating by 90 degrees four times in a row, gets us back to where we started.
+[10:39–10:40] i to the fourth equals 1.
+[10:41–10:45] To get more of a feel for things, let me just show the circle rotated at various different angles.
+[10:46–10:55] On both the left and right half of the screen, I'm putting a hand on the point that started at the number 1 to help us and help Linus keep track of the overall motion.
+[11:06–11:11] Next, let's introduce Felix the Flatlander, who only understands two-dimensional geometry.
+[11:11–11:15] Imagine trying to explain rotations of a sphere to Felix.
+[11:18–11:35] In the spirit of transitioning from complex numbers to quaternions, let's extend the complex numbers with its horizontal axis of real numbers and its vertical axis of imaginary numbers with a third axis, defined by some newly invented constant, j, sitting one unit away from zero, perpendicular to the complex plane.
+[11:35–11:51] Instead of having this new axis in the z-direction, like you might expect, for a better analogy with how we'll visualize quaternions, we'll want to orient things so that the i and j axes sit in the x and y directions, with the real number line aligned along the z-direction.
+[11:53–12:00] Every point in 3D space is described as some real number plus some real number times i plus some real number times j.
+[12:01–12:11] As it happens, it's not possible to define a notion of multiplication for a 3D number system like this that would satisfy the usual algebraic properties that make multiplication a useful construct.
+[12:11–12:21] Perhaps I'll outline why this is the case in a follow-on video, but staying focused on our current goal, think about describing 3D rotations in this coordinate system to Felix the Flatlander.
+[12:22–12:30] The unit sphere consists of all those numbers which are a distance 1 from 0 at the origin, meaning the sum of the squares of their coordinates is 1.
+[12:34–12:45] We can't show all of 3D space to Felix, but what we can do is project this 2D surface to him and give him a feel for what reorientations of the sphere look like under that projection.
+[12:46–12:56] Analogous to what we did before, stereographic projection will associate almost every point on the unit sphere with a unique point on the horizontal plane defined by the i and the j axes.
+[12:57–13:05] For each point on the sphere, draw a line from negative 1 at the south pole through that point and see where it intersects the plane.
+[13:12–13:15] So the point 1 at the north pole ends up at the center of the plane.
+[13:15–13:28] all of the points of the northern hemisphere get mapped somewhere inside the unit circle of the i-j plane, and that unit circle which passes through i, j, negative i, negative j, stays fixed in place.
+[13:28–13:30] And that's an important point to make note of.
+[13:31–13:44] Even though most points and lines and patches that Felix the Flatlander sees are warped projections of the real sphere, this unit circle is the one thing he has which is an honest part of our unit sphere, unaltered by projection.
+[13:46–13:55] All of the points in the southern hemisphere get projected outside that unit circle, each getting farther and farther away as you approach negative 1 at the south pole.
+[13:56–14:02] And again, negative 1 has no projection under this mapping, but what we say is that it ends up at some point at infinity.
+[14:03–14:10] That point at infinity is something such that no matter which direction you walk on the plane, as you go infinitely far out, you'll be approaching that point.
+[14:11–14:16] It's analogous to how if you walk any direction away from the north pole, you're approaching the south pole.
+[14:18–14:22] Now let me just pull up a view of what Felix sees in two dimensions.
+[14:22–14:32] As I rotate the sphere in various ways, the lines of latitude and longitude drawn on that sphere get projected into various circles and lines in Felix's space.
+[14:33–14:52] And the way I've done things up here, the checkerboard pattern on the surface of the sphere is accurately reflected in the projected view you see with Felix, and the pinker view represents where the point that started at the north pole ends up after the rotation, and the yellow circle represents where the equator ended up after the projection.
+[14:52–15:02] The more you put yourself in Felix's shoes right now, the easier quaternions will be in a moment, and as with Linus, it helps to focus on a few key reference objects rather than trying to see the whole sphere.
+[15:03–15:11] This circle, passing through 1, i, negative 1, and negative i, gets mapped onto a line which Felix sees as the horizontal axis.
+[15:12–15:16] It's important to remind Felix that what he sees is not the same thing as the i-axis.
+[15:17–15:27] Remember, we're only projecting the numbers that have a distance 1 from the origin, so most points on the actual i-axis, like 0, 2i, 3i, etc., are completely invisible to Felix.
+[15:30–15:37] Similarly, the circle that passes through 1, j, negative 1, and negative j gets projected onto what he sees as a vertical line.
+[15:38–15:45] In general, any line Felix sees comes from some circle on the sphere that passes through negative 1.
+[15:45–15:49] In some sense, a line is just a circle that passes through the point at infinity.
+[15:55–15:58] Now think about what Felix sees as we rotate the sphere.
+[15:58–16:07] A 90 degree rotation about the j-axis brings 1 to i, i to negative 1, negative 1 to negative i, and negative i to 1.
+[16:08–16:14] So what Felix the Flatlander sees is an extension of the rotation that Linus the Linelander was seeing.
+[16:14–16:22] Notice also that this action rotates the i, j unit circle to the position where the 1, j unit circle used to be.
+[16:22–16:31] So what Felix sees is his yellow unit circle getting transformed into a vertical line, while the red vertical line gets transformed into the unit circle.
+[16:32–16:37] Of course, from our perspective, we know this is all just rigid motion, no actual stretching or morphing is taking place.
+[16:38–16:40] All of that is just an artifact of the projection.
+[16:42–16:50] Similarly, a rotation about the i-axis involves moving 1 to j, j to negative 1, negative 1 to negative j, and negative j to 1.
+[16:51–17:01] This rotation turns the i, j unit circle into the 1, i unit circle, which to Felix looks like the unit circle getting transformed into a horizontal line.
+[17:09–17:21] A rotation about the real axis is actually quite easy for Felix to understand, since the whole projection simply gets rotated about the origin, where the only points staying fixed in place are 1 at the origin and negative 1 off at infinity.
+[17:29–17:51] In the same way that the complex numbers included the real numbers with a single extra quote unquote imaginary dimension, represented by the unit i, and that the not-actually-a-number system thing we had in three dimensions included a second imaginary direction, j, the quaternions include the real numbers together with three separate imaginary dimensions, represented by the units i, j, and k.
+[17:52–18:00] Each of these three imaginary dimensions is perpendicular to the real number line, and they're all perpendicular to each other somehow.
+[18:01–18:11] So in the same way that complex numbers are represented as a pair of real numbers, each quaternion can be written using four real numbers, and it lives in four-dimensional space.
+[18:11–18:17] You often think of this as being broken up into a real or scalar part, and then a 3D imaginary part.
+[18:18–18:27] And Hamilton used a special word for quaternions that had no real part and just i, j, k components, a word which was previously somewhat foreign in the lingo of math and physics, vector.
+[18:28–18:38] On the one hand, you could just define quaternion multiplication by giving the rules for how i, j, and k multiply together, and saying that everything must distribute nicely.
+[18:38–18:45] This is analogous to defining complex multiplication by saying that i times i is negative 1, and then distributing and simplifying products.
+[18:46–18:59] And indeed, this is how you would tell a computer to perform quaternion multiplication, and the relative compactness of this operation compared to say matrix multiplication is what's made quaternion so useful for graphics programming and many other things.
+[18:59–19:11] There's also a rather elegant form of this multiplication rule written in terms of the dot product and the cross product, and in some sense, quaternion multiplication subsumes both of these notions, at least as they appear in three dimensions.
+[19:12–19:25] But just as a deeper understanding for complex multiplication comes from understanding its geometry that multiplying by a complex number involves a combination of scaling and rotating, you and I are here for the four-dimensional geometry of quaternion multiplication.
+[19:25–19:35] And just as the magnitude of a complex number, its distance from zero, is the square root of the sum of the squares of its component, that same operation gives you the magnitude of a quaternion.
+[19:38–19:50] And multiplying one quaternion, q1, by another, q2, has the effect of scaling q2 by the magnitude of q1, followed by a very special type of rotation in four dimensions.
+[19:50–20:16] And those special 4D rotations, the heart of what we need to understand, correspond to the hypersphere of quaternions, a distance 1 from the origin, both in the sense that the quaternions whose multiplying action is a pure rotation live on that hypersphere, and in the sense that we can understand this weird 4D action just by following points on the hypersphere, rather than trying to look at all the points in the inconceivable stretches of four-dimensional space.
+[20:17–20:23] Analogous to what we did for Linus and Felix, we stereographically project this hypersphere into 3D space.
+[20:27–20:37] This label in the upper right is going to show a given unit quaternion, and this little pink dot will show where that particular quaternion gets projected in our 3D space.
+[20:38–20:47] Just as before, we're projecting from the number negative 1, which sits on the real number line that is somehow perpendicular to all of our 3D space, and beyond our perception.
+[20:48–20:53] Just as before, the number 1 ends up projected straight into the center of our space.
+[20:53–21:09] And in the same way that i and negative i were fixed in place for Linus, and that the ij unit circle was fixed in place for Felix, we get a whole sphere passing through i, j, and k on that unit hypersphere, which stays in place under the projection.
+[21:09–21:18] So what we see as a unit sphere in our 3D space represents the only unaltered part of the hypersphere of quaternions getting projected down onto us.
+[21:18–21:28] It's something analogous to the equator of a 3D sphere, and it represents all of the unit quaternions whose real part is zero, what Hamilton would have described as unit vectors.
+[21:31–21:45] The unit quaternions with positive real parts, between 0 and 1, end up somewhere inside this unit sphere, closer to the number 1 in our 3D space, which should feel analogous to how the northern hemisphere got mapped inside the unit circle for Felix.
+[21:47–21:52] On the other hand, all the unit quaternions with negative real part end up somewhere outside that unit sphere.
+[22:00–22:05] The number negative 1 is sitting off at the point at infinity, which you can easily find by walking in any direction.
+[22:06–22:21] Keep in mind, even though we see the projection of some of these quaternions as being closer or farther from the origin of our 3D space, everything you're looking at represents a unit quaternion, so everything you're looking at really has the same magnitude, the same distance from the number 0.
+[22:22–22:25] And that number 0 itself is nowhere to be found in this picture.
+[22:26–22:29] Like all other non-unit quaternions, it's invisible to us.
+[22:30–22:47] In the same way that for Felix, the circle passing through 1, i, negative 1, and negative i got projected into a line through the origin, when we see this line through the origin passing through i and negative i, we should understand that it really represents a circle.
+[22:47–23:07] Likewise, up on the hypersphere, invisible to us, there is a unit sphere passing through 1, i, j, negative 1, negative i, and negative j, and that whole sphere gets projected into the plane that we see passing through 1, i, negative i, j, negative j, and negative 1, off at infinity, what you and I might call the xy plane.
+[23:08–23:16] In general, any plane that you see here really represents the projection of a sphere somewhere up on the hypersphere which passes through the number negative 1.
+[23:19–23:34] The action of taking a unit quaternion and multiplying it by any other quaternion from the left can be thought of in terms of two separate 2D rotations, happening perpendicular to and in sync with each other in a way that could only ever be possible in four dimensions.
+[23:35–23:38] As a first example, let's look at multiplication by i.
+[23:38–23:43] We already know what this does to the circle that passes through 1 and i, which we see as a line.
+[23:45–23:56] 1 goes to i, i goes to negative 1, off at infinity, negative 1 comes back around to negative i, and negative i goes to 1.
+[23:56–24:02] Remember, just like what Linus saw, all of this is the stereographic projection of a 90 degree rotation.
+[24:03–24:09] Now look at the circle passing through j and k, which is in a sense perpendicular to the circle passing through 1 and i.
+[24:10–24:20] It might feel weird to talk about two circles being perpendicular to each other, especially when they have the same center and radius and don't touch each other at all, but nothing could be more natural in four dimensions.
+[24:21–24:33] You can think of the action of i on this perpendicular circle as obeying a certain right-hand rule, if you'll excuse the intrusion of my ghostly green-screen hand into our otherwise pristine platonic mathematical stage.
+[24:33–24:38] You let that thumb of your right hand point from the number 1 to i, and you curl your fingers.
+[24:39–24:43] The j-k circle will rotate in the direction of that curl.
+[24:43–24:44] How much?
+[24:44–24:50] Well, by the same amount as the 1i circle rotates, which is 90 degrees in this case.
+[24:50–24:55] This is what I meant by two rotations perpendicular to and in sync with each other.
+[24:55–25:08] So j goes to k, k goes to negative j, negative j goes to negative k, and negative k goes to j.
+[25:10–25:20] This gives us a little table for what the number i does to the other quaternions, but I want this not to be something that you memorize, but something that you could close your eyes and you could really see.
+[25:21–25:31] Computationally, if you know what a quaternion does to the numbers 1, i, j, and k, you know what it does to any arbitrary quaternion, since multiplication distributes nicely.
+[25:32–25:44] In the language of linear algebra, 1, i, j, and k form a basis of our 4-dimensional space, so knowing what our transformation does to them gives us the full information about what it does to all of space.
+[25:45–25:56] Geometrically, a 4-dimensional creature would be able to look at those two perpendicular rotations I just described, and understand that they lock you into one and only one rigid motion for the hypersphere.
+[25:56–26:01] We might lack the intuitions of such a hypothetical creature, but we can maybe try to get close.
+[26:01–26:08] Here's what the action of repeatedly multiplying by i looks like on our stereographic projection of the ijk sphere.
+[26:09–26:23] It gets rotated into what we see as a plane, then gets rotated further back to where it used to be, though the orientation is reversed now, then gets rotated again into what we see as a plane, and after the fourth iteration, it ends up right back where it started.
+[26:25–26:40] As another example, think of a quaternion like q equals negative square root of 2 over 2 plus square root of 2 over 2 times i, which if we pull up a picture of a complex plane, is a 135 degree rotation away from 1 in the direction of i.
+[26:41–26:46] Under our projection, we see this along the line from 1 to i somewhere outside the unit sphere.
+[26:47–26:50] If that sounds weird, just remember how Linus would have seen this same number.
+[26:51–27:06] The action of multiplying this q by all other quaternions will look to us like dragging the point at 1 all the way to this projected version of q, while the jk circle gets rotated 135 degrees, according to our right-hand rule.
+[27:09–27:13] Multiplication by any other quaternion is completely similar.
+[27:13–27:18] For example, let's see what it looks like for j to act on other quaternions by multiplication from the left.
+[27:19–27:32] The circle through 1 and j, which we see projected as a line through the origin, gets rotated 90 degrees, dragging 1 up to j, so j times 1 is 1 and j times j is negative 1.
+[27:38–27:55] The circle perpendicular to that one, passing through i and k, gets rotated 90 degrees according to this right-hand rule, where you point your thumb from 1 to j, so j times i is negative k, and j times k is i.
+[28:01–28:13] In general, for any other unit quaternion you see somewhere in space, start by drawing the unit circle passing through 1, q, and negative 1, which we see in our projection as a line through the origin.
+[28:14–28:18] Then draw the circle perpendicular to that 1 on what we see as the unit sphere.
+[28:18–28:27] You rotate the first circle so that 1 ends up where q was, and rotate the perpendicular circle by the same amount according to the right-hand rule.
+[28:40–28:43] One thing worth noticing here is that order of multiplication matters.
+[28:43–28:46] It's not, as mathematicians would say, commutative.
+[28:47–29:00] For example, i times j is k, which you might think of in terms of i acting on the quaternion j, rotating it up to k, but if you think of j as acting on i, j times i, it rotates i to negative k.
+[29:01–29:08] In fact, commutativity, this ability to swap the order of multiplication, is a way more special property than a lot of people realize.
+[29:09–29:12] And most groups of actions on some space don't have it.
+[29:12–29:25] It's like how in solving a Rubik's cube, order matters a lot, or how rotating a cube about the z-axis and then about the x-axis gives a different final state from rotating it about the x-axis, then about the z-axis.
+[29:29–29:44] And last, as one final but rather important point, so far I've shown you how to think about quaternions as acting by left multiplication, where when you read an expression like i times j, you think of i as a kind of function morphing all of space, and j is just one of the points that it's acting on.
+[29:44–29:53] But you can also think of them as a different sort of action, by multiplying from the right, where in this expression, j would be acting on i.
+[29:53–29:56] In that case, the rule for multiplication is very similar.
+[29:56–30:07] It's still the case that 1 goes to j, and j goes to negative 1, etc., but instead of applying the right-hand rule to the circle perpendicular to the 1j circle, you would use your left hand.
+[30:08–30:24] So either way, i times j is equal to k, but you can either think about this with your right hand curling the number j to the number k as your thumb points from 1 to i, or as your left hand curling i to k as its thumb points from 1 to j.
+[30:24–30:34] Understanding this left-hand rule for multiplication from the other side will be extremely useful for understanding how unit quaternions describe rotation in three dimensions.
+[30:35–30:40] And so far, it's probably not clear how exactly quaternions do describe 3D rotation.
+[30:41–30:48] I mean, if you consider one of these actions on the unit sphere, passing through i, j, and k, it doesn't leave that sphere in place, it morphs it out of position.
+[30:49–30:53] So the way that this works is slightly more complicated than a single quaternion product.
+[30:53–31:00] It involves a process called conjugation, and I'll make a full follow-on video all about it so that we have the time to go through some examples.
+[31:02–31:14] In the meantime, for more information on the story of quaternions and their relation to orientation in 3D space, Quanta, a mathematical publication I'm sure a lot of you are familiar with, just put out a post in a kind of loose conjunction with this video.
+[31:14–31:15] Link in the description.
+[31:16–31:29] If you enjoyed this, consider sharing it with some friends, and if you felt like the narrative structure here was actually helpful for understanding, maybe reassure those friends who would be turned off by a large timestamp that good math is actually worth the time.
+[31:30–31:32] And many thanks to the patrons among you.
+[31:32–31:39] I actually spent way longer than I care to admit on this project, so your patience and support is especially appreciated this time around.

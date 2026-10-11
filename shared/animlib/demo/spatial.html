@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101111">
+  <title>Spatial studies · animlib</title>
+  <style>
+    *{box-sizing:border-box}
+    :root{color-scheme:dark;font:15px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#ecebe5;background:#101111}
+    body{margin:0}button{font:inherit;color:inherit;cursor:pointer}button:disabled{opacity:.45;cursor:wait}
+    button:focus-visible{outline:2px solid #9cdceb;outline-offset:5px}
+    main{max-width:1440px;margin:auto;padding:30px 40px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:28px;border-bottom:1px solid #2b2d2d}
+    .brand{font-weight:650;letter-spacing:-.04em;font-size:22px}.brand span{color:#8b9793;font-weight:400;margin-left:12px;font-size:13px;letter-spacing:0}
+    .eyebrow{font:11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:#9aa5a0}
+    nav{display:flex;gap:8px;padding:24px 0;flex-wrap:wrap}
+    nav button{border:1px solid transparent;border-radius:6px;background:transparent;padding:10px 16px;font-size:13px;color:#a4aba7;transition:background .15s,color .15s}
+    nav button span{font:11px ui-monospace,monospace;color:#78817c;margin-right:12px}
+    nav button:hover{color:#fff;background:#1a1d1b}nav button[aria-pressed=true]{background:#222825;border-color:#38443d;color:#e8f2eb}
+    .study{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:36px;align-items:start}
+    .stage{position:relative;min-width:0;background:#000;border:1px solid #292c29;border-radius:12px;overflow:hidden}
+    canvas{display:block;width:100%;height:clamp(420px,58vw,650px);touch-action:none}
+    .stage-top{position:absolute;top:20px;left:22px;right:22px;display:flex;justify-content:space-between;gap:10px;pointer-events:none}
+    .stage-top span{font:10px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;color:#8a918c}
+    .stage-bottom{position:absolute;bottom:18px;left:22px;right:22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .stage-bottom p{font-size:11px;color:#858c87;margin:0;pointer-events:none}
+    #reset{background:#141715;border:1px solid #343b36;border-radius:5px;padding:6px 11px;font-size:11px;white-space:nowrap}
+    aside{padding-top:16px}h1{font-size:36px;line-height:1.16;letter-spacing:-.045em;font-weight:500;margin:18px 0}aside p{font-size:13px;color:#a4aaa5;margin:0 0 26px}
+    .formula{font:12px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;color:#b7d9c5;border-top:1px solid #2b2d2d;border-bottom:1px solid #2b2d2d;padding:18px 0;overflow-wrap:anywhere}
+    .controls-heading{margin:28px 0 18px}
+    #controls .animlib-controls{position:static!important;inset:auto!important;width:auto!important;height:auto!important;padding:0!important;align-items:stretch!important;gap:20px!important;--animlib-control-accent:#b7d9c5}
+    #controls .animlib-control{width:100%!important}
+    #detail{margin-top:28px;font-size:12px;color:#858e87}
+    footer{display:flex;justify-content:space-between;gap:18px;padding:22px 0;color:#707c74;font-size:11px}
+    #error{margin:0 0 20px;padding:14px 18px;border:1px solid #a24d61;background:#2c171d;color:#f7a1a3;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,monospace}
+    [hidden]{display:none!important}
+    @media(max-width:900px){main{padding:22px}.study{grid-template-columns:minmax(0,1fr) 235px;gap:24px}h1{font-size:30px}canvas{height:530px}.stage-bottom p{max-width:170px}}
+    @media(max-width:680px){main{padding:18px 16px}header{padding-bottom:18px}.brand span{display:none}nav{gap:2px;padding:18px 0}nav button{padding:9px 10px;font-size:12px}nav button span{margin-right:7px}.study{grid-template-columns:1fr;gap:8px}canvas{height:auto;aspect-ratio:1}aside{padding:20px 4px 0}h1{font-size:34px;margin-top:10px}aside p{max-width:480px}footer{border-top:1px solid #2b2d2d;margin-top:22px}.stage-top{left:16px;right:16px}.stage-bottom{left:16px;right:16px}}
+    @media(prefers-reduced-motion:reduce){nav button{transition:none}}
+  </style>
+</head>
+<body>
+  <main>
+    <header><div class="brand">animlib<span>Interactive studies</span></div><div class="eyebrow">A little more dimension</div></header>
+    <nav aria-label="Choose a spatial study">
+      <button type="button" data-scene="function-graph" aria-pressed="true" disabled><span>01</span>Function</button>
+      <button type="button" data-scene="parametric-flower" aria-pressed="false" disabled><span>02</span>Flower</button>
+      <button type="button" data-scene="solids-and-tubes" aria-pressed="false" disabled><span>03</span>Solids & tubes</button>
+      <button type="button" data-scene="procedural-textures" aria-pressed="false" disabled><span>04</span>Textures</button>
+    </nav>
+    <pre id="error" role="alert" hidden></pre>
+    <div class="study">
+      <section class="stage" aria-label="Interactive 3D scene">
+        <canvas aria-label="A shaded function graph. Drag to orbit or Shift-drag to pan."></canvas>
+        <div class="stage-top"><span id="category">Function surface</span><span id="status" role="status">Preparing scene…</span></div>
+        <div class="stage-bottom"><p>Drag to orbit · Shift-drag to pan</p><button id="reset" type="button" disabled>Reset view ↗</button></div>
+      </section>
+      <aside aria-labelledby="title">
+        <div id="number" class="eyebrow">Study 01 / 04</div>
+        <h1 id="title">A function, in space.</h1>
+        <p id="description"></p>
+        <div id="formula" class="formula"></div>
+        <div class="eyebrow controls-heading">Make it your own</div>
+        <div id="controls"></div>
+        <p id="detail"></p>
+      </aside>
+    </div>
+    <footer><span>Spatial studies / animlib</span><span>Built from functions. Explored by you.</span></footer>
+  </main>
+  <script type="module">
+    import { createPlayer } from '../src/index.ts';
+    import { spatialSources, spatialScenes } from './spatial.ts';
+
+    const query = selector => document.querySelector(selector);
+    const buttons = [...document.querySelectorAll('[data-scene]')];
+    const player = createPlayer({canvas:query('canvas'),controlsRoot:query('#controls')});
+    const showError = error => {
+      query('#error').textContent = error instanceof Error ? error.message : String(error);
+      query('#error').hidden = false;
+      query('#status').textContent = 'Scene error';
+    };
+    const describe = id => {
+      const scene = spatialScenes.find(scene => scene.id === id);
+      if (!scene) return;
+      for (const key of ['title','description','formula','category','detail']) query('#'+key).textContent = scene[key];
+      query('#number').textContent = 'Study '+scene.number+' / 04';
+      player.canvas.setAttribute('aria-label',scene.category+'. Drag to orbit or Shift-drag to pan.');
+      for (const button of buttons) button.setAttribute('aria-pressed',String(button.dataset.scene === id));
+    };
+    describe(spatialScenes[0].id);
+    player.subscribe(state => {
+      if (state.error) showError(state.error);
+      else {
+        query('#error').hidden = true;
+        query('#status').textContent = state.scene ? 'Live / 3D' : 'Preparing scene…';
+      }
+      if (state.scene) describe(state.scene);
+    });
+    const ready = (async () => {
+      const result = await player.submit({type:'load',scenes:spatialSources});
+      if (!result.ok) throw new Error(result.diagnostics.map(d => d.message).join('\n'));
+      await player.seek({scene:spatialSources[0].id,time:0});
+      if (player.getState().error) throw new Error(player.getState().error);
+      document.body.dataset.ready = 'true';
+      for (const button of [...buttons,query('#reset')]) button.disabled = false;
+    })();
+    window.animlibDemo = {player,ready};
+    ready.catch(showError);
+    for (const button of buttons) button.addEventListener('click',async () => {
+      try {
+        await ready;
+        await player.seek({scene:button.dataset.scene,time:0});
+        player.resetView();
+      } catch (error) { showError(error); }
+    });
+    query('#reset').addEventListener('click',() => player.resetView());
+    window.addEventListener('error',event => showError(event.error ?? event.message));
+    window.addEventListener('unhandledrejection',event => showError(event.reason));
+    window.addEventListener('pagehide',() => player.dispose(),{once:true});
+  </script>
+</body>
+</html>

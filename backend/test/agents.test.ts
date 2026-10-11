@@ -1,3 +1,4 @@
+import { loadPrompt, instructionSnapshot, INSTRUCTION_VERSION } from '../src/agents/prompts.js';
 import { afterEach, expect, spyOn, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -9,7 +10,7 @@ import { agentConfig, AgentError, agentFailure } from "../src/agents/config.js";
 import { authPath, createModelRuntime, deviceId, revokeSubscription } from "../src/agents/auth.js";
 import { PiAgentRunner } from "../src/agents/runtime.js";
 import type { AgentTask } from "../src/agents/runtime.js";
-import { createPiGenerator } from "../src/agents/generator.js";
+import { createPiGenerator as createProductionGenerator } from "../src/agents/generator.js";
 import { NarrationService } from "../src/narration/service.js";
 import { settingsFromEnv } from "../src/narration/elevenlabs.js";
 import { VideoService } from "../src/videos.js";
@@ -195,7 +196,7 @@ test('output validation, truncation and aborts do not consume provider retries',
   }
 });
 
-test("real Pi sessions expose only validation and correct invalid final output", async () => {
+test("real Pi sessions expose validation and web access while ignoring local instructions", async () => {
   const { runner, contexts, settings } = await fakeRuntime([message("bad"), message("valid"), message("separate")]);
   await writeFile(join(settings.agentDir, "AGENTS.md"), "UNTRUSTED_LOCAL_INSTRUCTION");
   await writeFile(join(settings.agentDir, "APPEND_SYSTEM.md"), "UNTRUSTED_APPEND");
@@ -205,12 +206,42 @@ test("real Pi sessions expose only validation and correct invalid final output",
   expect(result).toBe("valid");
   expect(contexts).toHaveLength(2);
   const toolNames = (context: Context) => context.messages.flatMap(message => message.role === "system" ? (message.toolsAdded ?? []).map(tool => tool.name) : []);
-  expect(toolNames(contexts[0])).toEqual(["validate_output"]);
+  expect(toolNames(contexts[0])).toEqual(["validate_output", "web_enable"]);
   expect(JSON.stringify(contexts[0])).not.toContain("UNTRUSTED_");
   expect(JSON.stringify(contexts[1])).toContain("Use valid output");
   expect(await runner.run({ systemPrompt: "Other task", prompt: "New task" })).toBe("separate");
-  expect(toolNames(contexts[2])).toHaveLength(0);
+  expect(toolNames(contexts[2])).toEqual(["web_enable"]);
   expect(JSON.stringify(contexts[2])).not.toContain("Use valid output");
+});
+
+test('Pi activates web tools, searches through Exa, and returns sources to the model', async () => {
+  const enable = message('', 'toolUse');
+  enable.content = [{ type: 'toolCall', id: 'enable-1', name: 'web_enable', arguments: {} }];
+  const search = message('', 'toolUse');
+  search.content = [{ type: 'toolCall', id: 'search-1', name: 'web_search', arguments: {
+    query: 'Pi agent documentation', provider: 'exa', workflow: 'none',
+  } }];
+  const { runner, contexts } = await fakeRuntime([enable, search, message('Researched answer')]);
+  const fetcher = spyOn(globalThis, 'fetch').mockImplementation((async (url, options) => {
+    expect(String(url)).toStartWith('https://mcp.exa.ai/');
+    const request = JSON.parse(String(options?.body));
+    expect(request.method).toBe('tools/call');
+    expect(request.params.arguments.query).toBe('Pi agent documentation');
+    return Response.json({ jsonrpc: '2.0', id: 1, result: { content: [{ type: 'text', text: JSON.stringify({
+      results: [{ title: 'Pi documentation', url: 'https://pi.dev/docs', text: 'Pi supports extension tools.' }],
+    }) }] } });
+  }) as typeof fetch);
+  try {
+    expect(await runner.run({ systemPrompt: 'Research the topic', prompt: 'Find Pi documentation' })).toBe('Researched answer');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    const names = contexts[1].messages.flatMap(message => message.role === 'system' ? (message.toolsAdded ?? []).map(tool => tool.name) : []);
+    expect(names).toEqual(expect.arrayContaining(['web_search', 'fetch_content', 'get_search_content', 'source_check']));
+    for (const name of ['bash', 'read', 'write', 'edit']) expect(names).not.toContain(name);
+    const result = contexts[2].messages.find(message => message.role === 'toolResult' && message.toolName === 'web_search');
+    expect(result?.role === 'toolResult' && result.isError).toBe(false);
+    expect(JSON.stringify(result?.content)).toContain('https://pi.dev/docs');
+    expect(JSON.stringify(result?.content)).toContain('Pi supports extension tools.');
+  } finally { fetcher.mockRestore(); }
 });
 
 test("Pi executes the validation tool and returns its result to the model", async () => {
@@ -310,6 +341,8 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     }
     expect(agentCalls).toBe(4); expect(speechCalls).toBe(2);
     expect(tasks[3].prompt).toContain('"previousFrame"');
+    const endpoint = JSON.parse(await readFile(join(settings.dataDir, video.id, 'scene-0.final-frame.json'), 'utf8'));
+    expect(endpoint.elements.some((element: { id: string }) => element.id === 'dot')).toBe(true);
     const packet = JSON.parse(tasks[2].prompt.slice(tasks[2].prompt.indexOf('\n') + 1));
     expect(packet.planning.lesson.learningGoal).toBe('Count dots');
     expect(packet.planning.outline.map((scene: { id: string }) => scene.id)).toEqual(['beat-1', 'beat-2']);
@@ -317,6 +350,10 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
     expect(JSON.parse(await readFile(join(settings.dataDir, video.id, 'lesson.json'), 'utf8')).plan.learningGoal).toBe('Count dots');
     const approval = JSON.parse(await readFile(join(settings.dataDir, video.id, 'lesson.json'), 'utf8')).editorialReview;
     expect(approval.attempt).toBe(0);
+    expect(JSON.parse(await readFile(join(settings.dataDir, video.id, 'lesson.json'), 'utf8')).instructionVersion).toBe(INSTRUCTION_VERSION);
+    const scenePrompt = await readFile(join(settings.dataDir, video.id, 'scene-0.prompt.md'), 'utf8');
+    const sceneSystem = scenePrompt.split('\n\nGenerate this scene')[0];
+    expect(JSON.parse(await readFile(join(settings.dataDir, video.id, 'scene-0.instructions.json'), 'utf8'))).toEqual(instructionSnapshot(sceneSystem));
     expect(JSON.parse(await readFile(join(settings.dataDir, video.id, 'editorial', approval.runId, 'lesson-review-0.json'), 'utf8')).verdict).toBe('pass');
     expect(await readFile(join(settings.dataDir, video.id, 'scene-0.prompt.md'), 'utf8')).toContain('Count dots');
     // Recreate the generator and request a previously completed stage, as after a crash before publication.
@@ -337,7 +374,7 @@ test("the video pipeline preserves narration audio IDs and reuses completed scri
   } finally { await service.close(); await narration.idle(); }
 });
 
-test('scene one streams before later TTS finishes and scene two receives its evaluated end-state', async () => {
+test.each(['classic', 'interactive'] as const)('%s scenes receive the shared policy and evaluated end-state while later TTS is pending', async videoMode => {
   const settings = await config();
   let release!: () => void, secondSpeechStarted = false;
   const gate = new Promise<void>(resolve => { release = resolve; });
@@ -360,6 +397,13 @@ test('scene one streams before later TTS finishes and scene two receives its eva
       return planned(script, base.plan);
     }
     const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
+    expect(task.systemPrompt.split(await loadPrompt('scene-craft'))).toHaveLength(2);
+    expect(task.systemPrompt).toContain(await loadPrompt('viewing-mode'));
+    expect(task.systemPrompt).toContain('# animlib scene-authoring reference');
+    expect(task.systemPrompt).not.toContain('### Player API');
+    expect(task.systemPrompt).not.toContain('3D is the default');
+    expect(input.videoMode).toBe(videoMode);
+    expect(input.legacyPlan).toBe(false);
     expect(task.systemPrompt).toContain('s.previous');
     expect(input.scene.utterances[0].words[0].startSec).toBe(0);
     expect(input.planning.lesson.entities[0].id).toBe('dot');
@@ -374,10 +418,17 @@ test('scene one streams before later TTS finishes and scene two receives its eva
       commands = "const dot=s.previous.get('dot');s.keep(dot);";
     }
     const source = `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:${JSON.stringify(input.endMode)}},s=>{${commands}s.wait(${input.scene.durationSec});});`;
+    const withOrbit = source.replace('scene({', 'scene({orbit:true,');
+    if (videoMode === 'classic') await expect(task.validate!(withOrbit)).rejects.toThrow('Classic scenes');
+    else {
+      await expect(task.validate!(withOrbit)).rejects.toThrow('whole-scene orbit');
+      const targetedOrbit = source.replace('s=>{', "s=>{s.view('inspection',{rect:[0,0,1,1],orbit:true,orbitHitTest:'geometry'},v=>v.circle('inspection-dot'));");
+      await task.validate!(targetedOrbit);
+    }
     await task.validate!(source); return source;
   } };
   const service = new VideoService(join(settings.agentDir, 'progressive.sqlite'), createPiGenerator(runner, narration, settings.dataDir), 'pi');
-  const video = service.create('shared-user', 'progressive', { title: 'Dots', topic: 'Dots', documents: [] });
+  const video = service.create('shared-user', 'progressive', { title: 'Dots', topic: 'Dots', documents: [], videoMode });
   const until = async (check: () => boolean) => {
     for (let i = 0; i < 300; i++) { if (check()) return; await Bun.sleep(10); }
     throw new Error('Timed out waiting for scene');
@@ -409,14 +460,21 @@ test('compiler repair messages retain locations and hints in the actual Pi conve
   expect(JSON.stringify(contexts[1])).toContain('Preserve the task');
 });
 
-test('existing saved Markdown videos resume without a new planning call', async () => {
+test.each(['markdown', 'planned', 'version-1'])('existing saved %s videos resume their historical contract without a new planning call', async format => {
   const settings = await config();
   const videoId = crypto.randomUUID(), owner = 'shared-user';
-  const request = { title: 'Old lesson', topic: 'Dots', documents: [] };
+  const request = { title: 'Old lesson', topic: 'Dots', documents: [], ...(format === 'version-1' ? { videoMode: 'interactive' as const } : {}) };
   const directory = join(settings.dataDir, videoId);
   const { mkdir } = await import('node:fs/promises');
   await mkdir(directory, { recursive: true });
-  await writeFile(join(directory, 'script.md'), '# Old lesson\n\n## Beat 1\n\nContent needed: One dot.\n\nNarration: One dot.');
+  const markdown = '# Old lesson\n\n## Beat 1\n\nContent needed: One dot.\n\nNarration: One dot.';
+  if (format === 'markdown') await writeFile(join(directory, 'script.md'), markdown);
+  else {
+    const cached = JSON.parse(planned(markdown));
+    if (format === 'version-1') cached.instructionVersion = 1;
+    cached.plan.scenes[0].interactions = [{ id: 'explore', type: 'toggle', label: 'Explore', drives: 'Example', discover: 'Count' }];
+    await writeFile(join(directory, 'lesson.json'), JSON.stringify(cached));
+  }
   const narration = new NarrationService({ root: join(settings.agentDir, 'old-narration'), provider: {
     settings: settingsFromEnv({ ELEVENLABS_VOICE_ID: 'test' }),
     async synthesize({ text }) {
@@ -430,11 +488,16 @@ test('existing saved Markdown videos resume without a new planning call', async 
     calls++;
     expect(task.prompt).toStartWith('Generate');
     const input = JSON.parse(task.prompt.slice(task.prompt.indexOf('\n') + 1));
-    expect(input.planning.outline[0].context).toContain('One dot');
-    return `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:"hold"},s=>{s.circle('dot');s.wait(${input.scene.durationSec});});`;
+    expect(input.legacyPlan).toBe(format !== 'version-1');
+    expect(input.instructionVersion).toBe(format === 'version-1' ? 1 : undefined);
+    expect(input.videoMode).toBe(format === 'version-1' ? 'interactive' : 'classic');
+    if (format === 'markdown') expect(input.planning.outline[0].context).toContain('One dot');
+    return `export default scene({audio:${JSON.stringify(input.audioAssetId)},end:"hold",orbit:true},s=>{s.circle('dot');${format !== 'markdown' ? "s.toggle('explore',{default:false});" : ''}s.wait(${input.scene.durationSec});});`;
   } }, narration, settings.dataDir);
   const result = await generator(request, 0, { videoId, owner, signal: new AbortController().signal });
   expect(result?.scene.narration).toBe('One dot.'); expect(calls).toBe(1);
+  const resumed = await generator(request, 0, { videoId, owner, signal: new AbortController().signal });
+  expect(resumed?.scene.source).toBe(result?.scene.source); expect(calls).toBe(1);
   await narration.idle();
 });
 
@@ -450,3 +513,8 @@ test('existing Pi subscription credentials use their selected provider without f
   expect(JSON.parse(await readFile(authPath(settings), 'utf8'))['openai-codex']).toEqual(legacy);
   expect(() => agentConfig({ AGENT_PROVIDER: 'openai-codex', AGENT_AUTH_MODE: 'api-key' })).toThrow('subscription mode');
 });
+
+// These tests isolate narration/timing contracts. visual-gate.test.ts covers rendered review.
+function createPiGenerator(...args: Parameters<typeof createProductionGenerator>) {
+  return createProductionGenerator(args[0], args[1], args[2], { ...args[3], visualGate: async ({ source }) => source });
+}

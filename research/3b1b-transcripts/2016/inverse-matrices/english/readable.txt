@@ -1,0 +1,89 @@
+[00:10–00:19] As you can probably tell by now, the bulk of this series is on understanding matrix and vector operations through that more visual lens of linear transformations.
+[00:19–00:27] This video is no exception, describing the concepts of inverse matrices, column space, rank, and null space through that lens.
+[00:27–00:34] A forewarning though, I'm not going to talk about the methods for actually computing these things, and some would argue that that's pretty important.
+[00:34–00:42] There are a lot of very good resources for learning those methods outside this series, keywords Gaussian elimination and row echelon form.
+[00:42–00:46] I think most of the value that I actually have to add here is on the intuition half.
+[00:46–00:50] Plus, in practice, we usually get software to compute this stuff for us anyway.
+[00:51–00:53] First, a few words on the usefulness of linear algebra.
+[00:54–01:01] By now, you already have a hint for how it's used in describing the manipulation of space, which is useful for things like computer graphics and robotics.
+[01:01–01:10] But one of the main reasons that linear algebra is more broadly applicable and required for just about any technical discipline is that it lets us solve certain systems of equations.
+[01:11–01:17] When I say system of equations, I mean you have a list of variables, things you don't know, and a list of equations relating them.
+[01:18–01:21] In a lot of situations, those equations can get very complicated.
+[01:22–01:25] But, if you're lucky, they might take on a certain special form.
+[01:26–01:36] Within each equation, the only thing happening to each variable is that it's scaled by some constant, and the only thing happening to each of those scaled variables is that they're added to each other.
+[01:37–01:42] So no exponents or fancy functions or multiplying two variables together, things like that.
+[01:43–01:52] The typical way to organize this sort of special system of equations is to throw all the variables on the left and put any lingering constants on the right.
+[01:53–02:01] It's also nice to vertically line up the common variables, and to do that, you might need to throw in some zero coefficients whenever the variable doesn't show up in one of the equations.
+[02:04–02:07] This is called a linear system of equations.
+[02:08–02:11] You might notice that this looks a lot like matrix-vector multiplication.
+[02:11–02:26] In fact, you can package all of the equations together into a single vector equation where you have the matrix containing all of the constant coefficients and a vector containing all of the variables, and their matrix-vector product equals some different constant vector.
+[02:28–02:37] Let's name that constant matrix A, denote the vector holding the variables with a bold-faced X, and call the constant vector on the right-hand side V.
+[02:38–02:42] This is more than just a notational trick to get our system of equations written on one line.
+[02:43–02:46] It sheds light on a pretty cool geometric interpretation for the problem.
+[02:47–02:57] The matrix A corresponds with some linear transformation, so solving Ax equals V means we're looking for a vector X, which, after applying the transformation, lands on V.
+[02:59–03:01] Think about what's happening here for a moment.
+[03:02–03:12] You can hold in your head this really complicated idea of multiple variables all intermingling with each other just by thinking about squishing and morphing space and trying to figure out which vector lands on another.
+[03:13–03:13] Cool, right?
+[03:14–03:18] To start simple, let's say you have a system with two equations and two unknowns.
+[03:19–03:23] This means the matrix A is a 2x2 matrix, and V and X are each two-dimensional vectors.
+[03:25–03:38] Now, how we think about the solutions to this equation depends on whether the transformation associated with A squishes all of space into a lower dimension, like a line or a point, or if it leaves everything spanning the full two dimensions where it started.
+[03:40–03:48] In the language of the last video, we subdivide into the cases where A has zero determinant and the case where A has non-zero determinant.
+[03:51–03:57] Let's start with the most likely case, where the determinant is non-zero, meaning space does not get squished into a zero-area region.
+[03:58–04:06] In this case, there will always be one and only one vector that lands on V, and you can find it by playing the transformation in reverse.
+[04:06–04:13] Following where V goes as we rewind the tape like this, you'll find the vector x such that A times x equals V.
+[04:15–04:24] When you play the transformation in reverse, it actually corresponds to a separate linear transformation, commonly called the inverse of A, denoted A to the negative one.
+[04:25–04:32] For example, if A was a counterclockwise rotation by 90 degrees, then the inverse of A would be a clockwise rotation by 90 degrees.
+[04:34–04:42] If A was a rightward shear that pushes j-hat one unit to the right, the inverse of A would be a leftward shear that pushes j-hat one unit to the left.
+[04:44–04:53] In general, A inverse is the unique transformation with the property that if you first apply A, then follow it with the transformation A inverse, you end up back where you started.
+[04:54–05:07] Applying one transformation after another is captured algebraically with matrix multiplication, so the core property of this transformation A inverse is that A inverse times A equals the matrix that corresponds to doing nothing.
+[05:08–05:11] The transformation that does nothing is called the identity transformation.
+[05:11–05:18] It leaves i-hat and j-hat each where they are, unmoved, so its columns are 1,0 and 0,1.
+[05:19–05:27] Once you find this inverse, which in practice you'd do with a computer, you can solve your equation by multiplying this inverse matrix by v.
+[05:29–05:36] And again, what this means geometrically is that you're playing the transformation in reverse and following v.
+[05:40–05:52] This non-zero determinant case, which for a random choice of matrix is by far the most likely one, corresponds with the idea that if you have two unknowns and two equations, it's almost certainly the case that there's a single unique solution.
+[05:53–05:59] This idea also makes sense in higher dimensions, when the number of equations equals the number of unknowns.
+[05:59–06:12] Again, the system of equations can be translated to the geometric interpretation where you have some transformation A and some vector v, and you're looking for the vector x that lands on v.
+[06:15–06:31] As long as the transformation A doesn't squish all of space into a lower dimension, meaning its determinant is non-zero, there will be an inverse transformation A inverse, with the property that if you first do A, then you do A inverse, it's the same as doing nothing.
+[06:33–06:39] And to solve your equation, you just have to multiply that reverse transformation matrix by the vector v.
+[06:43–06:52] But when the determinant is zero, and the transformation associated with the system of equations squishes space into a smaller dimension, there is no inverse.
+[06:52–06:55] You cannot unsquish a line to turn it into a plane.
+[06:55–06:58] At least that's not something that a function can do.
+[06:58–07:02] That would require transforming each individual vector into a whole line full of vectors.
+[07:03–07:06] But functions can only take a single input to a single output.
+[07:08–07:19] Similarly, for three equations and three unknowns, there will be no inverse if the corresponding transformation squishes 3D space onto the plane, or even if it squishes it onto a line or a point.
+[07:19–07:25] Those all correspond to a determinant of zero, since any region is squished into something with zero volume.
+[07:26–07:30] It's still possible that a solution exists even when there is no inverse.
+[07:30–07:39] It's just that when your transformation squishes space onto, say, a line, you have to be lucky enough that the vector v lives somewhere on that line.
+[07:43–07:48] You might notice that some of these zero determinant cases feel a lot more restrictive than others.
+[07:48–08:00] Given a 3x3 matrix, for example, it seems a lot harder for a solution to exist when it squishes space onto a line compared to when it squishes things onto a plane, even though both of those are zero determinant.
+[08:02–08:06] We have some language that's a bit more specific than just saying zero determinant.
+[08:06–08:13] When the output of a transformation is a line, meaning it's one-dimensional, we say the transformation has a rank of one.
+[08:15–08:20] If all the vectors land on some two-dimensional plane, we say the transformation has a rank of two.
+[08:22–08:27] So the word rank means the number of dimensions in the output of a transformation.
+[08:28–08:32] For instance, in the case of 2x2 matrices, rank two is the best that it can be.
+[08:33–08:39] It means the basis vectors continue to span the full two dimensions of space, and the determinant is not zero.
+[08:39–08:46] But for 3x3 matrices, rank two means that we've collapsed, but not as much as they would have collapsed for a rank one situation.
+[08:47–08:53] If a 3D transformation has a non-zero determinant and its output fills all of 3D space, it has a rank of three.
+[08:54–09:02] This set of all possible outputs for your matrix, whether it's a line, a plane, 3D space, whatever, is called the column space of your matrix.
+[09:04–09:06] You can probably guess where that name comes from.
+[09:06–09:15] The columns of your matrix tell you where the basis vectors land, and the span of those transformed basis vectors gives you all possible outputs.
+[09:16–09:21] In other words, the column space is the span of the columns of your matrix.
+[09:23–09:28] So a more precise definition of rank would be that it's the number of dimensions in the column space.
+[09:29–09:36] When this rank is as high as it can be, meaning it equals the number of columns, we call the matrix full rank.
+[09:38–09:45] Notice the zero vector will always be included in the column space, since linear transformations must keep the origin fixed in place.
+[09:46–09:51] For a full rank transformation, the only vector that lands at the origin is the zero vector itself.
+[09:52–09:58] But for matrices that aren't full rank, which squish to a smaller dimension, you can have a whole bunch of vectors that land on zero.
+[10:01–10:10] If a 2D transformation squishes space onto a line, for example, there is a separate line in a different direction full of vectors that get squished onto the origin.
+[10:11–10:17] If a 3D transformation squishes space onto a plane, there's also a full line of vectors that land on the origin.
+[10:20–10:27] If a 3D transformation squishes all of space onto a line, then there's a whole plane full of vectors that land on the origin.
+[10:32–10:38] This set of vectors that lands on the origin is called the null space, or the kernel of your matrix.
+[10:39–10:44] It's the space of all vectors that become null, in the sense that they land on the zero vector.
+[10:45–10:53] In terms of the linear system of equations, when v happens to be the zero vector, the null space gives you all of the possible solutions to the equation.
+[10:56–11:01] So that's a very high level overview of how to think about linear systems of equations geometrically.
+[11:02–11:10] Each system has some kind of linear transformation associated with it, and when that transformation has an inverse, you can use that inverse to solve your system.
+[11:12–11:23] Otherwise, the idea of column space lets us understand when a solution even exists, and the idea of a null space helps us to understand what the set of all possible solutions can look like.
+[11:24–11:29] Again, there's a lot that I haven't covered here, most notably how to compute these things.
+[11:29–11:34] I also had to limit my scope to examples where the number of equations equals the number of unknowns.
+[11:34–11:46] But the goal here is not to try to teach everything, it's that you come away with a strong intuition for inverse matrices, column space, and null space, and that those intuitions make any future learning that you do more fruitful.
+[11:47–11:51] Next video, by popular request, will be a brief footnote about non-square matrices.
+[11:51–11:59] Then after that, I'm going to give you my take on dot products, and something pretty cool that happens when you view them under the light of linear transformations. See you then!

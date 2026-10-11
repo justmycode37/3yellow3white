@@ -1,7 +1,12 @@
-import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, Geometry, SceneContext, SceneOptions, Vec2, Vec3, ViewState } from "./types.js";
+import type { AnimationAction, CameraState, CompileInput, CompiledScene, ControlDefinition, ControlValue, ElementHandle, ElementProps, ElementState, ElementStyle, Geometry, ReactiveDependency, ReactiveProperties, ReactiveUpdate, SceneContext, SceneOptions, SliderHandle, SliderOptions, Vec2, Vec3, ViewState } from "./types.js";
+import type { createSurfaceBuilders } from "./surfaces.js";
+import type { createSolidBuilders } from "./solids.js";
+import type { createMoleculeBuilders } from './molecules.js';
+
+type MeshBuilders = ReturnType<typeof createSurfaceBuilders> & ReturnType<typeof createSolidBuilders> & ReturnType<typeof createMoleculeBuilders>;
 
 /** Self-contained on purpose: the function is installed inside QuickJS, never eval'd by the host. */
-export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}): CompiledScene {
+export function buildScene(options: SceneOptions, builder: (context: SceneContext) => void, input: CompileInput = {}, installReactive?: (update: (values: Record<string, ControlValue>, changed: string[], time?: number) => ReactiveUpdate[]) => void, meshBuilders?: MeshBuilders): CompiledScene {
   const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
   const vector = (value: number[] = [0, 0, 0]): Vec3 => [value[0] ?? 0, value[1] ?? 0, value[2] ?? 0];
   const rotation = (value: number | number[] = 0): Vec3 => typeof value === "number" ? [0, 0, value] : vector(value);
@@ -21,7 +26,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const defaultCamera: CameraState = { yaw: mode === "3d" ? 0.55 : 0, pitch: mode === "3d" ? 0.35 : 0, target: [0, 0, 0], height: 8, distance: 12, perspective: mode === "3d" ? 1 : 0 };
   const camera = clone(input.previous?.camera ?? defaultCamera);
   let cameraNow = clone(camera);
-  const views = new Map<string, ViewState>((input.previous?.views ?? []).map(v => [v.id, { id: v.id, rect: clone(v.rect), camera: clone(v.camera), orbit: v.orbit }]));
+  const views = new Map<string, ViewState>((input.previous?.views ?? []).map(v => [v.id, { id: v.id, rect: clone(v.rect), camera: clone(v.camera), orbit: v.orbit, ...(v.orbitHitTest ? {orbitHitTest:v.orbitHitTest} : {}) }]));
   const viewCameras = new Map([...views].map(([id, view]) => [id, clone(view.camera)]));
   const declaredViews = new Set<string>();
   let currentView: string | undefined;
@@ -56,6 +61,7 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       e.position = rotateVector(e.position.map(v => v*parent!.scale) as Vec3,parent.rotation).map((v,i)=>v+parent!.position[i]) as Vec3;
       e.rotation = combineRotation(parent.rotation,e.rotation);
       e.scale *= parent.scale; e.opacity *= parent.opacity;
+      if (parent.castShadow === false) e.castShadow = false;
       if(parent.viewportOffset)e.viewportOffset=[(e.viewportOffset?.[0]??0)+parent.viewportOffset[0],(e.viewportOffset?.[1]??0)+parent.viewportOffset[1]];
       parent = originalParents.get(parent.id);
     }
@@ -71,6 +77,10 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const lifecycle: CompiledScene["lifecycle"] = [];
   const behaviors: NonNullable<CompiledScene["behaviors"]> = [];
   const bindings: NonNullable<CompiledScene["bindings"]> = [];
+  const callbacks: { target: string; slot?: number; controls: string[]; dependencies: ReactiveDependency[]; time?: true; callback: (...values: number[]) => ReactiveProperties; keys?: string[] }[] = [];
+  const reactiveHandles = new Set<SliderHandle>();
+  const timeHandle = Object.freeze({ time: true as const, [Symbol.toPrimitive]() { throw new Error("Read s.time through a binding"); } });
+  let building = true;
   let cursor = 0;
   let exiting: ElementHandle | undefined;
 
@@ -106,18 +116,30 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     if (used.has(id)) throw new Error(`Duplicate element ID: ${id}`);
     if (used.size >= 2000) throw new Error("Scene element limit exceeded (2000)");
     used.add(id);
-    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, strokeProfile, space, billboard, billboardOffset, viewportOffset, ...geometry } = props;
+    const { position, rotation: r, scale, opacity, fill, stroke, strokeWidth, strokeProfile, space, castShadow, billboard, billboardOffset, viewportOffset, ...geometry } = props;
     numericFormat(geometry.numberFormat);
     const element: ElementState = {
       id, geometry: { kind, ...clone(geometry) }, position: vector(position), rotation: rotation(r),
       scale: scale ?? 1, opacity: opacity ?? 1, fill: fill === undefined ? (kind === "line" || kind === "arrow" ? "none" : (input.palette?.foreground ?? "WHITE")) : fill,
       stroke: stroke === undefined ? (kind === "line" || kind === "arrow" ? (input.palette?.foreground ?? "WHITE") : "none") : stroke, strokeWidth: strokeWidth ?? (space === "screen" ? 1 : 0.04),
       ...(strokeProfile !== undefined ? { strokeProfile } : {}),
+      ...(castShadow !== undefined ? { castShadow } : {}),
       space: space ?? "world", ...(billboard !== undefined ? { billboard } : {}), ...(billboardOffset !== undefined ? { billboardOffset:vector(billboardOffset) } : {}), viewportOffset: viewportOffset !== undefined ? viewport(viewportOffset) : [0,0], ...(currentView ? { view: currentView } : {}), persistent: false,
     };
     states.set(id, element);
     lifecycle.push({ time: cursor, type: "add", ids: [id], elements: [clone(element)] });
     return handle(id);
+  };
+
+  // Constructor callbacks and sampling options stay inside the builder. Only
+  // ordinary mesh data and supported style properties cross the VM boundary.
+  const generatedMesh = (id: string, geometry: Geometry, props: ElementStyle & Pick<Geometry, "texture" | "material" | "clipPlanes" | "outline">): ElementHandle => {
+    const style: ElementStyle = {};
+    for (const key of ["position", "rotation", "scale", "opacity", "fill", "stroke", "strokeWidth", "strokeProfile", "space", "castShadow", "billboard", "billboardOffset", "viewportOffset"] as const) {
+      if (props[key] !== undefined) Object.assign(style, { [key]: props[key] });
+    }
+    const { kind: _kind, ...mesh } = geometry;
+    return add("mesh", id, { ...mesh, ...style, ...(props.clipPlanes !== undefined ? { clipPlanes: props.clipPlanes } : {}), ...(props.outline !== undefined ? { outline: props.outline } : {}), ...(props.texture !== undefined ? { texture: props.texture } : {}), ...(props.material !== undefined ? { material: props.material } : {}) });
   };
 
   const control = (id: string, definition: Omit<ControlDefinition, "id" | "label" | "value"> & { label?: string }): ControlValue => {
@@ -151,7 +173,8 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       const inheritedCamera = views.get(id)?.camera;
       const viewCamera: CameraState = { yaw: 0.55, pitch: 0.35, target: [0,0,0], height: 8, distance: 12, perspective: 1, ...clone(inheritedCamera ?? {}), ...clone(spec.camera ?? {}) };
       views.delete(id);
-      views.set(id, { id, rect: clone(spec.rect), orbit: spec.orbit ?? true, camera: viewCamera });
+      if (spec.orbitHitTest !== undefined && spec.orbitHitTest !== 'geometry') throw new Error('orbitHitTest must be "geometry"');
+      views.set(id, { id, rect: clone(spec.rect), orbit: spec.orbit ?? true, camera: viewCamera, ...(spec.orbitHitTest ? {orbitHitTest:spec.orbitHitTest} : {}) });
       viewCameras.set(id, clone(viewCamera));
       currentView = id;
       const { view: _view, ...scoped } = context;
@@ -189,6 +212,59 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
     text: (id, props) => add("text", id, { fontSize: props.space === "screen" ? 16 : 0.4, ...props }),
     latex: (id, props) => add("latex", id, { fontSize: props.space === "screen" ? 24 : 0.6, ...props }),
     mesh: (id, props) => add("mesh", id, props),
+    model: (id, props) => {
+      idCheck(id);
+      const metadata = input.models?.[props.asset];
+      if (!metadata) throw new Error(`Unknown model asset: ${props.asset}`);
+      const { asset, tint, ...style } = props;
+      if (Object.keys(style).some(k => !['position','rotation','scale','opacity','castShadow'].includes(k))) throw new Error('Unsupported model property');
+      const handles = new Map<string, ElementHandle>();
+      const partId = (part: string) => `${id}/${part}`;
+      for (const part of [...metadata.parts].reverse()) {
+        const children = part.primitives.map(index => add('model', `${id}/primitive-${index}`, {
+          model: { asset, primitive: index, bounds: clone(metadata.primitives[index].bounds) },
+          fill: tint ?? 'WHITE', stroke: 'none',
+        }));
+        children.push(...metadata.parts.filter(p => p.parent === part.id).map(p => handles.get(p.id)!));
+        const group = context.group(partId(part.id), children);
+        // Group origins preserve imported node pivots. Imported static rotations/scales are baked in host geometry.
+        const position = vector(part.position);
+        states.get(group.id)!.position = position;
+        lifecycle.at(-1)!.elements![0].position = clone(position);
+        handles.set(part.id, group);
+      }
+      const root = context.group(id, metadata.parts.filter(p => !p.parent).map(p => handles.get(p.id)!));
+      const state = states.get(id)!;
+      if (style.position) state.position = vector(style.position);
+      if (style.rotation !== undefined) state.rotation = rotation(style.rotation);
+      if (style.scale !== undefined) state.scale = style.scale;
+      if (style.opacity !== undefined) state.opacity = style.opacity;
+      if (style.castShadow !== undefined) state.castShadow = style.castShadow;
+      lifecycle.at(-1)!.elements![0] = clone(state);
+      const modelHandle = (element: ElementHandle) => ({ ...element, tintTo: (color: import('./types.js').ColorValue) => ({type:'animate' as const,ids:descendants(element.id).filter(id=>states.get(id)!.geometry.kind==='model'),properties:{fill:color}}) });
+      return { ...modelHandle(root), part: key => {
+        const matches = metadata.parts.filter(p => p.id === key || p.name === key);
+        if (matches.length !== 1) throw new Error(`Unknown or ambiguous model part: ${key}. Use its node ID.`);
+        return modelHandle(handles.get(matches[0].id)!);
+      } };
+    },
+    surface: (id, props) => generatedMesh(id, meshBuilders!.surface(props), props),
+    parametricSurface: (id, props) => generatedMesh(id, meshBuilders!.parametricSurface(props), props),
+    box: (id, props = {}) => generatedMesh(id, meshBuilders!.box(props), props),
+    cylinder: (id, props = {}) => generatedMesh(id, meshBuilders!.cylinder(props), props),
+    cone: (id, props = {}) => generatedMesh(id, meshBuilders!.cone(props), props),
+    torus: (id, props = {}) => generatedMesh(id, meshBuilders!.torus(props), props),
+    tube: (id, props) => generatedMesh(id, meshBuilders!.tube(props), props),
+    molecule: (id, props) => {
+      idCheck(id);
+      const meshes = meshBuilders!.molecule(props);
+      const children = meshes.map((geometry, i) => generatedMesh(`${id}/batch-${i}`, geometry, {
+        fill: props.fill, stroke: props.stroke, strokeWidth: props.strokeWidth, strokeProfile: props.strokeProfile, material: props.material, space: props.space,
+      }));
+      for (const child of children) groups.add(child.id);
+      return add('group', id, {children: children.map(child => child.id), position: props.position, rotation: props.rotation,
+        scale: props.scale, opacity: props.opacity, space: props.space, castShadow: props.castShadow, viewportOffset: props.viewportOffset});
+    },
     behavior: (target, behavior) => {
       descendants(target.id);
       behaviors.push({ target: target.id, behavior: clone(behavior) });
@@ -272,12 +348,41 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       for (const id of ids) groups.delete(id);
       lifecycle.push({ time: cursor, type: "remove", ids });
     },
-    slider: (id, spec) => control(id, { ...spec, kind: "slider" }) as number,
+    slider: ((id: string, spec: SliderOptions & { reactive?: boolean }) => {
+      const value = control(id, { ...spec, kind: "slider" });
+      if (!spec.reactive) return value as number;
+      const handle: SliderHandle = Object.freeze({ id, reactive: true as const,
+        [Symbol.toPrimitive]() { throw new Error('Reactive sliders are handles; use s.bind to read their values'); },
+      });
+      reactiveHandles.add(handle);
+      return handle;
+    }) as SceneContext['slider'],
+    time: timeHandle,
+    bind: (target, dependencies, callback) => {
+      descendants(target.id);
+      if (!Array.isArray(dependencies) || !dependencies.length || dependencies.length > 100 || dependencies.some(c => c !== timeHandle && !reactiveHandles.has(c as SliderHandle))) throw new Error('s.bind requires reactive slider handles or s.time from this scene');
+      if (typeof callback !== 'function' || callbacks.length >= 2000) throw new Error('Invalid or oversized reactive bindings');
+      const siblings = callbacks.filter(c => c.target === target.id);
+      for (const sibling of siblings) sibling.slot ??= callbacks.indexOf(sibling);
+      callbacks.push({ target: target.id, ...(siblings.length ? { slot: callbacks.length } : {}), controls: dependencies.filter((c): c is SliderHandle => c !== timeHandle).map(c => c.id), dependencies: [...dependencies], ...(dependencies.includes(timeHandle) ? { time: true as const } : {}), callback });
+    },
+    deform: (target, dependencies, callback) => {
+      descendants(target.id);
+      const geometry = states.get(target.id)!.geometry;
+      if (geometry.kind !== 'mesh' || typeof callback !== 'function') throw new Error('s.deform requires a mesh and a callback');
+      const rest = geometry.vertices!.map(point => vector(point));
+      context.bind(target, dependencies, (...values) => ({ vertices: rest.map((point, index) => {
+        const result = callback([...point], index, ...values);
+        if (!Array.isArray(result) || result.length !== 3) throw new Error('s.deform callback must return a Vec3');
+        return [...result] as Vec3;
+      }) }));
+    },
     toggle: (id, spec) => control(id, { ...spec, kind: "toggle" }) as boolean,
     select: (id, spec) => control(id, { ...spec, kind: "select" }) as string,
     previous: {
       get: id => { if (!inherited.has(id) || !states.has(id)) throw new Error(`Missing persistent element: ${id}`); return handle(id); },
       exiting: () => {
+        if (!building) throw new Error('Scene building APIs cannot be called from reactive bindings');
         if (exiting) return exiting;
         const old = clone(input.previous?.elements.filter(e => !e.persistent && !e.transient) ?? []);
         const ids = new Set(old.map(e => e.id));
@@ -309,7 +414,52 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
       to2D: properties => ({ type: "camera", ids: [], properties: { perspective: 0, yaw: 0, pitch: 0, ...properties } }),
     },
   };
+  // Retained callbacks may calculate property values, but cannot mutate the builder.
+  for (const key of Object.keys(context)) {
+    const fn = (context as unknown as Record<string, unknown>)[key];
+    if (typeof fn === 'function') (context as unknown as Record<string, unknown>)[key] = (...args: unknown[]) => {
+      if (!building) throw new Error('Scene building APIs cannot be called from reactive bindings');
+      return fn(...args);
+    };
+  }
   const returned: unknown = builder(context);
   if (returned && typeof (returned as { then?: unknown }).then === "function") throw new Error("Scene builders must be synchronous");
-  return { options: { mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks, behaviors, bindings };
+  building = false;
+  // A new object's first opacity animation declares its entrance. Hide it at
+  // creation, not just when fadeIn starts, including during earlier waits or
+  // movement tracks. Later reappearances must preserve the preceding visibility.
+  const births = new Map(lifecycle.flatMap(event => event.type === "add"
+    ? (event.elements ?? []).filter(e => !e.transient).map(e => [e.id, e] as const) : []));
+  const opacityAnimated = new Set<string>();
+  for (const track of tracks) {
+    if (track.action.type !== "animate" || !Object.hasOwn(track.action.properties ?? {}, "opacity")) continue;
+    for (const id of track.action.ids) {
+      if (opacityAnimated.has(id)) continue;
+      opacityAnimated.add(id);
+      const birth = births.get(id);
+      // Leave invalid authored opacity intact for boundary validation.
+      if (birth && track.action.fromOpacity === 0 && birth.opacity >= 0 && birth.opacity <= 1) birth.opacity = 0;
+    }
+  }
+  const update = (values: Record<string, ControlValue>, changed: string[], time?: number): ReactiveUpdate[] => callbacks.filter(binding => time !== undefined && binding.time || binding.controls.some(id => changed.includes(id))).map(binding => {
+    const output = binding.callback(...binding.dependencies.map(dep => dep === timeHandle ? time ?? 0 : values[(dep as SliderHandle).id] as number));
+    if (!output || typeof output !== 'object' || Array.isArray(output)) throw new Error('Reactive bindings must return property objects');
+    const keys = Object.keys(output).sort();
+    if (!keys.length || keys.some(key => !['radius','position','rotation','scale','opacity','fill','vertices','normals','material','texture','scalarColors'].includes(key))) throw new Error('Unsupported reactive property');
+    if (binding.keys && JSON.stringify(keys) !== JSON.stringify(binding.keys)) throw new Error('Reactive bindings must return the same property keys on every update');
+    binding.keys ??= keys;
+    const properties = { ...output };
+    for (const key of ['normals', 'material', 'texture', 'scalarColors'] as const) {
+      const value = properties[key];
+      if (Object.hasOwn(properties, key) && value !== null && (!value || typeof value !== 'object' || (key === 'normals' ? !Array.isArray(value) : Array.isArray(value)))) throw new Error(`Invalid reactive ${key}`);
+    }
+    if (properties.position !== undefined) properties.position = vector(properties.position);
+    if (properties.rotation !== undefined) properties.rotation = rotation(properties.rotation);
+    return { target: binding.target, ...(binding.slot !== undefined ? { slot: binding.slot } : {}), properties: clone(properties) };
+  });
+  const initialUpdates = update(Object.fromEntries(controls.map(c => [c.id, c.value])), controls.map(c => c.id), 0);
+  const reactiveBindings = callbacks.map((binding, i) => ({ target: binding.target, ...(binding.slot !== undefined ? { slot: binding.slot } : {}), controls: binding.controls, ...(binding.time ? { time: true as const } : {}), properties: initialUpdates[i].properties }));
+  if (callbacks.length) installReactive?.(update);
+  const lighting = options.lighting === undefined ? input.previous?.lighting : options.lighting;
+  return { options: { ...(lighting !== undefined ? { lighting: clone(lighting) } : {}), mode, end: options.end ?? "hold", orbit: options.orbit ?? mode === "3d", background: options.background === undefined ? input.palette?.background ?? "BLACK" : options.background, ...(options.audio ? { audio: options.audio } : {}) }, duration: cursor, controls, initial, camera, views: [...views.values()].filter(v => declaredViews.has(v.id) || [...initial, ...lifecycle.flatMap(event => event.elements ?? [])].some(e => e.view === v.id)), lifecycle, tracks, behaviors, bindings, ...(reactiveBindings.length ? { reactiveBindings } : {}), ...(callbacks.some(b => b.time) ? { reactiveTime: 0 } : {}) };
 }

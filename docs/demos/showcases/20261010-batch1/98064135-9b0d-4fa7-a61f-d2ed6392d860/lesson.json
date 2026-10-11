@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "markdown": "# Two-source wave interference\n\n## Beat 1: Two-source wave interference\n\nContent needed: 2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Two-source wave interference. Visualize two coherent circular wave sources, their superposed scalar field and fixed interference nodes. Use one shared wave formula and synchronized time; show constructive and destructive interference through geometry or field intensity, not a page of labels. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.\n\nNarration: This is a silent visualization timing fixture.",
+  "plan": {
+    "audience": "Curious adult",
+    "prerequisites": [],
+    "learningGoal": "Two-source wave interference",
+    "centralQuestion": "Two-source wave interference",
+    "keyInsight": "Create exactly one 20-second silent single-scene visualization showcase: Two-source wave interference. Visualize two coherent circular wave sources, their superposed scalar field and fixed interference nodes. Use one shared wave formula and synchronized time; show constructive and destructive interference through geometry or field intensity, not a page of labels. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+    "runningExample": "Two-source wave interference",
+    "misconceptions": [
+      "Schematic geometry is not measured data."
+    ],
+    "entities": [],
+    "scenes": [
+      {
+        "id": "beat-1",
+        "purpose": "Two-source wave interference",
+        "whyNow": "Standalone single-scene visualization showcase.",
+        "keyPoints": [
+          "Visualize two coherent circular wave sources, their superposed scalar field and fixed interference nodes. Use one shared wave formula and synchronized time; show constructive and destructive interference through geometry or field intensity, not a page of labels."
+        ],
+        "visualDescription": "2D (because the requested construction is planar): Create exactly one 20-second silent single-scene visualization showcase: Two-source wave interference. Visualize two coherent circular wave sources, their superposed scalar field and fixed interference nodes. Use one shared wave formula and synchronized time; show constructive and destructive interference through geometry or field intensity, not a page of labels. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D.",
+        "endsWith": "Hold the resulting detailed construction clearly for inspection.",
+        "carry": [],
+        "cleanup": [],
+        "sourceRefs": [
+          {
+            "document": "request",
+            "location": "supplied text",
+            "supports": "Create exactly one 20-second silent single-scene visualization showcase: Two-source wave interference. Visualize two coherent circular wave sources, their superposed scalar field and fixed interference nodes. Use one shared wave formula and synchronized time; show constructive and destructive interference through geometry or field intensity, not a page of labels. Use 2D because this showcase specifically tests that representation. Prioritize a detailed, correct, recognizable construction and one meaningful operation, with a short final hold. Use the existing 3Blue1Brown-inspired visual language: dark open canvas, restrained stable colors, readable local labels, deliberate motion and no explanatory slide deck. No narration, title card, outro card or wall of text. The host provides a synthetic silent timing packet; there are no spoken words to synchronize. Preserve its audio asset ID and exact duration. Use the real animlib capabilities and available production tools. Do not replace the requested complex construction with a generic icon. Distinguish schematic/idealized geometry from measured data. No interactive controls in this batch; allow orbit where appropriate for 3D."
+          }
+        ],
+        "interactions": []
+      }
+    ]
+  }
+}

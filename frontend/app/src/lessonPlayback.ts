@@ -7,6 +7,8 @@ import type { VideoManifest } from '../../../shared/video/contract'
 type AnimationPlayer = Pick<Player, 'submit' | 'seek' | 'play' | 'pause' | 'subscribe' | 'dispose'> & Partial<Pick<Player, 'registerAssets' | 'unlockAudio' | 'setSceneBarriers'>>
 export interface LessonPlaybackState {
   time: number
+  sceneId?: string
+  sceneTime?: number
   duration: number
   playing: boolean
   ended: boolean
@@ -80,7 +82,7 @@ export class LessonPlayback {
       const waitingAtAppend = time >= this.extendingBoundary
       if (!this.changingTimeline && !waitingForInsertion && (ended || state.status === 'ended' && !waitingAtAppend && (!atEdge || this.complete) || state.status === 'blocked')) this.wantsPlay = false
       this.update({
-        time, duration,
+        time, duration, sceneId: state.scene ?? undefined, sceneTime: state.time,
         playing: state.status === 'playing', ended, error: state.error ?? '',
         buffering: waitingForInsertion || !this.complete && (atEdge || !duration), waitingForInsertion, wantsPlay: this.wantsPlay,
       })
@@ -114,9 +116,9 @@ export class LessonPlayback {
     const ended = this.complete && atEdge && !waitingForInsertion
     if (ended) this.wantsPlay = false
     this.update({ waitingForInsertion, ended, buffering: waitingForInsertion || !this.complete && (atEdge || !this.state.ready), wantsPlay: this.wantsPlay })
-    if (this.state.buffering) { this.player.pause(); return }
-    if (this.wantsPlay && !this.suspended) await this.player.play()
-    else this.player.pause()
+    if (this.state.buffering) { if (this.state.playing) this.player.pause(); return }
+    if (this.wantsPlay && !this.suspended) { if (!this.state.playing) await this.player.play() }
+    else if (this.state.playing) this.player.pause()
   }
 
   private run(operation: () => Promise<void>) {
@@ -187,7 +189,7 @@ export class LessonPlayback {
       // while preserving the user's play/pause intent and all current control values.
       if (!append) this.player.pause()
       const position = { ...this.currentPosition }
-      if (scene.audio) this.player.registerAssets?.({ [scene.audioId!]: { kind: 'audio', url: scene.audio.url } })
+      if (scene.audio) this.player.registerAssets?.({ ...scene.assets, [scene.audioId!]: { kind: 'audio', url: scene.audio.url } })
       this.extendingBoundary = append ? boundary || Infinity : Infinity
       this.changingTimeline = true
       try {

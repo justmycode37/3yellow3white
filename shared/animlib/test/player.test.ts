@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ColorPalette, CompiledScene, Frame } from "../src/types.js";
+import type { CameraState, ColorPalette, CompiledScene, Frame } from "../src/types.js";
 
-const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, options: undefined as CompiledScene['options'] | undefined, palette: undefined as ColorPalette | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
+const rendering = vi.hoisted(() => ({ frame: undefined as Frame | undefined, options: undefined as CompiledScene['options'] | undefined, palette: undefined as ColorPalette | undefined, snapshotCamera: undefined as CameraState | undefined, orbit: { yaw: 0, pitch: 0 }, disposed: false }));
 vi.mock("../src/renderer.js", () => ({
   CanvasRenderer: class {
     onOrbitChange?: () => void;
@@ -10,17 +10,25 @@ vi.mock("../src/renderer.js", () => ({
     setOrbitEnabled() {}
     setPalette(palette: ColorPalette) { rendering.palette = palette; }
     syncInteraction() {}
-    interactionSnapshot() { const frame=rendering.frame;return frame?{frame,camera:frame.camera,width:800,height:600,rect:[0,0,1,1]}:undefined; }
+    interactionSnapshot(view = '') {
+      const frame=rendering.frame, region=frame?.views?.find(v=>v.id===view);
+      if (!frame || (view && !region)) return;
+      const rect=region?.rect??[0,0,1,1];
+      return {frame,camera:rendering.snapshotCamera??region?.camera??frame.camera,width:800*rect[2],height:600*rect[3],rect};
+    }
     resetInteraction() { rendering.orbit = { yaw: 0, pitch: 0 }; }
     async prepare(_scenes: CompiledScene[]) {}
     render(frame: Frame, options: CompiledScene['options']) { rendering.frame = structuredClone(frame); rendering.options = structuredClone(options); }
     dispose() { rendering.disposed = true; }
   },
 }));
+import { CanvasRenderer } from "../src/renderer.js";
 import { Canvas } from "./canvas-stub.js";
 import { createPlayer } from "../src/player.js";
 import { ControlOverlay } from "../src/controls.js";
 import { SceneSequence } from "../src/sequence.js";
+import { SourceCompiler } from '../src/compiler-client.js';
+import { AudioClock } from '../src/audio.js';
 import { THREE_BLUE_ONE_BROWN_PALETTE } from "../src/palette.js";
 
 let now: number;
@@ -29,9 +37,48 @@ let frames: Map<number, FrameRequestCallback>;
 beforeEach(() => {
   now = 0; frameId = 0; frames = new Map();
   rendering.frame = undefined; rendering.options = undefined; rendering.palette = undefined; rendering.orbit = { yaw: 0, pitch: 0 }; rendering.disposed = false;
+  rendering.snapshotCamera = undefined;
   vi.spyOn(performance, "now").mockImplementation(() => now);
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { const id = ++frameId; frames.set(id, callback); return id; });
   vi.stubGlobal("cancelAnimationFrame", (id: number) => { frames.delete(id); });
+});
+
+describe('player bounds', () => {
+  it('measures displayed animation and uses the effective camera and display palette', async () => {
+    const player = createPlayer({ canvas: new Canvas() as unknown as HTMLCanvasElement });
+    expect(player.getBounds('r')).toBeUndefined();
+    const result = await player.submit({type:'load', scenes:[{id:'a', source:`export default scene({}, s => {
+      const r=s.rectangle('r',{width:2,height:1,fill:Color.BLUE});
+      s.play(r.moveTo([2,0,0]),{duration:2,ease:'linear'});
+    });`}]});
+    expect(result.ok).toBe(true);
+    await player.seek({scene:'a',time:1});
+    expect(player.getBounds('r')).toEqual({left:400,top:262.5,right:550,bottom:337.5});
+    expect(player.getBounds('r',{space:'world'})).toEqual({min:[0,-0.5,0],max:[2,0.5,0]});
+    rendering.snapshotCamera = {...rendering.frame!.camera,target:[1,0,0],height:4};
+    expect(player.getBounds('r')).toEqual({left:250,top:225,right:550,bottom:375});
+    expect(player.getBounds('r',{space:'camera'})).toEqual({min:[-1,-0.5,12],max:[1,0.5,12]});
+    player.setDisplayPalette({...THREE_BLUE_ONE_BROWN_PALETTE,colors:{...THREE_BLUE_ONE_BROWN_PALETTE.colors,BLUE:'#123456'}});
+    expect(player.getBounds('r')).toEqual({left:250,top:225,right:550,bottom:375});
+    player.dispose();
+    expect(() => player.getBounds('r')).toThrow('disposed');
+  });
+
+  it('selects the object view and reports pixels relative to that view', async () => {
+    const player = createPlayer({ canvas: new Canvas() as unknown as HTMLCanvasElement });
+    const result = await player.submit({type:'load',scenes:[{id:'a',source:`export default scene({},s=>{
+      s.view('right',{rect:[0.5,0,0.5,1],camera:{yaw:0,pitch:0,perspective:0,height:8}},v=>{
+        v.rectangle('r',{width:2,height:1});
+        v.rectangle('label',{width:100,height:20,space:'screen'});
+      });
+    });`}]});
+    expect(result.ok).toBe(true);
+    expect(player.getBounds('r')).toEqual({left:125,top:262.5,right:275,bottom:337.5});
+    expect(player.getBounds('label')).toEqual({left:150,top:290,right:250,bottom:310});
+    expect(player.getBounds('label',{space:'world'})).toBeUndefined();
+    expect(player.getBounds('unknown')).toBeUndefined();
+    player.dispose();
+  });
 });
 
 class NativeWidgetStub {
@@ -134,6 +181,114 @@ const second = `export default scene({ end: "hold" }, s => {
   const dot = s.previous.get("dot");
   s.play(dot.moveTo([7,0]), {duration:2});
 });`;
+const reactive = `export default scene({},s=>{
+  const size=s.slider('size',{reactive:true,default:1,min:0.5,max:3});
+  const ball=s.sphere('ball',{radius:0.45});
+  s.bind(ball,[size],value=>({radius:0.45*value}));
+  s.play(ball.moveTo([4,0]),{duration:4,ease:'linear'});
+});`;
+
+describe('reactive player controls', () => {
+  it('keeps input ordering when an ordinary control changes reactive slider bounds',async()=>{
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      const source=`export default scene({},s=>{
+        const wide=s.toggle('wide',{default:false});
+        const x=s.slider('x',{reactive:true,default:1,min:0,max:wide?10:3});
+        const a=s.circle('a');s.bind(a,[x],x=>({radius:x}));s.wait(2);
+      });`;
+      expect((await player.submit({type:'load',scenes:[{id:'a',source}]})).ok).toBe(true);
+      const first=player.setControl({scene:'a',id:'x',value:2});
+      const bounds=player.setControl({scene:'a',id:'wide',value:true});
+      const last=player.setControl({scene:'a',id:'x',value:8});
+      await Promise.all([first,bounds,last]);
+      expect(player.getState().controls.find(c=>c.id==='x')?.value).toBe(8);
+      expect(rendering.frame?.elements[0].geometry.radius).toBe(8);
+    }finally{player.dispose();}
+  });
+  it('keeps seek barriers and independent controls ordered through a 500-input burst',async()=>{
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      const source=`export default scene({},s=>{
+        const x=s.slider('x',{reactive:true,default:1,min:0,max:500});
+        const y=s.slider('y',{reactive:true,default:1,min:0,max:500});
+        const a=s.circle('a');s.bind(a,[x,y],(x,y)=>({position:[x,y]}));s.wait(2);
+      });`;
+      expect((await player.submit({type:'load',scenes:[{id:'a',source}]})).ok).toBe(true);
+      const requests:Promise<unknown>[]=[];
+      const update=vi.spyOn(SourceCompiler.prototype,'update');
+      for(let i=0;i<500;i++) {
+        if(i===250)requests.push(player.seek({scene:'a',time:1}));
+        requests.push(player.setControl({scene:'a',id:i%2?'y':'x',value:i}));
+      }
+      await Promise.all(requests);
+      expect(update).toHaveBeenCalledTimes(4);
+      expect(rendering.frame?.elements[0].position).toEqual([498,499,0]);
+      expect(player.getState()).toMatchObject({status:'paused',time:1});
+    }finally{player.dispose();}
+  });
+  it('keeps playing without resetting the audio clock or live behaviors', async () => {
+    const factory=vi.fn(()=>({update:()=>false,dispose:vi.fn()}));
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement,behaviors:{tracker:factory}});
+    try {
+      expect((await player.submit({type:'load',scenes:[{id:'a',source:reactive.replace("s.bind(ball", "s.behavior(ball,{type:'custom',name:'tracker'});s.bind(ball")}]})).ok).toBe(true);
+      await player.seek({scene:'a',time:1});
+      await player.play();
+      const instances=factory.mock.calls.length;
+      const stop=vi.spyOn(AudioClock.prototype,'stop');
+      const compile=vi.spyOn(SourceCompiler.prototype,'compile');
+      now+=500;
+      await player.setControl({scene:'a',id:'size',value:2});
+      expect(player.getState()).toMatchObject({time:1.5,status:'playing',duration:4});
+      expect(rendering.frame?.elements[0]).toMatchObject({position:[1.5,0,0],geometry:{radius:0.9}});
+      expect(stop).not.toHaveBeenCalled();
+      expect(compile).not.toHaveBeenCalled();
+      expect(factory.mock.calls).toHaveLength(instances);
+      expect(frames.size).toBe(1);
+      await player.seek({scene:'a',time:0.5});
+      expect(rendering.frame?.elements[0]).toMatchObject({position:[0.5,0,0],geometry:{radius:0.9}});
+    } finally { player.dispose(); }
+  });
+
+  it('coalesces queued input to the latest value while one callback request is in flight', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:reactive}]});
+      const original=SourceCompiler.prototype.update;
+      let release!:()=>void;
+      const gate=new Promise<void>(resolve=>{release=resolve;});
+      const update=vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this: SourceCompiler,...args){await gate;return original.apply(this,args);});
+      const first=player.setControl({scene:'a',id:'size',value:1.5});
+      await vi.waitFor(()=>expect(update).toHaveBeenCalledTimes(1));
+      const second=player.setControl({scene:'a',id:'size',value:2});
+      const last=player.setControl({scene:'a',id:'size',value:3});
+      expect(second).toBe(last);
+      release();await Promise.all([first,second,last]);
+      expect(update).toHaveBeenCalledTimes(2);
+      expect(update.mock.calls.map(call=>call[1].size)).toEqual([1.5,3]);
+      expect(player.getState().controls[0].value).toBe(3);
+      expect(rendering.frame?.elements[0].geometry.radius).toBeCloseTo(1.35);
+    } finally { player.dispose(); }
+  });
+
+  it('preserves ordering across source edits and reports a coalesced failure to every caller', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:reactive}]});
+      const update=vi.spyOn(SourceCompiler.prototype,'update');
+      const first=player.setControl({scene:'a',id:'size',value:1.5});
+      const edit=player.submit({type:'replace',scene:'a',source:reactive.replace('0.45*value','value===3?-1:0.5*value')});
+      const last=player.setControl({scene:'a',id:'size',value:2});
+      await Promise.all([first,edit,last]);
+      expect(update.mock.calls.map(call=>call[1].size)).toEqual([1.5,2]);
+      expect(rendering.frame?.elements[0].geometry.radius).toBe(1);
+      const a=player.setControl({scene:'a',id:'size',value:1});
+      const b=player.setControl({scene:'a',id:'size',value:3});
+      await Promise.all([expect(a).rejects.toThrow('radius'),expect(b).rejects.toThrow('radius')]);
+      expect(player.getState().controls[0].value).toBe(2);
+    } finally { player.dispose(); }
+  });
+});
 const wait = (seconds: number, end = "hold") => `export default scene({end:"${end}"},s=>s.wait(${seconds}));`;
 
 describe("player navigation and live source updates", () => {
@@ -327,8 +482,10 @@ describe("player navigation and live source updates", () => {
     await sequence.submit({ type: 'insert', after: 'a', scenes: [{ id: 'b', source: second }] });
     expect(sequence.compiled[0]).toBe(interactive);
     expect(prepare.mock.calls.at(-1)![0]).toHaveLength(1);
+    prepare.mockClear();
     await sequence.setControl('a', 'scale', 3);
-    expect(prepare.mock.calls.at(-1)![0]).toHaveLength(2);
+    expect(prepare.mock.calls.map(([scenes]) => scenes.length)).toEqual([1, 1]);
+    expect(prepare.mock.calls.map(([scenes]) => scenes[0])).toEqual(sequence.compiled);
     expect(sequence.compiled[0]).not.toBe(original);
     expect(sequence.frame(1, 0).elements.find(element => element.id === 'dot')?.geometry.radius).toBe(3);
     sequence.dispose();
@@ -453,7 +610,175 @@ it('cancels capture before replacing the active compilation, even when a later s
     expect(canvas.captures.size).toBe(0);expect(events).toEqual(['start','cancel','dispose']);
     expect(player.getState()).toMatchObject({scene:'a',time:1,status:'paused'});
     expect(canvas.send('pointermove',375,200).prevented).toBe(false);
-    canvas.send('pointerdown');canvas.send('pointermove',375,200);
+    canvas.send('pointerdown');canvas.send('pointermove',375,200);advance(1/60);
     expect(rendering.frame?.elements[0].position[0]).toBeCloseTo(2);
+  } finally {player.dispose();}
+});
+
+it('keeps backend errors blocking even if another scene is submitted',async()=>{
+  const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+  const failure=new Error('Device failed and fallback unavailable');
+  vi.spyOn(CanvasRenderer.prototype,'render').mockImplementationOnce(function(this:CanvasRenderer){this.onError?.(failure);});
+  const scenes=[{id:'small',source:"export default scene({},s=>{s.rectangle('r');s.wait(1)});"}];
+  try{
+    expect((await player.submit({type:'load',scenes})).ok).toBe(true);
+    expect(player.getState()).toMatchObject({status:'blocked',error:failure.message});
+    expect((await player.submit({type:'load',scenes})).ok).toBe(true);
+    expect(player.getState()).toMatchObject({status:'blocked',error:failure.message});
+    await expect(player.play()).rejects.toBe(failure);
+    expect(frames.size).toBe(0);
+  }finally{player.dispose();}
+});
+
+describe('time-dependent retained player frames', () => {
+  const wave = `export default scene({},s=>{
+    const a=s.slider('a',{reactive:true,default:1,min:0,max:3});
+    const m=s.mesh('m',{vertices:[[0,0,0],[1,0,0],[0,1,0]],triangles:[[0,1,2]],shading:'smooth'});
+    s.deform(m,[s.time,a],([x,y],i,t,a)=>[x,y,t*a*y]);s.wait(4);
+  });`;
+  const z = () => rendering.frame!.elements[0].geometry.vertices![2][2];
+  it('awaits seeks and paused controls, samples playback, and seeks repeatably', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      expect((await player.submit({type:'load',scenes:[{id:'a',source:wave}]})).ok).toBe(true);
+      await player.seek({scene:'a',time:2});expect(z()).toBe(2);
+      await player.setControl({scene:'a',id:'a',value:2});expect(z()).toBe(4);
+      await player.seek({scene:'a',time:0.5});expect(z()).toBe(1);
+      await player.seek({scene:'a',time:2});expect(z()).toBe(4);
+      await player.play();advance(0.5);
+      await vi.waitFor(()=>expect(z()).toBe(5));
+      player.pause();await vi.waitFor(()=>expect(player.getState().status).toBe('paused'));
+      const before=z();advance(0.5);await Promise.resolve();expect(z()).toBe(before);
+    } finally {player.dispose();}
+  });
+  it('a pending worker result cannot overwrite a later seek or queue unbounded playback samples', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const real=SourceCompiler.prototype.update;let release!:()=>void;
+      const update=vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this:SourceCompiler,...args){
+        await new Promise<void>(resolve=>{release=resolve;});return real.apply(this,args);
+      });
+      advance(0.5);await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+      advance(0.5);advance(0.5);expect(update).toHaveBeenCalledTimes(1);
+      const seek=player.seek({scene:'a',time:3});release();await seek;expect(z()).toBe(3);
+      expect(player.getState().status).toBe('paused');
+    } finally {player.dispose();}
+  });
+  describe.each(['control reconstruction', 'source replacement'] as const)('%s playback intent', operation => {
+    it.each(['pause', 'pause-play', 'play-pause', 'seek', 'seek-play', 'unchanged'] as const)('honors %s while the refreshed frame awaits a sample', async intent => {
+      const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+      let release: (()=>void)|undefined;
+      try {
+        const source=wave.replace('reactive:true,','').replace('[s.time,a]','[s.time]').replace('i,t,a)=>','i,t)=>');
+        expect((await player.submit({type:'load',scenes:[{id:'a',source},{id:'b',source:wait(1)}]})).ok).toBe(true);
+        await player.seek({scene:'a',time:1});await player.play();
+        const real=SourceCompiler.prototype.update;
+        vi.spyOn(SourceCompiler.prototype,'update').mockImplementation(async function(this:SourceCompiler,...args){
+          const result=await real.apply(this,args);
+          if(args[4]===1 && !release)await new Promise<void>(resolve=>{release=resolve;});
+          return result;
+        });
+        const changing=operation==='control reconstruction'
+          ?player.setControl({scene:'a',id:'a',value:2})
+          :player.submit({type:'replace',scene:'b',source:wait(2)});
+        await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+        const later: Promise<unknown>[]=[];
+        if(intent==='pause' || intent==='pause-play')player.pause();
+        if(intent==='pause-play' || intent==='play-pause')later.push(player.play());
+        if(intent==='play-pause')player.pause();
+        if(intent==='seek' || intent==='seek-play')later.push(player.seek({scene:'a',time:2}));
+        if(intent==='seek-play')later.push(player.play());
+        release!();await changing;await Promise.all(later);
+        const playing=['pause-play','seek-play','unchanged'].includes(intent);
+        const time=intent.startsWith('seek')?2:1;
+        expect(player.getState()).toMatchObject({status:playing?'playing':'paused',time});
+        expect(frames.size).toBe(playing?1:0);
+        expect(z()).toBe(time*(operation==='control reconstruction'?2:1));
+      } finally {release?.();player.dispose();}
+    });
+  });
+  it('preserves a Play request issued while a seek waits behind a control update', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    let release: (()=>void)|undefined;
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const real=SourceCompiler.prototype.update;
+      vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this:SourceCompiler,...args){
+        await new Promise<void>(resolve=>{release=resolve;});return real.apply(this,args);
+      });
+      const input=player.setControl({scene:'a',id:'a',value:2});
+      await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+      const seeking=player.seek({scene:'a',time:3});
+      await player.play(); // Must record intent without waiting for the stalled input.
+      release!();await input;await seeking;
+      expect(player.getState()).toMatchObject({status:'playing',time:3});
+      expect(frames.size).toBe(1);expect(z()).toBe(6);
+    } finally {release?.();player.dispose();}
+  });
+  it('rejects an unknown seek without stopping a playing clock or its scheduled frame', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const stop=vi.spyOn(AudioClock.prototype,'stop');
+      await expect(player.seek({scene:'missing',time:2})).rejects.toThrow('Unknown scene');
+      expect(player.getState().status).toBe('playing');expect(frames.size).toBe(1);expect(stop).not.toHaveBeenCalled();
+      advance(0.5);await vi.waitFor(()=>expect(z()).toBe(0.5));
+    } finally {player.dispose();}
+  });
+  it.each(['pause','seek'] as const)('a later %s cancels a recorded Play intent', async intent => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    let release: (()=>void)|undefined;
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const real=SourceCompiler.prototype.update;
+      vi.spyOn(SourceCompiler.prototype,'update').mockImplementationOnce(async function(this:SourceCompiler,...args){
+        await new Promise<void>(resolve=>{release=resolve;});return real.apply(this,args);
+      });
+      const input=player.setControl({scene:'a',id:'a',value:2});
+      await vi.waitFor(()=>expect(release).toBeTypeOf('function'));
+      const seeking=player.seek({scene:'a',time:3});await player.play();
+      const later=intent==='seek'?player.seek({scene:'a',time:1}):Promise.resolve(player.pause());
+      release!();await input;await seeking;await later;
+      expect(player.getState()).toMatchObject({status:'paused',time:intent==='seek'?1:3});
+      expect(frames.size).toBe(0);
+    } finally {release?.();player.dispose();}
+  });
+  it('revalidates a seek after a queued load removes its target, without breaking later playback', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave}]});await player.play();
+      const loading=player.submit({type:'load',scenes:[{id:'b',source:wave}]});
+      const rejection=expect(player.seek({scene:'a',time:2})).rejects.toThrow('Unknown scene');
+      await loading;await rejection;
+      expect(player.getState()).toMatchObject({scene:'b',status:'paused'});
+      await player.play();expect(player.getState().status).toBe('playing');expect(frames.size).toBe(1);
+    } finally {player.dispose();}
+  });
+  it('a bad time sample keeps the last rendered frame and reports a blocked player', async () => {
+    const player=createPlayer({canvas:new Canvas() as unknown as HTMLCanvasElement});
+    try {
+      await player.submit({type:'load',scenes:[{id:'a',source:wave.replace('t*a*y','t===2?Infinity:t*a*y')}]});
+      await player.seek({scene:'a',time:1});expect(z()).toBe(1);
+      await player.seek({scene:'a',time:2});expect(z()).toBe(1);expect(player.getState().status).toBe('blocked');
+      await player.seek({scene:'a',time:3});expect(z()).toBe(3);expect(player.getState().error).toBeUndefined();
+    } finally {player.dispose();}
+  });
+  });
+it('coalesces paused and playing input into one RAF and consumes pending invalidation on seek/pause/dispose',async()=>{
+  const player=createPlayer({canvas:{} as HTMLCanvasElement});
+  try {
+    await player.submit({type:'load',scenes:[{id:'a',source:wait(5)}]});
+    const notified=vi.fn(),unsubscribe=player.subscribe(notified);notified.mockClear();
+    for(let i=0;i<8;i++)player.invalidateFrame();
+    expect(notified).not.toHaveBeenCalled();expect(frames.size).toBe(1);
+    advance(1/60);expect(notified).toHaveBeenCalledTimes(1);expect(frames.size).toBe(0);
+    await player.play();notified.mockClear();
+    for(let i=0;i<8;i++)player.invalidateFrame();
+    expect(frames.size).toBe(1);advance(1/60);expect(notified).toHaveBeenCalledTimes(1);
+    player.invalidateFrame();await player.seek({scene:'a',time:2});
+    expect(frames.size).toBe(0);expect(player.getState().time).toBe(2);
+    player.invalidateFrame();player.pause();expect(frames.size).toBe(0);
+    player.invalidateFrame();player.dispose();expect(frames.size).toBe(0);unsubscribe();
   } finally {player.dispose();}
 });

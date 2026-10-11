@@ -1,0 +1,24 @@
+.generation-progress { color: var(--player-ink); }
+.player-stage .generation-progress.player-status { gap: 0; padding: 88px 24px 124px; }
+.generation-usage { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+/* The "~" hangs to the left, so the digits stay centred over "tokens" and the glasses. */
+.generation-estimate { position: absolute; right: 100%; }
+.generation-count { position: relative; display: inline-flex; align-items: center; font-family: DynaPuff, sans-serif; font-size: clamp(48px, 8vw, 72px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.035em; line-height: 1.15; }
+.generation-digit { display: inline-block; width: 1ch; height: 1.15em; overflow: hidden; letter-spacing: 0; }
+.generation-digit-row { display: flex; align-items: center; justify-content: center; height: 1.15em; }
+.generation-digit-track { display: flex; flex-direction: column; }
+.generation-digit-up { transform: translateY(-50%); animation: generation-digit-up 200ms cubic-bezier(.22, 1, .36, 1) both; }
+.generation-digit-down { transform: translateY(0); animation: generation-digit-down 200ms cubic-bezier(.22, 1, .36, 1) both; }
+.generation-separator { letter-spacing: 0; }
+@keyframes generation-digit-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+@keyframes generation-digit-down {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0); }
+}
+.generation-unit { font-size: 11px; font-weight: 400; opacity: .55; }
+@media (prefers-reduced-motion: reduce) {
+  .generation-digit-track { animation: none; }
+}

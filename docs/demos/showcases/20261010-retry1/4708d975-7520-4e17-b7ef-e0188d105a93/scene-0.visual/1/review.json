@@ -1,0 +1,73 @@
+{
+  "sourceSha256": "3320bc06846eb86ae9111b544262cfef452a91cf45d6aa0e632bb3593bb3704f",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9249999999999976,
+        4.149999999999993,
+        5.374999999999989,
+        7.824999999999981
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.25000000000001,
+        12.675000000000045,
+        13.900000000000063,
+        15.12500000000008,
+        17.400000000000105,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.9249999999999976,
+        4.149999999999993,
+        5.374999999999989,
+        7.824999999999981
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10.25000000000001,
+        12.675000000000045,
+        13.900000000000063,
+        15.12500000000008,
+        17.400000000000105,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 12.675,
+      "objectIds": [
+        "focus-label",
+        "central-body-at-focus"
+      ],
+      "problem": "The text crossings are resolved, but the displaced focus label now sits immediately above the sector's upper orbital endpoint, far from the gold body, without a leader. This makes the location of the focus ambiguous in both aspect ratios.",
+      "fix": "Retain the collision-free placement and add a quiet leader clearly linking the focus label to the gold body, without crossing any lettering."
+    }
+  ]
+}

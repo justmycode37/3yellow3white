@@ -1,0 +1,384 @@
+{
+  "request": {
+    "title": "Can one source tell us why workers protested?",
+    "topic": "Write a roughly 90-second lesson in exactly 2 scenes for secondary-school history students, using only the supplied fictional source packet. Explain the difference between what a source directly reports and what it can justify about motives. Reach a qualified interpretation, not an invented definitive cause. No equations, no scripted pauses, no fabricated facts or additional sources. A timeline or evidence comparison may help. Do not force a mathematical proof or a single causal explanation.",
+    "videoMode": "classic",
+    "documents": [
+      {
+        "name": "fictional-source-packet.txt",
+        "text": "All events and sources here are fictional. A factory notice dated 4 May announces a 10% wage cut starting 10 May. A worker diary dated 11 May reports that several workers stopped work and records: \"My pay will not cover rent now.\" A manager letter dated 12 May attributes the stoppage to outside agitators but identifies none. No interviews with other workers, attendance totals, earlier wage records, or additional evidence are supplied."
+      }
+    ]
+  },
+  "samples": [
+    {
+      "label": "A",
+      "draft": {
+        "schemaVersion": 1,
+        "markdown": "# Can one source tell us why workers protested?\n\n## Beat 1 — What is actually reported?\n\nContent needed: Label the whole packet fictional. Show a date-ordered timeline: factory notice dated 4 May; wage cut scheduled for 10 May; worker diary dated 11 May. Keep the scheduled date visibly distinct from a confirmed event. Show the notice's 10% cut and the exact diary quotation, “My pay will not cover rent now.” Identify the stoppage as reported by the diary. Do not show a causal arrow.\n\nNarration: This fictional packet gives us a factory notice, a worker’s diary, and a manager’s letter. Can they tell us why workers stopped work? Start by separating what each source says from what we infer. The notice announces a ten percent wage cut, starting on the tenth of May. The diary, dated the eleventh, reports that several workers stopped work. Its author writes, “My pay will not cover rent now.” That directly records one worker’s concern about pay. It does not tell us what every worker thought, or establish that this concern caused the stoppage.\n\n## Beat 2 — How far can the interpretation go?\n\nContent needed: Retain the same notice and diary and add the manager letter dated 12 May. Compare each account with the reach of its evidence: diary—one worker's expressed concern; manager—outside-agitator attribution, nobody identified. Show that the announced cut precedes the reported stoppage without making sequence equal causation. Mark the missing evidence from the packet: other workers' interviews, attendance totals, earlier wage records. End with “Pay concerns may have contributed” visibly qualified by “Scale and other motives unknown.” Do not depict agitators as established people or assign motives to the unrepresented workers.\n\nNarration: The manager’s letter, dated the twelfth, blames outside agitators but names none. That records the manager’s explanation; it does not establish that agitators were responsible. Both writers offer limited viewpoints. However, the diary connects pay to a specific concern, rent, while the letter supplies no identified agitators. Together with the notice’s timing, this supports a cautious interpretation: pay concerns may have contributed to the stoppage. We cannot say how widely that motive was shared, or exclude other motives. Without other workers’ accounts, attendance totals, or earlier wage records, the cause remains only partly explained.",
+        "plan": {
+          "audience": "Secondary-school history students",
+          "prerequisites": [
+            "Distinguish a historical source from the event it describes.",
+            "Read dates in chronological order."
+          ],
+          "learningGoal": "Distinguish a source's direct report from an inference about motives, and use the fictional packet to state a qualified interpretation with specific limits.",
+          "centralQuestion": "What can this source packet justify about why workers stopped work?",
+          "keyInsight": "The diary directly expresses one worker's pay concern, which, alongside the announced cut's timing, makes pay a plausible contributing motive; neither that account nor the manager's unsupported attribution establishes the motives of all participants or a definitive cause.",
+          "runningExample": "The fictional factory packet: 4 May notice announcing a 10% wage cut starting 10 May; 11 May worker diary reporting several workers stopped work and stating 'My pay will not cover rent now.'; 12 May manager letter attributing the stoppage to unidentified outside agitators.",
+          "misconceptions": [
+            "A source's attribution of a cause establishes that cause.",
+            "One worker's expressed concern represents every worker's motive.",
+            "An announced implementation date proves the cut took effect as planned.",
+            "Events occurring in sequence prove a causal relationship.",
+            "Different viewpoints make all claims equally supported."
+          ],
+          "entities": [
+            {
+              "id": "source-timeline",
+              "meaning": "A chronological scaffold for the fictional packet in beat-1 and beat-2. Distinguish dated documents from the notice's scheduled wage-cut date; ordering encodes time, never proven causation.",
+              "color": "WHITE"
+            },
+            {
+              "id": "factory-notice",
+              "meaning": "The same fictional notice dated 4 May in beat-1 and beat-2, announcing a 10% cut starting 10 May. Preserve announcement status and dates when comparing it with the diary.",
+              "color": "BLUE"
+            },
+            {
+              "id": "worker-diary",
+              "meaning": "The same fictional diary dated 11 May, introduced in beat-1 and compared with the manager letter in beat-2. Its stoppage report and exact rent quotation remain attributable to this single author.",
+              "color": "YELLOW"
+            },
+            {
+              "id": "manager-letter",
+              "meaning": "The fictional manager letter dated 12 May, introduced in beat-2. Distinguish its outside-agitator attribution from established events and retain its lack of identified agitators.",
+              "color": "PURPLE"
+            }
+          ],
+          "scenes": [
+            {
+              "id": "beat-1",
+              "purpose": "Separate the notice's announcement and the diary's report from an inference about participants' motives.",
+              "whyNow": "Opens with the central historical question and establishes the dated evidence needed before weighing a competing attribution.",
+              "keyPoints": [
+                "The packet and its events are fictional.",
+                "The notice announces a cut and a future start date.",
+                "The diary reports a stoppage and expresses its author's rent concern.",
+                "This direct expression does not establish all workers' motives or the cause of the stoppage."
+              ],
+              "visualDescription": "2D (because chronology and attribution are planar evidence relationships): On a black background, introduce a white chronological scaffold with short labels identifying this as a fictional packet. Use date-ordered marks with schematic spacing, not a quantitative duration scale. Attach a blue notice excerpt to 4 May and a distinct outlined planned-event mark at 10 May linked only to the notice's announcement. Show '10% wage cut' and 'scheduled start', without implying verified implementation. Attach the yellow diary to 11 May, with separate short excerpts 'several workers stopped work' and the exact quotation 'My pay will not cover rent now.' Identify each excerpt's author and distinguish report from direct personal expression. When narration says 'one worker', emphasize the quotation's single author attribution, not anonymous crowd figures. No cause arrow, inferred motive label, or manager claim appears yet. Text excerpts are selective evidence, not a recreated document with invented wording.",
+              "endsWith": "The notice, its scheduled date, and the diary remain attached to the shared timeline. The diary quotation retains its single-author attribution. No causal link has been asserted, and the manager's explanation is still unrevealed.",
+              "carry": [
+                "source-timeline",
+                "factory-notice",
+                "worker-diary"
+              ],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "fictional-source-packet.txt",
+                  "location": "supplied text",
+                  "supports": "Fictional status; 4 May notice, 10% cut and scheduled 10 May start; 11 May diary's stoppage report and exact rent quotation."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-2",
+              "purpose": "Weigh the competing accounts and reach a limited interpretation of motives.",
+              "whyNow": "Uses the notice and diary already distinguished from inferences, adds the manager's attribution, and concludes with the strongest interpretation and its limits.",
+              "keyPoints": [
+                "The manager attributes the stoppage to outside agitators without identifying any.",
+                "A recorded explanation is not confirmation of the claimed cause.",
+                "The rent quotation gives specific support for one worker's pay concern.",
+                "The sequence and concern support a possible contribution from pay, not a definitive or universal motive.",
+                "Missing evidence limits conclusions about participation, wider motives, and earlier wages."
+              ],
+              "visualDescription": "2D (because comparison of source claims and evidential limits is planar): Begin from the retained timeline, blue notice, and yellow diary in their actual prior state. Add a purple manager-letter excerpt at 12 May, labeled 'attributes: outside agitators', followed by 'none identified' as narration states the limitation. Compare the diary's specific rent concern with the letter's uncorroborated attribution using source-linked annotations; neither source receives a binary true/false stamp. Keep chronological ordering intact, then simplify incidental timeline labels to make room for the qualified interpretation. Reveal 'Pay concerns may have contributed' only when spoken, connected to the notice and diary by evidence links explicitly labeled 'supports possibility', not causal arrows. Briefly show the supplied missing evidence as short plain labels: other workers' accounts, attendance totals, earlier wage records. End with 'Scale and other motives unknown' alongside the qualified claim. Do not draw agitator figures, a quantified crowd, or conjectured alternative motives. White scaffold and stable source colors retain attribution throughout.",
+              "endsWith": "All three sources remain identifiable with their distinct claims and limits. The final visible inference is that pay concerns may have contributed, qualified by unknown breadth and other motives; the packet's missing evidence remains apparent.",
+              "carry": [],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "fictional-source-packet.txt",
+                  "location": "supplied text",
+                  "supports": "12 May manager attribution and absence of identified agitators; no interviews with other workers, attendance totals, earlier wage records, or additional evidence. The possible contribution of pay is explicitly the lesson's qualified inference from the packet, not a quoted source conclusion."
+                }
+              ],
+              "interactions": []
+            }
+          ]
+        }
+      },
+      "measurements": {
+        "valid": true,
+        "scenes": 2,
+        "words": 188,
+        "wordsPerScene": [
+          94,
+          94
+        ],
+        "pauseCount": 0,
+        "pauseSeconds": 0,
+        "estimateSecondsAt140": 89,
+        "estimateSecondsRange": [
+          83,
+          99
+        ]
+      }
+    },
+    {
+      "label": "B",
+      "draft": {
+        "schemaVersion": 1,
+        "markdown": "# Can one source tell us why workers protested?\n\n## Beat 1 — What the sources actually say\n\nContent needed: All material is fictional. Build a dated evidence sequence: notice dated 4 May announcing a 10% wage cut starting 10 May; diary dated 11 May reporting that several workers stopped work and stating, ‘My pay will not cover rent now’; manager letter dated 12 May attributing the stoppage to unidentified outside agitators. Distinguish the date of the diary from an independently established date of the stoppage. Keep all claims attached to their sources.\n\nNarration: Why did these factory workers stop work? Our fictional packet contains three sources, but they do different jobs. A notice dated May fourth announces a ten percent wage cut, starting May tenth. That establishes an announced policy; it does not show anyone’s actual pay.\n\nNarration: A diary dated May eleventh reports that several workers stopped work. Its writer says, ‘My pay will not cover rent now.’ We have a report of a stoppage and one person’s financial concern. A manager’s letter dated May twelfth blames outside agitators, but names none. That records the manager’s explanation; it does not establish that agitators caused the stoppage.\n\n## Beat 2 — From reports to a qualified interpretation\n\nContent needed: Compare what each source supplies with the inference it can support. Preserve the notice’s status as an announcement, the diary’s single-writer scope, and the manager’s unsubstantiated attribution. Reach a qualified wage-related interpretation without treating chronology as proof. Show the limits: no other worker interviews, attendance totals, earlier wage records, or additional evidence.\n\nNarration: The wage explanation has some support: the cut was due to begin before the diary entry, and the writer connects pay with difficulty covering rent. Together, these make financial pressure a plausible contributor to the stoppage. But the diary does not explicitly say why every participant joined, or even that its writer joined.\n\nNarration: The manager offers a competing explanation. Naming no agitators leaves that claim unsupported within this packet, rather than proven false. Without other workers’ accounts, attendance totals, or earlier wage records, we cannot settle everyone’s motives. Our conclusion is qualified: the announced cut may have contributed to the stoppage, while the reasons individual workers took part remain uncertain.",
+        "plan": {
+          "audience": "Secondary-school history students",
+          "prerequisites": [
+            "Recognize a notice, diary, and letter as different kinds of historical source",
+            "Understand the chronological order of calendar dates"
+          ],
+          "learningGoal": "Distinguish a source's report or attribution from a justified inference about motives, and formulate a qualified interpretation using only a limited source packet.",
+          "centralQuestion": "How far can this packet justify an explanation of why workers stopped work?",
+          "keyInsight": "The notice and diary jointly support financial pressure as a plausible contributor, but an announced policy and one writer's concern cannot establish the motives of every participant; the manager's attribution is evidence of an explanation being offered, not confirmation of its cause.",
+          "runningExample": "The fictional factory packet: 4 May notice announcing a 10% wage cut starting 10 May; 11 May diary reporting several workers stopped work and stating 'My pay will not cover rent now'; 12 May manager letter blaming unidentified outside agitators.",
+          "misconceptions": [
+            "A source's causal claim automatically establishes its truth",
+            "A diary writer speaks for all workers or necessarily participated",
+            "An announced wage cut proves actual payroll changes",
+            "Chronological order alone proves causation",
+            "Lack of support proves the manager's explanation false"
+          ],
+          "entities": [
+            {
+              "id": "notice",
+              "meaning": "The fictional 4 May notice, with announcement date and planned 10 May start kept distinct. Introduced in beat-1 and retained in beat-2 as policy evidence, never transformed into verified payroll data.",
+              "color": "BLUE"
+            },
+            {
+              "id": "diary",
+              "meaning": "The fictional 11 May diary: a report of several workers stopping work and this writer's concern about rent. Introduced in beat-1 and retained in beat-2; its date labels the entry, not a separately verified stoppage date, and its writer never stands for all participants.",
+              "color": "YELLOW"
+            },
+            {
+              "id": "letter",
+              "meaning": "The fictional 12 May manager letter attributing the stoppage to unidentified outside agitators. Introduced in beat-1 and retained in beat-2, always visually owned by the manager's claim, never a depicted verified agitator.",
+              "color": "PURPLE"
+            },
+            {
+              "id": "date-line",
+              "meaning": "A schematic calendar guide for 4, 10, 11, and 12 May in beat-1; removed in beat-2 after establishing sequence. Calendar position denotes date, not causal strength.",
+              "color": "GREY"
+            },
+            {
+              "id": "interpretation",
+              "meaning": "The qualified inference introduced only in beat-2: the announced wage cut may have contributed, while individual motives remain uncertain. Connecting marks denote evidential support, not verified causal links.",
+              "color": "GREEN"
+            }
+          ],
+          "scenes": [
+            {
+              "id": "beat-1",
+              "purpose": "Separate documentary statements from the facts or motives those statements establish.",
+              "whyNow": "Opens the lesson by identifying the complete packet and each source's scope, preparing a comparison of explanations in beat-2.",
+              "keyPoints": [
+                "The notice announces a cut and planned start date, not an observed payroll outcome",
+                "The diary reports a stoppage and one writer's rent concern",
+                "The manager attributes a cause without identifying the alleged agitators"
+              ],
+              "visualDescription": "2D (because source chronology and the ownership of claims are planar relations): On the black explanatory stage, construct a quiet calendar guide with ticks proportional to day intervals for 4, 10, 11, and 12 May. Introduce a BLUE source label 'Notice' at 4 May and a connected annotation '10% cut announced' with a planned-start marker at 10 May. Introduce a YELLOW 'Diary' label at 11 May, explicitly dated as an entry, accompanied by the short report 'Several stopped work' and the supplied rent quotation. Introduce a PURPLE 'Manager letter' label at 12 May with 'Blames outside agitators' and then 'None identified'. These are schematic evidence annotations, not facsimile documents or cards. Keep source identity, date, and attached statement grouped throughout any repositioning; do not draw a stoppage event marker at 11 May. Reveal each qualification with its spoken explanation. No workers, agitators, payroll data, quantities of participants, or causal arrows are invented. A small 'Fictional packet' label establishes the material's status. Keep lettering within the player-safe area and readable in both 16:9 and 4:3.",
+              "endsWith": "All three source identities and their limited statements remain attached to the dated guide: announced cut, one writer's concern and report, manager's attribution without names. No overall causal conclusion is yet visible.",
+              "carry": [
+                "notice",
+                "diary",
+                "letter",
+                "date-line"
+              ],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "fictional-source-packet.txt",
+                  "location": "supplied text",
+                  "supports": "Fictional status; all three source dates, the announced 10% cut and 10 May start, diary report and quotation, and manager attribution without identified agitators"
+                },
+                {
+                  "document": "request",
+                  "location": "topic and videoMode",
+                  "supports": "Exactly two scenes, roughly 90 seconds, secondary-school audience, no equations or scripted pauses, classic mode"
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-2",
+              "purpose": "Combine limited evidence into a plausible interpretation while explicitly preserving uncertainty about motives.",
+              "whyNow": "Builds directly on the three source statements already visible and concludes the lesson by weighing their support without inventing a definitive cause.",
+              "keyPoints": [
+                "Sequence plus the writer's rent concern supports financial pressure as plausible",
+                "One writer's words cannot establish every participant's motive or the writer's participation",
+                "The manager's claim lacks supplied corroboration but is not disproved",
+                "Missing accounts and records limit the final interpretation"
+              ],
+              "visualDescription": "2D (because evaluating source support requires a comparison of statements rather than spatial depth): Begin from beat-1's actual three sources and date guide. Emphasize the notice's planned start and the diary entry date, then remove the guide while retaining the source labels and their meaningful statements. Place a restrained bracket between the BLUE announcement and YELLOW rent concern, labeled 'Supports a possibility' only when narration draws that inference. Introduce the GREEN interpretation 'Wage cut may have contributed' at that point; no arrow should imply a proved cause. Keep the diary's scope visible as 'One writer' and briefly annotate 'Participation unspecified' with the corresponding spoken limit. Contrast the PURPLE manager attribution with its existing 'None identified' qualification, then show 'Unconfirmed here', never a falsehood mark. Clear intermediate annotations before showing the supplied absences as short labels: 'Other workers' accounts', 'Attendance totals', 'Earlier wage records', introduced under 'Not supplied'. These identify evidential gaps, not empty data charts. End with the three source identities supporting or qualifying the interpretation and the short final limit 'Individual motives uncertain'. Preserve all semantic colors and keep the conclusion hidden until earned. Estimated spoken pacing for the complete lesson is roughly 90 seconds; measured narration determines both scene lengths and cue positions.",
+              "endsWith": "The source-owned evidence remains with the qualified interpretation 'Wage cut may have contributed' and 'Individual motives uncertain'. Temporary comparison annotations and the calendar guide are gone; no source is presented as definitively false or universally representative.",
+              "carry": [],
+              "cleanup": [
+                "date-line"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "fictional-source-packet.txt",
+                  "location": "supplied text",
+                  "supports": "The evidence used in the qualified wage interpretation, the absence of named agitators, and the explicitly missing other-worker interviews, attendance totals, earlier wage records, and additional evidence"
+                },
+                {
+                  "document": "request",
+                  "location": "topic",
+                  "supports": "Distinguish direct report from justification about motives and reach a qualified interpretation without a definitive invented cause"
+                }
+              ],
+              "interactions": []
+            }
+          ]
+        }
+      },
+      "measurements": {
+        "valid": true,
+        "scenes": 2,
+        "words": 213,
+        "wordsPerScene": [
+          103,
+          110
+        ],
+        "pauseCount": 0,
+        "pauseSeconds": 0,
+        "estimateSecondsAt140": 100,
+        "estimateSecondsRange": [
+          94,
+          112
+        ]
+      }
+    },
+    {
+      "label": "C",
+      "draft": {
+        "schemaVersion": 1,
+        "markdown": "# Can one source tell us why workers protested?\n\n## Beat 1 — A report and a possible motive\n\nContent needed: Fictional source packet. A dated evidence timeline distinguishes the 4 May notice from its announced 10 May wage-cut start, and the 11 May diary from the events it reports. Show the diary quotation exactly: My pay will not cover rent now. Keep the interpretation separate from source wording. Preserve notice and diary identities for beat-2.\n\nNarration: On 11 May, a worker writes that several workers have stopped work. Was a wage cut the reason? Our fictional packet offers clues.\n\nNarration: A factory notice dated 4 May announces a ten percent wage cut starting on 10 May. The next day's diary reports the stoppage and says, \"My pay will not cover rent now.\" This directly records the diarist's concern about rent. The timing links that concern with the announced cut, supporting financial pressure as a possible motive. But the diary does not say why every worker stopped.\n\n## Beat 2 — Weigh the claim, limit the conclusion\n\nContent needed: Continue with the same evidence. Add the 12 May manager letter attributing the stoppage to outside agitators, with none identified. Compare what each source reports with what it supports. Reveal the qualified interpretation only with the final spoken block. No other worker interviews, attendance totals, earlier wage records, or additional evidence are supplied.\n\nNarration: A manager's letter, dated 12 May, blames outside agitators but identifies none. It directly shows what the manager claimed; it does not establish that agitators caused the stoppage. Both writers offer partial views. We should neither dismiss the manager's claim nor turn one worker's worry into everyone's motive.\n\nReveal (spoken): The wage explanation has more specific support: an announced cut, a reported stoppage soon afterward, and one worker's concern about rent. The cut may have contributed to the stoppage. Without other workers' accounts or further evidence, we cannot establish a single cause or all workers' motives. A reported claim and a justified conclusion are different things.",
+        "plan": {
+          "audience": "Secondary-school history students; approximately 90 seconds, exactly two scenes.",
+          "prerequisites": [
+            "Everyday understanding of wages, rent, and stopping work"
+          ],
+          "learningGoal": "Distinguish what a source directly reports from an inference about motives, compare the specificity of support, and state a qualified interpretation of this fictional stoppage.",
+          "centralQuestion": "How far can this source packet justify the claim that the wage cut motivated the stoppage?",
+          "keyInsight": "The notice and diary give specific support for financial pressure as a possible contributing motive, while neither the diary nor the manager's unsupported attribution establishes all workers' motives or a single definitive cause.",
+          "runningExample": "One fictional factory stoppage: a notice dated 4 May announces a 10% wage cut starting 10 May; a diary dated 11 May reports several workers stopped work and records the writer's rent concern; a letter dated 12 May blames unidentified outside agitators.",
+          "misconceptions": [
+            "A source's attribution proves the cause it names",
+            "One worker's stated concern establishes every worker's motive",
+            "Events occurring close together alone establish causation",
+            "Missing corroboration proves the manager's claim false"
+          ],
+          "entities": [
+            {
+              "id": "evidence-timeline",
+              "meaning": "White dated scaffold introduced in beat-1 and extended in beat-2. Dates show source dates or an explicitly announced start date; chronology is never rendered as a proven causal chain. Calendar spacing uses elapsed days consistently.",
+              "color": "WHITE"
+            },
+            {
+              "id": "factory-notice",
+              "meaning": "Blue evidence from the 4 May factory notice, announcing a 10% cut from 10 May. Its date, announcement status and content remain attached in beat-1 and beat-2; it does not become a verified payroll record.",
+              "color": "BLUE"
+            },
+            {
+              "id": "worker-diary",
+              "meaning": "Yellow evidence from the 11 May diary: reported stoppage by several workers and the writer's rent concern. Both excerpts remain associated with this one writer through beat-2; no worker count or group-wide motive is added.",
+              "color": "YELLOW"
+            },
+            {
+              "id": "manager-letter",
+              "meaning": "Purple evidence introduced in beat-2: 12 May attribution to outside agitators, with none identified. The allegation stays visibly attached to its author.",
+              "color": "PURPLE"
+            },
+            {
+              "id": "qualified-inference",
+              "meaning": "Green interpretation, explicitly distinguished from source wording. Beat-1 introduces possible financial pressure; beat-2 narrows the overall conclusion to the cut may have contributed, with all workers' motives unknown.",
+              "color": "GREEN"
+            }
+          ],
+          "scenes": [
+            {
+              "id": "beat-1",
+              "purpose": "Separate the diary's direct report from a plausible but limited interpretation of motive.",
+              "whyNow": "Opens with the concrete stoppage question, then supplies the notice and diary needed to evaluate a possible financial motive before comparing the manager's attribution in beat-2.",
+              "keyPoints": [
+                "The diary reports several workers stopped work",
+                "The notice announces a wage cut with distinct announcement and start dates",
+                "The rent quotation directly records this writer's concern",
+                "Financial pressure is a possible motive, not a demonstrated motive for everyone"
+              ],
+              "visualDescription": "2D (because chronology and the evidential relationship between written claims are planar): Use a schematic dated line on a black background with white serif date labels, never a reconstructed factory or invented historical imagery. Introduce the 11 May diary report, then expand the same timeline back to 4 May and mark 10 May as the announced start. Use proportional day spacing without an unnecessary numeric axis. Keep source wording and dates bound to their colored source entities. Reveal the diary rent quotation as a selective excerpt, then visually distinguish an attached green inference labelled 'Possible financial pressure' from the yellow direct report. A bracket can connect the notice and diary as evidence to consider together; do not draw a solid causal arrow. End the spoken limitation with 'One writer' attached to the diary. Keep all source labels legible inside the playback-safe region. No formulas, equations, scripted silence, or controls.",
+              "endsWith": "The notice and diary remain attached to their correct dates, including the announced 10 May start. The diary's rent concern is visibly one writer's evidence, with possible financial pressure marked as interpretation. The manager's explanation has not appeared.",
+              "carry": [
+                "evidence-timeline",
+                "factory-notice",
+                "worker-diary",
+                "qualified-inference"
+              ],
+              "cleanup": [],
+              "sourceRefs": [
+                {
+                  "document": "fictional-source-packet.txt",
+                  "location": "supplied text: fictional-status statement, 4 May notice, and 11 May diary",
+                  "supports": "Fictional setting; announced 10% cut starting 10 May; several workers reportedly stopped; exact rent quotation. Financial motive is presented as an inference, not a quoted fact."
+                }
+              ],
+              "interactions": []
+            },
+            {
+              "id": "beat-2",
+              "purpose": "Weigh two explanations by their specific support and reach a qualified conclusion.",
+              "whyNow": "Builds on the distinction between a direct diary report and inferred financial motive, applies the same distinction to the manager's claim, and concludes the opening investigation within the packet's limits.",
+              "keyPoints": [
+                "The manager attributes the stoppage to outside agitators",
+                "No agitators are identified in the supplied letter",
+                "The notice and diary provide more specific support for financial pressure",
+                "The cut may have contributed, but one cause and all workers' motives remain unestablished"
+              ],
+              "visualDescription": "2D (because comparing source claims with their evidential support is planar): Begin from the retained timeline and source excerpts. Extend the timeline to 12 May and introduce the purple manager attribution, with 'None identified' locally attached. Maintain the notice as an announcement, the diary as one account, and the letter as an attribution. Compare with selective highlights: notice's announced cut, diary's stoppage report and rent concern, then letter's missing named evidence. Do not use fabricated numerical confidence scores or false/true stamps. Retain the previous green inference until the final Reveal block, when its wording becomes 'Cut may have contributed'. Keep the supporting blue and yellow source connections visible; the purple claim remains with its limitation. Add a concise qualification 'All motives unknown' as narration states the evidence gap. Fade the timeline scaffold after the dated comparison is complete to leave a readable evidence-to-interpretation relationship. Source entities keep their dates when the scaffold exits. The final still state follows the reasoning, not a separate recap card. No equations, timed silence, or interaction.",
+              "endsWith": "Three attributed source summaries remain with their dates; the green qualified conclusion is connected to the specific notice and diary evidence, and the limitation about all workers' motives remains visible. Nothing depicts a definitive cause.",
+              "carry": [],
+              "cleanup": [
+                "evidence-timeline"
+              ],
+              "sourceRefs": [
+                {
+                  "document": "fictional-source-packet.txt",
+                  "location": "supplied text: 12 May manager letter and final statement of missing evidence; notice and diary",
+                  "supports": "Manager's attribution names no agitators; no other workers' interviews, attendance totals, earlier wage records or additional evidence are available. The comparison and qualified conclusion are interpretations of these supplied details."
+                }
+              ],
+              "interactions": []
+            }
+          ]
+        }
+      },
+      "measurements": {
+        "valid": true,
+        "scenes": 2,
+        "words": 193,
+        "wordsPerScene": [
+          89,
+          104
+        ],
+        "pauseCount": 0,
+        "pauseSeconds": 0,
+        "estimateSecondsAt140": 91,
+        "estimateSecondsRange": [
+          85,
+          102
+        ]
+      }
+    }
+  ]
+}

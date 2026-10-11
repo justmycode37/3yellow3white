@@ -220,6 +220,27 @@ it('routes captured pointer drags to one region and blocks a locked region witho
   renderer.dispose();expect(canvas.removeEventListener).toHaveBeenCalledTimes(6);
 });
 
+it('starts geometry-targeted orbit on a model, not empty space or standalone text', async()=>{
+  const {renderer,send}=orbitHarness();
+  try {
+    const scene=await compileSource(`export default scene({},s=>{
+      s.view("model",{rect:[0,0,1,1],orbit:true,orbitHitTest:"geometry",camera:{yaw:0,pitch:0,height:8}},v=>{
+        v.keep(v.sphere("ball",{radius:0.6}));
+        v.latex("caption",{tex:"x",position:[3,0,0]});
+      });s.wait(1);
+    });`);
+    const frame=evaluateScene(scene,0);
+    renderer.syncInteraction('scene',0,scene,frame);
+    Object.assign(renderer,{lastFrame:frame,lastOptions:scene.options});
+    const drag=(x:number,y:number)=>{send('pointerdown',x,y);send('pointermove',x+20,y);send('pointerup',x+20,y);};
+    drag(100,100);expect(renderer.getOrbit('model').yaw).toBe(0);
+    drag(550,200);expect(renderer.getOrbit('model').yaw).toBe(0);
+    drag(400,200);expect(renderer.getOrbit('model').yaw).not.toBe(0);
+    const next=await compileSource('export default scene({},s=>{s.previous.get("ball");s.wait(1);});',{previous:frame});
+    expect(evaluateScene(next,0).views?.[0].orbitHitTest).toBe('geometry');
+  } finally {renderer.dispose();}
+});
+
 function orbitHarness(width=800,height=400) {
   vi.stubGlobal('ResizeObserver',class {observe(){}disconnect(){}});
   const handlers=new Map<string,(event:PointerEvent)=>void>();

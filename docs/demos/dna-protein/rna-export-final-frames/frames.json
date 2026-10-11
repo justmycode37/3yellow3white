@@ -1,0 +1,179 @@
+{
+  "backend": "native-webgpu",
+  "frames": [
+    {
+      "time": 0,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-0.png"
+    },
+    {
+      "time": 3,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-1.png"
+    },
+    {
+      "time": 6,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-2.png"
+    },
+    {
+      "time": 7,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-3.png"
+    },
+    {
+      "time": 9,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-4.png"
+    },
+    {
+      "time": 12,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-5.png"
+    },
+    {
+      "time": 15,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-6.png"
+    },
+    {
+      "time": 17,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-7.png"
+    },
+    {
+      "time": 21,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-8.png"
+    },
+    {
+      "time": 26,
+      "width": 1280,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-9.png"
+    },
+    {
+      "time": 0,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-0.png"
+    },
+    {
+      "time": 3,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-1.png"
+    },
+    {
+      "time": 6,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-2.png"
+    },
+    {
+      "time": 7,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-3.png"
+    },
+    {
+      "time": 9,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-4.png"
+    },
+    {
+      "time": 12,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-5.png"
+    },
+    {
+      "time": 15,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-6.png"
+    },
+    {
+      "time": 17,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-7.png"
+    },
+    {
+      "time": 21,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-8.png"
+    },
+    {
+      "time": 26,
+      "width": 960,
+      "height": 720,
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-9.png"
+    }
+  ],
+  "sheets": [
+    {
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-sheet-0.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        0,
+        3,
+        6,
+        7,
+        9,
+        12
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\1280x720-sheet-1.png",
+      "width": 1280,
+      "height": 720,
+      "times": [
+        15,
+        17,
+        21,
+        26
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-sheet-0.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        0,
+        3,
+        6,
+        7,
+        9,
+        12
+      ],
+      "columns": 2
+    },
+    {
+      "path": "docs\\demos\\dna-protein\\rna-export-final-frames\\960x720-sheet-1.png",
+      "width": 960,
+      "height": 720,
+      "times": [
+        15,
+        17,
+        21,
+        26
+      ],
+      "columns": 2
+    }
+  ]
+}

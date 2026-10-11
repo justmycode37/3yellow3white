@@ -1,3 +1,5 @@
+import { captureDraws } from './gpu-capture.js';
+import { VERTEX_FLOATS } from '../src/texture-shader.js';
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {CanvasRenderer} from '../src/renderer.js';
 import {project,strokeTriangles} from '../src/geometry.js';
@@ -15,15 +17,16 @@ async function captureRenderer(palette?:ColorPalette) {
   vi.stubGlobal('GPUTextureUsage',{RENDER_ATTACHMENT:1});
   const writes:Float32Array[]=[];
   const draws:number[]=[];
+  const capture=captureDraws(writes,draws);
   let stride=0;
   let clear:Record<string,number>={};
   const device={limits:{maxTextureDimension2D:8192},lost:new Promise(()=>{}),addEventListener:()=>{},destroy:()=>{},
     createShaderModule:()=>({getCompilationInfo:async()=>({messages:[]})}),
     createRenderPipelineAsync:async(descriptor:{vertex:{buffers:{arrayStride:number}[]}})=>{stride=descriptor.vertex.buffers[0].arrayStride/4;return {getBindGroupLayout:()=>({})};},
-    createBuffer:()=>({destroy:()=>{}}),createBindGroup:()=>({}),
+    createSampler:()=>({}),createBuffer:capture.createBuffer,createBindGroup:capture.createBindGroup,
     createTexture:({size}:{size:number[]})=>({width:size[0],height:size[1],createView:()=>({}),destroy:()=>{}}),
-    queue:{writeBuffer:(_buffer:unknown,_offset:number,data:Float32Array)=>writes.push(data.slice()),submit:()=>{}},
-    createCommandEncoder:()=>({beginRenderPass:(descriptor:{colorAttachments:{clearValue:Record<string,number>}[]})=>{clear=descriptor.colorAttachments[0].clearValue;return {setPipeline:()=>{},setBindGroup:()=>{},setVertexBuffer:()=>{},setViewport:()=>{},setScissorRect:()=>{},draw:(count:number)=>draws.push(count),end:()=>{}};},finish:()=>({})}),
+    queue:capture.queue,
+    createCommandEncoder:()=>({beginRenderPass:(descriptor:{colorAttachments:{clearValue:Record<string,number>}[]})=>{clear=descriptor.colorAttachments[0].clearValue;return capture.pass;},finish:()=>({})}),
   };
   vi.stubGlobal('navigator',{gpu:{requestAdapter:async()=>({requestDevice:async()=>device}),getPreferredCanvasFormat:()=> 'bgra8unorm'}});
   const canvas={width:800,height:450,style:{},getBoundingClientRect:()=>({width:800,height:450}),getContext:()=>({configure:()=>{},unconfigure:()=>{},getCurrentTexture:()=>({createView:()=>({})})}),addEventListener:()=>{},removeEventListener:()=>{}} as unknown as HTMLCanvasElement;
@@ -50,13 +53,13 @@ describe('render review regressions',()=> {
         draw(sphere,view);
         const data=vertices();
         let previous=Infinity;
-        for(let i=0;i<data.length;i+=45) {
-          const center=[0,1,2].map(axis=>(data[i+axis]+data[i+15+axis]+data[i+30+axis])/3) as Vec3;
+        for(let i=0;i<data.length;i+=(3 * VERTEX_FLOATS)) {
+          const center=[0,1,2].map(axis=>(data[i+axis]+data[i+VERTEX_FLOATS+axis]+data[i+2*VERTEX_FLOATS+axis])/3) as Vec3;
           const depth=project(center,view,800,450).depth;
           expect(depth).toBeLessThanOrEqual(previous+1e-10);previous=depth;
-          for(let j=i;j<i+45;j+=15){expect(data[j+6]).toBe(0.5);expect(data[j+11]).toBe(1);expect(Math.hypot(data[j+8],data[j+9],data[j+10])).toBeCloseTo(1,6);}
+          for(let j=i;j<i+(3 * VERTEX_FLOATS);j+=VERTEX_FLOATS){expect(data[j+6]).toBe(0.5);expect(data[j+11]).toBe(1);expect(Math.hypot(data[j+8],data[j+9],data[j+10])).toBeCloseTo(1,6);}
         }
-        expect(draws()).toEqual([data.length/15]);
+        expect(draws()).toEqual([data.length/VERTEX_FLOATS]);
       }
     }finally{renderer.dispose();}
   });

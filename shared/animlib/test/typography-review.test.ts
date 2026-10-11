@@ -1,3 +1,4 @@
+import { captureDraws } from './gpu-capture.js';
 import { describe, expect, it, vi } from 'vitest';
 import { compileSource } from '../src/compiler.js';
 import { flattenSvgPath, layoutLatex, layoutLatexGeometry } from '../src/latex.js';
@@ -201,6 +202,7 @@ it('keeps mapped glyphs visually identical throughout a self-morph and the resto
   vi.stubGlobal('GPUBufferUsage', {UNIFORM: 1, COPY_DST: 2, VERTEX: 4});
   vi.stubGlobal('GPUTextureUsage', {RENDER_ATTACHMENT: 1});
   const writes: Float32Array[] = [];
+  const capture = captureDraws(writes);
   let stride = 0;
   const device = {
     limits: {maxTextureDimension2D: 8192}, lost: new Promise(() => {}), addEventListener() {}, destroy() {},
@@ -208,10 +210,10 @@ it('keeps mapped glyphs visually identical throughout a self-morph and the resto
     createRenderPipelineAsync: async (descriptor: {vertex: {buffers: {arrayStride: number}[]}}) => {
       stride = descriptor.vertex.buffers[0].arrayStride / 4; return {getBindGroupLayout: () => ({})};
     },
-    createBuffer: () => ({destroy() {}}), createBindGroup: () => ({}),
+    createSampler: () => ({}), createBuffer: capture.createBuffer, createBindGroup: capture.createBindGroup,
     createTexture: ({size}: {size: number[]}) => ({width: size[0], height: size[1], createView: () => ({}), destroy() {}}),
-    queue: {writeBuffer: (_buffer: unknown, _offset: number, data: Float32Array) => writes.push(data.slice()), submit() {}},
-    createCommandEncoder: () => ({beginRenderPass: () => ({setPipeline() {}, setBindGroup() {}, setVertexBuffer() {}, draw() {}, end() {}}), finish: () => ({})}),
+    queue: capture.queue,
+    createCommandEncoder: () => ({beginRenderPass: () => capture.pass, finish: () => ({})}),
   };
   vi.stubGlobal('navigator', {gpu: {requestAdapter: async () => ({requestDevice: async () => device}), getPreferredCanvasFormat: () => 'bgra8unorm'}});
   const canvas = {width: 800, height: 450, style: {}, getBoundingClientRect: () => ({width: 800, height: 450}),

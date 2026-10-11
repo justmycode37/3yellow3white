@@ -1,0 +1,35 @@
+[00:03–00:08] So, in my video with Steve Strogatz about the brachistochrone, we reference this thing called Snell's Law.
+[00:09–00:15] It's the principle in physics that tells you how light bends as it travels from one medium into another where its speed changes.
+[00:16–00:22] Our conversation did talk about this in detail, but it was a little bit too much detail, so I ended up cutting it out of the video.
+[00:23–00:33] So what I want to do here is just show you a condensed version of that, because it references a pretty clever argument by Mark Levy, and it also gives a sense of completion to the brachistochrone solution as a whole.
+[00:37–00:39] Consider when light travels from air into water.
+[00:40–00:47] The speed of light is a little bit slower in water than it is in air, and this results in the beam of light bending as it enters the water.
+[00:48–00:48] Why?
+[00:50–00:54] There are many ways that you can think about this, but a pretty neat one is to use Fermat's Principle.
+[00:54–01:04] We talked about this in detail in the brachistochrone video, but in short, it tells you that if light goes from some point to another, it will always do it in the fastest way possible.
+[01:06–01:11] Consider some point A in its trajectory in the air, and some point B on its trajectory in the water.
+[01:13–01:16] First you might think that the straight line between them is the fastest path.
+[01:16–01:23] The only problem with that strategy though, even though it's the shortest path, is that you may be spending a long time in the water.
+[01:23–01:29] Light is slower in the water, so the path can become faster if we shift things to favor spending more time in the air.
+[01:30–01:34] You might even try to minimize the time spent in the water by shifting it all the way to the right.
+[01:34–01:37] However, it's not actually the best thing to do either.
+[01:37–01:42] As with the brachistochrone problem, we find ourselves trying to balance these two competing factors.
+[01:42–01:45] It's a problem that you can write down with geometry.
+[01:45–01:52] And if this was a calculus class, we would set up the appropriate equation with a single variable x, and find where its derivative is zero.
+[01:54–01:57] But we've got something better than calculus, a Mark-Levy solution.
+[01:58–02:02] He recognized that optics is not the only time that nature seeks out a minimum.
+[02:03–02:04] It does so with energy as well.
+[02:05–02:08] Any mechanical setup will stabilize when the potential energy is at a minimum.
+[02:10–02:20] So for this light-into-media problem, he imagines putting a rod on the border between the air and water, and placing a ring on the rod, which is free to slide left and right.
+[02:21–02:27] Now attach a spring from point A to the ring, and a second spring between the ring and point B.
+[02:28–02:33] You can think of the layout of the springs as a potential path that light could take between A and B.
+[02:34–02:47] To finagle things so that the potential energy in the springs equals the amount of time that light would take on that path, you just need to make sure that each spring has a constant tension which is inversely proportional to the speed of light in its medium.
+[02:49–02:53] The only problem with this is that constant tension springs don't actually exist.
+[02:54–03:00] That's right, they're unphysical springs, but there's still the aspect of the system wanting to minimize its total energy.
+[03:01–03:07] That physical principle will hold even though these springs don't exist in the world as we know it.
+[03:08–03:13] The reason springs make the problem simpler though, is that we can find the stable state just by balancing forces.
+[03:14–03:20] The leftward component of the force in the top spring has to cancel out with the rightward component in the force of the bottom spring.
+[03:20–03:28] In this case, the horizontal component in each spring is just the total force times the sine of the angle that that spring makes with the vertical.
+[03:29–03:35] And from that, out pops this thing called Snell's law, which many of us learned in our first physics class.
+[03:36–03:48] Snell's law says that sine of theta divided by the speed of light stays constant when light travels from one medium to another, where theta is the angle that beam of light makes with a line perpendicular to the interface between the two media.
+[03:49–03:50] So there you go, no calculus necessary.

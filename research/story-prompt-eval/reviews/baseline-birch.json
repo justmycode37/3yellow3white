@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "verdict": "pass",
+  "summary": "The lesson distinguishes attributed reports from warranted interpretations and reaches a qualified conclusion supported by the fictional packet.",
+  "issues": [],
+  "checks": [
+    "The 4 May notice announces a 10% cut starting 10 May; narration and timeline preserve the distinction between announcement date and proposed start date.",
+    "The 11 May diary reports several workers stopped and records the exact rent concern; the lesson attributes that concern to one writer rather than every worker.",
+    "The 12 May manager letter identifies no agitators; the lesson treats its allegation as a claim without declaring it either proved or disproved.",
+    "The final interpretation that the cut may have contributed is qualified by the lack of other workers' accounts and does not infer a sole cause from chronology.",
+    "Both scenes retain source identities, dates, colors, and the distinction between source wording and green interpretation; the closing visual agrees with the spoken limitation.",
+    "Exactly two scenes, 193 spoken words, no pauses, no equations, and no controls fit the requested roughly 90-second classic lesson; timeline and evidence labels use supported primitives.",
+    "This model review uses only the supplied fictional evidence; no external verification or unavailable validate_output run is claimed."
+  ]
+}

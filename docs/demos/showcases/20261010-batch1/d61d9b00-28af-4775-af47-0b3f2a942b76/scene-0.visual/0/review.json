@@ -1,0 +1,75 @@
+{
+  "sourceSha256": "0eb05111f7659527fa746ced9ec4aa9070f18903d23b5b4c620d955b8128adeb",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.4,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        16.666666666666668,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        2.4,
+        5,
+        6.666666666666667,
+        8.333333333333334
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        10,
+        11.666666666666666,
+        13.333333333333334,
+        15,
+        16.666666666666668,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 16.666666666666668,
+      "objectIds": [
+        "map-formula",
+        "source-point-value",
+        "image-point-value",
+        "pole-rule"
+      ],
+      "problem": "In both aspect ratios, the formula's numerator enters the reserved top 12%, while the lower portions of the point-value fractions enter the reserved bottom 12%. These essential annotations are exposed to player-overlay obstruction; the earlier pole readout occupies the same bottom region.",
+      "fix": "Move the central formula slightly downward and raise the bottom readouts so their complete glyph bounds remain within the middle 76% of the viewport, preserving the existing geometry and correspondence layout."
+    }
+  ]
+}

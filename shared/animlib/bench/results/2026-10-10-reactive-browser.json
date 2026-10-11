@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-10",
+  "environment": "Chrome 154 Linux, WebGL2 SwiftShader; real module worker and native WAV audio",
+  "passed": 40,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "missing WebGPU: real WebGL2 triangle colors",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: sphere radius with animated position",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: circle radius with fade",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: position and attached billboard",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: scalar rotation",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: 3D rotation",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: scale and surface connector",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: opacity and palette alpha",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: isolated group opacity",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: late creation then removal",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: view-local sphere",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: static properties through shape morph",
+      "ok": true
+    },
+    {
+      "name": "reactive/rebuilt pixels: group transform with child animation",
+      "ok": true
+    },
+    {
+      "name": "real worker callback errors roll back and worker loss recovers",
+      "ok": true
+    },
+    {
+      "name": "mixed control burst uses new slider bounds in the real worker",
+      "ok": true
+    },
+    {
+      "name": "translucent children preserve foreground layer depth",
+      "ok": true
+    },
+    {
+      "name": "isolated group applies fade once in overlaps",
+      "ok": true
+    },
+    {
+      "name": "ordinary group preserves child alpha multiplication",
+      "ok": true
+    },
+    {
+      "name": "nested isolated fades multiply once at each boundary",
+      "ok": true
+    },
+    {
+      "name": "pass-through parent opacity applies once to isolated child",
+      "ok": true
+    },
+    {
+      "name": "intentional child transparency is preserved inside isolation",
+      "ok": true
+    },
+    {
+      "name": "isolated group respects opaque external occlusion",
+      "ok": true
+    },
+    {
+      "name": "screen-space isolated group",
+      "ok": true
+    },
+    {
+      "name": "regional isolation respects scissor and view placement",
+      "ok": true
+    },
+    {
+      "name": "isolated fade completes fully opaque",
+      "ok": true
+    },
+    {
+      "name": "isolated fade completes fully hidden",
+      "ok": true
+    },
+    {
+      "name": "null adapter: real WebGL2 output",
+      "ok": true
+    },
+    {
+      "name": "rejected adapter: real WebGL2 output",
+      "ok": true
+    },
+    {
+      "name": "rejected device: real WebGL2 output",
+      "ok": true
+    },
+    {
+      "name": "context-locked canvas is replaced and restored on disposal",
+      "ok": true
+    },
+    {
+      "name": "all production demos, LaTeX morphs and deterministic seek",
+      "ok": true
+    },
+    {
+      "name": "all six lessons in light/dark themes",
+      "ok": true
+    },
+    {
+      "name": "3D depth occlusion and lighting",
+      "ok": true
+    },
+    {
+      "name": "transparency preserves rear contributions",
+      "ok": true
+    },
+    {
+      "name": "regional viewport Y orientation, scissor and screen overlays",
+      "ok": true
+    },
+    {
+      "name": "round 3D lines and arrows visible from side and end",
+      "ok": true
+    },
+    {
+      "name": "interactive demo, retained orbit and responsive DPR resizing",
+      "ok": true
+    },
+    {
+      "name": "identical text/LaTeX/shape morphs preserve pixels",
+      "ok": true
+    },
+    {
+      "name": "player sliders/toggles, append clock continuity and previous-scene handoffs",
+      "ok": true
+    },
+    {
+      "name": "real WAV audio clock, progressive append, seeking and loss/disposal",
+      "ok": true
+    }
+  ]
+}

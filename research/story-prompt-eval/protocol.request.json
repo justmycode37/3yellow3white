@@ -1,0 +1,6 @@
+{
+  "title": "Why retrying can charge twice",
+  "topic": "Write a roughly 3-minute lesson in exactly 4 scenes for junior developers. Explain idempotency keys using a payment request whose response is lost after the server commits it. Include the case where the first request never arrived, show why timeout alone cannot distinguish these cases, and explain how an atomic stored key/result association makes a retry return the prior result instead of repeating the operation. Distinguish retrying the same intended purchase from a new purchase; state that key reuse must reject a changed payload, and that retention scope limits the guarantee. No pauses. A request/response diagram is appropriate; no equations needed.",
+  "videoMode": "classic",
+  "documents": []
+}

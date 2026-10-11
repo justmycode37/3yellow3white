@@ -1,4 +1,4 @@
-import type { SceneSource } from 'animlib'
+import type { Asset, SceneSource } from 'animlib'
 import type { SceneRequest, SceneRequestInput } from '../../../shared/video/scene-requests.ts'
 import { insertedSceneId } from '../../../shared/video/scene-requests.ts'
 
@@ -12,7 +12,7 @@ export const requestScenes = (input: SceneRequestInput, key: string) => fetch(`/
   method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key }, body: JSON.stringify(input),
 }).then(responseJSON<SceneRequest>)
 
-export interface TimelineScene extends SceneSource { audio?: { id: string; url: string }; requestId?: string }
+export interface TimelineScene extends SceneSource { audio?: { id: string; url: string }; assets?: Record<string, Asset>; requestId?: string }
 type TimelineEntry = TimelineScene | { waitingFor: string }
 
 /** Attach each group after its captured scene; nested requests stay next to their target. */

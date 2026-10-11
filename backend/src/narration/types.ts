@@ -39,7 +39,7 @@ export interface NarrationPackageV1 {
   sampleRate: 24000; durationSec: number; scenes: NarrationScene[]; combinedAudio: AudioAsset;
 }
 /** A committed prefix of narration; totalScenes determines the final end mode. */
-export type NarrationScenePackage = Pick<NarrationPackageV1, 'id' | 'scriptHash' | 'scenes'> & { totalScenes?: number };
+export type NarrationScenePackage = Pick<NarrationPackageV1, 'id' | 'scriptHash' | 'scenes'> & { totalScenes?: number; timingBasis?: 'subtitle-reading' };
 export interface RawAlignment {
   sceneId: string; utteranceId: string; offsetSec: number; requestId?: string;
   original?: Alignment; normalized: Alignment;

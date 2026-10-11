@@ -1,5 +1,6 @@
 import type { CameraState, Geometry, Position, Vec3 } from './types.js';
 import { GeometryCache } from './cache.js';
+import { morphPathContours, pathContours } from './path.js';
 
 export const vec3 = (p: Position): Vec3 => [p[0], p[1], p[2] ?? 0];
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
@@ -20,14 +21,23 @@ export function project(point: Vec3, camera: CameraState, width: number, height:
   const depth = camera.distance-z;
   const perspective = Math.min(1, Math.max(0, camera.perspective));
   const divisor = (1-perspective) + perspective * depth / camera.distance;
-  const scale = height/camera.height / Math.max(0.01, divisor);
+  // Match the shaders throughout the visible depth range. Clamping a positive
+  // divisor shrinks near-camera geometry and sends anchor rays to the wrong pixel.
+  const scale = height/camera.height / (divisor > 0 ? divisor : 0.01);
   return { x: width/2+x*scale, y: height/2-y*scale, depth, visible: depth > 0.01 && depth < camera.distance*100 && divisor > 0, scale };
 }
-export function outline(geometry: Geometry): { points: Vec3[]; closed: boolean } | null {
+export function outline(geometry: Geometry, tolerance = 0.002): { points: Vec3[]; closed: boolean } | null {
   switch (geometry.kind) {
     case 'circle': return { points: Array.from({ length: 96 }, (_, i) => { const a=i*Math.PI/48; return [Math.cos(a)*(geometry.radius ?? 1),Math.sin(a)*(geometry.radius ?? 1),0]; }), closed: true };
     case 'rectangle': { const w=(geometry.width ?? 2)/2,h=(geometry.height ?? 1)/2; return { points: [[-w,-h,0],[w,-h,0],[w,h,0],[-w,h,0]], closed: true }; }
-    case 'path': case 'line': case 'arrow': return { points: (geometry.points ?? []).map(vec3), closed: geometry.kind === 'path' && !!geometry.closed };
+    case 'path': {
+      if (geometry.d !== undefined || geometry.curve === 'smooth') {
+        const contours = pathContours(geometry, tolerance);
+        return contours.length === 1 ? contours[0] : null;
+      }
+      return { points: (geometry.points ?? []).map(vec3), closed: !!geometry.closed };
+    }
+    case 'line': case 'arrow': return { points: (geometry.points ?? []).map(vec3), closed: false };
     default: return null;
   }
 }
@@ -112,8 +122,10 @@ export function matchPoints(from: Vec3[], to: Vec3[], closed: boolean, count=96)
     .map(wrap).sort((x,y)=>x-y).filter((t,i,all)=>!i||t-all[i-1]>1e-12);
   return save(knots.map(t=>source.at(t)),knots.map(t=>target.at(wrap(shift+direction*t))));
 }
-export function morphOutline(from: Geometry,to: Geometry,progress:number): { points: Vec3[]; closed:boolean } | null {
-  const a=outline(from),b=outline(to);
+export function morphOutline(from: Geometry,to: Geometry,progress:number,tolerance=0.002): { points: Vec3[]; closed:boolean } | null {
+  const curves=morphPathContours(from,to,progress,tolerance);
+  if(curves)return curves.length===1?curves[0]:null;
+  const a=outline(from,tolerance),b=outline(to,tolerance);
   if(!a||!b||a.closed!==b.closed||!a.points.length||!b.points.length) return null;
   const [start,end]=matchPoints(a.points,b.points,a.closed);
   return {points:start.map((p,i)=>p.map((v,j)=>lerp(v,end[i][j],progress)) as Vec3),closed:a.closed};

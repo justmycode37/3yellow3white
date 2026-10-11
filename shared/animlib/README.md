@@ -24,8 +24,9 @@ the library handles reproducible playback, scene handoffs, and live updates.
   and morphs carried objects where their identity matters. Unrelated subjects
   should have deliberate exits and entrances, without whole-scene crossfades or
   arbitrary reuse of an atom as a sorting bar.
-- **Support useful morphs and readable mathematics.** Compatible shapes match
-  points automatically. LaTeX morphs use explicit mappings between named parts;
+- **Support useful morphs and readable mathematics.** Compatible curved paths
+  interpolate corresponding control points; other compatible single outlines
+  match points automatically. LaTeX morphs use explicit mappings between named parts;
   unmatched parts fade in or out. Authors need stable formula anchors and numbers
   that count between values without shifting surrounding symbols. Text, arrows,
   and borders should remain clean throughout an animation.
@@ -48,12 +49,50 @@ the library handles reproducible playback, scene handoffs, and live updates.
 ## Scope
 
 The core provides shapes, paths, text, LaTeX, meshes, groups, animation, and player
-behavior. The default player renders and handles input on its canvas; it creates
+behavior. Paths support straight segments, smooth curves through points, and SVG
+path data for Bézier curves, arcs, and compound shapes with holes. Both GPU
+backends render these through the same geometry pipeline. The default player
+renders and handles input on its canvas; it creates
 no surrounding DOM. Generic drag/spring/custom behaviors and live attachments or
 connectors compose with the authored timeline. Isolated groups let overlapping
-parts fade as one object. Domain helpers for matrices, molecules, arrays, and graphs belong in the
-surrounding app. Internal dependencies are allowed; the public API requires no
-framework.
+parts fade as one object. `s.molecule` batches supplied molecular coordinates into
+display beads; host-only `importPDB` and `createMolecularEnvelope` prepare deposited
+coordinates and schematic smooth envelopes. See [molecular coordinates](docs/molecules.md)
+for examples, provenance, and scientific limits. Higher-level matrix, chemical-bond,
+array, and graph helpers belong in the surrounding app. Internal dependencies are
+allowed; the public API requires no framework.
+
+Spatial builders include `surface` for `z = f(x, y)`, `parametricSurface` for
+two-parameter maps (including curved petals), `box`, `cylinder`, `cone`, `torus`,
+and `tube` for a constant-radius sweep through 3D points. They produce ordinary
+mesh handles with smooth shading by default (flat for boxes) and no stroke.
+Raw `mesh` remains unlit unless given `shading: 'flat'` or `'smooth'`; both GPU
+backends support the same simple directional lighting. Geometry-changing controls
+can use retained `s.deform` or `s.bind` callbacks to update existing vertices
+without changing topology. Use ordinary numeric sliders to rebuild sample counts,
+holes, connectivity, and dependent text or formulas.
+See [shaded meshes and sampled surfaces](docs/reference.md#shaded-meshes) for
+examples, periodic seams, invalid-sample holes, segment defaults, and geometry
+budgets. Start with modest sampling; the 20,000-vertex/20,000-triangle per-mesh
+limits are validation ceilings, not frame-rate guarantees.
+
+Spheres and all mesh builders accept `texture` for checker, stripes, noise,
+marble, and wood patterns, plus `material` for metalness, roughness, specular
+highlights, and emissive color/intensity. Patterns use local XYZ and two palette
+colors on both GPU backends; `texture.bumpStrength` adds raised or recessed relief
+to the lighting normals. Metal reflections approximate a studio environment.
+Ordinary controls can rebuild their parameters; retained bindings can replace
+`material` and `texture` settings without rebuilding geometry. Imported GLB models
+additionally support image textures, UV maps and image normal maps through `s.model`;
+see below.
+Displacement, scene reflections and bloom are not included. See
+[textures and materials](docs/reference.md#procedural-textures-and-materials).
+
+Open `http://localhost:5173/spatial.html` for interactive function, flower, and
+solid/tube and texture/material studies. The [scene sources](demo/spatial.ts) use the production player
+and support orbit, shading comparisons, and parameter controls. After building,
+run `node shared/animlib/bench/spatial.mjs --json` from the repository root for
+compilation and CPU rendering measurements (GPU calls are stubbed).
 
 The library enforces a color palette, defaulting to 3Blue1Brown's Manim colors
 with a black background and white foreground. Scene styles use typed tokens such
@@ -72,12 +111,15 @@ evolving; the API and current limits are described in the
 The [storyboard capability summary](docs/capabilities.md) describes feasible
 visuals, interaction, scene continuity, and current boundaries for a planning AI.
 The backend includes it in storyline authoring and editorial-review prompts;
-scene authors receive the full reference.
+scene authors receive the authoring sections extracted from the reference,
+including API limits and model-publication guidance.
 
 The [demo scenes](demo/scenes.ts) exercise the three subject areas. The demo uses a
 fullscreen black canvas, mostly white drawing with selective color accents, and a
 bottom progress bar with play/pause controls and native scene controls. Open
 `http://localhost:5173/?interactive` for a two-view interaction example.
+Open `http://localhost:5173/?reactive` for the [reactive slider prototype](docs/reactive-controls.md):
+JavaScript bindings update object properties without rerunning their scene builder.
 Open `http://localhost:5173/behaviors.html` for a canvas-only example: draggable
 atoms, spring return, attached labels, a surface-clipped bond, pan/orbit and a
 composited object fade. All interaction is declared in the scene.
@@ -94,6 +136,15 @@ s.play(object.fadeOut(), { duration: 1 });
 Drag and spring are independent behaviors. Hosts can register additional behavior
 factories through `createPlayer({ canvas, behaviors })`; compiled scenes contain
 only declarative data. See [behaviors and bindings](docs/reference.md#behaviors-and-live-bindings).
+
+Open `http://localhost:5173/plant.html` for a plant built from curved paths, with
+replayable leaf growth and Bézier bending. `s.path` accepts SVG path data in `d`
+or `points` with `curve: 'smooth'`; see
+[curved paths](docs/reference.md#curved-paths-and-organic-shapes).
+The [plant scene source](demo/plant.ts) uses the production player and renderer.
+The demo opens on the finished plant; **Replay growth** plays the animation.
+Use `plant.html?capture` to hide the replay button for screenshots.
+
 DOM controls now require an explicit `controlsRoot`; existing applications that
 want the native overlay should pass `canvas.parentElement` or another host.
 
@@ -103,15 +154,18 @@ Use Node.js 22.16 or newer. From the repository root:
 
 ```sh
 npm ci
+npm run build        # library JS and declarations; required by consumers in tests
 npm run dev          # demo at http://localhost:5173
 npm run typecheck
 npm test
-npm run build        # library JS and TypeScript declarations
 npm run demo:build   # bundled static demo
 ```
 
 The library is a private npm workspace named `animlib` in `shared/animlib`.
 Build it before importing it elsewhere in this project.
+
+See [interaction performance](docs/performance.md) for slider/orbit profiling,
+measured bottlenecks, and reproducible browser and CPU benchmarks.
 
 ## Shared scene evaluation
 
@@ -127,16 +181,18 @@ import { compileSource, evaluateScene } from 'animlib/core';
 
 // source is the scene's JavaScript; previous is the preceding final Frame
 // (undefined for the first scene). Pass current controls and a stable seed.
-const compiled = await compileSource(source, { previous, controls, seed: 1 });
+const compiled = await compileSource(source, { previous, controls, seed: 1 }, { sampleTime: 'end' });
 const endState = evaluateScene(compiled, compiled.duration);
 const contextJson = JSON.stringify(endState);
 ```
 
 The final frame includes inherited persistent elements, outgoing elements, and
 the authored camera. To reconstruct a complete sequence, use `SceneSequence`
-and read `sequence.frame(index, sequence.compiled[index].duration)` after a
-successful submission. Upstream source or control changes require recomputing
-the handoff. A frame contains visual state; an LLM still needs the next scene's
+and read `await sequence.evaluate(index, sequence.compiled[index].duration)` after
+a successful submission. These examples sample retained `s.time` callbacks at the
+end; synchronous `evaluateScene` and `sequence.frame` use the callback values
+already stored in their snapshots. Upstream source or control changes require
+recomputing the handoff. A frame contains visual state; an LLM still needs the next scene's
 objective and any semantic context.
 
 The repository's Bun backend depends on this workspace and can import this API
@@ -146,11 +202,67 @@ For API examples, behavior details, architecture, limits, and native GPU checks,
 see the [full reference](docs/reference.md). Public types live in
 [src/types.ts](src/types.ts).
 
+### Object bounds
+
+Hosts can query any element or group through `animlib` or `animlib/core`:
+
+```js
+import { getLocalBounds, getWorldBounds, getCameraBounds, getScreenBounds } from 'animlib/core';
+
+const local = getLocalBounds(endState, 'object');     // { min: [x,y,z], max: [x,y,z] }
+const world = getWorldBounds(endState, 'object');
+const camera = getCameraBounds(endState, 'object');  // Z is depth from the camera
+const pixels = getScreenBounds(endState, 'object', { width: 1280, height: 720 });
+// pixels: { left, top, right, bottom }, in full-canvas CSS pixels
+
+const displayed = player.getBounds('object');        // selected view's CSS pixels
+const displayedWorld = player.getBounds('object', { space: 'world' });
+```
+
+Queries use the renderer's current tessellated paint, including strokes, text,
+LaTeX, morphs, and group descendants. Missing or empty objects return `undefined`.
+Use `includeInvisible: true` to measure hidden paint for layout; use
+`includeStroke: false` to exclude strokes. Player queries include viewer orbit,
+pan, and live presentation changes. See [object bounds](docs/reference.md#object-bounds)
+for coordinate conventions, clipping, and limits.
+
+### Text overlap detection
+
+Hosts can inspect a frame or sample an animation through either `animlib` or
+`animlib/core`, without a browser or GPU:
+
+```js
+import { detectOverlaps, detectSceneOverlaps } from 'animlib/core';
+
+const overlaps = detectOverlaps(endState, { width: 1280, height: 720 });
+const samples = detectSceneOverlaps(compiled, {
+  width: 1280, height: 720, sampleRate: 10,
+});
+```
+
+Detection reports intersections between the rendered glyphs of **distinct text
+or LaTeX elements**. Shapes may overlap each other or text freely. Glyphs within
+one text element or formula are never compared against each other; separate text
+elements are checked even when they share a group. Reports contain stable element
+pairs, canvas bounds, and a collision point for later correction. Scene inspection
+checks settled text by default: text affected by active animations, parent groups,
+bindings, or cameras is skipped until the animation finishes. Stationary text is
+still checked while unrelated elements animate. Set `includeAnimating: true` to
+inspect transient overlaps as well. The single-frame `detectOverlaps` API has no
+timeline and checks the supplied geometry regardless of motion.
+
+Detection is opt-in and leaves layouts unchanged. Scene inspection is sampled,
+so brief collisions between samples can be missed. See
+[overlap inspection](docs/reference.md#overlap-inspection) for the full contract
+and limits.
+
 ### WebGL2 browser checks
 
-Start `npm run dev -- --port 5178 --strictPort` and open
+Start `npm --workspace animlib run dev -- --port 5178 --strictPort` and open
 `http://localhost:5178/webgl-test.html`. Click **Run browser tests**; the page runs
 real rendering/readback and playback assertions with WebGPU forced unavailable.
+These include curved fills, compound-path holes, Bézier morphing, and the plant's
+growth and deterministic seeking.
 `window.webglTests` resolves to the report (`failed: 0` means success). These checks
 are separate from portable mocked unit tests and native `test:gpu` checks.
 
@@ -162,3 +274,33 @@ Canvas attributes are preserved, native controls are rebound, and disposal resto
 the original canvas. `player.backend` reports `webgpu` or `webgl2` once prepared.
 WebGL context loss pauses playback/audio; restoration redraws at the retained time
 and allows Play to resume. Antialiasing quality depends on the WebGL implementation.
+
+Scene `lighting` configures ambient/directional intensity and world-fixed versus
+camera-relative light direction. Optional soft planar shadows add contact cues
+from opaque meshes/spheres on a finite receiving floor. The original studio
+appearance remains the default. See the [authoring reference](docs/reference.md#scene-lighting-and-planar-shadows)
+and interactive [lighting study](demo/lighting.html) (`/lighting.html` in the dev server).
+
+Explanatory 3D studies: run `npm run dev` and open `/explanatory.html` for clipping
+planes with hole-preserving section caps, scalar fields, feature outlines, and
+depth-aware labels. See [authoring details](docs/reference.md#sections-feature-edges-scalar-fields-and-label-depth).
+
+### Imported models
+
+`s.model('assembly', { asset: 'registered-id' })` creates an ordinary seekable
+model instance with addressable parts and imported image materials on both GPU
+backends. The host registers `{ kind: 'model', url, sha256, metadata }`; binary
+GLBs stay outside the scene compiler and frame JSON. Use `part('name')` for
+transforms and `tintTo(Color.BLUE)` for highlighting.
+
+The backend scene agent can call `publish_model` with a public HTTPS GLB URL or
+generated named mesh geometry. Model manifests travel with generated scenes;
+the player preloads them before committing a submission. Storage uses
+`MODEL_ASSET_DIR` (default `data/models`). External generators can POST a raw GLB
+to `/api/models`.
+
+Open `/model-viewer.html` for a local-file viewer and a generated textured example.
+See [imported static models](docs/reference.md#imported-static-3d-models) for the
+API, static glTF compatibility profile, budgets, and current limitations. Run
+`/models.html` for focused browser pixel checks; native `test:gpu` covers the
+same UV/material behavior on Vulkan WebGPU.

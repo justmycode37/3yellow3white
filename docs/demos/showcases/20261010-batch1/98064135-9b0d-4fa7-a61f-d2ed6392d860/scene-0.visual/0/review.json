@@ -1,0 +1,73 @@
+{
+  "sourceSha256": "8776a2af324822e4b688287114a79132443b0763094bea8af6b7e3762f99bd87",
+  "sampleMap": [
+    {
+      "image": 1,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        1.6666666666666667,
+        3.05,
+        5.3,
+        6.666666666666667
+      ]
+    },
+    {
+      "image": 2,
+      "width": 1280,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.925,
+        10.175,
+        12.425,
+        15.05,
+        17.675,
+        20
+      ]
+    },
+    {
+      "image": 3,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        0,
+        0.5,
+        1.6666666666666667,
+        3.05,
+        5.3,
+        6.666666666666667
+      ]
+    },
+    {
+      "image": 4,
+      "width": 960,
+      "height": 720,
+      "columns": 2,
+      "times": [
+        7.925,
+        10.175,
+        12.425,
+        15.05,
+        17.675,
+        20
+      ]
+    }
+  ],
+  "approved": false,
+  "findings": [
+    {
+      "timeSec": 7.925,
+      "objectIds": [
+        "phase-1",
+        "phase-2"
+      ],
+      "problem": "The intermediate wave state overlays two different phases: separate crest circles coexist instead of propagating, while opposite-sign field colors dissolve together. The source confirms 0.75-second crossfades between only eight phase snapshots, so these interiors do not represent the displayed scalar field at one synchronized time.",
+      "fix": "Advance crest radii continuously and use denser synchronized field samples, computing the signed sum before color mapping. Preserve the correct fixed-node curves, composition and 20-second duration."
+    }
+  ]
+}

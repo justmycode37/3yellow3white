@@ -1,0 +1,178 @@
+{
+  "baseline": "73a57be8806eee0dc29ef6d4802e521be0cbc637",
+  "cases": 42,
+  "frameComparisons": 1384,
+  "controlChanges": 105,
+  "failed": 0,
+  "results": [
+    {
+      "name": "production demo sequence",
+      "ok": true
+    },
+    {
+      "name": "two-view interaction",
+      "ok": true
+    },
+    {
+      "name": "translucent children preserve foreground layer depth",
+      "ok": true
+    },
+    {
+      "name": "isolated group applies fade once in overlaps",
+      "ok": true
+    },
+    {
+      "name": "ordinary group preserves child alpha multiplication",
+      "ok": true
+    },
+    {
+      "name": "nested isolated fades multiply once at each boundary",
+      "ok": true
+    },
+    {
+      "name": "pass-through parent opacity applies once to isolated child",
+      "ok": true
+    },
+    {
+      "name": "intentional child transparency is preserved inside isolation",
+      "ok": true
+    },
+    {
+      "name": "isolated group respects opaque external occlusion",
+      "ok": true
+    },
+    {
+      "name": "screen-space isolated group",
+      "ok": true
+    },
+    {
+      "name": "regional isolation respects scissor and view placement",
+      "ok": true
+    },
+    {
+      "name": "isolated fade completes fully opaque",
+      "ok": true
+    },
+    {
+      "name": "isolated fade completes fully hidden",
+      "ok": true
+    },
+    {
+      "name": "general authoring 1",
+      "ok": true
+    },
+    {
+      "name": "general authoring 2",
+      "ok": true
+    },
+    {
+      "name": "general authoring 3",
+      "ok": true
+    },
+    {
+      "name": "general authoring 4",
+      "ok": true
+    },
+    {
+      "name": "general authoring 5",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: sphere radius with animated position",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: circle radius with fade",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: position and attached billboard",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: scalar rotation",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: 3D rotation",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: scale and surface connector",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: opacity and palette alpha",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: isolated group opacity",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: late creation then removal",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: view-local sphere",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: static properties through shape morph",
+      "ok": true
+    },
+    {
+      "name": "ordinary equivalent: group transform with child animation",
+      "ok": true
+    },
+    {
+      "name": "Carbon, the great connector light",
+      "ok": true
+    },
+    {
+      "name": "Carbon, the great connector dark",
+      "ok": true
+    },
+    {
+      "name": "Orbitals without the overwhelm light",
+      "ok": true
+    },
+    {
+      "name": "Orbitals without the overwhelm dark",
+      "ok": true
+    },
+    {
+      "name": "Follow the electrons light",
+      "ok": true
+    },
+    {
+      "name": "Follow the electrons dark",
+      "ok": true
+    },
+    {
+      "name": "A different way to see vectors light",
+      "ok": true
+    },
+    {
+      "name": "A different way to see vectors dark",
+      "ok": true
+    },
+    {
+      "name": "What a matrix really does light",
+      "ok": true
+    },
+    {
+      "name": "What a matrix really does dark",
+      "ok": true
+    },
+    {
+      "name": "Meet the eigenvectors light",
+      "ok": true
+    },
+    {
+      "name": "Meet the eigenvectors dark",
+      "ok": true
+    }
+  ],
+  "date": "2026-10-10"
+}

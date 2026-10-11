@@ -1,10 +1,20 @@
-import type { CameraState } from './types.js';
+import { modelGLSL } from './model-shader.js';
+import { GLModelTextures } from './model-textures.js';
+import type { ModelImage } from './models.js';
+import type { DecodedModelImage } from './model-store.js';
+import { lightingUniform } from './lighting.js';
+import { IDENTITY_INSTANCE, MAX_INSTANCES } from './retained-geometry.js';
+import type { RetainedMesh } from './retained-geometry.js';
+import { materialGLSL } from './material-shader.js';
+import { VERTEX_FLOATS, textureGLSL } from './texture-shader.js';
+import type { CameraState, Frame } from './types.js';
 import type { RenderCommand } from './composition.js';
 import { GLCompositor } from './gl-compositor.js';
 
 /** The same packed triangles and camera data are submitted by both backends. */
 export interface RenderBatch {
   camera: CameraState;
+  lighting?: Frame['lighting'];
   width: number;
   height: number;
   rect?: number[];
@@ -15,20 +25,46 @@ export interface RenderBatch {
 
 const vertex = `#version 300 es
 precision highp float;
-layout(location=0) in vec3 world;
+layout(location=0) in vec3 localWorld;
 layout(location=1) in vec4 color;
 layout(location=2) in float screen;
-layout(location=3) in vec3 normal;
+layout(location=3) in vec3 localNormal;
 layout(location=4) in float lit;
-layout(location=5) in float layer;
-layout(location=6) in vec2 viewportOffset;
+layout(location=5) in float localLayer;
+layout(location=6) in vec2 localViewportOffset;
+layout(location=7) in vec3 texPosition;
+layout(location=8) in float texKind;
+layout(location=9) in vec4 texColor;
+layout(location=10) in float texSeed;
+layout(location=11) in vec3 material;
+layout(location=12) in vec3 emission;
+layout(location=13) in float bumpStrength;
+layout(location=14) in vec4 uv;
+out vec4 vUV;
+uniform mat4 objectTransform[${MAX_INSTANCES}];
+uniform vec4 objectInfo[${MAX_INSTANCES}];
 uniform vec4 focus;
 uniform vec4 angles;
 uniform vec4 viewport;
 out vec4 vColor;
 out vec3 vNormal;
 out float vLit;
+out vec3 vTexPosition;
+out float vTexKind;
+out vec4 vTexColor;
+out float vTexSeed;
+out vec3 vViewDirection;
+out vec3 vMaterial;
+out vec3 vEmission;
+out vec3 vViewPosition;
+out float vBumpStrength;
 void main() {
+  mat4 transform=objectTransform[gl_InstanceID];
+  vec4 info=objectInfo[gl_InstanceID];
+  vec3 world=(transform*vec4(localWorld,1.)).xyz;
+  vec3 normal=(transform*vec4(localNormal,0.)).xyz/info.y;
+  float layer=localLayer+info.x;
+  vec2 viewportOffset=localViewportOffset+info.zw;
   vec3 p=world-focus.xyz;
   float cy=cos(-angles.x), sy=sin(-angles.x);
   p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
@@ -45,37 +81,76 @@ void main() {
   position.z=2.*position.z-position.w;
   gl_Position=position;
   vec3 n=vec3(normal.x*cy+normal.z*sy,normal.y,-normal.x*sy+normal.z*cy);
-  vNormal=vec3(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
+  vUV=uv;vNormal=vec3(n.x,n.y*cp-n.z*sp,n.y*sp+n.z*cp);
   vLit=lit; vColor=color;
+  vTexPosition=texPosition;vTexKind=texKind;vTexColor=texColor;vTexSeed=texSeed;
+  vMaterial=material;vEmission=emission;vViewPosition=p;vBumpStrength=bumpStrength*info.y;vViewDirection=mix(vec3(0.,0.,1.),vec3(-p.x,-p.y,depth),angles.w);
 }`;
 const fragment = `#version 300 es
 precision highp float;
+in vec4 vUV;
 in vec4 vColor;
 in vec3 vNormal;
 in float vLit;
+in vec3 vTexPosition;
+in float vTexKind;
+in vec4 vTexColor;
+in float vTexSeed;
+in vec3 vViewDirection;
+in vec3 vMaterial;
+in vec3 vEmission;
+in vec3 vViewPosition;
+in float vBumpStrength;
 out vec4 outputColor;
+uniform vec4 light;
+uniform vec4 ambient;
+${textureGLSL}
+${materialGLSL}
+${modelGLSL}
 void main() {
   vec4 color=vColor;
-  if(vLit>0.5) {
-    float amount=0.32+0.68*max(0.,dot(normalize(vNormal),normalize(vec3(-0.4,0.65,1.))));
-    color=vec4(color.rgb*amount,color.a);
+  vec4 imported=importedColor(color,vUV,vTexSeed,vNormal,vViewPosition,vViewDirection,gl_FrontFacing,light,ambient.x);
+  if(modelFlags.w>0.5){outputColor=imported;return;}
+  vec3 footprint=fwidth(vTexPosition);
+  float height=0.;
+  if(vTexKind>0.5){
+    vec2 surface=proceduralSample(vTexPosition,vTexKind,vTexSeed,footprint);
+    color=mix(color,vTexColor,surface.x);height=surface.y;
   }
-  outputColor=color;
+  vec3 dx=dFdx(vViewPosition),dy=dFdy(vViewPosition);
+  vec2 dh=vec2(dFdx(height),dFdy(height));
+  if(color.a<=0.){discard;}
+  if(vLit>0.5) {
+    vec3 n=vNormal;
+    n=n/max(length(n),0.000001);
+    if(vBumpStrength!=0.){n=bumpNormal(n,dx,dy,dh,vBumpStrength);}
+    if(vLit>1.5&&!gl_FrontFacing){n=-n;}
+    if(vMaterial.y>0.){color=vec4(materialColor(color.rgb,n,normalize(vViewDirection),vMaterial,light,ambient.x),color.a);}
+    else {float amount=0.32*ambient.x+0.68*light.w*max(0.,dot(n,normalize(light.xyz)));
+    color=vec4(color.rgb*amount,color.a);}
+  }
+  outputColor=vec4(color.rgb+vEmission,color.a);
 }`;
 
 /** WebGL2 submission only; scene evaluation, tessellation and ordering live in CanvasRenderer. */
 export class WebGLBackend {
+  private modelTextures:GLModelTextures;
   private program: WebGLProgram;
   private buffer: WebGLBuffer;
   private vao: WebGLVertexArrayObject;
   private focus: WebGLUniformLocation;
   private angles: WebGLUniformLocation;
   private viewport: WebGLUniformLocation;
+  private light: WebGLUniformLocation;
+  private ambient: WebGLUniformLocation;
   private capacity = 0;
+  private objectTransform: WebGLUniformLocation;
+  private objectInfo: WebGLUniformLocation;
+  private meshes = new Map<RetainedMesh, { vertices: WebGLBuffer; indices: WebGLBuffer; vao: WebGLVertexArrayObject }>();
   private compositor?: GLCompositor;
   readonly maxSize: number;
 
-  constructor(readonly gl: WebGL2RenderingContext) {
+  constructor(readonly gl: WebGL2RenderingContext,images:Map<ModelImage,DecodedModelImage>=new Map()) {
     const shaders: WebGLShader[] = [];
     let program: WebGLProgram | null = null, buffer: WebGLBuffer | null = null, vao: WebGLVertexArrayObject | null = null;
     try {
@@ -94,17 +169,17 @@ export class WebGLBackend {
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(`WebGL2 program: ${gl.getProgramInfoLog(program)}`);
       buffer = gl.createBuffer(); vao = gl.createVertexArray();
       if (!buffer || !vao) throw new Error('WebGL2 could not allocate geometry resources.');
-      this.program = program; this.buffer = buffer; this.vao = vao;
+      this.program = program;this.modelTextures=new GLModelTextures(gl,images,program); this.buffer = buffer; this.vao = vao;
       const uniform = (name: string) => {
         const value = gl.getUniformLocation(program!, name);
         if (value === null) throw new Error(`WebGL2 camera uniform missing: ${name}`);
         return value;
       };
       this.focus = uniform('focus'); this.angles = uniform('angles'); this.viewport = uniform('viewport');
+      this.light = uniform('light'); this.ambient = uniform('ambient');
+      this.objectTransform = uniform('objectTransform[0]'); this.objectInfo = uniform('objectInfo[0]');
       gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52]]) {
-        gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, 60, offset);
-      }
+      this.attributes();
       gl.bindVertexArray(null);
       const viewportLimits = gl.getParameter(gl.MAX_VIEWPORT_DIMS) as Int32Array;
       this.maxSize = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), viewportLimits[0], viewportLimits[1]);
@@ -115,6 +190,29 @@ export class WebGLBackend {
       if (program) gl.deleteProgram(program);
       throw error;
     } finally { for (const shader of shaders) gl.deleteShader(shader); }
+  }
+
+  private attributes(): void {
+    const gl = this.gl;
+    for (const [location, size, offset] of [[0,3,0],[1,4,12],[2,1,28],[3,3,32],[4,1,44],[5,1,48],[6,2,52],[7,3,60],[8,1,72],[9,4,76],[10,1,92],[11,3,96],[12,3,108],[13,1,120],[14,4,124]]) {
+      gl.enableVertexAttribArray(location); gl.vertexAttribPointer(location, size, gl.FLOAT, false, VERTEX_FLOATS*4, offset);
+    }
+  }
+
+  private retainedMesh(mesh: RetainedMesh) {
+    const gl = this.gl;
+    let resource = this.meshes.get(mesh);
+    if (resource) return resource;
+    const vertices = gl.createBuffer(), indices = gl.createBuffer(), vao = gl.createVertexArray();
+    if (!vertices || !indices || !vao) {
+      if (vertices) gl.deleteBuffer(vertices); if (indices) gl.deleteBuffer(indices); if (vao) gl.deleteVertexArray(vao);
+      throw new Error('WebGL2 could not allocate retained geometry.');
+    }
+    resource = { vertices, indices, vao }; this.meshes.set(mesh, resource);
+    gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW); this.attributes();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
+    return resource;
   }
 
   render(data: Float32Array, batches: RenderBatch[], clear: number[], width: number, height: number): void {
@@ -133,6 +231,7 @@ export class WebGLBackend {
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.clearColor(clear[0], clear[1], clear[2], 1); gl.clearDepth(1);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    const used = new Set<RetainedMesh>();
     let first = 0;
     for (const batch of batches) {
       gl.useProgram(this.program);
@@ -145,12 +244,24 @@ export class WebGLBackend {
       gl.uniform4f(this.focus, ...c.target, 0);
       gl.uniform4f(this.angles, c.yaw, c.pitch, c.distance, c.perspective);
       gl.uniform4f(this.viewport, batch.width, batch.height, c.height, 0);
-      const count = batch.floatCount / 15;
+      const light = lightingUniform(batch.lighting, c);
+      gl.uniform4f(this.light, light[0], light[1], light[2], light[3]);
+      gl.uniform4f(this.ambient, light[4], 0, 0, 0);
+      const count = batch.floatCount / VERTEX_FLOATS;
       const commands = batch.commands ?? [{ first, count: batch.opaqueVertices, opaque: true }, { first: first+batch.opaqueVertices, count: count-batch.opaqueVertices, opaque: false }];
       const draw = (command: Extract<RenderCommand,{first:number}>) => {
         gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.depthMask(command.opaque);
         gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
-        gl.drawArrays(gl.TRIANGLES,command.first,command.count);
+        this.modelTextures.bind(command.modelMaterial);
+        const instances = command.instances ?? [IDENTITY_INSTANCE];
+        const matrices = new Float32Array(instances.length*16), info = new Float32Array(instances.length*4);
+        instances.forEach((instance,i) => { matrices.set(instance.subarray(0,16),i*16); info.set(instance.subarray(16,20),i*4); });
+        gl.uniformMatrix4fv(this.objectTransform,false,matrices); gl.uniform4fv(this.objectInfo,info);
+        if (command.mesh) {
+          used.add(command.mesh);
+          gl.bindVertexArray(this.retainedMesh(command.mesh).vao);
+          gl.drawElementsInstanced(gl.TRIANGLES,command.mesh.indices.length,gl.UNSIGNED_INT,0,instances.length);
+        } else gl.drawArrays(gl.TRIANGLES,command.first,command.count);
       };
       if (commands.some(command => 'children' in command)) {
         this.compositor ??= new GLCompositor(gl);
@@ -159,10 +270,18 @@ export class WebGLBackend {
       first += count;
     }
     gl.depthMask(true); gl.disable(gl.SCISSOR_TEST); gl.bindVertexArray(null);
+    for (const [mesh,resource] of this.meshes) if (!used.has(mesh)) {
+      gl.deleteBuffer(resource.vertices); gl.deleteBuffer(resource.indices); gl.deleteVertexArray(resource.vao); this.meshes.delete(mesh);
+    }
   }
 
   dispose(): void {
+    this.modelTextures.dispose();
     this.compositor?.dispose();
+    for (const resource of this.meshes.values()) {
+      this.gl.deleteBuffer(resource.vertices); this.gl.deleteBuffer(resource.indices); this.gl.deleteVertexArray(resource.vao);
+    }
+    this.meshes.clear();
     this.gl.deleteBuffer(this.buffer); this.gl.deleteVertexArray(this.vao); this.gl.deleteProgram(this.program);
   }
 }

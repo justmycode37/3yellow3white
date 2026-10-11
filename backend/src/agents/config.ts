@@ -17,6 +17,10 @@ export function agentConfig(env: Record<string, string | undefined> = process.en
   if (provider === 'openai-codex' && authMode !== 'subscription') throw new AgentError('CONFIG', 'Existing Pi openai-codex credentials require subscription mode.');
   const thinking = env.AGENT_THINKING ?? "high";
   if (!["off", "minimal", "low", "medium", "high", "xhigh", "max"].includes(thinking)) throw new AgentError("CONFIG", "Invalid AGENT_THINKING level.");
+  const sceneOutputMode = env.AGENT_SCENE_OUTPUT_MODE ?? 'text';
+  if (sceneOutputMode !== 'text' && sceneOutputMode !== 'validated-reference') throw new AgentError('CONFIG', 'AGENT_SCENE_OUTPUT_MODE must be text or validated-reference.');
+  const sceneTimingMode = env.AGENT_SCENE_TIMING_MODE ?? 'inline';
+  if (sceneTimingMode !== 'inline' && sceneTimingMode !== 'host') throw new AgentError('CONFIG', 'AGENT_SCENE_TIMING_MODE must be inline or host.');
   return {
     authMode,
     provider,
@@ -24,6 +28,8 @@ export function agentConfig(env: Record<string, string | undefined> = process.en
     dataDir: resolve(env.AGENT_DATA_DIR ?? "data/agents"),
     model: env.AGENT_MODEL ?? "gpt-6-astra",
     thinking: thinking as "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max",
+    sceneOutputMode: sceneOutputMode as 'text' | 'validated-reference',
+    sceneTimingMode: sceneTimingMode as 'inline' | 'host',
     apiKey: env.OPENAI_API_KEY,
   };
 }

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RNA transcription · Quality milestones</title>
+  <style>
+    :root { color-scheme: dark; font: 14px system-ui,sans-serif; color: #eee; background: #000; }
+    * { box-sizing: border-box; } body { margin: 0; }
+    #stage { position: fixed; inset: 0; } canvas { width: 100%; height: 100%; display: block; }
+    header { position: fixed; top: 16px; left: 20px; display: flex; gap: 10px; align-items: center; }
+    select,button,input { font: inherit; color: inherit; accent-color: #a8d6ed; }
+    select,button,input[type=number] { background: #121212; border: 1px solid #666; border-radius: 5px; padding: 7px; }
+    button { cursor: pointer; } :focus-visible { outline: 2px solid #a8d6ed; outline-offset: 3px; }
+    footer { position: fixed; bottom: 18px; left: 8%; right: 8%; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 10px; background: #000c; }
+    #seek { flex: 1; min-width: 100px; } #time { width: 82px; }
+    #status { position: fixed; top: 60px; left: 20px; font-size: 12px; color: #aaa; max-width: 80%; }
+    #error { position: fixed; top: 88px; left: 20px; color: #ffaaaa; white-space: pre-wrap; }
+    @media(max-width:700px) { footer { left: 2%; right: 2%; } header { left: 10px; } select { max-width: 180px; } }
+  </style>
+</head>
+<body>
+  <main id="stage" aria-label="RNA transcription animation"></main>
+  <header><label>Milestone <select id="run" aria-label="Milestone"></select></label><button id="reload">Refresh demos</button></header>
+  <output id="status" aria-live="polite">Loading saved demos…</output><output id="error"></output>
+  <footer>
+    <button id="play">Play</button><button id="restart">Restart</button>
+    <input id="seek" type="range" min="0" max="1" step="0.001" value="0" aria-label="Lesson time">
+    <output id="clock">0.0 / 0.0 s</output>
+    <label>Scene <select id="scene" aria-label="Scene"></select></label>
+    <label>Local seconds <input id="time" type="number" min="0" step="0.1" value="0"></label><button id="go">Go</button>
+    <label><input id="mute" type="checkbox"> Mute</label><button id="reset">Reset view</button>
+  </footer>
+  <script type="module" src="/quality.ts"></script>
+</body>
+</html>

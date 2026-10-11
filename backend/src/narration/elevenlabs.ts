@@ -5,8 +5,8 @@ import type { SpeechResult, SpeechSettings, SynthesisInput } from "./types.js";
 
 export function settingsFromEnv(env: Record<string, string | undefined> = process.env): SpeechSettings {
   return { voiceId: env.ELEVENLABS_VOICE_ID ?? "", modelId: env.ELEVENLABS_MODEL_ID ?? "eleven_multilingual_v2", outputFormat: "pcm_24000",
-    // Allow more emotional variation with a modest emphasis on the speaker's style.
-    voiceSettings: { stability: 0.45, similarity_boost: 0.75, style: 0.2, use_speaker_boost: true, speed: 1 } };
+    // Give Alexander a highly animated delivery, with broad variation and strong expressive emphasis.
+    voiceSettings: { stability: 0.15, similarity_boost: 0.75, style: 0.9, use_speaker_boost: true, speed: 1.12 } };
 }
 export interface SpeechProvider {
   settings: SpeechSettings;

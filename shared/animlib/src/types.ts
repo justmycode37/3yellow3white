@@ -1,5 +1,15 @@
+import type { ModelAsset, ModelMetadata, ModelProps, ModelHandle, ModelReference } from './model-types.js';
+export type * from './model-types.js';
+import type { ExplanatoryGeometry, ScalarColors } from "./explanatory-types.js";
+export type { ClipPlane, MeshOutline, ScalarRamp, ScalarColors, SurfaceScalar, ExplanatoryGeometry } from "./explanatory-types.js";
 import type { Color, PaletteColor } from "./palette.js";
+import type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
+import type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
+import type { MoleculeProps } from './molecule-types.js';
+export type * from './molecule-types.js';
 export type { Color, PaletteColor } from "./palette.js";
+export type { SurfaceProps, ParametricSurfaceProps } from "./surface-types.js";
+export type { BoxProps, CylinderProps, ConeProps, TorusProps, TubeProps } from "./solid-types.js";
 
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
@@ -18,18 +28,62 @@ export interface ColorPalette {
 /** A named color, optionally with separate alpha; arbitrary CSS is not accepted. */
 export type ColorValue = Color | { readonly color: PaletteColor; readonly opacity: number };
 
-export interface Geometry {
-  kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group";
+/** Two palette colors mixed by a deterministic, object-space 3D pattern. */
+export interface ProceduralTexture {
+  pattern: "checker" | "stripes" | "noise" | "marble" | "wood";
+  /** Secondary color; the element fill is the primary color. */
+  color: ColorValue;
+  /** Pattern coordinates = local position * scale + offset. Default 1. */
+  scale?: number | Vec3;
+  offset?: Vec3;
+  /** Integer 0–65535, default 0. Varies noise, marble, and wood. */
+  seed?: number;
+  /** Signed bump height in local units, -1–1; default 0. Changes lighting only. */
+  bumpStrength?: number;
+}
+
+/** Stylized surface lighting; omitted keeps the original directional shading. */
+export interface Material {
+  /** 0–1, default 0. Metals tint reflections with the fill. */
+  metalness?: number;
+  /** 0.05–1, default 0.45. Larger values broaden and soften highlights. */
+  roughness?: number;
+  /** Nonmetal base highlight strength, 0–1, default 0.5. */
+  specular?: number;
+  /** Adds surface color; no bloom or illumination of neighboring objects. */
+  emissive?: ColorValue;
+  /** 0–4, default 1. Emissive color alpha also scales the emission. */
+  emissiveIntensity?: number;
+}
+
+export interface Geometry extends ExplanatoryGeometry {
+  /** Text/LaTeX: default depth tests glyphs; other modes act on the whole label anchor. */
+  labelOcclusion?: "depth" | "overlay" | "hide" | "fade";
+  kind: "circle" | "sphere" | "rectangle" | "path" | "line" | "arrow" | "text" | "latex" | "mesh" | "group" | "model";
+  model?: ModelReference;
   radius?: number;
   width?: number;
   height?: number;
   points?: Position[];
   closed?: boolean;
+  /** SVG path data in local XY coordinates (positive Y up); Z closes each contour. */
+  d?: string;
+  /** Smooth Catmull–Rom interpolation through path points; omitted means straight edges. */
+  curve?: "linear" | "smooth";
   text?: string;
   tex?: string;
   fontSize?: number;
   vertices?: Position[];
   triangles?: [number, number, number][];
+  scalarColors?: ScalarColors;
+  /** Mesh lighting; omitted preserves unlit rendering. Smooth normals share vertex indices. */
+  shading?: "unlit" | "flat" | "smooth";
+  /** Optional per-vertex local normals for smooth mesh shading; normalized when rendered. */
+  normals?: Vec3[];
+  /** Procedural fill on meshes and spheres only. */
+  texture?: ProceduralTexture;
+  /** Configurable lighting on spheres and meshes. */
+  material?: Material;
   children?: string[];
   /** Composite this group's children before applying its opacity. */
   isolated?: boolean;
@@ -51,6 +105,8 @@ export interface ElementStyle {
   /** Round world-space tubes instead of flat stroke ribbons. Not animated. */
   strokeProfile?: "flat" | "round";
   space?: "world" | "screen";
+  /** false excludes this element (or group descendants) from planar shadows. Not animated. */
+  castShadow?: boolean;
   billboard?: boolean;
   billboardOffset?: Position;
   /** Camera-independent translation in fractions of the viewport width/height. */
@@ -70,6 +126,8 @@ export interface ElementState {
   strokeWidth: number;
   strokeProfile?: "flat" | "round";
   space: "world" | "screen";
+  /** false excludes this element (or group descendants) from planar shadows. Not animated. */
+  castShadow?: boolean;
   billboard?: boolean;
   billboardOffset?: Vec3;
   viewportOffset?: Vec2;
@@ -92,6 +150,8 @@ export interface ViewOptions {
   rect: [number, number, number, number];
   camera?: Partial<CameraState>;
   orbit?: boolean;
+  /** Restrict orbit starts to pickable model surfaces; standalone text is ignored. */
+  orbitHitTest?: "geometry";
 }
 
 export interface ViewState {
@@ -99,6 +159,7 @@ export interface ViewState {
   rect: [number, number, number, number];
   camera: CameraState;
   orbit: boolean;
+  orbitHitTest?: "geometry";
 }
 
 export interface CameraState {
@@ -110,12 +171,48 @@ export interface CameraState {
   perspective: number;
 }
 
+/** White scene lights. Intensities multiply the legacy studio contributions. */
+export interface SceneLighting {
+  /** 0–4, default 1. */
+  ambient?: number;
+  directional?: {
+    /** Direction TOWARD the light; normalized. Default [-0.4, 0.65, 1]. */
+    direction?: Vec3;
+    /** Default camera: +X right, +Y up, +Z toward viewer. */
+    space?: "world" | "camera";
+    /** 0–4, default 1. */
+    intensity?: number;
+    /** Projects opaque caster silhouettes onto receiver, without self-shadowing. */
+    shadow?: {
+      /** Angular disk radius in radians, 0–0.25; default 0.04. */
+      softness?: number;
+      /** 1, 7, or 13 deterministic directions; default medium (7). */
+      quality?: "low" | "medium" | "high";
+      /** Receiver offset in world units, 0–0.05; default 0.002. */
+      bias?: number;
+      /** 0–1, default 0.35. Occlusion of direct light at full coverage. */
+      opacity?: number;
+    };
+  };
+  /** Finite horizontal XZ plane shared by scene views; receives shadows only. */
+  receiver?: {
+    /** Center in world units, default [0,-1,0]. */
+    position?: Vec3;
+    /** Width (X), depth (Z), both positive world units. */
+    size: Vec2;
+    /** Opaque palette token, default GREY_D. */
+    fill?: PaletteColor;
+  };
+}
+
 export interface SceneOptions {
   mode?: Mode;
   end?: "hold" | "advance";
   audio?: string;
   orbit?: boolean;
   background?: PaletteColor;
+  /** Omitted inherits across handoffs; "studio" resets to the original lighting. */
+  lighting?: SceneLighting | "studio";
 }
 
 export interface AnimationAction {
@@ -149,7 +246,35 @@ export interface ControlDefinition extends ControlPlacement {
   max?: number;
   step?: number;
   options?: string[];
+  /** Opt-in runtime input; its value is consumed by s.bind callbacks. */
+  reactive?: boolean;
 }
+
+export interface SliderHandle { readonly id: string; readonly reactive: true }
+export interface SliderOptions extends ControlPlacement {
+  label?: string; default: number; min: number; max: number; step?: number;
+}
+/** Scene-local seconds, clamped to the timeline; read only through a binding. */
+export interface TimeHandle { readonly time: true }
+export type ReactiveDependency = SliderHandle | TimeHandle;
+/** Absolute property replacements. Mesh connectivity is never writable. */
+export type ReactiveProperties = Pick<ElementStyle, 'position' | 'rotation' | 'scale' | 'opacity' | 'fill'> & Pick<Geometry, 'radius' | 'vertices'> & {
+  /** Null (or vertices without normals) recomputes shading normals. */
+  normals?: Vec3[] | null;
+  /** Whole-object replacements; null restores the original untextured/simple appearance. */
+  material?: Material | null;
+  texture?: ProceduralTexture | null;
+  scalarColors?: ScalarColors | null;
+};
+export interface ReactiveBinding {
+  target: string;
+  /** Distinguishes disjoint bindings on one target; absent for a single binding. */
+  slot?: number;
+  controls: string[];
+  time?: true;
+  properties: ReactiveProperties;
+}
+export interface ReactiveUpdate { target: string; slot?: number; properties: ReactiveProperties }
 
 export interface Lifecycle {
   time: number;
@@ -159,7 +284,7 @@ export interface Lifecycle {
 }
 
 export interface CompiledScene {
-  options: Required<Omit<SceneOptions, "audio">> & { audio?: string; palette?: ColorPalette };
+  options: Required<Omit<SceneOptions, "audio" | "lighting">> & { audio?: string; lighting?: SceneLighting | "studio"; palette?: ColorPalette };
   duration: number;
   controls: ControlDefinition[];
   initial: ElementState[];
@@ -169,6 +294,10 @@ export interface CompiledScene {
   tracks: Track[];
   behaviors?: BehaviorDeclaration[];
   bindings?: BindingDeclaration[];
+  /** Serializable outputs; callback functions stay in the sandbox runtime. */
+  reactiveBindings?: ReactiveBinding[];
+  /** Time represented by retained callback outputs; absent for control-only scenes. */
+  reactiveTime?: number;
 }
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -179,7 +308,7 @@ export type BehaviorSpec =
 export interface BehaviorDeclaration { target: string; behavior: BehaviorSpec; }
 export type BindingDeclaration =
   | { type: "attach"; target: string; source: string; offset?: Vec3 }
-  | { type: "connect"; target: string; from: string; to: string; endpoints?: "center" | "surface"; offset?: number };
+  | { type: "connect"; target: string; from: string; to: string; endpoints?: "center" | "surface" | "bounds"; offset?: number };
 export interface Ray { origin: Vec3; direction: Vec3; }
 export interface InteractionSnapshot {
   /** Detached copy of the displayed frame and effective view camera. */
@@ -213,18 +342,86 @@ export interface Behavior {
 export type BehaviorFactory = (options: JsonValue | undefined) => Behavior;
 
 export interface Frame {
+  lighting?: SceneLighting | "studio";
   elements: ElementState[];
   camera: CameraState;
   cameraAnimated: boolean;
   views?: (ViewState & { cameraAnimated: boolean })[];
 }
 
+/** Axis-aligned bounds in CSS pixels, with X rightwards and Y downwards. */
+export interface Bounds2D { left: number; top: number; right: number; bottom: number; }
+/** Axis-aligned bounds in local/world units or camera coordinates. */
+export interface Bounds3D { min: Vec3; max: Vec3; }
+export interface BoundsOptions {
+  /** Optional tessellation viewport; defaults to 800 × 450 CSS pixels. */
+  width?: number;
+  height?: number;
+  /** Override the element's authored view camera (also affects billboards). */
+  camera?: CameraState;
+  palette?: ColorPalette;
+  /** Include zero-opacity paint and ancestors for layout. Default false. */
+  includeInvisible?: boolean;
+  /** Include painted strokes and arrowheads. Default true. */
+  includeStroke?: boolean;
+}
+export interface ScreenBoundsOptions extends BoundsOptions {
+  /** Full canvas CSS dimensions; view bounds are translated into canvas coordinates. */
+  width: number;
+  height: number;
+  /** Clip to the view rectangle and canvas. Camera near/far clipping always applies. Default true. */
+  clip?: boolean;
+}
+export type PlayerBoundsOptions = Omit<BoundsOptions, 'width' | 'height' | 'camera' | 'palette'> & {
+  /** Defaults to screen. Screen bounds use pixels relative to the selected view's top-left. */
+  space?: 'local' | 'world' | 'camera' | 'screen';
+  clip?: boolean;
+};
+/** Canvas CSS pixels, with x increasing rightwards and y increasing downwards. */
+export interface OverlapBounds extends Bounds2D {}
+export type OverlapSeverity = "unacceptable";
+export interface OverlapDiagnostic {
+  /** Distinct text/LaTeX element IDs, sorted lexically for stable pair identity. */
+  elements: [string, string];
+  /** Only text-against-text collisions are reported. */
+  severity: OverlapSeverity;
+  kind: "text-overlap";
+  /** Bounding box of actual intersections, not just intersecting element boxes. */
+  bounds: OverlapBounds;
+  elementBounds: [OverlapBounds, OverlapBounds];
+  /** A point inside an actual glyph intersection, suitable for a debug marker. */
+  witness: Vec2;
+}
+export interface OverlapOptions {
+  /** Logical canvas size in CSS pixels. Required: projection depends on aspect ratio. */
+  width: number;
+  height: number;
+  palette?: ColorPalette;
+  /** Skip primitives below this effective alpha, including groups and morph fades. Default 0.01. */
+  minOpacity?: number;
+  /** Intentional overlaps. Group IDs apply to all their descendants; order is irrelevant. */
+  ignorePairs?: readonly (readonly [string, string])[];
+}
+export interface SceneOverlapOptions extends OverlapOptions {
+  /** Include text affected by active tracks, groups, bindings, or cameras. Default false. */
+  includeAnimating?: boolean;
+  /** Explicit local sample times; sorted/deduplicated. Overrides sampleRate. */
+  times?: readonly number[];
+  /** Samples per second, default 10. Includes endpoints, lifecycle events and track boundaries. */
+  sampleRate?: number;
+}
+export interface SceneOverlapSample {
+  time: number;
+  overlaps: OverlapDiagnostic[];
+}
+
 export interface ElementHandle {
   readonly id: string;
-  animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset" | "strokeProfile">): AnimationAction;
+  animate(properties: Omit<ElementStyle, "space" | "billboard" | "billboardOffset" | "strokeProfile" | "castShadow">): AnimationAction;
   moveTo(position: Position): AnimationAction;
   rotateTo(rotation: Position | number): AnimationAction;
   scaleTo(scale: number): AnimationAction;
+  /** New elements start hidden when this is their first scheduled opacity animation. */
   fadeIn(): AnimationAction;
   fadeOut(): AnimationAction;
   morphTo(geometry: Geometry, options?: { map?: Record<string, string> }): AnimationAction;
@@ -243,16 +440,33 @@ export interface SceneContext {
   text(id: string, props: ElementProps): ElementHandle;
   latex(id: string, props: ElementProps): ElementHandle;
   mesh(id: string, props: ElementProps): ElementHandle;
-  group(id: string, children: ElementHandle[], options?: { isolated?: boolean }): ElementHandle;
+  model(id: string, props: ModelProps): ModelHandle;
+  /** Sample z = fn(x, y) into a shaded triangle mesh. */
+  surface(id: string, props: SurfaceProps): ElementHandle;
+  /** Sample a two-parameter map into a shaded triangle mesh. */
+  parametricSurface(id: string, props: ParametricSurfaceProps): ElementHandle;
+  box(id: string, props?: BoxProps): ElementHandle;
+  cylinder(id: string, props?: CylinderProps): ElementHandle;
+  cone(id: string, props?: ConeProps): ElementHandle;
+  torus(id: string, props?: TorusProps): ElementHandle;
+  tube(id: string, props: TubeProps): ElementHandle;
+  molecule(id: string, props: MoleculeProps): ElementHandle;
+  group(id: string, children: ElementHandle[], options?: { isolated?: boolean; castShadow?: boolean }): ElementHandle;
   behavior(target: ElementHandle, behavior: BehaviorSpec): void;
   attach(target: ElementHandle, source: ElementHandle, options?: { offset?: Position }): void;
-  connect(target: ElementHandle, from: ElementHandle, to: ElementHandle, options?: { endpoints?: "center" | "surface"; offset?: number }): void;
+  /** Text/LaTeX endpoints default to padded visual bounds; other endpoints use their origins. */
+  connect(target: ElementHandle, from: ElementHandle, to: ElementHandle, options?: { endpoints?: "center" | "surface" | "bounds"; offset?: number }): void;
   play(actions: AnimationAction | AnimationAction[], options: { duration: number; ease?: Ease }): void;
   wait(seconds: number): void;
   keep(element: ElementHandle): void;
   remove(element: ElementHandle): void;
   view(id: string, options: ViewOptions, builder: (context: ViewContext) => void): void;
-  slider(id: string, options: ControlPlacement & { label?: string; default: number; min: number; max: number; step?: number }): number;
+  slider(id: string, options: SliderOptions & { reactive: true }): SliderHandle;
+  slider(id: string, options: SliderOptions & { reactive?: false }): number;
+  readonly time: TimeHandle;
+  bind(target: ElementHandle, dependencies: ReactiveDependency[], callback: (...values: number[]) => ReactiveProperties): void;
+  /** Deform captured rest vertices without changing triangle indices. */
+  deform(target: ElementHandle, dependencies: ReactiveDependency[], callback: (point: Vec3, index: number, ...values: number[]) => Vec3): void;
   toggle(id: string, options: ControlPlacement & { label?: string; default: boolean }): boolean;
   select(id: string, options: ControlPlacement & { label?: string; default: string; options: string[] }): string;
   previous: { get(id: string): ElementHandle; exiting(): ElementHandle };
@@ -305,6 +519,7 @@ export interface PlayerState {
 }
 
 export interface CompileInput {
+  models?: Record<string, ModelMetadata>;
   /** Defaults to THREE_BLUE_ONE_BROWN_PALETTE. */
   palette?: ColorPalette;
   previous?: Frame;
@@ -312,7 +527,7 @@ export interface CompileInput {
   seed?: number;
 }
 
-export interface Asset { kind: "audio"; url: string }
+export type Asset = { kind: "audio"; url: string } | ModelAsset;
 export interface PlayerOptions {
   /** Defaults to THREE_BLUE_ONE_BROWN_PALETTE; applies to every scene. */
   palette?: ColorPalette;

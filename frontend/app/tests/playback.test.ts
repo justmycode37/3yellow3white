@@ -4,7 +4,7 @@ import { Color, compileSource, evaluateScene } from 'animlib'
 import type { PlayerState, SceneSource, Submission, SubmitResult } from 'animlib'
 import { LessonPlayback, scenePosition, sequenceTime } from '../src/lessonPlayback.ts'
 import { lessonScenes } from '../src/lessonScenes.ts'
-import { lessons } from '../src/data.ts'
+import { lessons } from './fixtures/lessons.ts'
 import type { SceneRequest } from '../../../shared/video/scene-requests.ts'
 import { sceneRequestTimeline, sceneRequestBarriers } from '../src/sceneRequests.ts'
 import type { VideoManifest } from '../../../shared/video/contract.ts'
@@ -258,6 +258,8 @@ test('inserting and replaying a follow-up preserves the active moment, pause int
   assert.equal(playback.getState().playing, false)
   await playback.playScene('followup:first')
   assert.equal(player.state.scene, 'followup:first')
+  assert.equal(playback.getState().sceneId, 'followup:first')
+  assert.equal(playback.getState().sceneTime, 0)
   assert.equal(player.state.time, 0)
   assert.equal(playback.getState().playing, true)
   playback.dispose()
@@ -320,6 +322,8 @@ test('waits at insertion boundaries and resumes through progressively prepared a
   assert.equal(playback.getState().ended, false)
   await playback.acceptSceneRequests([pendingAddition(1)])
   assert.equal(player.state.scene, 'followup:first')
+  assert.equal(playback.getState().sceneId, 'followup:first')
+  assert.equal(playback.getState().sceneTime, 0)
   assert.equal(player.state.time, 0)
   assert.equal(playback.getState().playing, true)
   assert.deepEqual(player.barriers, ['followup:first'])
@@ -342,6 +346,8 @@ test('keeps a manual pause while waiting and after the insertion becomes ready',
   await playback.toggle()
   await playback.acceptSceneRequests([pendingAddition(1, 'complete')])
   assert.equal(player.state.scene, 'followup:first')
+  assert.equal(playback.getState().sceneId, 'followup:first')
+  assert.equal(playback.getState().sceneTime, 0)
   assert.equal(player.state.time, 0)
   assert.equal(playback.getState().playing, false)
   assert.equal(playback.getState().wantsPlay, false)
@@ -421,3 +427,35 @@ test('pending groups preserve same-anchor order and nested insertion boundaries'
   assert.deepEqual([...sceneRequestBarriers(sources, [pendingAddition(), ready, nested], prepared)], ['first', 'ready:first'])
   assert.deepEqual([...sceneRequestBarriers(sources, [pendingAddition(0, 'failed'), ready, nested], prepared)], ['ready:first'])
 })
+
+
+test('frequent usage-only snapshots preserve scenes, time, and playback intent', async () => {
+  const player = new StreamingPlayer(), playback = new LessonPlayback(player, false)
+  const first = manifest(1)
+  await playback.acceptManifest(first)
+  player.emit({ time: 3, status: 'paused' })
+  const priorCalls = [...player.calls]
+  for (let revision = 2; revision < 10; revision++) {
+    await playback.acceptManifest({ ...first, revision, tokenUsage: { inputTokens: 50, outputTokens: 20, totalTokens: 70, estimatedOutputTokens: revision * 10 } })
+  }
+  assert.equal(player.state.scenes.length, 1)
+  assert.equal(playback.getState().time, 3)
+  assert.equal(playback.getState().playing, false)
+  assert.deepEqual(player.calls, priorCalls)
+  await playback.toggle()
+  await playback.acceptManifest({ ...first, revision: 10, tokenUsage: { inputTokens: 50, outputTokens: 100, totalTokens: 150, estimatedOutputTokens: 0 } })
+  assert.equal(playback.getState().playing, true)
+  assert.equal(playback.getState().time, 3)
+  playback.dispose()
+})
+
+test('registers model assets with audio before compiling a streamed scene', async () => {
+  const player=new StreamingPlayer();
+  const calls:string[]=[];
+  const asset={kind:'model' as const,url:'/api/models/hash.glb',metadata:{version:1 as const,parts:[],primitives:[],bounds:{min:[0,0,0] as [number,number,number],max:[1,1,1] as [number,number,number]},triangles:1,materials:[]}};
+  const registered:Record<string,unknown>[]=[];
+  Object.assign(player,{registerAssets:(assets:Record<string,unknown>)=>{calls.push('assets');registered.push(assets);}});
+  const submit=player.submit.bind(player);player.submit=async change=>{calls.push('submit');return submit(change);};
+  const playback=new LessonPlayback(player),video=manifest(1);video.scenes[0].assets={model:asset};
+  try{await playback.acceptManifest(video);assert.deepEqual(calls,['assets','submit']);assert.deepEqual(registered[0].model,asset);assert.deepEqual(registered[0]['base:audio-0'],{kind:'audio',url:'/audio'});}finally{playback.dispose();}
+});

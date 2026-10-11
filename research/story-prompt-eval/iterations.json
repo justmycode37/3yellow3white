@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Baseline before editing",
+    "finding": "Original scripts were already substantively strong. Uniform convergence honored the requested definitions-first opening despite the prompt's opposing default. Every baseline script exceeded at least one old scene word target to satisfy its duration and content constraints. One first-pass plan used a harness filename as a source.",
+    "action": "Preserved original prompts and raw drafts. Recorded hypotheses and a seven-dimension rubric before revision; included a reduced-guidance control to test whether extra narrative instructions earned their cost.",
+    "result": "The evidence supports removing contradictory defaults, not claiming that original scripts were uniformly poor. Source-name errors remain visible in the results."
+  },
+  {
+    "title": "Revision 1: shorter, flexible, visually explicit",
+    "finding": "The original two prompts contained 2,305 words. Scene caps, opening prohibitions, and a preferred naming sequence were more restrictive than the researched range of explanatory structures. UI implementation details and repeated advice consumed space without helping narrative decisions.",
+    "action": "Reduced the two prompts to 1,492 words; kept host contracts. Added an explicit test of visual encoding, operation, observation, and inference. Aligned two downstream show-before-naming statements. Generated five new scripts with complete scene plans.",
+    "result": "Blind scores totaled 104/105 for both original and candidate drafts, versus 100/105 for reduced-guidance controls. This coarse, near-ceiling rubric shows no overall semantic superiority. Candidate scripts all passed the parser; original 4/5 and control 1/5 passed. Source-name errors are a harness-sensitive confound, not proof of a causal improvement. Both original and candidate reviewers matched all six fixture verdicts."
+  },
+  {
+    "title": "Revision 2: preserve qualifications when compressing",
+    "finding": "Candidate Bayes correctly derived 9/108 but ended by claiming a positive becomes informative only when combined with prevalence. That confuses having evidential value with calculating a posterior. Original history incorrectly treated a diary's date as evidence that the stoppage happened after the announced cut. Candidate history's plan also needed a sharper document-date/event-date distinction.",
+    "action": "Added one general instruction to authoring and review: compressed summaries must retain the conditions and qualifications that made the explanation true. Avoided adding Bayes-specific or history-specific rules. Generated fresh Bayes and history scripts, plus an unseen interactive gradient-descent case.",
+    "result": "Fresh Bayes now ends with the qualified counting rule and estimates 183 seconds for a roughly 180-second request. Fresh history explicitly forbids inventing a stoppage date and estimates 93 seconds for roughly 90 seconds. The held-out script uses the requested equation-first opening and one optional slider, while preserving a complete narrated default. See independent final draft reviews for acceptance and remaining issues; these single reruns cannot isolate the added sentence's causal effect."
+  },
+  {
+    "title": "What remains unproven",
+    "finding": "All observations are from model-written scripts and semantic visual plans. Timing estimates are not recordings, and planned visual evidence is not a verified animation. The blind rubric has a ceiling effect and the seed fixtures are relatively clear-cut.",
+    "action": "Keep raw outputs, blind judgments, source study, prompt snapshots, first-pass validation errors, and executable inspection scripts. Separate application format validation from educational quality.",
+    "result": "The strongest supported outcome is substantially shorter, less contradictory steering with comparable quality on these samples. More repeat runs and human comprehension tests would be needed to claim reliable learning gains. No rendering or whole-video creation was performed."
+  }
+]

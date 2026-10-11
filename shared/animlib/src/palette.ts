@@ -1,5 +1,5 @@
 import colorString from "color-string";
-import type { ColorPalette, ColorValue, CompiledScene, ElementState } from "./types.js";
+import type { ColorPalette, ColorValue, CompiledScene, ElementState, Geometry } from "./types.js";
 
 // Source: https://github.com/3b1b/manim/blob/master/manimlib/default_config.yml
 // Median aliases follow manimlib/constants.py. Black background follows
@@ -47,7 +47,15 @@ export function parseColor(source: string): [number, number, number, number] {
 
 function parseCssColor(source: string): [number, number, number, number] {
   if (source === "none") return [0, 0, 0, 0];
-  const rgb = colorString.get.rgb(source);
+  let rgb = colorString.get.rgb(source);
+  if (!rgb) {
+    // color-string rejects signed exponents in RGB alpha, which JS emits for tiny fades.
+    const exponent = /^(rgba?\([^,]+,[^,]+,[^,]+,)\s*([+-]?(?:\d+\.?\d*|\.\d+)[eE][+-]?\d+)\s*\)$/i.exec(source);
+    if (exponent) {
+      rgb = colorString.get.rgb(`${exponent[1]}1)`);
+      if (rgb) rgb[3] = Math.max(0, Math.min(1, Number(exponent[2])));
+    }
+  }
   if (rgb) return [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, rgb[3]];
   const hsl = colorString.get.hsl(source), hwb = colorString.get.hwb(source);
   if (!hsl && !hwb) throw new Error(`Unsupported CSS color: ${source}`);
@@ -167,16 +175,38 @@ export function enforceScenePalette(scene: CompiledScene, resolver: PaletteResol
   const validate = (value: ColorValue, label: string) => {
     try { resolver.validate(value); } catch (error) { throw new Error(`${label}: ${(error as Error).message}`); }
   };
+  const explanatory = (g: Geometry) => {
+    for (const color of g.scalarColors?.colors ?? []) validate(color, "Scalar ramp");
+    if (g.outline) validate(g.outline.color, "Outline");
+    for (const p of g.clipPlanes ?? []) if (p.section) {
+      validate(p.section.color, "Section");
+      if (p.section.cap !== undefined) validate(p.section.cap, "Section cap");
+    }
+  };
   const element = (e: ElementState) => {
+    explanatory(e.geometry);
     validate(e.fill, `${e.id} fill`); validate(e.stroke, `${e.id} stroke`);
+    if (e.geometry.material?.emissive !== undefined) validate(e.geometry.material.emissive, `${e.id} emissive color`);
+    if (e.geometry.texture) validate(e.geometry.texture.color, `${e.id} texture color`);
   };
   scene.options.palette = resolver.palette;
   validate(scene.options.background, "Scene background");
+  if (scene.options.lighting && scene.options.lighting !== "studio" && scene.options.lighting.receiver) validate(scene.options.lighting.receiver.fill ?? "GREY_D", "Shadow receiver fill");
   if (typeof scene.options.background !== "string" || (scene.options.background as string) === "none") throw new Error("Scene background requires an opaque Color token");
   scene.initial.forEach(element);
+  for (const binding of scene.reactiveBindings ?? []) {
+    const p = binding.properties;
+    if (p.fill !== undefined) validate(p.fill, `${binding.target} reactive fill`);
+    if (p.material?.emissive !== undefined) validate(p.material.emissive, `${binding.target} reactive emissive`);
+    if (p.texture) validate(p.texture.color, `${binding.target} reactive texture`);
+    for (const color of p.scalarColors?.colors ?? []) validate(color, `${binding.target} reactive scalar ramp`);
+  }
   for (const event of scene.lifecycle) event.elements?.forEach(element);
   for (const track of scene.tracks) {
     Object.values(track.from).forEach(element);
+    if (track.action.type === "morph" && track.action.geometry) explanatory(track.action.geometry);
+    if (track.action.type === "morph" && track.action.geometry?.material?.emissive !== undefined) validate(track.action.geometry.material.emissive, "Morph emissive color");
+    if (track.action.type === "morph" && track.action.geometry?.texture) validate(track.action.geometry.texture.color, "Morph texture color");
     if (track.action.type === "animate") {
       const props = track.action.properties as Partial<ElementState>;
       for (const key of ["fill", "stroke"] as const) if (props?.[key] !== undefined) validate(props[key]!, `Animation ${key}`);

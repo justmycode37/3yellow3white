@@ -1,0 +1,38 @@
+[
+  {
+    "id": "amber",
+    "caseId": "uniform",
+    "expected": "pass",
+    "reason": "Correct definition-first quantifier argument, no mandatory concrete-first opening."
+  },
+  {
+    "id": "birch",
+    "caseId": "history",
+    "expected": "pass",
+    "reason": "Qualified evidence comparison; no mandatory math, mystery, or pause."
+  },
+  {
+    "id": "cobalt",
+    "caseId": "leaf",
+    "expected": "revise",
+    "reason": "Central mechanism removed from speech AND evidence; labels merely restate tradeoff."
+  },
+  {
+    "id": "dune",
+    "caseId": "bayes",
+    "expected": "revise",
+    "reason": "False arithmetic: 9/108 called 90%."
+  },
+  {
+    "id": "elm",
+    "caseId": "uniform",
+    "expected": "revise",
+    "reason": "Plan leaks answer to maximum-error question during its pause."
+  },
+  {
+    "id": "flint",
+    "caseId": "history",
+    "expected": "revise",
+    "reason": "Unsupported definitive sole-cause claim from limited packet."
+  }
+]
