@@ -21,7 +21,7 @@ import { initialSources } from '../demo/scenes.js';
 import { interactionSource } from '../demo/interaction.js';
 import { plantSource } from '../demo/plant.js';
 import { lessonScenes } from '../../../frontend/app/src/lessonScenes.js';
-import { lessons } from '../../../frontend/app/src/data.js';
+import { lessons } from '../../../frontend/app/tests/fixtures/lessons.js';
 import type { ColorValue, SceneSource } from '../src/types.js';
 
 // Deliberately runs in a real browser, independently of the mocked Vitest suite.
