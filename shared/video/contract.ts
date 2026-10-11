@@ -3,6 +3,8 @@ export type VideoMode = 'classic' | 'interactive'
 /** Versioned delivery contract; source remains available for interactive recompilation. */
 export interface VideoRequest {
   title: string
+  /** Host-owned contextual follow-up: at most three scenes. */
+  sceneRequest?: boolean
   topic: string
   documents: { name: string; text: string }[]
   /** Viewing preference supplied to the storyline planner; omitted means classic. */

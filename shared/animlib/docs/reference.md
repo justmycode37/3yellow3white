@@ -238,6 +238,12 @@ await player.submit({
 });
 ```
 
+`setSceneBarriers(ids)` replaces the host's set of scene ends that must hold, even
+when authored with `end: "advance"`. At a barrier the final frame remains visible
+with status `ended`, and `play()` cannot restart it. Clearing a barrier does not
+resume automatically; the host can seek to the newly prepared scene and play when
+appropriate. Explicit seeks and navigation remain available while waiting.
+
 The host assigns stable scene IDs. Source code supplies the scene's options and
 builder, without duplicating its host-assigned ID. Element and control IDs are
 specified inside scene code.
@@ -253,6 +259,10 @@ type SceneId = string;
 type SceneSource = {
   id: SceneId;
   source: string;
+  // Default: adjacent predecessor. Null: independent start. ID: earlier scene's end.
+  handoffFrom?: SceneId | null;
+  // Optional host binding that overrides the source's audio asset ID.
+  audioId?: string;
 };
 
 type Submission =
@@ -290,6 +300,7 @@ interface Player {
   submit(change: Submission): Promise<SubmitResult>;
   play(): Promise<void>;
   pause(): void;
+  setSceneBarriers(ids: SceneId[]): void;
   seek(position: { scene: SceneId; time: number }): Promise<void>;
   next(): Promise<void>;
   previous(): Promise<void>;

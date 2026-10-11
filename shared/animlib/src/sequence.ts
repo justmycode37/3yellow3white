@@ -41,7 +41,13 @@ export class SceneSequence {
     let previous: Frame | undefined = compiled.length ? evaluateScene(compiled.at(-1)!, compiled.at(-1)!.duration) : undefined;
     for (const source of sources.slice(prefix.length)) {
       try {
+        if (source.handoffFrom !== undefined) {
+          const index = source.handoffFrom === null ? -1 : sources.findIndex(s => s.id === source.handoffFrom);
+          if (source.handoffFrom !== null && (index < 0 || index >= compiled.length)) throw new Error(`Invalid handoff scene: ${source.handoffFrom}`);
+          previous = index < 0 ? undefined : evaluateScene(compiled[index], compiled[index].duration);
+        }
         const scene = await this.compiler.compile(source.source, { previous, controls: values.get(source.id), seed: this.options.seed ?? 1, palette: this.options.palette }, this.options);
+        if (source.audioId !== undefined) scene.options.audio = source.audioId;
         compiled.push(scene); previous = evaluateScene(scene, scene.duration);
       } catch (error) {
         if (error instanceof SceneCompileError) error.diagnostic.scene = source.id;

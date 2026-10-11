@@ -265,7 +265,14 @@ export interface SceneContext {
 
 export type ViewContext = Omit<SceneContext, "view">;
 
-export interface SceneSource { id: string; source: string }
+export interface SceneSource {
+  id: string;
+  source: string;
+  /** Omitted: previous scene. Null: independent scene. ID: an earlier scene's end. */
+  handoffFrom?: string | null;
+  /** Host-owned audio asset binding, independent of IDs used by generated source. */
+  audioId?: string;
+}
 export type Submission =
   | { type: "load"; scenes: SceneSource[] }
   | { type: "replace"; scene: string; source: string }
