@@ -113,3 +113,12 @@ test('retains model authoring and agent publication while excluding host loading
   expect(output).toContain("assembly.part('Panel')");
   expect(output).toContain('publish_model');
 });
+
+test('includes callable molecular authoring guidance without relying on a linked document', () => {
+  const output = buildAuthoringReference(reference);
+  expect(output).toContain(between('### Molecular display beads', '### Curved paths and organic shapes'));
+  for (const text of ["s.molecule('protein'", 'positions:', 'radius:', 'origin:',
+    'detail:', '10,000 sites', '${id}/batch-N', 'Neither helper is available inside scene code.']) {
+    expect(output).toContain(text);
+  }
+});

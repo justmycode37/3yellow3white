@@ -253,9 +253,12 @@ How to build 3D with animlib:
   stroke. Raw `s.mesh` needs `shading: 'smooth'` or `'flat'` to receive lighting.
   Use palette tokens for fill. Start with modest sampling (surfaces default to
   32 segments per axis; each mesh is limited to 20,000 vertices and triangles).
-  To vary surface callbacks, solid dimensions, or tube points, use an ordinary
-  numeric slider and rebuild from its value; `s.bind` cannot rebuild mesh geometry.
-  Keep dependent labels and the scene duration consistent.
+  Use an ordinary numeric slider to resample construction callbacks or change
+  sample counts, holes, mesh connectivity, or dependent text/formulas. For
+  fixed-topology deformation, retained `s.deform` or `s.bind` can update vertices
+  and normals from reactive sliders and absolute scene-local `s.time`.
+  Keep dependent labels and the scene duration consistent; never simplify the
+  explanation merely to fit retained properties.
 - Give every 3D thing its TRUE shape with the matching primitive, instead of
   approximating it with rows of spheres or flat silhouettes:
   a quantity that depends on two variables (a potential or energy landscape, a
@@ -271,8 +274,9 @@ How to build 3D with animlib:
   the group, instead of animating each member.
 - Keep 3D cheap and calm: at most three or four surface or tube meshes in a scene,
   32 segments per axis or fewer unless the shape visibly needs more, opaque bodies
-  where they intersect, and no triangle strokes. A surface that a slider reshapes
-  is rebuilt on every change, so keep its callback simple.
+  where they intersect, and no triangle strokes. Ordinary sliders rebuild surfaces
+  on every change; retained deformation updates vertices without rebuilding the
+  builder. Keep both callbacks and geometry modest.
 - The focus pulse works on these meshes too (`scaleTo(1.15)` and back on the mesh
   or its group). To point at one REGION of a surface (a minimum, a saddle point),
   place a small sphere marker on it and pulse the marker.
@@ -290,9 +294,13 @@ Alignment (strict; misplaced parts are the most visible kind of jank):
   for stylized metal, matte/plastic highlights, or luminous surfaces. Metalness
   and specular are 0–1, roughness 0.05–1, emission intensity 0–4; emissive is a
   palette color. Raw meshes need flat/smooth shading for lit material effects.
-  Use ordinary controls for these parameters. Omit material to keep simple shading.
+  Ordinary controls can rebuild these parameters; retained bindings can replace
+  whole `material` or `texture` settings without rebuilding geometry.
+  Omit material to keep simple shading.
   Choose patterns that clarify the subject, with enough contrast for labels.
-  There are no image textures, image normal maps or displacement, scene reflections, or bloom.
+  Procedural primitives do not support image textures or image normal maps;
+  host-registered static GLB models support embedded image materials and normal
+  maps through `s.model`. Displacement, scene reflections, and bloom are unavailable.
 - Use a texture or material only when it tells the viewer something; a plain shaded
   body is the default. Good reasons:
   it shows MOTION or ORIENTATION that a plain body hides (stripes or a checker on a
@@ -306,7 +314,7 @@ Alignment (strict; misplaced parts are the most visible kind of jank):
   it tells two otherwise identical bodies apart.
 - Keep textures quiet: the object's concept colour stays the `fill`, and the second
   colour is a nearby darker or lighter tone, never a second concept colour and never
-  YELLOW. Use a large `scale` (few, broad features) rather than fine busy detail, at
+  YELLOW. Use a low texture `scale` (few, broad features) rather than fine busy detail, at
   most two textured objects in a scene, and no texture on small things such as atoms,
   points or thin tubes. Labels and formulas never sit on top of a textured body.
 - A texture is attached to the body, so it moves, rotates and pulses with it; do not

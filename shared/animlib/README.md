@@ -55,9 +55,12 @@ backends render these through the same geometry pipeline. The default player
 renders and handles input on its canvas; it creates
 no surrounding DOM. Generic drag/spring/custom behaviors and live attachments or
 connectors compose with the authored timeline. Isolated groups let overlapping
-parts fade as one object. Domain helpers for matrices, molecules, arrays, and graphs belong in the
-surrounding app. Internal dependencies are allowed; the public API requires no
-framework.
+parts fade as one object. `s.molecule` batches supplied molecular coordinates into
+display beads; host-only `importPDB` and `createMolecularEnvelope` prepare deposited
+coordinates and schematic smooth envelopes. See [molecular coordinates](docs/molecules.md)
+for examples, provenance, and scientific limits. Higher-level matrix, chemical-bond,
+array, and graph helpers belong in the surrounding app. Internal dependencies are
+allowed; the public API requires no framework.
 
 Spatial builders include `surface` for `z = f(x, y)`, `parametricSurface` for
 two-parameter maps (including curved petals), `box`, `cylinder`, `cone`, `torus`,
@@ -65,7 +68,9 @@ and `tube` for a constant-radius sweep through 3D points. They produce ordinary
 mesh handles with smooth shading by default (flat for boxes) and no stroke.
 Raw `mesh` remains unlit unless given `shading: 'flat'` or `'smooth'`; both GPU
 backends support the same simple directional lighting. Geometry-changing controls
-use ordinary numeric sliders to rebuild meshes, not retained `s.bind` callbacks.
+can use retained `s.deform` or `s.bind` callbacks to update existing vertices
+without changing topology. Use ordinary numeric sliders to rebuild sample counts,
+holes, connectivity, and dependent text or formulas.
 See [shaded meshes and sampled surfaces](docs/reference.md#shaded-meshes) for
 examples, periodic seams, invalid-sample holes, segment defaults, and geometry
 budgets. Start with modest sampling; the 20,000-vertex/20,000-triangle per-mesh
@@ -76,8 +81,10 @@ marble, and wood patterns, plus `material` for metalness, roughness, specular
 highlights, and emissive color/intensity. Patterns use local XYZ and two palette
 colors on both GPU backends; `texture.bumpStrength` adds raised or recessed relief
 to the lighting normals. Metal reflections approximate a studio environment.
-Ordinary controls can rebuild their parameters. Imported GLB models additionally support
-image textures, UV maps and image normal maps through `s.model`; see below.
+Ordinary controls can rebuild their parameters; retained bindings can replace
+`material` and `texture` settings without rebuilding geometry. Imported GLB models
+additionally support image textures, UV maps and image normal maps through `s.model`;
+see below.
 Displacement, scene reflections and bloom are not included. See
 [textures and materials](docs/reference.md#procedural-textures-and-materials).
 
@@ -104,7 +111,8 @@ evolving; the API and current limits are described in the
 The [storyboard capability summary](docs/capabilities.md) describes feasible
 visuals, interaction, scene continuity, and current boundaries for a planning AI.
 The backend includes it in storyline authoring and editorial-review prompts;
-scene authors receive the full reference.
+scene authors receive the authoring sections extracted from the reference,
+including API limits and model-publication guidance.
 
 The [demo scenes](demo/scenes.ts) exercise the three subject areas. The demo uses a
 fullscreen black canvas, mostly white drawing with selective color accents, and a
@@ -173,16 +181,18 @@ import { compileSource, evaluateScene } from 'animlib/core';
 
 // source is the scene's JavaScript; previous is the preceding final Frame
 // (undefined for the first scene). Pass current controls and a stable seed.
-const compiled = await compileSource(source, { previous, controls, seed: 1 });
+const compiled = await compileSource(source, { previous, controls, seed: 1 }, { sampleTime: 'end' });
 const endState = evaluateScene(compiled, compiled.duration);
 const contextJson = JSON.stringify(endState);
 ```
 
 The final frame includes inherited persistent elements, outgoing elements, and
 the authored camera. To reconstruct a complete sequence, use `SceneSequence`
-and read `sequence.frame(index, sequence.compiled[index].duration)` after a
-successful submission. Upstream source or control changes require recomputing
-the handoff. A frame contains visual state; an LLM still needs the next scene's
+and read `await sequence.evaluate(index, sequence.compiled[index].duration)` after
+a successful submission. These examples sample retained `s.time` callbacks at the
+end; synchronous `evaluateScene` and `sequence.frame` use the callback values
+already stored in their snapshots. Upstream source or control changes require
+recomputing the handoff. A frame contains visual state; an LLM still needs the next scene's
 objective and any semantic context.
 
 The repository's Bun backend depends on this workspace and can import this API

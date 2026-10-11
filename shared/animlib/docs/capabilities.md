@@ -34,6 +34,12 @@ Keep these instructions in nonspoken planning; they are not narration.
   produce smooth native meshes from supplied positions, with explicit density
   scale, threshold, grid resolution and smoothing. No automatic atomic surfaces, bond inference,
   folding physics, biological assembly reconstruction or mmCIF parsing.
+- **Imported static models:** registered GLB assets can include named parts,
+  UV-mapped image materials, vertex colors, and image normal maps on both GPU
+  backends. The scene agent publishes/downloads assets through `publish_model`,
+  then references their IDs with `s.model`. Parts can move, rotate, fade, and
+  receive palette tints; assets persist through scene handoffs. No skinning,
+  animation clips, imported topology morphs, or deformation of imported models.
 - **Surface appearance:** spheres and meshes support checker, stripe, noise,
   marble, and wood patterns using two palette colors. Patterns stay attached under
   object transforms. Adjustable procedural bump perturbs lighting normals for
@@ -170,9 +176,10 @@ dragged an object. Custom behaviors require host-registered implementations.
 
 ## Diagrams assembled by scene code
 
-Matrices, coordinate systems, charts, molecules, arrays, graphs, trees, and
-algorithm traces are built from the primitives above; dedicated domain APIs are
-not built into animlib. Suitable requests include:
+Matrices, coordinate systems, charts, chemical bonds, arrays, graphs, trees, and
+algorithm traces are assembled from the primitives above. Molecular coordinate
+display has the limited `s.molecule` helper described above; it does not infer
+chemistry or simulate a molecule. Suitable requests include:
 
 - Show a matrix acting on two basis vectors and a small grid, with the same
   vectors carried into a second view.
@@ -195,12 +202,19 @@ Scene code can calculate modest examples with JavaScript and provided math
 helpers; it cannot import packages, fetch data, access the surrounding page, or
 run asynchronous builders.
 
+Hosts can inspect object/group bounds in local, world, camera, or screen space,
+and detect projected glyph overlaps between distinct text/LaTeX elements.
+Inspection is opt-in and does not reposition labels or enforce clearance from
+shapes. Animation inspection samples settled text by default and can miss
+collisions between samples; it is not automatic layout or proof of visual quality.
+
 ## Current boundaries
 
-- Static GLB models can include UV-mapped image materials and named parts. The scene agent
-  publishes/downloads assets through `publish_model`, then references their IDs with
-  `s.model`. Parts can move, rotate, fade and receive palette tints; assets persist
-  through scene handoffs. No skinning, animation clips or imported topology morphs yet.
+- Imported models require self-contained static triangle GLBs with embedded
+  PNG/JPEG images. FBX/OBJ/Blender files need conversion outside animlib. Each GLB
+  is limited to 200,000 vertices/triangles; scenes allow 500,000 imported triangles
+  across instances. Imported materials retain their own colors; palette tints
+  highlight them. These ceilings are not recommended scene sizes.
 - No standalone image/video textures, photorealistic materials,
   image maps on procedural primitives, displacement, environment maps, self-shadowing, arbitrary mesh shadow receivers, bloom, point/spot lights,
   full physics solver, or automatic extrusion. Prefer schematic geometry.
@@ -234,10 +248,13 @@ run asynchronous builders.
   Section caps require closed nonbranching contours and do not repair
   self-intersections/nonmanifold meshes. Fine outlines follow finite tessellation.
   Anchor label modes ignore translucent occluders and do not place labels
-  automatically. Scalar ramps require sufficient surface sampling for detail. Compiler
-  ceilings include 2,000 object IDs per builder and 32 view regions; these are
-  hard limits, not recommended scene sizes.
+  automatically. Scalar ramps require sufficient surface sampling for detail.
+  Compiler ceilings include 256,000 JavaScript source characters, 2,000 object IDs
+  per builder, 100,000 added geometry points, and 32 view regions, with a default
+  200 ms execution budget and 32 MiB VM memory budget. Molecular batching still
+  consumes mesh/aggregate/source budgets. These are hard limits, not recommended
+  scene sizes.
 
-For implementation details, the scene author receives the full
+For implementation details, the scene author receives the authoring sections of the
 [API reference](reference.md). Maintain this summary alongside changes to that
 reference and the public [scene types](../src/types.ts).

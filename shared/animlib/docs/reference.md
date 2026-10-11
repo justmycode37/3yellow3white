@@ -86,8 +86,9 @@ There is one authoring style: sequential `play(...)` and `wait(...)`. Multiple
 animations in a single `play` run together. Explicit timestamps stay internal.
 
 The application demos cover linear algebra, organic chemistry, and
-computer algorithms. Matrices, molecules, arrays, and graphs belong to application
-helpers built from animlib's shapes, text, paths, meshes, and groups.
+computer algorithms. Matrix diagrams, chemical bonds, arrays, and graphs use
+application helpers built from animlib's shapes, text, paths, meshes, and groups.
+For coordinate-centered molecular display beads, animlib provides `s.molecule`.
 
 ### Decisions from the interview
 
@@ -248,8 +249,8 @@ The host assigns stable scene IDs. Source code supplies the scene's options and
 builder, without duplicating its host-assigned ID. Element and control IDs are
 specified inside scene code. The host can read `player.canvas` after recovery and
 observe replacements through `onCanvasChange`. `player.backend` reports the active
-backend after initialization. `registerAssets` adds audio assets for progressive
-lessons; `unlockAudio` lets a host unlock audio during a user gesture.
+backend after initialization. `registerAssets` adds audio and model assets for
+progressive lessons; `unlockAudio` lets a host unlock audio during a user gesture.
 `setDisplayPalette` remaps the existing palette slots for rendering and controls
 without recompiling or changing authored scene state. It must retain all slot names from
 the original palette. `resetView` clears live navigation and behavior offsets.
@@ -324,6 +325,10 @@ interface Player {
   getPan(view?: string): Vec3;
   setPan(value: Vec3, view?: string): void;
   getInteractionSnapshot(view?: string): InteractionSnapshot | undefined;
+  project(point: Vec3, view?: string):
+    { x: number; y: number; depth: number; visible: boolean; scale: number } | undefined;
+  ray(x: number, y: number, view?: string): Ray | undefined;
+  getBounds(id: string, options?: PlayerBoundsOptions): Bounds2D | Bounds3D | undefined;
   /** Coalesced redraw on the next animation frame, also while paused. */
   invalidateFrame(): void;
   getState(): PlayerState;
@@ -369,7 +374,9 @@ export default scene(
 );
 ```
 
-The execution environment provides `scene` and approved `math` helpers.
+The execution environment provides `scene`, `Color`, `palette`, and `math`/`Math`.
+`math` is the frozen standard JavaScript `Math` object, with seeded randomness;
+it is not a symbolic algebra or vector/matrix package.
 Application helpers can be ordinary functions declared in the submitted source.
 Host-side helper registration is not yet exposed. Arbitrary imports are not part
 of the source contract.
@@ -410,7 +417,9 @@ start of the interval. Scene-builder calls never draw intermediate frames.
 
 Basic creation methods are `circle`, `sphere`, `rectangle`, `line`, `arrow`,
 `path`, `text`, `latex`, `mesh`, and `group`. For spatial geometry, use
-`surface`, `parametricSurface`, `box`, `cylinder`, `cone`, `torus`, and `tube`.
+`surface`, `parametricSurface`, `box`, `cylinder`, `cone`, `torus`, `tube`,
+`line3D`, and `arrow3D`. `molecule` batches supplied coordinates into display
+beads, and `model` instantiates a host-registered static GLB with named parts.
 All take stable IDs. Groups supply parent transforms and operate on their children
 together. Surface callbacks run during scene compilation and produce plain mesh data.
 
@@ -793,6 +802,43 @@ vertices and `2 * (n - 1) * r` triangles; two caps add `2 * (r + 1)` vertices
 and `2 * r` triangles. A closed tube uses `n * r` vertices and `2 * n * r`
 triangles. More radial segments round the cross-section; more centerline samples
 resolve bends. Keep both modest for interactive scenes.
+
+### Molecular display beads
+
+`s.molecule(id, props)` builds batched, smooth-shaded mesh beads around supplied
+coordinates and returns one ordinary group handle. It does not create one
+individually addressable element per site or infer chemical bonds.
+
+```js
+const protein = s.molecule('protein', {
+  positions: [0, 0, 0, 3.8, 0.2, 0], // Packed XYZ; illustrative coordinates.
+  radius: 1.5, origin: [0, 0, 0], detail: 1,
+  scale: 0.2, fill: Color.GOLD,
+  material: { roughness: 0.7, specular: 0.2 },
+});
+s.play(protein.rotateTo([0, 0.8, 0]), { duration: 2 });
+s.keep(protein);
+```
+
+Props: required nonempty packed `positions` (three finite numbers per site,
+at most 10,000 sites) and positive `radius`; optional `origin` (default `[0,0,0]`),
+`detail` (`0`: 8 faces/site, default; `1`: 32 faces/site), `material`, and ordinary
+style/transforms except billboard settings. Coordinates and generated vertices
+must stay within ±1,000,000. The origin is subtracted before the group transform;
+use one origin and scale across chains of a structure. Separate calls allow
+different colors, radii, or independently moving parts. Children reserve IDs
+`${id}/batch-N`; batches obey the 20,000-vertex/triangle per-mesh ceilings and
+the aggregate geometry/source/VM budgets. The 10,000-site input cap does not
+guarantee that a scene of that size will compile or render responsively.
+
+The host-only `importPDB` export prepares legacy PDB coordinates with chain
+selection, heavy-atom or CA/P residue selection, and provenance. It does not parse
+mmCIF, include HETATM records, infer bonds, or reconstruct biological assemblies.
+The host-only `createMolecularEnvelope` produces a bounded, Gaussian-smoothed
+native mesh from supplied positions; embed its finished arrays using `s.mesh`.
+Neither helper is available inside scene code. Radii, detail, subsampling, and
+envelopes are schematic display choices, not atomic surfaces or folding physics.
+See [molecular coordinates](molecules.md) for offline preparation and scientific limits.
 
 ### Curved paths and organic shapes
 
@@ -1450,7 +1496,7 @@ with supported properties. Keep an ordinary numeric slider when a control change
 text, LaTeX numbers, path geometry, mesh topology, object counts, camera settings, animation
 targets, or timing. For example, a vector-length slider that also updates a formula
 should continue using the ordinary builder path so both remain consistent. Both
-styles may coexist in one scene; this prototype does not replace or restrict the
+styles may coexist in one scene; retained bindings do not replace or restrict the
 existing authoring API. Do not simplify a planned explanation to fit the fast path.
 Reactive callbacks must use their supplied values and immutable captured data;
 mutation of closure state or consuming random values breaks reproducibility.
@@ -1751,8 +1797,9 @@ startup has a separate timeout; a failed worker can be recreated on a later
 submission. These limits protect the scene-building step; they are not a complete
 budget for subsequent TeX layout, tessellation, or GPU allocation.
 
-Current data limits include 256 KB per source, 100 scenes, 2,000 object IDs per
-builder, 100 controls, 32 view regions, 10,000 animation tracks, and a 24-hour visual timeline.
+Current data limits include 256,000 JavaScript source characters (UTF-16 code units),
+100 scenes, 2,000 object IDs per builder, 100 controls, 32 view regions, 10,000
+animation tracks, and a 24-hour visual timeline.
 SVG path data is limited to 20,000 characters and 20,000 normalized control
 points per path. Point arrays are limited to 20,000 entries; added scene geometry
 has a 100,000-point budget, including SVG path control points.
@@ -2063,10 +2110,15 @@ This implementation targets modest explanatory scenes. It does not establish a
 large-scene performance guarantee. TeX layout is cached, and bounded caches reuse
 parsed paths, curve tessellations, contour triangulations, and morph correspondence
 across evaluated frames. Object transforms are prepared once per element, and
-vertex data is assembled directly
-in typed arrays. Vertex generation/upload and timeline evaluation still happen
-each frame. Selective reconstruction and GPU-side animation are possible
-improvements after measuring real scenes.
+vertex data is assembled directly in typed arrays. Stable opaque geometry retains
+indexed GPU buffers; camera/object transforms update uniforms and compatible draws
+can share geometry. Transparent geometry, morphs, adaptive curves, changing
+geometry, and other ineligible draws still use CPU preparation. Timeline evaluation
+continues each frame. Ordinary controls rebuild the sequence; retained controls
+reuse the changed builder and earlier scenes but reconstruct dependent later
+scenes. Appending sources reuses the existing prefix. See [performance](performance.md)
+for historical measurements and [retained geometry](#element-animation-and-coordinates)
+for current eligibility and invalidation rules.
 
 Opaque meshes have depth testing. Translucent world geometry is sorted back to front
 per triangle, including sphere surfaces and round strokes, using the current camera
@@ -2285,6 +2337,11 @@ not the original node's rotated local axes. `moveTo` sets a position relative to
 the part's parent; the published metadata includes each initial position.
 Units and overall model size are preserved. Use the published bounds to choose
 scale and camera framing.
+
+A compiled scene may reference at most 500,000 imported triangles across all
+instances; model roots, parts, and primitives consume the ordinary object-ID budget.
+Use much smaller assets for interactive/mobile scenes. Per-asset and resident
+budgets are described in the host registration section below.
 
 Materials retain imported colors independently of the host palette. Explicit
 tints multiply imported colors in linear space; `WHITE` clears the tint. The

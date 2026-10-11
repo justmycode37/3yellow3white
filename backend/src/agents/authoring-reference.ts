@@ -17,6 +17,7 @@ const headings = [
   '### Procedural textures and materials',
   '### Function and parametric surfaces',
   '### Basic solids and swept tubes',
+  '### Molecular display beads',
   '### Curved paths and organic shapes',
   '### Choosing how objects relate and move',
   '### Fading a composed object',
