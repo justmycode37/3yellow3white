@@ -425,6 +425,22 @@ export function buildScene(options: SceneOptions, builder: (context: SceneContex
   const returned: unknown = builder(context);
   if (returned && typeof (returned as { then?: unknown }).then === "function") throw new Error("Scene builders must be synchronous");
   building = false;
+  // A new object's first opacity animation declares its entrance. Hide it at
+  // creation, not just when fadeIn starts, including during earlier waits or
+  // movement tracks. Later reappearances must preserve the preceding visibility.
+  const births = new Map(lifecycle.flatMap(event => event.type === "add"
+    ? (event.elements ?? []).filter(e => !e.transient).map(e => [e.id, e] as const) : []));
+  const opacityAnimated = new Set<string>();
+  for (const track of tracks) {
+    if (track.action.type !== "animate" || !Object.hasOwn(track.action.properties ?? {}, "opacity")) continue;
+    for (const id of track.action.ids) {
+      if (opacityAnimated.has(id)) continue;
+      opacityAnimated.add(id);
+      const birth = births.get(id);
+      // Leave invalid authored opacity intact for boundary validation.
+      if (birth && track.action.fromOpacity === 0 && birth.opacity >= 0 && birth.opacity <= 1) birth.opacity = 0;
+    }
+  }
   const update = (values: Record<string, ControlValue>, changed: string[], time?: number): ReactiveUpdate[] => callbacks.filter(binding => time !== undefined && binding.time || binding.controls.some(id => changed.includes(id))).map(binding => {
     const output = binding.callback(...binding.dependencies.map(dep => dep === timeHandle ? time ?? 0 : values[(dep as SliderHandle).id] as number));
     if (!output || typeof output !== 'object' || Array.isArray(output)) throw new Error('Reactive bindings must return property objects');
