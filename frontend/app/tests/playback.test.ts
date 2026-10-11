@@ -4,7 +4,7 @@ import { Color, compileSource, evaluateScene } from 'animlib'
 import type { PlayerState, SceneSource, Submission, SubmitResult } from 'animlib'
 import { LessonPlayback, scenePosition, sequenceTime } from '../src/lessonPlayback.ts'
 import { lessonScenes } from '../src/lessonScenes.ts'
-import { lessons } from '../src/data.ts'
+import { lessons } from './fixtures/lessons.ts'
 import type { VideoManifest } from '../../../shared/video/contract.ts'
 
 class TestPlayer {
