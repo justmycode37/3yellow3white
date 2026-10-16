@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 import importlib.util
 import json
-import os
-import re
-import subprocess
 import tempfile
-import textwrap
 import unittest
 from unittest.mock import patch
 from pathlib import Path
@@ -111,28 +107,6 @@ class EnvironmentTests(unittest.TestCase):
             self.assertIn('AGENT_MODEL=existing-model\n', runtime)
             self.assertEqual(json.loads((release / 'paths.json').read_text())['video'], str(base / 'videos'))
             self.assertEqual((release / 'runtime.env').stat().st_mode & 0o777, 0o600)
-
-    def test_workflow_serializes_private_narration_settings_and_rejects_invalid_secrets(self):
-        workflow = Path(__file__).parent.parent / '.github/workflows/ci.yml'
-        step = workflow.read_text().split('      - name: Deploy the tested Docker image over SSH\n', 1)[1]
-        script = textwrap.dedent(re.search(r"          python3 - <<'PY'\n(.*?)          PY\n", step, re.S)[1])
-        with tempfile.TemporaryDirectory() as root:
-            (Path(root) / 'aha-ssh').mkdir(mode=0o700)
-            values = {'ELEVENLABS_API_KEY': 'literal$secret\\value"quote', 'ELEVENLABS_VOICE_ID': 'alice',
-                      'ELEVENLABS_MODEL_ID': 'eleven_multilingual_v2', 'NARRATION_PUBLIC_ORIGIN': 'https://example.test'}
-            env = dict(os.environ, **values, RUNNER_TEMP=root)
-            result = subprocess.run([config.sys.executable, '-c', script], env=env, capture_output=True, text=True)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(result.stdout, '')
-            path = Path(root) / 'aha-ssh/deployment.env'
-            self.assertEqual(config.read_environment([path]), values)
-            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
-            for invalid in ['', 'secret\nINJECTED=value']:
-                env['ELEVENLABS_API_KEY'] = invalid
-                result = subprocess.run([config.sys.executable, '-c', script], env=env, capture_output=True, text=True)
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn('ELEVENLABS_API_KEY', result.stderr)
-                self.assertNotIn('INJECTED', result.stderr)
 
 
 if __name__ == '__main__':

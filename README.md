@@ -45,12 +45,13 @@ by the backend.
 
 ## Deployment
 
-GitHub Actions tests pull requests and deploys successful updates to `main` over
-SSH using Docker Compose. Deployments retain lesson data, narration, and agent
-state, with rollback if activation fails.
+GitHub Actions builds and tests pull requests and updates to `main`, and saves
+tested release artifacts on `main`. VM deployment is manual using Docker Compose.
+Deployments retain lesson data, narration, and agent state, with rollback if
+activation fails.
 
-See the [deployment guide](docs/deployment.md) for server requirements, GitHub
-secrets, manual deployment, and recovery. Production sign-in is handled by the
+See the [deployment guide](docs/deployment.md) for server requirements, runtime
+configuration, manual deployment, and recovery. Production sign-in is handled by the
 [VISCon reverse proxy](docs/authentication.md).
 
 To run the app directly without watch mode:
