@@ -2,16 +2,18 @@
 
 The app repository owns `.github/workflows/ci.yml`, `Dockerfile`, `compose.yaml`,
 and `scripts/*release*`. GitHub Actions builds and tests a Linux x86_64 Docker
-image, then uploads that exact image over SSH. No container registry, GitHub
+image and saves a release artifact on `main`. Deployment to the VM is manual;
+GitHub Actions does not connect to the VM. No container registry, GitHub
 credentials on the VM, or infrastructure repository is required.
 
 ## After merging to main
 
 Pull requests run the library, frontend, backend, and deployment configuration
 checks. They also build the image and run the container lifecycle test. A push to
-`main` runs those checks and deploys the tested image. **Run workflow** on `main`
-redeploys it. Other branches do not deploy. Superseded main revisions are skipped;
-only one production deployment runs at a time.
+`main` runs those checks and saves the tested image as a `release-COMMIT_SHA`
+artifact for three days. **Run workflow** on `main` repeats the checks and artifact
+upload. No workflow run activates production. Use the manual procedure below to
+transfer and activate a tested release.
 
 The multistage Dockerfile builds the frontend/shared library with Node, then ships
 only the backend, built assets, production dependencies, and the lockfile's Bun
@@ -73,30 +75,21 @@ The public address remains <https://11.hackathon.ethz.ch>. VISCon handles TLS an
 access control and forwards to VM port 8080. Deployment does not install a new
 reverse proxy or change SSH settings. Docker publishes the same application port.
 
-## GitHub configuration
+## Deployment access
 
-The existing repository configuration is reused:
-
-- Secret `VM_SSH_PRIVATE_KEY`: dedicated deployment private key.
-- Secret `VM_SSH_KNOWN_HOSTS`: verified VM host-key line.
-- Secret `ELEVENLABS_API_KEY`: demo account key with text-to-speech access.
-- Variable `VM_HOST`: `11-direct.viscon-hackathon.ch`.
-- Variable `VM_SSH_USER`: `deploy`.
-
-The matching public key belongs in `/home/deploy/.ssh/authorized_keys` with the
-`restrict` prefix. The workflow uses the GitHub `production` environment and is
-limited to `main`. No new registry credentials are needed.
+Manual uploads require SSH access as the VM's `deploy` user. GitHub Actions no
+longer uses the `production` environment, VM SSH secrets, or VM host/user variables.
+Configure runtime secrets on the VM or supply a private `deployment.env` beside
+the uploaded archive as described below.
 
 ## Runtime configuration and storage
 
 Settings are read from `/srv/apps/3yellow3white/.env`, then
-`/etc/3yellow3white/environment` (later values win). GitHub Actions supplies a
-private `deployment.env` beside the uploaded archive; its values take precedence
-over both VM files. It contains the GitHub ElevenLabs key and the workflow's public
-voice, model, and origin settings. Secrets are supplied during deployment, outside
-the Docker image and uploaded build artifact. Missing secrets stop deployment
-before production is replaced. Temporary runner/upload copies are removed by
-workflow cleanup; each release retains its mode-600 runtime file for restart and rollback.
+`/etc/3yellow3white/environment` (later values win). An optional private
+`deployment.env` beside the uploaded archive takes precedence over both VM files.
+GitHub Actions does not supply runtime secrets. Keep secrets outside the Docker
+image and uploaded build artifact, and remove temporary upload copies after
+deployment. Each release retains its mode-600 runtime file for restart and rollback.
 Use one `KEY=value` per line;
 whole values can be single/double quoted. Root-owned files are read through sudo
 without logging their values. Shell commands and `$` references are
@@ -129,10 +122,10 @@ The three data directories must be separate, without nesting. Paths must be outs
 ownership is not changed. Configured paths should match those used by the old
 service before migration.
 
-The workflow sets `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` for both
-video and narration origin validation behind the gateway, and supplies
-`ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`. Manual deployments can supply
-`deployment.env` beside the archive or configure these values in the VM files.
+Configure `NARRATION_PUBLIC_ORIGIN=https://11.hackathon.ethz.ch` for both video
+and narration origin validation behind the gateway, along with
+`ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and `ELEVENLABS_MODEL_ID`. Supply these
+values in `deployment.env` beside the archive or in the VM runtime files.
 Never run a second writer
 or the narration CLI against the active data directory. See [narration](narration.md).
 
@@ -144,9 +137,10 @@ On a machine with Docker, Compose >=2.30, and Python 3:
 bash scripts/package-release.sh "$(git rev-parse HEAD)" /tmp/aha-release
 ```
 
-This builds the image and runs the isolated lifecycle test. Transfer
-`release.tar.gz`, `release.sha256`, and `scripts/deploy-release.sh` to a temporary
-VM directory using the deployment key. From that directory, as `deploy`:
+This builds the image and runs the isolated lifecycle test. Alternatively, download
+and extract the `release-COMMIT_SHA` artifact from a successful `main` workflow run.
+Transfer `release.tar.gz`, `release.sha256`, and `scripts/deploy-release.sh` to a
+temporary VM directory using the deployment key. From that directory, as `deploy`:
 
 ```sh
 sha256sum --check release.sha256
